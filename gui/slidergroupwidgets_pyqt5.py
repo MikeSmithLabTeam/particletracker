@@ -383,7 +383,6 @@ class Spinbox_Slider(QWidget):
                 param_list=self.param_list
             else:
                self.param_list = param_list
-            print(param_list[self.method_name])
             self.slider_range(param_list[self.method_name][self.param_name][1], param_list[self.method_name][self.param_name][2])
             self.slider_value(param_list[self.method_name][self.param_name][0])
             self.slider_increment(param_list[self.method_name][self.param_name][3])

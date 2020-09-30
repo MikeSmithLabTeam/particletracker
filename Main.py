@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, movie_filename=None, settings_filename=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
         EXIT_CODE_REBOOT = -123
-        print(not isfile(movie_filename))
+
         if isfile(movie_filename):
             self.movie_filename = movie_filename
         else:
