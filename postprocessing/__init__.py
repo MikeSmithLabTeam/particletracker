@@ -1,7 +1,7 @@
-from ParticleTrackingGui.general.parameters import get_method_name
-from ParticleTrackingGui.general.dataframes import DataStore
-from ParticleTrackingGui.postprocessing import postprocessing_methods as pm
-import numpy as np
+from ParticleTracker.general.parameters import get_method_name
+from ParticleTracker.general.dataframes import DataStore
+from ParticleTracker.postprocessing import postprocessing_methods as pm
+
 
 class PostProcessor:
     def __init__(self, parameters=None, vidobject=None, data_filename=None):

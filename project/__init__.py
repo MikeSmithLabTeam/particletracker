@@ -1,10 +1,8 @@
-from ParticleTrackingGui import tracking, preprocessing, postprocessing, \
-    annotation, linking
-from ParticleTrackingGui.video_crop import ReadCropVideo
 import os.path
-import numpy as np
-from labvision.images.basics import display
 
+from ParticleTracker.video_crop import ReadCropVideo
+from ParticleTracker import tracking, preprocessing, postprocessing, \
+    annotation, linking
 
 class PTWorkflow:
     '''

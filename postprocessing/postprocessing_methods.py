@@ -1,8 +1,8 @@
 import numpy as np
-from ParticleTrackingGui.general.parameters import get_method_key, get_param_val
 import scipy.spatial as sp
 import trackpy as tp
 
+from ParticleTracker.general.parameters import get_method_key, get_param_val
 '''
 -----------------------------------------------------------------------------------------------------
 All these methods operate on all frames simultaneously

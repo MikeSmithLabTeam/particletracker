@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
 import trackpy as tp
-from ParticleTrackingGui.general.parameters import get_param_val, get_method_key
 import pandas as pd
-import ParticleTrackingGui.tracking.intensity_methods as im
+
+from ParticleTracker.general.parameters import get_param_val, get_method_key
+import ParticleTracker.tracking.intensity_methods as im
 
 
 '''

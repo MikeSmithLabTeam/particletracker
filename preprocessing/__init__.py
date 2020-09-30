@@ -1,5 +1,5 @@
-from ParticleTrackingGui.preprocessing import preprocessing_methods as pm
-from ParticleTrackingGui.general.parameters import get_method_name
+from ParticleTracker.preprocessing import preprocessing_methods as pm
+from ParticleTracker.general.parameters import get_method_name
 import numpy as np
 
 class Preprocessor:

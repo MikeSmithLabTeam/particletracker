@@ -1,5 +1,5 @@
-from ParticleTrackingGui.general import dataframes
-from ParticleTrackingGui.general.parameters import  get_param_val
+from ParticleTracker.general import dataframes
+from ParticleTracker.general.parameters import  get_param_val
 import trackpy
 import numpy as np
 import pandas as pd

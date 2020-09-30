@@ -1,5 +1,5 @@
-from ParticleTrackingGui.project import PTWorkflow
-from ParticleTrackingGui.general.writeread_param_dict import read_paramdict_file
+from ParticleTracker.project import PTWorkflow
+from ParticleTracker.general.writeread_param_dict import read_paramdict_file
 from filehandling import BatchProcess
 
 

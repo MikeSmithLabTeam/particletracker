@@ -1,26 +1,36 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from ParticleTrackingGui.gui.image_viewer import QtImageViewer
-from ParticleTrackingGui.project.workflow import PTProject
-from ParticleTrackingGui.gui.slidergroupwidgets_pyqt5 import Spinbox_Slider
-from ParticleTrackingGui.gui.checked_tab_widget import CheckableTabWidget
-from ParticleTrackingGui.general.writeread_param_dict import write_paramdict_file
 from os.path import isfile
-from pathlib import Path
-
-
-
 import cv2
 import sys
+
+
+from ParticleTracker.gui.image_viewer import QtImageViewer
+from ParticleTracker.project.workflow import PTProject
+from ParticleTracker.gui.slidergroupwidgets_pyqt5 import Spinbox_Slider
+from ParticleTracker.gui.checked_tab_widget import CheckableTabWidget
+from ParticleTracker.general.writeread_param_dict import write_paramdict_file
+
 
 class MainWindow(QMainWindow):
     def __init__(self, *args, movie_filename=None, settings_filename=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
         EXIT_CODE_REBOOT = -123
+        print(not isfile(movie_filename))
+        if isfile(movie_filename):
+            self.movie_filename = movie_filename
+        else:
+            self.movie_filename = None
 
-        self.movie_filename = movie_filename
+        if isfile(settings_filename):
+            self.settings_filename = settings_filename
+        else:
+            self.settings_filename = None
+
+
         self.settings_filename = settings_filename
+
         self.reboot()
 
     def reboot(self):
@@ -192,6 +202,8 @@ class MainWindow(QMainWindow):
     ------------------------------------------------------------------
     ----------------------------------------------------------------"""
     def open_tracker(self):
+        print(self.movie_filename)
+
         if self.movie_filename is None:
             self.open_movie_dialog()
         if self.settings_filename is None:
@@ -304,8 +316,8 @@ class MainWindow(QMainWindow):
 app = QApplication(sys.argv)
 
 window = MainWindow(
-    movie_filename='/home/mike/PycharmProjects/ParticleTrackingGui/testdata/trackpy.mp4',
-    settings_filename='/home/mike/PycharmProjects/ParticleTrackingGui/project/param_files/trackpy.param')
+    movie_filename='/home/mike/PycharmProjects/ParticleTrackr/testdata/trackpy.mp4',
+    settings_filename='/home/mike/PycharmProjects/ParticleTracker/project/param_files/trackpy.param')
 
 window.show()
 

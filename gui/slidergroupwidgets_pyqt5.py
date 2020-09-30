@@ -2,10 +2,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from ParticleTrackingSimple.gui.crop_mask import SelectAreaWidget
-import re
-import numpy as np
-from labvision.images.basics import display
+from ParticleTracker.gui.crop_mask import SelectAreaWidget
+
 
 class Collect_SB_Slider(QWidget):
     def __init__(self, param_dict, methods, update_viewer_fn, *args, win=None, **kwargs):

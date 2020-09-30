@@ -1,5 +1,5 @@
-from ParticleTrackingSimple.general.dataframes import DataStore
-from ParticleTrackingSimple.postprocessing.postprocessing_methods import *
+from ParticleTracker.general.dataframes import DataStore
+from ParticleTracker.postprocessing.postprocessing_methods import *
 
 from labvision.video.opencv_io import ReadVideo
 

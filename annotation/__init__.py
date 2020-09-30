@@ -1,7 +1,7 @@
 from labvision.video import WriteVideo, WriteVideoFFMPEG
-from ParticleTrackingGui.annotation import annotation_methods as am
-from ParticleTrackingGui.general import dataframes
-from ParticleTrackingGui.general.parameters import get_method_name
+from ParticleTracker.annotation import annotation_methods as am
+from ParticleTracker.general import dataframes
+from ParticleTracker.general.parameters import get_method_name
 from tqdm import tqdm
 from pathlib import Path
 import numpy as np

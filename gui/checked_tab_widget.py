@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from ParticleTrackingGui.gui.drag_drop_list import MyListWidget
-from ParticleTrackingGui.gui.clickable_combo_box import ComboBoxAndButton
-from ParticleTrackingGui.gui.slidergroupwidgets_pyqt5 import Collect_SB_Slider, CollectionButtonLabels
+from ParticleTracker.gui.drag_drop_list import MyListWidget
+from ParticleTracker.gui.clickable_combo_box import ComboBoxAndButton
+from ParticleTracker.gui.slidergroupwidgets_pyqt5 import Collect_SB_Slider, CollectionButtonLabels
 
 
 class Color(QWidget):

@@ -1,9 +1,9 @@
 import os
 from tqdm import tqdm
-from ParticleTrackingGui.general import dataframes
-from ParticleTrackingGui.tracking import tracking_methods as tm
-from pathlib import Path
-import numpy as np
+
+from ParticleTracker.general import dataframes
+from ParticleTracker.tracking import tracking_methods as tm
+
 
 class ParticleTracker:
     """

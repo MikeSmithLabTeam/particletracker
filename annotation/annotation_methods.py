@@ -1,5 +1,5 @@
-from ParticleTrackingGui.general.parameters import get_param_val, get_method_key
-from ParticleTrackingGui.general.cmap import colour_array
+from ParticleTracker.general.parameters import get_param_val, get_method_key
+from ParticleTracker.general.cmap import colour_array
 import cv2
 import numpy as np
 
