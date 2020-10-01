@@ -5,12 +5,9 @@ from ParticleTracker.general.parameters import get_param_val
 def colour_array(subset_df, f, parameters, method=None):
     cmap_type = parameters[method]['cmap_type']
     sz = np.shape(subset_df.index.values)
-    print(sz[0])
     if cmap_type == 'static':
         colour_val = parameters[method]['colour']
-        print(type(colour_val))
         colours = colour_val*np.ones((sz[0],3))
-        print(colours)
     elif cmap_type == 'continuous':
         cmap_column = parameters[method]['cmap_column']
         colour_data = subset_df[[cmap_column]].values

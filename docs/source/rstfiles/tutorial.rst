@@ -46,6 +46,10 @@ it back in select the method from the drop down and click add method.
 Each method has various sliders and text boxes below. To adjust the min
 and max of each slider you can right click.
 
+The viewer can show you the image with annotations or if you toggle the button below it
+it will show you the image after preprocessing. Drag and hold the right mouse button to
+zoom in on an area. Double click the right button to zoom right out.
+
 Once you are happy save the .param file. You can then reload this later.
 
 Some methods need data from more than one frame. This is often the case for postprocessing
