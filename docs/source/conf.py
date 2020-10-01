@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'ParticleTrackingSimple'
+project = 'ParticleTracker'
 copyright = '2020, Mike Smith, James Downs, Nathan Smith'
 author = 'Mike Smith, James Downs, Nathan Smith'
 
