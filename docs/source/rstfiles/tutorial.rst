@@ -36,15 +36,20 @@ First thing to do is play with some of the testdata which are 3 short
 mp4s in the testdata folder. Run the gui from Main.py and open the correct
 movie. Then open the .param file by the same name in the project > param_files folder.
 This will apply these settings to analyse that video and should work. To see
-the results you will need to tick the annotate box on the tabbed checkboxes.
+the results you will need to tick the annotate box on the tabbed checkboxes. This and postprocessor
+are by default unselected.
 
-You can change the order of methods in each section by dragging and dropping. To
+Each step in the tracking process is only applied if the checkbox on the tab is ticked.
+Once selected you need to set up the methods in that section. You can change the order of methods in each section by dragging and dropping. To
 stop a method being applied you can drag it below inactive. To remove it completely
 right click on it. This will still keep the same values in the dictionary. To add
 it back in select the method from the drop down and click add method.
-
 Each method has various sliders and text boxes below. To adjust the min
 and max of each slider you can right click.
+
+The image can be cropped and masked using the tools. With all these methods, toggle the button
+to begin, drag a rectangle for crop or mask ellipse or click the image to select vertices for mask
+polygon. Once happy toggle the button back and the crop or mask will update.
 
 The viewer can show you the image with annotations or if you toggle the button below it
 it will show you the image after preprocessing. Drag and hold the right mouse button to
@@ -53,14 +58,15 @@ zoom in on an area. Double click the right button to zoom right out.
 Once you are happy save the .param file. You can then reload this later.
 
 Some methods need data from more than one frame. This is often the case for postprocessing
-and annotation. To do this click "process_part" when you are told the processing is finished
+and annotation. To use these methods click "process_part". When you are told the processing is finished
 click the "use_part" check button. The software now uses the stored data for the postprocessing
 and annotation.
 
 When you are completely happy press "process" this processes the movie according
-to all the tabs you have checked. It will produce a vidname.hdf5 file with the data
-and if you have annotation selected a vidname_annotated.mp4 which shows the annotations
-you asked for.
+to all the tabs you have checked. It will produce a vidname.hdf5 file with the data in the same folder
+as the video being processed. If you have annotation selected a vidname_annotated.mp4 which shows the annotations
+you asked for. It will also copy the .param file renaming it vidname.param to this folder so that you have a copy
+of the parameters used to process. All these processes overwrite without checking!
 
 You may eventually find that you are simply using the same param file. It is possible to batch process all
 the videos in one folder using the batchprocess.py in the utility folder. This will
