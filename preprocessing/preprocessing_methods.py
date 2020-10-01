@@ -350,9 +350,7 @@ def adaptive_threshold(frame, parameters=None, call_num=None):
     '''
 
     method_key = get_method_key('adaptive_threshold', call_num=call_num)
-    print(method_key)
     params = parameters['preprocess'][method_key]
-    print(params)
     block = get_param_val(params['block_size'])
     const = get_param_val(params['C'])
     invert = get_param_val(params['ad_mode'])

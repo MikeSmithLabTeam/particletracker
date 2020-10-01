@@ -311,8 +311,8 @@ class MainWindow(QMainWindow):
 app = QApplication(sys.argv)
 
 window = MainWindow(
-    movie_filename='/home/mike/PycharmProjects/ParticleTrackr/testdata/trackpy.mp4',
-    settings_filename='/home/mike/PycharmProjects/ParticleTracker/project/param_files/trackpy.param')
+    movie_filename='/home/mike/PycharmProjects/ParticleTracker/testdata/contours.mp4',
+    settings_filename='/home/mike/PycharmProjects/ParticleTracker/project/param_files/contours_hydrogels.param')
 
 window.show()
 
