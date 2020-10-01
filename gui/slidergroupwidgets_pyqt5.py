@@ -304,6 +304,12 @@ class Text_Box(QWidget):
                 value = True
             elif self.text_value == 'False':
                 value = False
+            elif self.text_value[0] == '(':
+                vals = self.text_value[1:-1].split(',')
+                values = []
+                for val in vals:
+                    values.append(int(val))
+                value = tuple(values)
             elif (self.datatype == str):
                 value = self.text_value
             elif self.datatype == tuple:
@@ -382,7 +388,7 @@ class Spinbox_Slider(QWidget):
             if param_list == []:
                 param_list=self.param_list
             else:
-               self.param_list = param_list
+                self.param_list = param_list
             self.slider_range(param_list[self.method_name][self.param_name][1], param_list[self.method_name][self.param_name][2])
             self.slider_value(param_list[self.method_name][self.param_name][0])
             self.slider_increment(param_list[self.method_name][self.param_name][3])

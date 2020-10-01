@@ -133,7 +133,10 @@ class MainWindow(QMainWindow):
         self.toggle_img.setCheckable(True)
         self.toggle_img.setChecked(False)
         self.toggle_img.clicked.connect(self.select_img_view)
-        self.frame_selector = Spinbox_Slider('frame','frame',[self.tracker.cap.frame_range[0], self.tracker.cap.frame_range[0], self.tracker.cap.frame_range[1]-1, self.tracker.cap.frame_range[2]],update_viewer_fn=self.update_viewer)
+        param_dict = {}
+        param_dict['frame']={}
+        param_dict['frame']['frame']=[self.tracker.cap.frame_range[0], self.tracker.cap.frame_range[0], self.tracker.cap.frame_range[1]-1, self.tracker.cap.frame_range[2]]
+        self.frame_selector = Spinbox_Slider('frame','frame',param_dict,update_viewer_fn=self.update_viewer)
         self.update_viewer()
         view_layout.addWidget(self.movie_label)
         view_layout.addWidget(self.settings_label)
@@ -143,7 +146,7 @@ class MainWindow(QMainWindow):
 
     def update_viewer(self):
         if self.live_update_button.isChecked():
-            frame_number = self.frame_selector.param_list[0]
+            frame_number = self.frame_selector.param_list['frame']['frame'][0]
             try:
                 #Check dictionary is updated.
 
