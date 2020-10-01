@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from os.path import isfile
+from pathlib import Path
 import cv2
 import sys
 
@@ -19,18 +20,14 @@ class MainWindow(QMainWindow):
         EXIT_CODE_REBOOT = -123
 
         if isfile(movie_filename):
-            self.movie_filename = movie_filename
+            self.movie_filename = str(Path(movie_filename))
         else:
             self.movie_filename = None
 
         if isfile(settings_filename):
-            self.settings_filename = settings_filename
+            self.settings_filename = str(Path(settings_filename))
         else:
             self.settings_filename = None
-
-
-        self.settings_filename = settings_filename
-
         self.reboot()
 
     def reboot(self):
@@ -65,24 +62,24 @@ class MainWindow(QMainWindow):
         self.toolbar = QToolBar('Toolbar')
         self.toolbar.setIconSize(QSize(16,16))
         self.addToolBar(self.toolbar)
-        open_movie_button = QAction(QIcon("gui/icons/icons/folder-open-film.png"), "Open File", self)
+        open_movie_button = QAction(QIcon(str(Path("gui/icons/icons/folder-open-film.png"))), "Open File", self)
         open_movie_button.setStatusTip("Open Movie or Img Sequence")
         open_movie_button.triggered.connect(self.open_movie_click)
         self.toolbar.addAction(open_movie_button)
 
-        open_settings_button = QAction(QIcon("gui/icons/icons/script-import.png"), "Open Settings File", self)
+        open_settings_button = QAction(QIcon(str(Path("gui/icons/icons/script-import.png"))), "Open Settings File", self)
         open_settings_button.setStatusTip("Open Movie or Img Sequence")
         open_settings_button.triggered.connect(self.open_settings_button_click)
         self.toolbar.addAction(open_settings_button)
 
-        save_settings_button = QAction(QIcon("gui/icons/icons/script-export.png"), "Save Settings File", self)
+        save_settings_button = QAction(QIcon(str(Path("gui/icons/icons/script-export.png"))), "Save Settings File", self)
         save_settings_button.setStatusTip("Save Settings")
         save_settings_button.triggered.connect(self.save_settings_button_click)
         self.toolbar.addAction(save_settings_button)
 
         self.toolbar.addSeparator()
 
-        self.live_update_button = QAction(QIcon("gui/icons/icons/arrow-circle.png"), "Live Updates", self)
+        self.live_update_button = QAction(QIcon(str(Path("gui/icons/icons/arrow-circle.png"))), "Live Updates", self)
         self.live_update_button.setCheckable(True)
         self.live_update_button.setChecked(True)
         self.live_update_button.triggered.connect(self.live_update_button_click)
@@ -90,23 +87,23 @@ class MainWindow(QMainWindow):
 
         self.toolbar.addSeparator()
 
-        process_part_button = QAction(QIcon("gui/icons/icons/clapperboard--minus.png"), "Process part", self)
+        process_part_button = QAction(QIcon(str(Path("gui/icons/icons/clapperboard--minus.png"))), "Process part", self)
         process_part_button.triggered.connect(self.process_part_button_click)
         self.toolbar.addAction(process_part_button)
 
-        self.use_part_button = QAction(QIcon("gui/icons/icons/fire--exclamation.png"), "Use part processed", self)
+        self.use_part_button = QAction(QIcon(str(Path("gui/icons/icons/fire--exclamation.png"))), "Use part processed", self)
         self.use_part_button.setCheckable(True)
         self.use_part_button.setChecked(False)
         self.use_part_button.triggered.connect(self.use_part_button_click)
         self.toolbar.addAction(self.use_part_button)
 
-        process_button = QAction(QIcon("gui/icons/icons/clapperboard--arrow.png"), "Process", self)
+        process_button = QAction(QIcon(str(Path("gui/icons/icons/clapperboard--arrow.png"))), "Process", self)
         process_button.triggered.connect(self.process_button_click)
         self.toolbar.addAction(process_button)
 
         self.toolbar.addSeparator()
 
-        close_button = QAction(QIcon("gui/icons/icons/cross-button.png"), "Close", self)
+        close_button = QAction(QIcon(str(Path("gui/icons/icons/cross-button.png"))), "Close", self)
         close_button.triggered.connect(self.close_button_click)
         self.toolbar.addAction(close_button)
 
@@ -202,8 +199,6 @@ class MainWindow(QMainWindow):
     ------------------------------------------------------------------
     ----------------------------------------------------------------"""
     def open_tracker(self):
-        print(self.movie_filename)
-
         if self.movie_filename is None:
             self.open_movie_dialog()
         if self.settings_filename is None:
