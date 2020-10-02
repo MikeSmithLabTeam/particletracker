@@ -364,7 +364,7 @@ def track_gui(movie=None, settings=None):
 
 
 def track_batchprocess(filefilter, paramfile, crop=True, preprocess=True, track=True, link=True, postprocess=True,
-                 annotate=True)
+                 annotate=True):
     '''
 
     Parameters
