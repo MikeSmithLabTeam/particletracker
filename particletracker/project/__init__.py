@@ -1,7 +1,7 @@
 import os.path
 
-from ParticleTracker.video_crop import ReadCropVideo
-from ParticleTracker import tracking, preprocessing, postprocessing, \
+from ..video_crop import ReadCropVideo
+from .. import tracking, preprocessing, postprocessing, \
     annotation, linking
 
 class PTWorkflow:

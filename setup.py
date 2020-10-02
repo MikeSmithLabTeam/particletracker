@@ -13,7 +13,8 @@ setuptools.setup(
     install_requires=[
         'opencv-python',
         'numpy',
-        'matplotlib'
+        'matplotlib',
+        'qimage2ndarray'
     ],
     dependency_links=[
         'https://github.com/MikeSmithLabTeam/labvision/tarball/repo/master#egg=package-1.0'
