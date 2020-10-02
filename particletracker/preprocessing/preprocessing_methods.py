@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from general.parameters import  get_param_val, get_method_key
+from ..general.parameters import  get_param_val, get_method_key
 
 def distance(frame, parameters=None, call_num=None):
     ''' Perform a distance transform on frame

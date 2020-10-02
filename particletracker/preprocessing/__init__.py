@@ -1,6 +1,6 @@
-from preprocessing import preprocessing_methods as pm
-from general.parameters import get_method_name
-import numpy as np
+from ..preprocessing import preprocessing_methods as pm
+from ..general.parameters import get_method_name
+
 
 class Preprocessor:
     """

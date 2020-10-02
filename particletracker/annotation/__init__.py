@@ -1,7 +1,7 @@
 from labvision.video import WriteVideo, WriteVideoFFMPEG
-from annotation import annotation_methods as am
-from general import dataframes
-from general.parameters import get_method_name
+from ..annotation import annotation_methods as am
+from ..general import dataframes
+from ..general.parameters import get_method_name
 from tqdm import tqdm
 
 
