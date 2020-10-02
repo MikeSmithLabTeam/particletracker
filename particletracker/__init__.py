@@ -330,7 +330,7 @@ class MainWindow(QMainWindow):
         self.reboot()
 
     def close_button_click(self):
-        quit()
+        sys.exit()
 
 
 
