@@ -17,10 +17,12 @@ setuptools.setup(
         'qimage2ndarray',
         'tqdm',
         'pandas',
-        'trackpy'
+        'trackpy',
+        'labvision @ git+https://github.com/MikeSmithLabTeam/labvision',
+        'filehandling @ git+https://github.com/MikeSmithLabTeam/filehandling'
     ],
-    dependency_links=[
-        'https://github.com/MikeSmithLabTeam/labvision/tarball/repo/master#egg=package-1.0',
-    'https://github.com/MikeSmithLabTeam/filehandling/tarball/repo/master#egg=package-1.0',
-    ],
+    # dependency_links=[
+    #     'https://github.com/MikeSmithLabTeam/labvision/tarball/repo/master#egg=package-1.0',
+    # 'https://github.com/MikeSmithLabTeam/filehandling/tarball/repo/master#egg=package-1.0',
+    # ],
 )
