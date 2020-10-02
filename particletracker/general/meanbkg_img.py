@@ -3,7 +3,7 @@ from filehandling import BatchProcess
 import numpy as np
 import cv2
 
-from ..video_crop import ReadCropVideo
+from particletracker.video_crop import ReadCropVideo
 from ..project.bacteria import PARAMETERS
 
 def create_bkg_img(parameters=None, filename=None):

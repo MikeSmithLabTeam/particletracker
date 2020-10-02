@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from os.path import isfile, dirname
+import os
+from os.path import isfile
 from pathlib import Path
 import cv2
 import sys
@@ -66,10 +67,9 @@ class MainWindow(QMainWindow):
         # Contains all widgets on rhs.
 
     def setup_menus_toolbar(self):
-        import os
+
         dir = os.path.abspath(__file__)
         resources_dir = os.path.join(dir[:-11],'gui','icons','icons')
-        print(resources_dir)
         self.toolbar = QToolBar('Toolbar')
         self.toolbar.setIconSize(QSize(16,16))
         self.addToolBar(self.toolbar)
@@ -229,7 +229,7 @@ class MainWindow(QMainWindow):
         options |= QFileDialog.DontUseNativeDialog
         self.recovery_movie_filename = self.movie_filename
         if self.movie_filename is None:
-            movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie or Img Sequence", '',
+            movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie or Img Sequence", QDir.homePath(),
                                                             "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v)", options=options)
         else:
             movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie or Img Sequence",
