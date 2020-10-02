@@ -14,9 +14,13 @@ setuptools.setup(
         'opencv-python',
         'numpy',
         'matplotlib',
-        'qimage2ndarray'
+        'qimage2ndarray',
+        'tqdm',
+        'pandas',
+        'trackpy'
     ],
     dependency_links=[
-        'https://github.com/MikeSmithLabTeam/labvision/tarball/repo/master#egg=package-1.0'
+        'https://github.com/MikeSmithLabTeam/labvision/tarball/repo/master#egg=package-1.0',
+    'https://github.com/MikeSmithLabTeam/filehandling/tarball/repo/master#egg=package-1.0',
     ],
 )
