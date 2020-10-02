@@ -1,5 +1,5 @@
-from ..general.parameters import get_param_val, get_method_key
-from ..general.cmap import colour_array
+from general.parameters import get_param_val, get_method_key
+from general.cmap import colour_array
 import cv2
 import numpy as np
 

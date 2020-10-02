@@ -219,7 +219,7 @@ PARAMETERS = {
     'annotate':annotate
     }
 
-from ParticleTrackingSimple.general.writeread_param_dict import write_paramdict_file
+from ..general.writeread_param_dict import write_paramdict_file
 
 write_paramdict_file(PARAMETERS, '/home/mike/PycharmProjects/ParticleTrackingGui/project/param_files/trackpy.param')
 

@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from ..gui.drag_drop_list import MyListWidget
-from ..gui.clickable_combo_box import ComboBoxAndButton
-from ..gui.slidergroupwidgets_pyqt5 import Collect_SB_Slider, CollectionButtonLabels
+from gui.drag_drop_list import MyListWidget
+from gui.clickable_combo_box import ComboBoxAndButton
+from gui.slidergroupwidgets_pyqt5 import Collect_SB_Slider, CollectionButtonLabels
 
 
 class Color(QWidget):

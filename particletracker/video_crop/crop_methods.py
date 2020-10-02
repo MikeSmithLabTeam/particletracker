@@ -1,5 +1,5 @@
 import numpy as np
-from ..video_crop.crop_box_gui import ROIfigure
+from video_crop.crop_box_gui import ROIfigure
 
 
 def crop_box(frame, crop_coords=None):

@@ -1,7 +1,7 @@
 import os.path
 
-from ..video_crop import ReadCropVideo
-from .. import tracking, preprocessing, postprocessing, \
+from video_crop import ReadCropVideo
+import tracking, preprocessing, postprocessing, \
     annotation, linking
 
 class PTWorkflow:

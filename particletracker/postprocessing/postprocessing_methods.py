@@ -2,7 +2,7 @@ import numpy as np
 import scipy.spatial as sp
 import trackpy as tp
 
-from ..general.parameters import get_method_key, get_param_val
+from general.parameters import get_method_key, get_param_val
 '''
 -----------------------------------------------------------------------------------------------------
 All these methods operate on all frames simultaneously

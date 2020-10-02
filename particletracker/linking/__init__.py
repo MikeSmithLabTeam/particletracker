@@ -1,5 +1,5 @@
-from ..general import dataframes
-from ..general.parameters import  get_param_val
+from general import dataframes
+from general.parameters import  get_param_val
 import trackpy
 import numpy as np
 import pandas as pd
