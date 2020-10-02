@@ -3,8 +3,8 @@ from filehandling import BatchProcess
 import numpy as np
 import cv2
 
-from ParticleTracker.video_crop import ReadCropVideo
-from ParticleTracker.project.bacteria import PARAMETERS
+from ..video_crop import ReadCropVideo
+from ..project.bacteria import PARAMETERS
 
 def create_bkg_img(parameters=None, filename=None):
     """Create a background image based on an average of the video

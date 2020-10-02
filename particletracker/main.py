@@ -7,11 +7,11 @@ import cv2
 import sys
 
 
-from ParticleTracker.gui.image_viewer import QtImageViewer
-from ParticleTracker.project.workflow import PTProject
-from ParticleTracker.gui.slidergroupwidgets_pyqt5 import Spinbox_Slider
-from ParticleTracker.gui.checked_tab_widget import CheckableTabWidget
-from ParticleTracker.general.writeread_param_dict import write_paramdict_file
+from .gui.image_viewer import QtImageViewer
+from .project.workflow import PTProject
+from .gui.slidergroupwidgets_pyqt5 import Spinbox_Slider
+from .gui.checked_tab_widget import CheckableTabWidget
+from .general.writeread_param_dict import write_paramdict_file
 
 
 class MainWindow(QMainWindow):
@@ -62,24 +62,28 @@ class MainWindow(QMainWindow):
         self.toolbar = QToolBar('Toolbar')
         self.toolbar.setIconSize(QSize(16,16))
         self.addToolBar(self.toolbar)
-        open_movie_button = QAction(QIcon(str(Path("gui/icons/icons/folder-open-film.png"))), "Open File", self)
+        open_movie_button = QAction(QIcon(str(Path(
+            "gui/icons/icons/folder-open-film.png"))), "Open File", self)
         open_movie_button.setStatusTip("Open Movie or Img Sequence")
         open_movie_button.triggered.connect(self.open_movie_click)
         self.toolbar.addAction(open_movie_button)
 
-        open_settings_button = QAction(QIcon(str(Path("gui/icons/icons/script-import.png"))), "Open Settings File", self)
+        open_settings_button = QAction(QIcon(str(Path(
+            "gui/icons/icons/script-import.png"))), "Open Settings File", self)
         open_settings_button.setStatusTip("Open Movie or Img Sequence")
         open_settings_button.triggered.connect(self.open_settings_button_click)
         self.toolbar.addAction(open_settings_button)
 
-        save_settings_button = QAction(QIcon(str(Path("gui/icons/icons/script-export.png"))), "Save Settings File", self)
+        save_settings_button = QAction(QIcon(str(Path(
+            "gui/icons/icons/script-export.png"))), "Save Settings File", self)
         save_settings_button.setStatusTip("Save Settings")
         save_settings_button.triggered.connect(self.save_settings_button_click)
         self.toolbar.addAction(save_settings_button)
 
         self.toolbar.addSeparator()
 
-        self.live_update_button = QAction(QIcon(str(Path("gui/icons/icons/arrow-circle.png"))), "Live Updates", self)
+        self.live_update_button = QAction(QIcon(str(Path(
+            "gui/icons/icons/arrow-circle.png"))), "Live Updates", self)
         self.live_update_button.setCheckable(True)
         self.live_update_button.setChecked(True)
         self.live_update_button.triggered.connect(self.live_update_button_click)
@@ -87,23 +91,27 @@ class MainWindow(QMainWindow):
 
         self.toolbar.addSeparator()
 
-        process_part_button = QAction(QIcon(str(Path("gui/icons/icons/clapperboard--minus.png"))), "Process part", self)
+        process_part_button = QAction(QIcon(str(Path(
+            "gui/icons/icons/clapperboard--minus.png"))), "Process part", self)
         process_part_button.triggered.connect(self.process_part_button_click)
         self.toolbar.addAction(process_part_button)
 
-        self.use_part_button = QAction(QIcon(str(Path("gui/icons/icons/fire--exclamation.png"))), "Use part processed", self)
+        self.use_part_button = QAction(QIcon(str(Path(
+            "gui/icons/icons/fire--exclamation.png"))), "Use part processed", self)
         self.use_part_button.setCheckable(True)
         self.use_part_button.setChecked(False)
         self.use_part_button.triggered.connect(self.use_part_button_click)
         self.toolbar.addAction(self.use_part_button)
 
-        process_button = QAction(QIcon(str(Path("gui/icons/icons/clapperboard--arrow.png"))), "Process", self)
+        process_button = QAction(QIcon(str(Path(
+            "gui/icons/icons/clapperboard--arrow.png"))), "Process", self)
         process_button.triggered.connect(self.process_button_click)
         self.toolbar.addAction(process_button)
 
         self.toolbar.addSeparator()
 
-        close_button = QAction(QIcon(str(Path("gui/icons/icons/cross-button.png"))), "Close", self)
+        close_button = QAction(QIcon(str(Path(
+            "gui/icons/icons/cross-button.png"))), "Close", self)
         close_button.triggered.connect(self.close_button_click)
         self.toolbar.addAction(close_button)
 

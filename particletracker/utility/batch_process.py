@@ -1,5 +1,5 @@
 from filehandling import BatchProcess
-from ParticleTracker.project.workflow import PTProject
+from ..project.workflow import PTProject
 
 
 if '__main__' == __name__:

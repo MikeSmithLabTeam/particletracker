@@ -1,6 +1,6 @@
-from ParticleTracker.general.parameters import get_method_name
-from ParticleTracker.general.dataframes import DataStore
-from ParticleTracker.postprocessing import postprocessing_methods as pm
+from ..general.parameters import get_method_name
+from ..general.dataframes import DataStore
+from ..postprocessing import postprocessing_methods as pm
 
 
 class PostProcessor:

@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 from matplotlib.widgets import RectangleSelector
 import time
 
-from ParticleTracker.gui.pyqt5_widgets import MatplotlibFigure
+from ..gui.pyqt5_widgets import MatplotlibFigure
 
 
 class ROIGraph(MatplotlibFigure):

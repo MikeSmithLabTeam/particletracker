@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from ParticleTracker.general.parameters import get_param_val
+from ..general.parameters import get_param_val
 
 def colour_array(subset_df, f, parameters, method=None):
     cmap_type = parameters[method]['cmap_type']

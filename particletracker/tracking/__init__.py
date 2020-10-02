@@ -1,8 +1,8 @@
 import os
 from tqdm import tqdm
 
-from ParticleTracker.general import dataframes
-from ParticleTracker.tracking import tracking_methods as tm
+from ..general import dataframes
+from ..tracking import tracking_methods as tm
 
 
 class ParticleTracker:

@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-from ParticleTracker.video_crop.crop_methods import crop_box
+from .crop_methods import crop_box
 from labvision.video import ReadVideo
 
 

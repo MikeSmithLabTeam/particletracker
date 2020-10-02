@@ -3,8 +3,8 @@ import numpy as np
 import trackpy as tp
 import pandas as pd
 
-from ParticleTracker.general.parameters import get_param_val, get_method_key
-import ParticleTracker.tracking.intensity_methods as im
+from ..general.parameters import get_param_val, get_method_key
+from ..tracking import intensity_methods as im
 
 
 '''
