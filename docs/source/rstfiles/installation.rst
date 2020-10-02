@@ -13,4 +13,4 @@ to upgrade use:
 
 
 - when installing on windows there appears to be a bug with pytables that affects the HDFSTore.
-This can be resolved by pip uninstall pytables
+This can be resolved by pip uninstall pytables and then conda install -c anaconda pytables
