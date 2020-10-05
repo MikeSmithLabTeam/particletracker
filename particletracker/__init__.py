@@ -24,7 +24,7 @@ HOUGH_PARAM = TESTDATA_DIR + 'hough_discs.param'
 TRACKPY_VID = TESTDATA_DIR + 'trackpy.mp4'
 TRACKPY_PARAM = TESTDATA_DIR + 'trackpy.param'
 
-
+__all__ = ['CONTOURS_VID', 'CONTOURS_PARAM', 'HOUGH_PARAM', 'HOUGH_VID', 'TRACKPY_VID', 'TRACKPY_PARAM']
 
 
 class MainWindow(QMainWindow):
