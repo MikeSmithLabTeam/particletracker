@@ -15,6 +15,16 @@ from .gui.checked_tab_widget import CheckableTabWidget
 from .general.writeread_param_dict import write_paramdict_file
 from filehandling import BatchProcess
 
+PACKAGE_DIR = os.path.dirname(__file__)
+TESTDATA_DIR = PACKAGE_DIR+'/testdata/'
+CONTOURS_VID = TESTDATA_DIR + 'contours.mp4'
+CONTOURS_PARAM = TESTDATA_DIR + 'contours_hydrogels.param'
+HOUGH_VID = TESTDATA_DIR + 'hough.mp4'
+HOUGH_PARAM = TESTDATA_DIR + 'hough_discs.param'
+TRACKPY_VID = TESTDATA_DIR + 'trackpy.mp4'
+TRACKPY_PARAM = TESTDATA_DIR + 'trackpy.param'
+
+
 
 
 class MainWindow(QMainWindow):
