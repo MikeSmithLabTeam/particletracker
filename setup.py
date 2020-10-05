@@ -21,7 +21,7 @@ setuptools.setup(
         'labvision @ git+https://github.com/MikeSmithLabTeam/labvision',
         'filehandling @ git+https://github.com/MikeSmithLabTeam/filehandling'
     ],
-    package_data={'project': ['../testdata/*']},
+    package_data={'testdata': ['testdata/*']},
     # dependency_links=[
     #     'https://github.com/MikeSmithLabTeam/labvision/tarball/repo/master#egg=package-1.0',
     # 'https://github.com/MikeSmithLabTeam/filehandling/tarball/repo/master#egg=package-1.0',
