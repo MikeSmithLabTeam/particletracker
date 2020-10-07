@@ -12,7 +12,7 @@ To install run the following line in your environment
 Repository for managing images, videos and cameras. 
 
 ## Documentation 
-    https://lab-vision.readthedocs.io/en/latest/
+    https://particle-tracker.readthedocs.io/en/latest/
 
 ## Installation from github
     pip install git+https://github.com/MikeSmithLabTeam/particletracker
