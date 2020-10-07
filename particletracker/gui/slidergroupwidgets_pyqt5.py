@@ -81,6 +81,7 @@ class CollectionButtonLabels(QWidget):
         self.edit_widget_list = []
         self.active_methods = list(self.param_dict['crop_method'])
         for method in methods:
+
             inner_layout = QHBoxLayout()
             if method == 'frame_range':
                 layout.addWidget(Frame_Range_Box(method, param_dict, self.reboot))
@@ -91,18 +92,23 @@ class CollectionButtonLabels(QWidget):
                 button.clicked.connect(lambda x=button.isChecked, method=button.text(): self.crop(x))
                 edit = QLineEdit(method + ':' + str(self.param_dict['crop_box']))
                 edit.returnPressed.connect(lambda x=edit.text, name='crop_box': self.update_crop_edit(x, method=name))
+                self.edit_widget_list.append(edit)
             elif method == 'mask_polygon':
                 button.clicked.connect(lambda x=button.isChecked, shape='mask_polygon': self.mask(x, shape=shape))
                 edit = QLineEdit(method + ':' + str(self.param_dict['mask_polygon']))
                 edit.returnPressed.connect(lambda x=edit.text, name='mask_polygon': self.update_mask_edit(x, method=name))
+                self.edit_widget_list.append(edit)
                 self.update_mask_edit(self.param_dict['mask_polygon'], method='mask_polygon')
             elif method == 'mask_ellipse':
                 button.clicked.connect(lambda x=button.isChecked, shape='mask_ellipse': self.mask(x, shape=shape))
                 edit = QLineEdit(method + ':' + str(self.param_dict['mask_ellipse']))
                 edit.returnPressed.connect(lambda x=edit.text, name='mask_ellipse': self.update_mask_edit(x, method=name))
+                self.edit_widget_list.append(edit)
                 self.update_mask_edit(self.param_dict['mask_ellipse'], method='mask_ellipse')
 
-            self.edit_widget_list.append(edit)
+
+
+
             inner_layout.addWidget(button)
             inner_layout.addWidget(edit)
             layout.addLayout(inner_layout)
@@ -200,13 +206,15 @@ class CollectionButtonLabels(QWidget):
                 self.mask_tool.display_point_list = mask_vals
                 self.param_dict['mask_polygon'] = mask_vals
         except:
-            #Yes I know this is bad practice but I don't care right now
+            #Yes I know this is bad practice but I don't care right now!
             pass
 
 
         active_methods = ['crop_box']
+
         for widget in self.edit_widget_list:
             if method in widget.text():
+                print(str(self.param_dict[method]))
                 widget.setText(method + ':' + str(self.param_dict[method]))
                 active_methods.append(method)
         self.param_dict['crop_method'] = tuple(active_methods)

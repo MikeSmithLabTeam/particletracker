@@ -16,6 +16,7 @@ class TrackingAnnotator:
 
 
     def annotate(self, f_index=None, use_part=False, bitrate='HIGH1080', framerate=30):
+        frame = self.cap.read_frame(n=0)
         if f_index is None:
             frame = self.cap.read_frame(n=0)
             if self.parameters['videowriter'] == 'opencv':
@@ -32,7 +33,6 @@ class TrackingAnnotator:
             data_filename = self.data_filename
         else:
             data_filename = self.data_filename[:-5] + '_temp.hdf5'
-
         with dataframes.DataStore(data_filename, load=True) as data:
             if f_index is None:
                 if ('frame_range' in self.parameters['annotate_method']) and (self.parameters['frame_range'] is not None):
@@ -45,7 +45,6 @@ class TrackingAnnotator:
                 start=f_index
                 stop=f_index+1
             self.cap.set_frame(start)
-
             for f in tqdm(range(start, stop, 1), 'Annotating'):
                 frame = self.cap.read_frame()
                 for method in self.parameters['annotate_method']:
@@ -53,7 +52,6 @@ class TrackingAnnotator:
                     frame = getattr(am, method_name)(frame, data, f, self.parameters, call_num=call_num)
                 if f_index is None:
                     self.out.add_frame(frame)
-
             if f_index is None:
                 self.out.close()
                 print('vid written')

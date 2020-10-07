@@ -1,12 +1,14 @@
-from .dataframes import DataStore
-
+from particletracker.general.dataframes import DataStore
+import numpy as np
 
 if __name__ == '__main__':
-    ds = DataStore('/home/mike/PycharmProjects/ParticleTrackingGui/testdata/contours.hdf5',load=True)
+    ds = DataStore('/home/ppzmis/Documents/PythonScripts/particletracker/particletracker/testdata/hough_temp.hdf5',load=True)
     df = ds.df
 
     #Annoyingly the linking code creates an index and a column called frame.
     df.index.name = 'frame_index'
+
+    print(np.size(df['particle'].loc[0]))
 
     #View the data
     print(df) # Print data

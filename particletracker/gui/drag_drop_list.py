@@ -169,21 +169,3 @@ class MyListWidget(QListWidget):
         title = self.parent.tabBar().tabText(tab_index)
         self.parent.add_bottom_widgets(title, active_tab_bottom)
 
-
-
-if __name__ == '__main__':
-
-    test2 = {'adaptive_threshold':{'block_size': [29,1,300,2],
-                          'C': [-23, -30, 30, 1],
-                          'ad_mode': [0, 0, 1, 1]
-                          }}
-
-    frame = {'frame': [10,1,100,1]}
-
-    items = ('a','b','c')
-
-    app = QApplication([])
-    key='frame'
-    sb = DraggableList(items)
-    sb.show()
-    app.exec_()

@@ -57,7 +57,7 @@ class PTWorkflow:
                                                        parameters=self.parameters[
                                                            'annotate'], frame=self.cap.read_frame())
 
-    def process(self):
+    def process(self, use_part=False):
         """Process an entire video
 
         Process is called on the main instance using the command
@@ -67,15 +67,15 @@ class PTWorkflow:
             link = True etc
         :return:
         """
-
-        if self.track_select:
-            self.pt.track()
-        if self.link_select:
-            self.link.link_trajectories()
+        if not use_part:
+            if self.track_select:
+                self.pt.track()
+            if self.link_select:
+                self.link.link_trajectories()
         if self.postprocess_select:
-            self.pp.process()
+            self.pp.process(use_part=True)
         if self.annotate_select:
-            self.an.annotate()
+            self.an.annotate(use_part=use_part)
 
 
 

@@ -46,7 +46,7 @@ class PTProject(PTWorkflow):
 
     def __init__(self, video_filename=None, param_filename=None):
         #Select operations to be performed'output_name':'x_smooth',
-
+        print(param_filename)
         PTWorkflow.__init__(self, video_filename=video_filename)
         self.crop_select = True
         self.preprocess_select = True
@@ -55,19 +55,9 @@ class PTProject(PTWorkflow):
         self.postprocess_select = False
         self.annotate_select = False
         self.param_filename = param_filename
+
         self.parameters = read_paramdict_file(param_filename)
+        print(self.parameters['crop'])
         self._setup()
 
-
-
-if '__main__' == __name__:
-
-    filefilter = '/home/mike/PycharmProjects/ParticleTrackingSimple/testdata/test.mp4'
-    paramfile = '/home/mike/PycharmProjects/ParticleTrackingSimple/project/param_files/bacteria.param'
-
-
-
-    for filename in BatchProcess(filefilter):
-        track = PTProject(video_filename=filename, param_filename=paramfile)
-        track.process()
 

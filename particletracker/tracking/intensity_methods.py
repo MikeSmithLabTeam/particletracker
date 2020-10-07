@@ -12,5 +12,9 @@ tracking algorithm.
 '''
 
 def mean_intensity(masked_img):
-    mean_intensity =  np.mean(masked_img)
-    return mean_intensity
+    try:
+        mean_intensity =  np.mean(masked_img)
+        return mean_intensity
+    except Exception as e:
+        print('Error in tracking.intensity_methods.mean_intensity')
+        print(e)

@@ -30,9 +30,13 @@ def distance(frame, parameters=None, call_num=None):
     np.ndarray - The distance transform image.
 
     '''
-    dist = cv2.distanceTransform(frame, cv2.DIST_L2, 5)
-    dist = 255*dist/np.max(dist)
-    return dist.astype(np.uint8)
+    try:
+        dist = cv2.distanceTransform(frame, cv2.DIST_L2, 5)
+        dist = 255*dist/np.max(dist)
+        return dist.astype(np.uint8)
+    except Exception as e:
+        print('Error in preprocessing_methods.distance')
+        print(e)
 
 def grayscale(frame, parameters=None, call_num=None):
     ''' Convert colour frame to grayscale
@@ -59,35 +63,46 @@ def grayscale(frame, parameters=None, call_num=None):
     np.ndarray - The grayscale image
 
     '''
-    method_key = get_method_key('grayscale', call_num=call_num)
-    params = parameters['preprocess'][method_key]
+    try:
+        method_key = get_method_key('grayscale', call_num=call_num)
+        params = parameters['preprocess'][method_key]
 
-    sz = np.shape(frame)
-    if np.shape(sz)[0] == 3:
-        frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    elif np.shape(sz)[0] == 2:
-        print('Image is already grayscale')
-    else:
-        print('Something went wrong! Shape img not recognised')
+        sz = np.shape(frame)
+        if np.shape(sz)[0] == 3:
+            frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        elif np.shape(sz)[0] == 2:
+            print('Image is already grayscale')
+        else:
+            print('Something went wrong! Shape img not recognised')
 
-    return frame
+        return frame
+    except Exception as e:
+        print('Error in preprocessing_methods.grayscale')
+        print(e)
+
+
 
 def colour_channel(frame, parameters=None, call_num=None):
     """
     This function selects a particular colour channel, returning a
      grayscale image from a colour input frame
     """
-    method_key = get_method_key('colour_channel', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    colour = params['colour']
-    assert (colour == 'red') or (colour == 'green') or (colour == 'blue'),"colour param must be 'red', 'green' or 'blue'"
-    if colour == 'red':
-        index = 0
-    elif colour == 'green':
-        index = 1
-    elif colour == 'blue':
-        index = 2
-    return frame[:,:,index]
+    try:
+        method_key = get_method_key('colour_channel', call_num=call_num)
+        params = parameters['preprocess'][method_key]
+        colour = params['colour']
+        assert (colour == 'red') or (colour == 'green') or (colour == 'blue'),"colour param must be 'red', 'green' or 'blue'"
+        if colour == 'red':
+            index = 0
+        elif colour == 'green':
+            index = 1
+        elif colour == 'blue':
+            index = 2
+        return frame[:,:,index]
+    except Exception as e:
+        print('Error in preprocessing_methods.colour_channel')
+        print(e)
+
 
 def subtract_bkg(frame, parameters=None, call_num=None):
     ''' Subtract a bkg image
@@ -121,53 +136,57 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     image with background image subtracted
 
     '''
-    method_key = get_method_key('subtract_bkg', call_num=call_num)
-    params = parameters['preprocess'][method_key]
+    try:
+        method_key = get_method_key('subtract_bkg', call_num=call_num)
+        params = parameters['preprocess'][method_key]
 
-    if params['subtract_bkg_type'] == 'mean':
-        mean_val = int(np.mean(frame))
-        subtract_frame = mean_val * np.ones(np.shape(frame), dtype=np.uint8)
-        if get_param_val(params['subtract_bkg_invert']):
-            frame2 = cv2.subtract(subtract_frame, frame)
-        else:
-            frame2 = cv2.subtract(frame, subtract_frame)
+        if params['subtract_bkg_type'] == 'mean':
+            mean_val = int(np.mean(frame))
+            subtract_frame = mean_val * np.ones(np.shape(frame), dtype=np.uint8)
+            if get_param_val(params['subtract_bkg_invert']):
+                frame2 = cv2.subtract(subtract_frame, frame)
+            else:
+                frame2 = cv2.subtract(frame, subtract_frame)
 
-    elif params['subtract_bkg_type'] == 'img':
-        # This option subtracts the previously created image which is added to dictionary.
-        #These parameters are fed to the blur function
-        temp_params = {}
-        temp_params['preprocess'] = {
-            'blur': {'kernel': get_param_val(params['subtract_bkg_blur_kernel'])}}
+        elif params['subtract_bkg_type'] == 'img':
+            # This option subtracts the previously created image which is added to dictionary.
+            #These parameters are fed to the blur function
+            temp_params = {}
+            temp_params['preprocess'] = {
+                'blur': {'kernel': get_param_val(params['subtract_bkg_blur_kernel'])}}
 
-        #Load bkg img
-        if parameters['experiment']['bkg_img'] is None:
-            name = parameters['experiment']['video_filename']
-            subtract_frame = cv2.imread(name[:-4] + '_bkgimg.png',cv2.IMREAD_GRAYSCALE)
-        else:
-            subtract_frame = cv2.imread(parameters['experiment']['bkg_img'],cv2.IMREAD_GRAYSCALE)
+            #Load bkg img
+            if parameters['experiment']['bkg_img'] is None:
+                name = parameters['experiment']['video_filename']
+                subtract_frame = cv2.imread(name[:-4] + '_bkgimg.png',cv2.IMREAD_GRAYSCALE)
+            else:
+                subtract_frame = cv2.imread(parameters['experiment']['bkg_img'],cv2.IMREAD_GRAYSCALE)
 
-        assert (np.shape(frame) == np.shape(subtract_frame)),\
-            'Warning: input frame and subtracted frame must have same shape'
+            assert (np.shape(frame) == np.shape(subtract_frame)),\
+                'Warning: input frame and subtracted frame must have same shape'
 
-        #blur frames
-        frame2 = blur(frame, temp_params)
-        frame2 = frame2.astype(np.uint8)
-        subtract_frame = blur(subtract_frame, temp_params)
-        subtract_frame =subtract_frame.astype(np.uint8)
+            #blur frames
+            frame2 = blur(frame, temp_params)
+            frame2 = frame2.astype(np.uint8)
+            subtract_frame = blur(subtract_frame, temp_params)
+            subtract_frame =subtract_frame.astype(np.uint8)
 
-        if get_param_val(params['subtract_bkg_invert']):
-            frame2 = cv2.subtract(subtract_frame, frame2)
-        else:
-            frame2 = cv2.subtract(frame2, subtract_frame)
+            if get_param_val(params['subtract_bkg_invert']):
+                frame2 = cv2.subtract(subtract_frame, frame2)
+            else:
+                frame2 = cv2.subtract(frame2, subtract_frame)
 
-        if np.max(frame) == 0:
-            frame2 = frame
+            if np.max(frame) == 0:
+                frame2 = frame
 
-    if params['subtract_bkg_norm']==True:
-        frame2 = cv2.normalize(frame2, None, alpha=0, beta=255,
-                              norm_type=cv2.NORM_MINMAX)
+        if params['subtract_bkg_norm']==True:
+            frame2 = cv2.normalize(frame2, None, alpha=0, beta=255,
+                                  norm_type=cv2.NORM_MINMAX)
 
-    return frame2
+        return frame2
+    except Exception as e:
+        print('Error in preprocessing_methods.subtrack_bkg')
+        print(e)
 
 def variance(frame, parameters=None, call_num=None):
     ''' Variance of an image
@@ -211,46 +230,50 @@ def variance(frame, parameters=None, call_num=None):
     image of absolute difference from mean
 
     '''
+    try:
+        method_key = get_method_key('variance', call_num=call_num)
+        params = parameters['preprocess'][method_key]
 
-    method_key = get_method_key('variance', call_num=call_num)
-    params = parameters['preprocess'][method_key]
+        if params['variance_type'] == 'mean':
+            mean_val = int(np.mean(frame))
+            subtract_frame = mean_val*np.ones(np.shape(frame), dtype=np.uint8)
+        elif params['variance_type'] == 'img':
+            temp_params = {}
+            temp_params['preprocess'] = {'blur':{'kernel':get_param_val(params['variance_blur_kernel'])}}
 
-    if params['variance_type'] == 'mean':
-        mean_val = int(np.mean(frame))
-        subtract_frame = mean_val*np.ones(np.shape(frame), dtype=np.uint8)
-    elif params['variance_type'] == 'img':
-        temp_params = {}
-        temp_params['preprocess'] = {'blur':{'kernel':get_param_val(params['variance_blur_kernel'])}}
+            if parameters['experiment']['bkg_img'] is None:
+                name = parameters['experiment']['video_filename']
+                subtract_frame = cv2.imread(name[:-4] + '_bkgimg.png',-1)
+            else:
+                subtract_frame = cv2.imread(parameters['experiment']['bkg_img'],-1)
 
-        if parameters['experiment']['bkg_img'] is None:
-            name = parameters['experiment']['video_filename']
-            subtract_frame = cv2.imread(name[:-4] + '_bkgimg.png',-1)
-        else:
-            subtract_frame = cv2.imread(parameters['experiment']['bkg_img'],-1)
+            assert (np.shape(frame) == np.shape(subtract_frame)), \
+                'Warning: input frame and subtracted frame must have same shape'
 
-        assert (np.shape(frame) == np.shape(subtract_frame)), \
-            'Warning: input frame and subtracted frame must have same shape'
+            frame2 = blur(frame, temp_params)
+            subtract_frame = blur(subtract_frame, temp_params)
+        elif params['variance_type'] == 'zeros':
+            subtract_frame = np.zeros(np.shape(frame))
 
-        frame2 = blur(frame, temp_params)
-        subtract_frame = blur(subtract_frame, temp_params)
-    elif params['variance_type'] == 'zeros':
-        subtract_frame = np.zeros(np.shape(frame))
+        mean_subtract = np.mean(subtract_frame)
+        mean_frame = np.mean(frame)
+        subtract_frame = subtract_frame * (mean_frame / mean_subtract)
+        subtract_frame = subtract_frame.astype(np.uint8)
 
-    mean_subtract = np.mean(subtract_frame)
-    mean_frame = np.mean(frame)
-    subtract_frame = subtract_frame * (mean_frame / mean_subtract)
-    subtract_frame = subtract_frame.astype(np.uint8)
+        frame1 = cv2.subtract(subtract_frame, frame)
+        frame1 = cv2.normalize(frame1, frame1 ,0,255,cv2.NORM_MINMAX)
+        frame2 = cv2.subtract(frame, subtract_frame)
+        frame2 = cv2.normalize(frame2, frame2,0,255,cv2.NORM_MINMAX)
+        frame = cv2.add(frame1, frame2)
 
-    frame1 = cv2.subtract(subtract_frame, frame)
-    frame1 = cv2.normalize(frame1, frame1 ,0,255,cv2.NORM_MINMAX)
-    frame2 = cv2.subtract(frame, subtract_frame)
-    frame2 = cv2.normalize(frame2, frame2,0,255,cv2.NORM_MINMAX)
-    frame = cv2.add(frame1, frame2)
+        if params['variance_bkg_norm'] == True:
+            frame = cv2.normalize(frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
 
-    if params['variance_bkg_norm'] == True:
-        frame = cv2.normalize(frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+        return frame
+    except Exception as e:
+        print('Error in preprocessing_methods.variance')
+        print(e)
 
-    return frame
 
 def flip(frame, parameters=None, call_num=None):
     '''Inverts a binary frame
@@ -271,8 +294,12 @@ def flip(frame, parameters=None, call_num=None):
     Inverted binary image
 
     '''
+    try:
+        return ~frame
+    except Exception as e:
+        print('Error in preprocessing_methods.flip')
+        print(e)
 
-    return ~frame
 
 def threshold(frame, parameters=None, call_num=None):
     '''Apply a global image threshold
@@ -304,15 +331,19 @@ def threshold(frame, parameters=None, call_num=None):
     binary image with 255 for pixel val > threshold else 0.
 
     '''
+    try:
+        method_key = get_method_key('threshold', call_num=call_num)
+        params = parameters['preprocess'][method_key]
 
-    method_key = get_method_key('threshold', call_num=call_num)
-    params = parameters['preprocess'][method_key]
+        threshold = get_param_val(params['threshold'])
+        mode = get_param_val(params['th_mode'])
+        ret, out = cv2.threshold(frame,threshold,255,mode)
 
-    threshold = get_param_val(params['threshold'])
-    mode = get_param_val(params['th_mode'])
-    ret, out = cv2.threshold(frame,threshold,255,mode)
+        return out
+    except Exception as e:
+        print('Error in preprocessing_methods.threshold')
+        print(e)
 
-    return out
 
 def adaptive_threshold(frame, parameters=None, call_num=None):
     '''Adaptive threshold
@@ -348,18 +379,23 @@ def adaptive_threshold(frame, parameters=None, call_num=None):
     binary image with 255 above threshold else 0.
 
     '''
+    try:
+        method_key = get_method_key('adaptive_threshold', call_num=call_num)
+        params = parameters['preprocess'][method_key]
+        block = get_param_val(params['block_size'])
+        const = get_param_val(params['C'])
+        invert = get_param_val(params['ad_mode'])
 
-    method_key = get_method_key('adaptive_threshold', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    block = get_param_val(params['block_size'])
-    const = get_param_val(params['C'])
-    invert = get_param_val(params['ad_mode'])
+        if invert == 1:
+            out = cv2.adaptiveThreshold(frame,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, block, const)
+        else:
+            out = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block, const)
+        return out
+    except Exception as e:
+        print('Error in preprocessing_methods.adaptive_threshold')
+        print(e)
 
-    if invert == 1:
-        out = cv2.adaptiveThreshold(frame,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, block, const)
-    else:
-        out = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block, const)
-    return out
+
 
 def blur(frame, parameters=None, call_num=None):
     ''' Gaussian blur
@@ -391,12 +427,16 @@ def blur(frame, parameters=None, call_num=None):
     blurred image
 
     '''
-    method_key = get_method_key('blur', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    kernel = get_param_val(params['kernel'])
-    out = cv2.GaussianBlur(frame, (kernel, kernel), 0)
+    try:
+        method_key = get_method_key('blur', call_num=call_num)
+        params = parameters['preprocess'][method_key]
+        kernel = get_param_val(params['kernel'])
+        out = cv2.GaussianBlur(frame, (kernel, kernel), 0)
 
-    return out
+        return out
+    except Exception as e:
+        print('Error in preprocessing_methods.blur')
+        print(e)
 
 def medianblur(frame, parameters=None, call_num=None):
     '''Median blur
@@ -428,11 +468,16 @@ def medianblur(frame, parameters=None, call_num=None):
     blurred image
 
     '''
-    method_key = get_method_key('medianblur', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    kernel = get_param_val(params['kernel'])
-    out = cv2.medianBlur(frame, kernel)
-    return out
+    try:
+        method_key = get_method_key('medianblur', call_num=call_num)
+        params = parameters['preprocess'][method_key]
+        kernel = get_param_val(params['kernel'])
+        out = cv2.medianBlur(frame, kernel)
+        return out
+    except Exception as e:
+        print('Error in preprocessing_methods.median_blur')
+        print(e)
+
 
 def gamma(image, parameters=None, call_num=None):
     ''' Gamma correction
@@ -460,20 +505,24 @@ def gamma(image, parameters=None, call_num=None):
     gamma corrected image
 
     '''
+    try:
+        method_key = get_method_key('gamma', call_num=call_num)
+        params = parameters['preprocess'][method_key]
 
-    method_key = get_method_key('gamma', call_num=call_num)
-    params = parameters['preprocess'][method_key]
+        gamma = get_param_val(params['gamma'])/100.0
+        # build a lookup table mapping the pixel values [0, 255] to
+        # their adjusted gamma values
+        invGamma = 1.0 / gamma
 
-    gamma = get_param_val(params['gamma'])/100.0
-    # build a lookup table mapping the pixel values [0, 255] to
-    # their adjusted gamma values
-    invGamma = 1.0 / gamma
-
-    table = np.array([((i / 255.0) ** invGamma) * 255
-                      for i in np.arange(0, 256)]).astype("uint8")
+        table = np.array([((i / 255.0) ** invGamma) * 255
+                          for i in np.arange(0, 256)]).astype("uint8")
 
 
-    return cv2.LUT(image, table)
+        return cv2.LUT(image, table)
+    except Exception as e:
+        print('Error in preprocessing_methods.gamma')
+        print(e)
+
 
 def resize(frame, parameters=None, call_num=None):
     ''' Resize an image
@@ -504,11 +553,17 @@ def resize(frame, parameters=None, call_num=None):
     Resized frame
 
     '''
-    method_key = get_method_key('resize', call_num=call_num)
-    params = parameters['preprocess'][method_key]
+    try:
+        method_key = get_method_key('resize', call_num=call_num)
+        params = parameters['preprocess'][method_key]
 
-    scale = get_param_val(params['scale'])/100
-    return cv2.resize(frame, scale)
+        scale = get_param_val(params['scale'])/100
+        return cv2.resize(frame, scale)
+    except Exception as e:
+        print('Error in preprocessing_methods.resize')
+        print(e)
+
+
 
 def erosion(frame, parameters=None, call_num=None):
     ''' Morphological erosion
@@ -540,12 +595,15 @@ def erosion(frame, parameters=None, call_num=None):
         Resized frame
 
         '''
+    try:
+        method_key = get_method_key('erosion', call_num=call_num)
+        params = parameters['preprocess'][method_key]
+        kernel = get_param_val(params['erosion_kernel'])
+        iterations = get_param_val(params['iterations'])
 
-    method_key = get_method_key('erosion', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    kernel = get_param_val(params['erosion_kernel'])
-    iterations = get_param_val(params['iterations'])
+        kernel = np.ones((kernel, kernel))
 
-    kernel = np.ones((kernel, kernel))
-
-    return cv2.erode(frame, kernel, iterations=iterations)
+        return cv2.erode(frame, kernel, iterations=iterations)
+    except Exception as e:
+        print('Error in preprocessing_methods.erosion')
+        print(e)

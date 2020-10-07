@@ -18,9 +18,9 @@ from filehandling import BatchProcess
 PACKAGE_DIR = os.path.dirname(__file__)
 TESTDATA_DIR = PACKAGE_DIR+'/testdata/'
 CONTOURS_VID = TESTDATA_DIR + 'contours.mp4'
-CONTOURS_PARAM = TESTDATA_DIR + 'contours_hydrogels.param'
+CONTOURS_PARAM = TESTDATA_DIR + 'contours.param'
 HOUGH_VID = TESTDATA_DIR + 'hough.mp4'
-HOUGH_PARAM = TESTDATA_DIR + 'hough_discs.param'
+HOUGH_PARAM = TESTDATA_DIR + 'hough.param'
 TRACKPY_VID = TESTDATA_DIR + 'trackpy.mp4'
 TRACKPY_PARAM = TESTDATA_DIR + 'trackpy.param'
 
@@ -181,12 +181,14 @@ class MainWindow(QMainWindow):
                     self.viewer.setImage(self.bgr_to_rgb(proc_img))
                 else:
                     self.viewer.setImage(self.bgr_to_rgb(annotated_img))
-            except:
+            except Exception as e:
                 '''
                 This is called to reverse a settings change that was made.
                 Usually the user has asked for an impossible combination 
                 of methods to be applied. See CheckableTabWidgets --> MyListWidget
                 '''
+                print(e)
+
                 # self.toplevel_settings.deactivate_last_added_method()
                 msgBox = QMessageBox.about(self, "Warning",
                                    "Tracking crashed: It is likely "
@@ -321,6 +323,11 @@ class MainWindow(QMainWindow):
         self.tracker.annotate_select = annotate_init_state
 
     def use_part_button_click(self):
+        '''This code only changes appearance of gui and checks
+        to see if .hdf5 data file exists. The commands tracker.process
+        and tracker.process_frame take a keyword use_part which
+        is set by checking toggle status of this button.
+        '''
         if isfile(self.movie_filename[:-4] + '.hdf5'):
             #Greys out / un greys the tabs which are not being used
             for i in range(5):
@@ -334,8 +341,12 @@ class MainWindow(QMainWindow):
 
     def process_button_click(self):
         self.tracker.reset_annotator()
-        self.tracker.process()
-        write_paramdict_file(self.tracker.parameters, self.movie_filename[:-4] + '.param')
+        if self.use_part_button.isChecked():
+            self.tracker.process(use_part=True)
+        else:
+            self.tracker.process()
+
+        write_paramdict_file(self.tracker.parameters, self.movie_filename[:-4] + '_expt.param')
         QMessageBox.about(self, "", "Processing Finished")
         self.reboot()
 

@@ -27,9 +27,15 @@ class DataStore:
 
     def load(self):
         """Load HDFStore"""
-        with pd.HDFStore(self.filename) as store:
-            self.df = store.get('df')
-            self.metadata = store.get_storer('df').attrs.metadata
+        try:
+            with pd.HDFStore(self.filename) as store:
+                self.df = store.get('df')
+                self.metadata = store.get_storer('df').attrs.metadata
+        except Exception as e:
+            print('Error in general.dataframes')
+            print(e)
+            print('Error in DataStore.load')
+
 
     def __enter__(self):
         return self
@@ -150,18 +156,24 @@ class DataStore:
         self.df = self.df.reset_index()
 
     def save(self, filename=None):
-        """Save HDFStore"""
-        self.add_headings_to_metadata()
-        if filename is None:
-            with pd.HDFStore(self.filename) as store:
-                store.put('df', self.df)
-                store.get_storer('df').attrs.metadata = self.metadata
-                store.close()
-        else:
-            with pd.HDFStore(filename) as store:
-                store.put('df', self.df)
-                store.get_storer('df').attrs.metadata = self.metadata
-                store.close()
+        try:
+            """Save HDFStore"""
+            self.add_headings_to_metadata()
+            if filename is None:
+                with pd.HDFStore(self.filename) as store:
+                    store.put('df', self.df)
+                    store.get_storer('df').attrs.metadata = self.metadata
+                    store.close()
+            else:
+                with pd.HDFStore(filename) as store:
+                    store.put('df', self.df)
+                    store.get_storer('df').attrs.metadata = self.metadata
+                    store.close()
+
+        except Exception as e:
+            print('Error in general.dataframes')
+            print(e)
+            print('Error in DataStore.save')
 
     def add_headings_to_metadata(self):
         self.metadata['headings'] = self.headings
