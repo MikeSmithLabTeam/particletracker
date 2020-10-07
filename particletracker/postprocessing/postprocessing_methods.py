@@ -270,6 +270,7 @@ def neighbours(df, f_index=None, parameters=None, call_num=None,):
     method = parameters[method_key]['method']
     df['neighbours'] = np.NaN
     for f in _every_frame(df, f_index):
+        print(f)
         df = df.loc[f]
         if method == 'delaunay':
             df =_find_delaunay(df, parameters=parameters)
