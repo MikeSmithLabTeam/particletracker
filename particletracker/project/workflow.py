@@ -46,7 +46,6 @@ class PTProject(PTWorkflow):
 
     def __init__(self, video_filename=None, param_filename=None):
         #Select operations to be performed'output_name':'x_smooth',
-        print(param_filename)
         PTWorkflow.__init__(self, video_filename=video_filename)
         self.crop_select = True
         self.preprocess_select = True
@@ -57,7 +56,6 @@ class PTProject(PTWorkflow):
         self.param_filename = param_filename
 
         self.parameters = read_paramdict_file(param_filename)
-        print(self.parameters['crop'])
         self._setup()
 
 

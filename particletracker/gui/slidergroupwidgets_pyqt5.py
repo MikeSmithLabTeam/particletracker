@@ -214,7 +214,6 @@ class CollectionButtonLabels(QWidget):
 
         for widget in self.edit_widget_list:
             if method in widget.text():
-                print(str(self.param_dict[method]))
                 widget.setText(method + ':' + str(self.param_dict[method]))
                 active_methods.append(method)
         self.param_dict['crop_method'] = tuple(active_methods)
@@ -271,8 +270,9 @@ class Frame_Range_Box(QWidget):
             value = tuple(values)
             self.param_dict[self.param_name] = value
             self.update_fn()
-        except:
+        except Exception as e:
             print('invalid value')
+            print(e)
 
 
 
@@ -331,8 +331,9 @@ class Text_Box(QWidget):
                 value = self.text_value
             self.param_dict[self.param_name] = value
             self.update_fn()
-        except:
+        except Exception as e:
             print('invalid value')
+            print(e)
 
 class Spinbox_Slider(QWidget):
     """
@@ -404,8 +405,9 @@ class Spinbox_Slider(QWidget):
             self.spinbox_value(param_list[self.method_name][self.param_name][0])
             self.spinbox_increment(param_list[self.method_name][self.param_name][3])
 
-        except:
+        except Exception as e:
             print('Not valid input params')
+            print(e)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton:

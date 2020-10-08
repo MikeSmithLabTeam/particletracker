@@ -53,7 +53,7 @@ class MainWindow(QMainWindow):
             self.main_panel.deleteLater()
             self.main_panel.setParent(None)
         self.open_tracker()
-        self.setWindowTitle("Particle Tracking Gui")
+        self.setWindowTitle("Particle Tracker")
 
         self.main_panel = QWidget()
         self.main_layout = QHBoxLayout()  # Contains view and settings layout
@@ -77,7 +77,6 @@ class MainWindow(QMainWindow):
         # Contains all widgets on rhs.
 
     def setup_menus_toolbar(self):
-
         dir = os.path.abspath(__file__)
         resources_dir = os.path.join(dir[:-11],'gui','icons','icons')
         self.toolbar = QToolBar('Toolbar')
@@ -150,6 +149,7 @@ class MainWindow(QMainWindow):
         self.movie_label = QLabel(self.movie_filename)
         self.settings_label = QLabel(self.settings_filename)
         self.viewer = QtImageViewer()
+        self.intensity_label = QLabel("")
         self.toggle_img = QPushButton("Preprocessed Image")
         self.toggle_img.setCheckable(True)
         self.toggle_img.setChecked(False)
@@ -197,7 +197,13 @@ class MainWindow(QMainWindow):
 
 
     def reset_viewer(self):
-        self.frame_selector.update_params([0, 0, self.tracker.cap.num_frames-1, 1])
+        param_dict = {}
+        param_dict['frame'] = {}
+        param_dict['frame']['frame'] = [self.tracker.cap.frame_range[0],
+                                        self.tracker.cap.frame_range[0],
+                                        self.tracker.cap.frame_range[1] - 1,
+                                        self.tracker.cap.frame_range[2]]
+        self.frame_selector.update_params(param_dict)
         self.movie_label.setText(self.movie_filename)
 
     def select_img_view(self):

@@ -2,13 +2,19 @@ from particletracker.general.dataframes import DataStore
 import numpy as np
 
 if __name__ == '__main__':
-    ds = DataStore('/home/ppzmis/Documents/PythonScripts/particletracker/particletracker/testdata/hough_temp.hdf5',load=True)
+    ds = DataStore('/home/ppzmis/Documents/PythonScripts/particletracker/particletracker/testdata/hough.hdf5',load=True)
     df = ds.df
+    ds2 = DataStore(
+        '/home/ppzmis/Documents/PythonScripts/particletracker/particletracker/testdata/hough_temp.hdf5',
+        load=True)
+    df2 = ds2.df
 
     #Annoyingly the linking code creates an index and a column called frame.
     df.index.name = 'frame_index'
+    #print(np.size(df2['particle']))
 
-    print(np.size(df['particle'].loc[0]))
+    for i in range(df.index.max()):
+        print(np.size(df[df.index == i]['particle']))
 
     #View the data
     print(df) # Print data

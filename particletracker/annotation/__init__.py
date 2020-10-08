@@ -33,6 +33,7 @@ class TrackingAnnotator:
             data_filename = self.data_filename
         else:
             data_filename = self.data_filename[:-5] + '_temp.hdf5'
+
         with dataframes.DataStore(data_filename, load=True) as data:
             if f_index is None:
                 if ('frame_range' in self.parameters['annotate_method']) and (self.parameters['frame_range'] is not None):

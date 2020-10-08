@@ -29,9 +29,9 @@ def text_label(frame, data, f, parameters=None, call_num=None):
         text=parameters[method_key]['text']
         position = parameters[method_key]['position']
         annotated_frame=cv2.putText(frame, text, position, cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                                    parameters[method_key]['font_size'],
+                                    int(parameters[method_key]['font_size']),
                                     parameters[method_key]['font_colour'],
-                                    parameters[method_key]['font_thickness'],
+                                    int(parameters[method_key]['font_thickness']),
                                     cv2.LINE_AA)
 
         return annotated_frame
@@ -62,9 +62,9 @@ def var_label(frame, data, f, parameters=None, call_num=None):
         position = parameters[method_key]['position']
 
         annotated_frame=cv2.putText(frame, text, position, cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                                    parameters[method_key]['font_size'],
+                                    int(parameters[method_key]['font_size']),
                                     parameters[method_key]['font_colour'],
-                                    parameters[method_key]['font_thickness'],
+                                    int(parameters[method_key]['font_thickness']),
                                     cv2.LINE_AA)
 
         return annotated_frame
@@ -95,9 +95,9 @@ def particle_values(frame, data, f, parameters=None, call_num=None):
         for index, particle_val in enumerate(particle_values):
             frame = cv2.putText(frame, str(particle_val), (int(x[index]), int(y[index])),
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                                parameters[method_key]['font_size'],
+                                int(parameters[method_key]['font_size']),
                                 parameters[method_key]['font_colour'],
-                                parameters[method_key]['font_thickness'],
+                                int(parameters[method_key]['font_thickness']),
                                 cv2.LINE_AA)
 
         return frame
@@ -154,7 +154,7 @@ def circles(frame, data, f, parameters=None, call_num=None):
         colours = colour_array(subset_df, f, parameters, method=method_key)
         for i, circle in enumerate(circles):
             try:
-                frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), int(circle[2]), colours[i], thickness)
+                frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), int(circle[2]), colours[i], int(thickness))
             except:
                 print('Failed plotting circle, check data is valid')
         return frame
@@ -176,7 +176,7 @@ def boxes(frame, data, f, parameters=None, call_num=None):
         for index, box in enumerate(box_pts):
             if contour_inside_img(sz, box):
                 frame = _draw_contours(frame, box, col=colours[index],
-                                           thickness=get_param_val(parameters[method_key]['thickness']))
+                                           thickness=int(get_param_val(parameters[method_key]['thickness'])))
         return frame
     except Exception as e:
         print('Error in annotation_methods.boxes')
@@ -207,7 +207,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
 
         for index, contour in enumerate(contour_pts):
            frame = _draw_contours(frame, contour, col=colours[index],
-                                           thickness=thickness)
+                                           thickness=int(thickness))
         return frame
     except Exception as e:
         print('Error in annotation_methods.contours')
@@ -229,7 +229,7 @@ def _draw_contours(img, contours, col=(0,0,255), thickness=1):
             img = cv2.drawContours(img, contours, -1, col, thickness)
         else:
             for i, contour in enumerate(contours):
-                img = cv2.drawContours(img, contour, -1, col[i], thickness)
+                img = cv2.drawContours(img, contour, -1, col[i], int(thickness))
         return img
     except Exception as e:
         print('Error in annotation methods._draw_contours')
@@ -254,7 +254,7 @@ def networks(frame, data, f, parameters=None, call_num=None):
             for index2, neighbour in enumerate(neighbour_ids):
                 pt = df.loc[neighbour, ['x','y']].values
                 pt2 = (int(pt[0]), int(pt[1]))
-                frame = cv2.line(frame,pt1, pt2, colours[index], thickness, lineType=cv2.LINE_AA)
+                frame = cv2.line(frame,pt1, pt2, colours[index], int(thickness), lineType=cv2.LINE_AA)
     except Exception as e:
         print('Error in annotation_methods.networks')
         print(e)
@@ -286,7 +286,7 @@ def vectors(frame, data, f, parameters=None, call_num=None):
         for i, vector in enumerate(vectors):
             frame = cv2.arrowedLine(frame, (int(vector[0]), int(vector[1])),
                                     (int(vector[0]+vector[2]*vector_scale),int(vector[1]+vector[3]*vector_scale)),
-                                    color=colours[i], thickness=thickness,line_type=line_type,shift=0,tipLength=tipLength)
+                                    color=colours[i], thickness=int(thickness),line_type=line_type,shift=0,tipLength=tipLength)
         return frame
     except Exception as e:
         print('Error in annotation_methods.vectors')
@@ -320,7 +320,7 @@ def trajectories(frame, data, f, parameters=None, call_num=None):
         for index, particle in enumerate(particle_ids):
             traj_pts = df3[[x_col_name,y_col_name]].loc[particle]
             traj_pts = np.array(traj_pts.values, np.int32).reshape((-1,1,2))
-            frame = cv2.polylines(frame,[traj_pts],False,colours[index],thickness)
+            frame = cv2.polylines(frame,[traj_pts],False,colours[index],int(thickness))
         return frame
     except Exception as e:
         print('Error in annotation_methods.trajectories')

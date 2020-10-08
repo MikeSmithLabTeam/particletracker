@@ -2,7 +2,6 @@ from ..general import dataframes
 from ..general.parameters import  get_param_val
 import trackpy
 import numpy as np
-import pandas as pd
 
 class LinkTrajectory:
     def __init__(self, data_filename=None, parameters=None):

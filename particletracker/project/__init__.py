@@ -67,6 +67,7 @@ class PTWorkflow:
             link = True etc
         :return:
         """
+        print('start process')
         if not use_part:
             if self.track_select:
                 self.pt.track()

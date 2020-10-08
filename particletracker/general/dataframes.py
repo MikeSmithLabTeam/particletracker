@@ -201,13 +201,3 @@ def concatenate_datastore(datastore_list, new_filename):
     DS_out.save()
 
 
-if __name__ == "__main__":
-    from Generic import filedialogs
-
-    file = filedialogs.load_filename()
-    DS = DataStore(file)
-    print(DS.df.head())
-    print(DS.df.tail())
-    print(DS.metadata)
-    print(DS.df.dtypes)
-
