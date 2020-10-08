@@ -18,6 +18,7 @@ setuptools.setup(
         'tqdm',
         'pandas',
         'trackpy',
+        'tables',
         'labvision @ git+https://github.com/MikeSmithLabTeam/labvision',
         'filehandling @ git+https://github.com/MikeSmithLabTeam/filehandling'
     ],
