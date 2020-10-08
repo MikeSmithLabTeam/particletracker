@@ -149,7 +149,6 @@ class MainWindow(QMainWindow):
         self.movie_label = QLabel(self.movie_filename)
         self.settings_label = QLabel(self.settings_filename)
         self.viewer = QtImageViewer()
-        self.intensity_label = QLabel("")
         self.toggle_img = QPushButton("Preprocessed Image")
         self.toggle_img.setCheckable(True)
         self.toggle_img.setChecked(False)

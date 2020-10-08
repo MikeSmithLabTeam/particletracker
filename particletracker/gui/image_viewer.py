@@ -99,6 +99,7 @@ class QtImageViewer(QGraphicsView):
         Raises a RuntimeError if the input image has type other than QImage or QPixmap.
         :type image: QImage | QPixmap
         """
+        self.image=image
         if type(image) is QPixmap:
             pixmap = image
         elif type(image) is QImage:
@@ -140,6 +141,12 @@ class QtImageViewer(QGraphicsView):
             if self.canPan:
                 self.setDragMode(QGraphicsView.ScrollHandDrag)
             self.leftMouseButtonPressed.emit(scenePos.x(), scenePos.y())
+            print('Pixel Coords:')
+            print('(' +str(scenePos.x())+','+str(scenePos.y())+')')
+            print('Pixel Intensities:')
+            print(self.image[int(scenePos.y()),int(scenePos.x()),:])
+            print('\n')
+
         elif event.button() == Qt.RightButton:
             if self.canZoom:
                 self.setDragMode(QGraphicsView.RubberBandDrag)
