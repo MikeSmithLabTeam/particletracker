@@ -19,10 +19,13 @@ PACKAGE_DIR = os.path.dirname(__file__)
 TESTDATA_DIR = PACKAGE_DIR+'/testdata/'
 CONTOURS_VID = TESTDATA_DIR + 'contours.mp4'
 CONTOURS_PARAM = TESTDATA_DIR + 'contours.param'
+BOXES_VID = TESTDATA_DIR + 'boxes.mp4'
+BOXES_PARAM = TESTDATA_DIR + 'boxes.param'
 HOUGH_VID = TESTDATA_DIR + 'hough.mp4'
 HOUGH_PARAM = TESTDATA_DIR + 'hough.param'
 TRACKPY_VID = TESTDATA_DIR + 'trackpy.mp4'
 TRACKPY_PARAM = TESTDATA_DIR + 'trackpy.param'
+DEFAULT_PARAM = TESTDATA_DIR + 'default.param'
 
 __all__ = ['CONTOURS_VID', 'CONTOURS_PARAM', 'HOUGH_PARAM', 'HOUGH_VID', 'TRACKPY_VID', 'TRACKPY_PARAM']
 

@@ -4,7 +4,7 @@ def create_param_file(filename):
     experiment = {'experiment_method':('video_filename','sample', 'fps'),
                   'video_filename':None,
                   'bkg_img':None,#None gives default of video_filename[:-4] + '_bkgimg.png'
-                  'sample':'Normal Bacteria + 500nm colloids in buffer just bright',
+                  'sample':'Sample',
                   'fps':30,
                   'metadata':None
                   }
@@ -53,29 +53,27 @@ def create_param_file(filename):
                   'p2':[39, 1, 201,2],
                   'min_rad':[10, 1, 301,2],
                   'max_rad':[50, 1, 301,2],
-                 'get_intensities':True
+                 'get_intensities':False
                  },
         'contours':{'noise_cutoff':[2,1,50,1],
                     'area_min':[20, 1, 2000, 1],
                     'area_max':[2000, 1, 20000, 1],
                     'aspect':[1,1,20,1],
-                    'get_intensities':True
+                    'get_intensities':False
                     },
         'boxes':{'noise_cutoff':[2,1,50,1],
                     'area_min':[2, 1, 2000, 1],
                     'area_max':[2000, 1, 20000, 1],
                     'aspect':[1,1,20,1],
-                    'get_intensities':True
+                    'get_intensities':False
                  },
         }
 
     link = {
         'link_method':('default',),
-        'default':{ 'pos_columns':None,
-                    'max_frame_displacement': [10,1,1000,1],
+        'default':{ 'max_frame_displacement': [10,1,1000,1],
                     'memory': [3,1,30,1],
                     'min_frame_life': [10,1,100,1]
-                    #
                     }
         }
 
@@ -96,15 +94,12 @@ def create_param_file(filename):
         },
         'median':{'column_name':'r_diff',
                     'output_name':'median_r',},
-
         'max':{'column_name':'r_diff',
                'output_name':'max_r',},
-
         'classify':{'column_name':'max_r',
                     'output_name':'classifier',
                     'value':[18, 1, 100, 1]
                     },
-
         'angle':{'column_names':('x','y'),
                  'output_name':'theta',
                  'units':'degrees'
@@ -115,12 +110,7 @@ def create_param_file(filename):
                 'fps':50.0,
                 'method':'finite_difference'
                   },
-        'rate*2':{'column_name':'y',
-                'output_name':'vy',
-                'fps':50.0,
-                'method':'finite_difference'
-                  },
-        'neighbours':{'method':'delaunay',
+        'neighbours':{'method':'delaunay',#kdtree
                       'neighbours':6,
                       'cutoff':[50,1,200,1],
                     }
@@ -130,7 +120,7 @@ def create_param_file(filename):
     annotate = {
         'annotate_method': ('circles',),
         'videowriter':'opencv',#ffmpeg
-        'frame_range':(0,10),#(start,stop) frame numbers
+        'frame_range':None,#(start,stop) frame numbers
         'text_label':{'text':'BP1',
                      'position':(100,100),
                      'font_colour':(255,0,0),
@@ -146,9 +136,9 @@ def create_param_file(filename):
         'particle_values': {'values_column': 'particle',
                             'font_colour': (255, 0, 255),
                             'font_size': 1,
-                            'font_thickness': 1
+                            'font_thickness': 2
                             },
-        'circles':{'radius':[6,1,1000,1],
+        'circles':{'radius':[6,1,1000,1],#This is overridden in Hough Circles
                    'cmap_type':'static',#'continuous',
                    'cmap_column':'x',#For continuous
                    'cmap_max':[470,1,2000,1],#For continuous
@@ -158,28 +148,30 @@ def create_param_file(filename):
                    'classifier': 1,#For discrete or continuous
                    'thickness':2
                    },
-        'boxes':{  'cmap_type':'continuous',
+        'boxes':{  'cmap_type':'continuous',#static
                    'cmap_column':'x',  #None
                    'cmap_max':[1,1,2000,1],
                    'cmap_scale':1,
+                   'colour': (0, 255, 0),  # For static
                    'thickness':2,
                    'classifier_column': None,  # For discrete or continuous
                    },
-        'contours':{'radius':[6,1,1000,1],
-                   'cmap_type':'static',#'continuous',
+        'contours':{'cmap_type':'static',#'continuous',
                    'cmap_column':'x',#For continuous
                    'cmap_max':[470,1,2000,1],#For continuous
                    'cmap_scale':1,
                    'colour': (0,255,0),#For static
                    'classifier_column': None,#For discrete or continuous
-                   'classifier': 1,#For discrete or continuous
+                   'classifier': None,#For discrete or continuous
                    'thickness':2
                    },
-        'networks':{'classifier_column':None,
+        'networks':{
                     'cmap_type':'static',#'continuous',
                     'cmap_column':'x',#For continuous                      'classifier': 1,#For discrete or continuous
                     'cmap_max':[470,1,2000,1],#For continuous              thickness':2
                     'cmap_scale':1,
+                    'classifier_column': None,
+                    'classifier': None,
                     'colour': (0,255,0),#For static
                     'thickness':2
                     },
@@ -207,8 +199,8 @@ def create_param_file(filename):
                     'cmap_scale':1,
                     'colour': (64,224,208),#For static
                     'classifier_column':'classifier',#For discrete or continuous
-                    'classifier': 1,#For discrete or continuous
-                    'thickness':1
+                    'classifier': None,#For discrete or continuous
+                    'thickness':2
                    },
         }
 
@@ -223,4 +215,5 @@ def create_param_file(filename):
         }
 
     write_paramdict_file(PARAMETERS, filename)
+
 
