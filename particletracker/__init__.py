@@ -388,7 +388,7 @@ def track_gui(movie=None, settings=None):
 
 
 
-def track_batchprocess(filefilter, paramfile, crop=True, preprocess=True, track=True, link=True, postprocess=True,
+def track_batchprocess(moviefilter, settings, crop=True, preprocess=True, track=True, link=True, postprocess=True,
                  annotate=True):
     '''
 
@@ -404,8 +404,8 @@ def track_batchprocess(filefilter, paramfile, crop=True, preprocess=True, track=
 
     '''
 
-    for filename in BatchProcess(filefilter):
-        track = PTProject(video_filename=filename, param_filename=paramfile)
+    for filename in BatchProcess(moviefilter):
+        track = PTProject(video_filename=filename, param_filename=settings)
         track.crop_select = crop
         track.preprocess_select = preprocess
         track.track_select = track
