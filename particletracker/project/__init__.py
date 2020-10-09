@@ -31,7 +31,7 @@ class PTWorkflow:
         self.parameters['experiment']['video_filename'] = self.video_filename
         self._create_processes()
 
-    def _create_processes(self):
+    def _create_processes(self, n=0):
         self.cap = ReadCropVideo(parameters=self.parameters['crop'],
                                  filename=self.video_filename,
                                  )
@@ -48,7 +48,7 @@ class PTWorkflow:
         self.an = annotation.TrackingAnnotator(vidobject=self.cap,
                                                data_filename=self.data_filename,
                                                parameters=self.parameters[
-                                                   'annotate'], frame=self.cap.read_frame())
+                                                   'annotate'], frame=self.cap.read_frame(n=n))
         self.frame = self.cap.read_frame()
 
     def reset_annotator(self):
