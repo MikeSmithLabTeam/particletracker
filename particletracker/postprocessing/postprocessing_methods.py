@@ -290,24 +290,24 @@ def logic_NOT(data, f_index=None, parameters=None, call_num=None):
         output_name = parameters[method_key]['output_name']
         data[output_name] = ~data[column]
     except Exception as e:
-        print('Error in postprocessing_methods.logic_combine')
+        print('Error in postprocessing_methods.logic_NOT')
         print(e)
 
 def logic_AND(data, f_index=None, parameters=None, call_num=None):
     try:
-        method_key = get_method_key('logic_combine', call_num)
+        method_key = get_method_key('logic_AND', call_num)
         column1 = parameters[method_key]['column_name']
         column2 = parameters[method_key]['column_name2']
         output_name = parameters[method_key]['output_name']
         data[output_name] = data[column1] * data[column2]
     except Exception as e:
-        print('Error in postprocessing_methods.logic_combine')
+        print('Error in postprocessing_methods.logic_AND')
         print(e)
 
 
 def logic_OR(data, f_index=None, parameters=None, call_num=None):
     try:
-        method_key = get_method_key('logic_combine', call_num)
+        method_key = get_method_key('logic_OR', call_num)
         column1 = parameters[method_key]['column_name']
         column2 = parameters[method_key]['column_name2']
 
