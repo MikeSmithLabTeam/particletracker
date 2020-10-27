@@ -98,13 +98,17 @@ def create_param_file(filename):
                'output_name':'max_r',},
         'classify':{'column_name':'max_r',
                     'output_name':'classifier',
-                    'value':[18, 1, 100, 1]
+                    'lower_threshold':[1, 1, 100, 1],
+                    'upper_threshold':[2000, 1, 2000, 1]
                     },
+        'classify_most':{'column_name':'classifier',
+                         'output_name':'output'},
         'angle':{'column_names':('x','y'),
                  'output_name':'theta',
                  'units':'degrees'
 
         },
+        'contour_area': {'output_name':'area'},
         'rate':{'column_name':'x',
                 'output_name':'vx',
                 'fps':50.0,

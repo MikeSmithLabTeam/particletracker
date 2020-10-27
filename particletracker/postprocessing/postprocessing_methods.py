@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.spatial as sp
 import trackpy as tp
+import cv2
 
 from ..general.parameters import get_method_key, get_param_val
 '''
@@ -145,6 +146,27 @@ def angle(data, f_index=None, parameters=None, call_num=None):
         print('Error in postprocessing_methods.angle')
         print(e)
 
+def contour_area(data, f_index=None, parameters=None, call_num=None):
+    '''
+    Designed to work with contours and boxes
+    '''
+    try:
+        method_key = get_method_key('contour_area', call_num)
+        output_name = parameters[method_key]['output_name']
+        contours = data['contours'].tolist()
+        areas = []
+        for contour in contours:
+            areas.append(cv2.contourArea(contour))
+
+        data[output_name] = np.array(areas)
+        return data
+    except Exception as e:
+        print('Error in postprocessing_methods.contour_area')
+        print(e)
+
+
+
+
 def mean(data, f_index=None, parameters=None, call_num=None):
     ''' Mean of a columns values
 
@@ -215,25 +237,38 @@ def max(data, f_index=None, parameters=None, call_num=None):
         print(e)
 
 
-def _classify_fn(x, threshold_value=None):
+def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
     ''' classify
 
         Notes
         -----
 
-        Returns the median of a particle's trajectory values to a new
-        column. The value is repeated next to all entries for that trajectory
-
-        :return: dataframe with new column defined in output_name of parameters
-
         '''
     try:
-        if x < threshold_value:
-            return 1
+        if (x > lower_threshold_value) and (x < upper_threshold_value):
+            return True
         else:
-            return 2
+            return False
     except Exception as e:
         print('Error in postprocessing_methods._classify_fn')
+        print(e)
+
+def classify_most(data, f_index=None, parameters=None, call_num=None):
+    '''
+    Takes a columns of boolean values for each particle and returns a column which takes
+    the most common value. ie True, True, False, True, True becomes True, True, True, True, True.
+    '''
+    try:
+        method_key = get_method_key('classify_most', call_num)
+        column = parameters[method_key]['column_name']
+        output_name=parameters[method_key]['output_name']
+        temp=data.groupby('particle')[column].transform('median')
+        data[output_name] = temp
+        print('classify_most')
+        print(temp)
+        return data
+    except Exception as e:
+        print('Error in postprocessing_methods.classify_most')
         print(e)
 
 def classify(data, f_index=None, parameters=None, call_num=None):
@@ -241,12 +276,15 @@ def classify(data, f_index=None, parameters=None, call_num=None):
         method_key = get_method_key('classify', call_num)
         column = parameters[method_key]['column_name']
         output_name=parameters[method_key]['output_name']
-        threshold_value = get_param_val(parameters[method_key]['value'])
-        data[output_name] = data[column].apply(_classify_fn, threshold_value=threshold_value)
+        lower_threshold_value = get_param_val(parameters[method_key]['lower_threshold'])
+        upper_threshold_value = get_param_val(parameters[method_key]['upper_threshold'])
+        data[output_name] = data[column].apply(_classify_fn, lower_threshold_value=lower_threshold_value, upper_threshold_value=upper_threshold_value)
         return data
     except Exception as e:
         print('Error in postprocessing_methods.classify')
         print(e)
+
+
 
 def subtract_drift(data, f_index=None, parameters=None, call_num=None):
     ''' subtract drift from an x,y coordinate trajectory
@@ -359,4 +397,18 @@ def _find_delaunay(df, parameters=None, call_num=None):
 
     except Exception as e:
         print('Error in postprocessing_methods.delaunay')
+        print(e)
+
+def _get_class_subset(data, f, parameters, method=None):
+    try:
+        classifier_column= parameters[method]['classifier_column']
+        if classifier_column is None:
+            subset_df = data.df.loc[f]
+        else:
+            classifier = parameters[method]['classifier']
+            temp = data.df.loc[f]
+            subset_df = temp[temp[classifier_column] == classifier]
+        return subset_df
+    except Exception as e:
+        print('Error in annotation_methods.get_class_subset')
         print(e)

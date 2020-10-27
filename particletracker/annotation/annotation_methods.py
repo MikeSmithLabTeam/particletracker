@@ -86,6 +86,7 @@ def particle_values(frame, data, f, parameters=None, call_num=None):
     :return: annotated frame
     '''
     try:
+
         method_key = get_method_key('particle_values', call_num=None)
         x = data.get_info(f, 'x')
         y = data.get_info(f, 'y')
