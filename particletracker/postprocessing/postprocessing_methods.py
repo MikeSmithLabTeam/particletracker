@@ -264,8 +264,6 @@ def classify_most(data, f_index=None, parameters=None, call_num=None):
         output_name=parameters[method_key]['output_name']
         temp=data.groupby('particle')[column].transform('median')
         data[output_name] = temp
-        print('classify_most')
-        print(temp)
         return data
     except Exception as e:
         print('Error in postprocessing_methods.classify_most')
