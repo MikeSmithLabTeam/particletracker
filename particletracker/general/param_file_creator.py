@@ -148,13 +148,14 @@ def create_param_file(filename):
                    'classifier': 1,#For discrete or continuous
                    'thickness':2
                    },
-        'boxes':{  'cmap_type':'continuous',#static
+        'boxes':{  'cmap_type':'static',#static
                    'cmap_column':'x',  #None
                    'cmap_max':[1,1,2000,1],
                    'cmap_scale':1,
                    'colour': (0, 255, 0),  # For static
-                   'thickness':2,
                    'classifier_column': None,  # For discrete or continuous
+                   'classifier':1,
+                   'thickness': 2
                    },
         'contours':{'cmap_type':'static',#'continuous',
                    'cmap_column':'x',#For continuous
