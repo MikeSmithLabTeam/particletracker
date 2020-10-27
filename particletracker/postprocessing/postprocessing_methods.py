@@ -106,13 +106,10 @@ def magnitude(data, f_index=None, parameters=None, call_num=None):
     '''
     try:
         method_key=get_method_key('magnitude', call_num)
-        columns = parameters[method_key]['column_names']
+        column = parameters[method_key]['column_name']
+        column2 = parameters[method_key]['column_name2']
         output_name = parameters[method_key]['output_name']
-        column_data=data[[columns[0],columns[1]]]
-        if np.size(columns) == 2:
-            data[output_name] = (column_data[columns[0]]**2 + column_data[columns[1]]**2)**0.5
-        elif np.size(columns) == 3:
-            data[output_name] = (column_data[columns[0]]**2 + column_data[columns[1]]**2 + column_data[columns[2]]**2)**0.5
+        data[output_name] = (data[column]**2 + data[column2]**2)**0.5
         return data
     except Exception as e:
         print('Error in postprocessing_methods.magnitude')
