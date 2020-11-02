@@ -29,7 +29,6 @@ class Collect_SB_Slider(QWidget):
 
             #Edit Text boxes inside dictionaries
             if isinstance(param_dict[method], dict):
-                print('dict')
                 for method_param in list(param_dict[method].keys()):
                     if isinstance(param_dict[method][method_param], str) \
                             or isinstance(param_dict[method][method_param], int) \
@@ -45,7 +44,6 @@ class Collect_SB_Slider(QWidget):
                     or isinstance(param_dict[method], float)\
                     or isinstance(param_dict[method], tuple)\
                     or isinstance(param_dict[method], type(None)):
-                print('top')
                 vbox.addWidget(Text_Box(None, method, param_dict, update_viewer_fn))#
                 widget_count += 1
 
