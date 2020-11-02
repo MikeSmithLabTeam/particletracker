@@ -146,7 +146,7 @@ class MyListWidget(QListWidget):
 
             for method in self.param_dict[self.title][self.title + '_method']:
                 if (method not in param_dict_keys):
-                    self.param_dict[self.title][method] = self.param_dict[self.title][method.split('*')[0]]
+                    self.param_dict[self.title][method] = self.param_dict[self.title][method.split('*')[0]].copy()
         else:
             self.param_dict[self.title][self.title + '_method'] = tuple(self.method_list)
 

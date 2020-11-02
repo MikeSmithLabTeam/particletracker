@@ -29,13 +29,14 @@ class Collect_SB_Slider(QWidget):
 
             #Edit Text boxes inside dictionaries
             if isinstance(param_dict[method], dict):
+                print('dict')
                 for method_param in list(param_dict[method].keys()):
                     if isinstance(param_dict[method][method_param], str) \
                             or isinstance(param_dict[method][method_param], int) \
                             or isinstance(param_dict[method][method_param], float)\
                             or isinstance(param_dict[method][method_param], tuple)\
                             or isinstance(param_dict[method][method_param], type(None)):
-                        vbox.addWidget(Text_Box(method_param, param_dict[method], update_viewer_fn))
+                        vbox.addWidget(Text_Box(method_param,method, param_dict, update_viewer_fn))
                         widget_count += 1
 
             # Edit Text boxes as top level entries
@@ -44,7 +45,8 @@ class Collect_SB_Slider(QWidget):
                     or isinstance(param_dict[method], float)\
                     or isinstance(param_dict[method], tuple)\
                     or isinstance(param_dict[method], type(None)):
-                vbox.addWidget(Text_Box(method, param_dict, update_viewer_fn))#
+                print('top')
+                vbox.addWidget(Text_Box(None, method, param_dict, update_viewer_fn))#
                 widget_count += 1
 
             if widget_count > 0:
@@ -279,11 +281,15 @@ class Frame_Range_Box(QWidget):
 
 class Text_Box(QWidget):
 
-    def __init__(self, param_name, param_dict, update_fn, *args, **kwargs):
+    def __init__(self, param_name, method_name, param_dict, update_fn, *args, **kwargs):
         self.update_fn = update_fn
         self.param_dict = param_dict
+        self.method_name=method_name
         self.param_name = param_name
-        text = param_dict[param_name]
+        if param_name is None:
+            text = param_dict[method_name]
+        else:
+            text = param_dict[method_name][param_name]
         self.datatype = type(text)
         super(Text_Box, self).__init__(*args, **kwargs)
         layout = QHBoxLayout()
@@ -329,7 +335,14 @@ class Text_Box(QWidget):
             else:
                 #If datatype is None should be picked up by this.
                 value = self.text_value
-            self.param_dict[self.param_name] = value
+            if self.param_name is None:
+                self.param_dict[self.method_name] = value
+                print(self.method_name)
+                print(self.param_dict[self.method_name])
+            else:
+                self.param_dict[self.method_name][self.param_name] = value
+            print(self.method_name)
+            print(self.param_dict[self.method_name][self.param_name])
             self.update_fn()
         except Exception as e:
             print('invalid value')
