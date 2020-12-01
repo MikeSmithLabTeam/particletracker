@@ -89,7 +89,8 @@ def create_param_file(filename):
                       'output_name':'x_diff',
                       'span':[10,1,50,1]
                       },
-        'magnitude':{'column_names':('x_diff','y_diff'),
+        'magnitude':{'column_name':'x_diff',
+                     'column_name2':'y_diff',
                      'output_name':'r_diff'
         },
         'median':{'column_name':'r_diff',
