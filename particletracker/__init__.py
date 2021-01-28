@@ -3,7 +3,7 @@ import sys
 
 from .project.workflow import PTProject
 from filehandling import BatchProcess
-from toplevel import MainWindow
+from .toplevel import MainWindow
 
 def track_gui(movie=None, settings=None):
     '''

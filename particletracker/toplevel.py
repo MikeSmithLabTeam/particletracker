@@ -10,10 +10,10 @@ import sys
 
 from .gui.image_viewer import QtImageViewer
 from .project.workflow import PTProject
-from .gui.slidergroupwidgets_pyqt5 import Spinbox_Slider
 from .gui.checked_tab_widget import CheckableTabWidget
 from .general.writeread_param_dict import write_paramdict_file
-
+from .general.imageformat import bgr_to_rgb
+from qtwidgets.sliders import QCustomSlider
 
 PACKAGE_DIR = os.path.dirname(__file__)
 TESTDATA_DIR = PACKAGE_DIR+'/testdata/'
@@ -35,19 +35,15 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__(*args, **kwargs)
         EXIT_CODE_REBOOT = -123
 
-        if movie_filename is None:
-            self.movie_filename = None
-        elif isfile(movie_filename):
+        if isfile(movie_filename):
             self.movie_filename = str(Path(movie_filename))
         else:
             self.movie_filename = None
 
-        if settings_filename is None:
-            self.settings_filename = None
-        elif isfile(settings_filename):
+        if isfile(settings_filename):
             self.settings_filename = str(Path(settings_filename))
         else:
-            self.settings_filename = None
+            self.movie_filename = None
 
         self.reboot()
 
@@ -56,13 +52,12 @@ class MainWindow(QMainWindow):
             self.main_panel.deleteLater()
             self.main_panel.setParent(None)
         self.open_tracker()
-        self.setWindowTitle("Particle Tracker")
 
+        self.setWindowTitle("Particle Tracker")
         self.main_panel = QWidget()
         self.main_layout = QHBoxLayout()  # Contains view and settings layout
         self.view_layout = QVBoxLayout()  # Contains image, image toggle button and frame slider
         self.settings_layout = QVBoxLayout()  # Contains tab widget with all tracking controls
-        # Qt namespace has a lot of attributes for widgets: http://doc.qt.io/qt-5/qt.html
         self.init_ui(self.view_layout, self.settings_layout)
         self.main_layout.addLayout(self.view_layout)
         self.main_layout.addLayout(self.settings_layout)
@@ -70,14 +65,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.main_panel)
         self.showMaximized()
 
-
     def init_ui(self, view_layout, settings_layout, reboot=True):
         if not hasattr(self, 'file_menu'):
             self.setup_menus_toolbar()
-
         self.setup_viewer(view_layout)# Contains image window, frame slider and spinbox.
-        self.setup_settings_panel(settings_layout)
-        # Contains all widgets on rhs.
+        self.setup_settings_panel(settings_layout)# Contains all widgets on rhs.
 
     def setup_menus_toolbar(self):
         dir = os.path.abspath(__file__)
@@ -85,6 +77,12 @@ class MainWindow(QMainWindow):
         self.toolbar = QToolBar('Toolbar')
         self.toolbar.setIconSize(QSize(16,16))
         self.addToolBar(self.toolbar)
+
+        '''
+        ---------------------------------------------------------------------------------------------------
+        Buttons on toolbar
+        ---------------------------------------------------------------------------------------------------
+        '''
         open_movie_button = QAction(QIcon(os.path.join(resources_dir,"folder-open-film.png")), "Open File", self)
         open_movie_button.setStatusTip("Open Movie or Img Sequence")
         open_movie_button.triggered.connect(self.open_movie_click)
@@ -134,6 +132,11 @@ class MainWindow(QMainWindow):
         self.setStatusBar(statusbar)
         menu = self.menuBar()
 
+        '''
+        ---------------------------------------------------------------------------------------------
+        File menu items
+        ---------------------------------------------------------------------------------------------
+        '''
         self.file_menu = menu.addMenu("&File")
         self.file_menu.addAction(open_movie_button)
         self.file_menu.addAction(open_settings_button)
@@ -148,6 +151,9 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(close_button)
 
     def setup_viewer(self, view_layout):
+        '''
+        Viewer is the LHS of gui containing window, frame_slider etc
+        '''
         self.viewer_is_setup = True
         self.movie_label = QLabel(self.movie_filename)
         self.settings_label = QLabel(self.settings_filename)
@@ -156,20 +162,47 @@ class MainWindow(QMainWindow):
         self.toggle_img.setCheckable(True)
         self.toggle_img.setChecked(False)
         self.toggle_img.clicked.connect(self.select_img_view)
-        param_dict = {}
-        param_dict['frame']={}
-        param_dict['frame']['frame']=[self.tracker.cap.frame_range[0], self.tracker.cap.frame_range[0], self.tracker.cap.frame_range[1]-1, self.tracker.cap.frame_range[2]]
-        self.frame_selector = Spinbox_Slider('frame','frame',param_dict,update_viewer_fn=self.update_viewer)
-        self.update_viewer()
+        self.frame_selector = QCustomSlider(title='Frame',
+                                            min_=self.tracker.cap.frame_range[0],
+                                            max_=self.tracker.cap.frame_range[1]-1,
+                                            step_=1,
+                                            value_=self.tracker.cap.frame_range[0],
+                                            spinbox=True,
+                                            )
+        self.frame_selector.valueChanged.connect(self.frame_selector_slot)
+        #self.update_viewer()
         view_layout.addWidget(self.movie_label)
         view_layout.addWidget(self.settings_label)
         view_layout.addWidget(self.viewer)
         view_layout.addWidget(self.toggle_img)
         view_layout.addWidget(self.frame_selector)
 
+    '''
+    -------------------------------------------------------------------
+    Settings panel is the rhs of gui containing all the param adjustors
+    -------------------------------------------------------------------
+    '''
+    def setup_settings_panel(self, settings_layout):
+        self.toplevel_settings = CheckableTabWidget(self.tracker, self.update_viewer, self.viewer, reboot=self.reboot)
+        settings_layout.addWidget(self.toplevel_settings)
+
+    """
+    ---------------------------------------------------------------         
+    ------------------------------------------------------------------
+    Callback functions
+    ------------------------------------------------------------------
+    ----------------------------------------------------------------
+    """
+
+    @pyqtSlot(int)
+    def frame_selector_slot(self, value):
+        sender = self.sender()
+        print(sender.title)
+        self.update_viewer()
+
     def update_viewer(self):
         if self.live_update_button.isChecked():
-            frame_number = self.frame_selector.param_list['frame']['frame'][0]
+            frame_number = self.frame_selector.value()
             try:
                 #Check dictionary is updated.
 
@@ -180,9 +213,9 @@ class MainWindow(QMainWindow):
 
                 toggle = self.toggle_img.isChecked()
                 if toggle:
-                    self.viewer.setImage(self.bgr_to_rgb(proc_img))
+                    self.viewer.setImage(bgr_to_rgb(proc_img))
                 else:
-                    self.viewer.setImage(self.bgr_to_rgb(annotated_img))
+                    self.viewer.setImage(bgr_to_rgb(annotated_img))
             except Exception as e:
                 '''
                 This is called to reverse a settings change that was made.
@@ -199,13 +232,17 @@ class MainWindow(QMainWindow):
 
 
     def reset_viewer(self):
-        param_dict = {}
-        param_dict['frame'] = {}
-        param_dict['frame']['frame'] = [self.tracker.cap.frame_range[0],
-                                        self.tracker.cap.frame_range[0],
-                                        self.tracker.cap.frame_range[1] - 1,
-                                        self.tracker.cap.frame_range[2]]
-        self.frame_selector.update_params(param_dict)
+        #param_dict = {}
+        #param_dict['frame'] = {}
+        #param_dict['frame']['frame'] = [self.tracker.cap.frame_range[0],
+        #                                self.tracker.cap.frame_range[0],
+        #                                self.tracker.cap.frame_range[1] - 1,
+        #                                self.tracker.cap.frame_range[2]]
+        #self.frame_selector.update_params(param_dict)
+        self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],
+                                           max_=self.tracker.cap.frame_range[1] - 1,
+                                           step_=1,
+                                           )
         self.movie_label.setText(self.movie_filename)
 
     def select_img_view(self):
@@ -215,23 +252,6 @@ class MainWindow(QMainWindow):
             self.toggle_img.setText("Captured Image")
         self.update_viewer()
 
-    def bgr_to_rgb(self, img):
-        '''BGR or RGB that is the question. Opencv
-        and PyQT have a different answer so convert
-        the opencv images prior to sending to
-        PyQT so that gui and exported things look
-        the same.'''
-        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    def setup_settings_panel(self, settings_layout):
-        self.toplevel_settings = CheckableTabWidget(self.tracker, self.update_viewer, self.viewer, reboot=self.reboot)
-        settings_layout.addWidget(self.toplevel_settings)
-
-    """---------------------------------------------------------------         
-    ------------------------------------------------------------------
-    Callback functions
-    ------------------------------------------------------------------
-    ----------------------------------------------------------------"""
     def open_tracker(self):
         if self.movie_filename is None:
             ok = False
@@ -286,7 +306,6 @@ class MainWindow(QMainWindow):
             return True
         else:
             return False
-
 
     def open_settings_button_click(self):
         try:

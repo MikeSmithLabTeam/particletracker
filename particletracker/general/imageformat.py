@@ -44,3 +44,11 @@ def hstack(*args):
     else:
         ims = [grayscale_2_bgr(im) for im in args]
         return np.hstack(ims)
+
+def bgr_to_rgb(img):
+    '''BGR or RGB that is the question. Opencv
+    and PyQT have a different answer so convert
+    the opencv images prior to sending to
+    PyQT so that gui and exported things look
+    the same.'''
+    return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
