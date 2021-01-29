@@ -2,16 +2,16 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from ..gui.crop_mask import SelectAreaWidget
+from qtwidgets import QCustomSlider, QCustomTextBox, SelectAreaWidget
+from ..gui.pyqt5_widgets import QModCustomTextBox
 
-
-class Collect_SB_Slider(QWidget):
-    def __init__(self, param_dict, methods, update_viewer_fn, *args, win=None, **kwargs):
-        super(Collect_SB_Slider, self).__init__(*args, **kwargs)
+class CollectionParamAdjustors(QWidget):
+    def __init__(self, param_dict, title, methods, param_change, *args, win=None, **kwargs):
+        super(CollectionParamAdjustors, self).__init__(*args, **kwargs)
         self.widget_list = []
-        self.build_widgets(param_dict, methods, update_viewer_fn)
+        self.build_widgets(param_dict, title, methods, param_change)
 
-    def build_widgets(self, param_dict, methods, update_viewer_fn):
+    def build_widgets(self, param_dict, title, methods, param_change):
         #Layout containing all groupboxes
         self.layout_outer = QVBoxLayout()
 
@@ -20,31 +20,54 @@ class Collect_SB_Slider(QWidget):
             group_box = QGroupBox(method)
             vbox = QVBoxLayout()
 
-            #Slider lists
+            """
+            Read the datatype of param dictionary. Use this to determine
+            what type of gui object (slider, text box etc) to display for adjustment.
+            """
             if isinstance(param_dict[method], dict):
                 for method_param in list(param_dict[method].keys()):
+                    # If sub dictionary contains a list [value, min, max, step] gui displays a QCustomSlider
                     if isinstance(param_dict[method][method_param], list):
-                        vbox.addWidget(Spinbox_Slider(method_param,method, param_dict, update_viewer_fn))#
+                        slider = QCustomSlider(title = method_param,
+                                                min_ = param_dict[method][method_param][1],
+                                                max_ = param_dict[method][method_param][2],
+                                                step_ = param_dict[method][method_param][3],
+                                                value_ = param_dict[method][method_param][0],
+                                                spinbox = True,
+                                                )
+                        #Add location within dictionary as metadata
+                        slider.meta = [title, method, method_param]
+                        slider.widget = 'slider'
+                        #Signal connected to param_change slot. This is in toplevel.py
+                        slider.valueChanged.connect(lambda x=None: param_change(x))
+                        vbox.addWidget(slider)
                         widget_count += 1
 
-            #Edit Text boxes inside dictionaries
-            if isinstance(param_dict[method], dict):
-                for method_param in list(param_dict[method].keys()):
-                    if isinstance(param_dict[method][method_param], str) \
-                            or isinstance(param_dict[method][method_param], int) \
-                            or isinstance(param_dict[method][method_param], float)\
-                            or isinstance(param_dict[method][method_param], tuple)\
-                            or isinstance(param_dict[method][method_param], type(None)):
-                        vbox.addWidget(Text_Box(method_param,method, param_dict, update_viewer_fn))
+                    #if some other datatype display edit text boxes
+                    else:
+                        textbox = QCustomTextBox(title=method_param, value_=param_dict[method][method_param])
+                        # Add location within dictionary as metadata
+                        textbox.meta = [title, method, method_param]
+                        textbox.widget = 'textbox'
+                        # Signal connected to param_change slot. This is in toplevel.py
+                        textbox.returnPressed.connect(lambda x=textbox.text: param_change(x))
+                        vbox.addWidget(textbox)#Text_Box(method_param,method, param_dict, param_change))
                         widget_count += 1
 
             # Edit Text boxes as top level entries
-            if isinstance(param_dict[method], str) \
+            elif isinstance(param_dict[method], str) \
                     or isinstance(param_dict[method], int) \
                     or isinstance(param_dict[method], float)\
                     or isinstance(param_dict[method], tuple)\
                     or isinstance(param_dict[method], type(None)):
-                vbox.addWidget(Text_Box(None, method, param_dict, update_viewer_fn))#
+
+                textbox = QCustomTextBox(title=method, value_=param_dict[method])
+                # Add location within dictionary as metadata
+                textbox.meta = [title, method]
+                textbox.widget = 'textbox'
+                # Signal connected to param_change slot. This is in toplevel.py
+                textbox.returnPressed.connect(lambda x=None: param_change(x))
+                vbox.addWidget(textbox)
                 widget_count += 1
 
             if widget_count > 0:
@@ -67,51 +90,30 @@ class Collect_SB_Slider(QWidget):
             self.layout.removeWidget(widget)
 
 
-class CollectionButtonLabels(QWidget):
-    def __init__(self, param_dict, methods, update_fn, img_viewer, crop_mask_vid_obj, reboot=None, *args, **kwargs):
-        super(CollectionButtonLabels, self).__init__(*args, **kwargs)
+class CropMask(QWidget):
+    valueChanged = pyqtSignal(str)
+
+    def __init__(self, param_dict,title, methods, param_change, img_viewer, crop_mask_vid_obj, reboot=None, *args, **kwargs):
+        super(CropMask, self).__init__(*args, **kwargs)
         self.reboot=reboot
         self.img_viewer=img_viewer
-        self.crop_mask_vid_obj=crop_mask_vid_obj
-        self.update_fn=update_fn
+        #self.crop_mask_vid_obj=crop_mask_vid_obj
+        self.param_change=param_change
         self.methods = methods
         self.param_dict = param_dict
         layout= QVBoxLayout()
         self.crop_layout = layout
         self.edit_widget_list = []
         self.active_methods = list(self.param_dict['crop_method'])
+
         for method in methods:
-
-            inner_layout = QHBoxLayout()
-            if method == 'frame_range':
-                layout.addWidget(Frame_Range_Box(method, param_dict, self.reboot))
-            else:
-                button=QPushButton(method)
-                button.setCheckable(True)
-            if method == 'crop_box':
-                button.clicked.connect(lambda x=button.isChecked, method=button.text(): self.crop(x))
-                edit = QLineEdit(method + ':' + str(self.param_dict['crop_box']))
-                edit.returnPressed.connect(lambda x=edit.text, name='crop_box': self.update_crop_edit(x, method=name))
-                self.edit_widget_list.append(edit)
-            elif method == 'mask_polygon':
-                button.clicked.connect(lambda x=button.isChecked, shape='mask_polygon': self.mask(x, shape=shape))
-                edit = QLineEdit(method + ':' + str(self.param_dict['mask_polygon']))
-                edit.returnPressed.connect(lambda x=edit.text, name='mask_polygon': self.update_mask_edit(x, method=name))
-                self.edit_widget_list.append(edit)
-                self.update_mask_edit(self.param_dict['mask_polygon'], method='mask_polygon')
-            elif method == 'mask_ellipse':
-                button.clicked.connect(lambda x=button.isChecked, shape='mask_ellipse': self.mask(x, shape=shape))
-                edit = QLineEdit(method + ':' + str(self.param_dict['mask_ellipse']))
-                edit.returnPressed.connect(lambda x=edit.text, name='mask_ellipse': self.update_mask_edit(x, method=name))
-                self.edit_widget_list.append(edit)
-                self.update_mask_edit(self.param_dict['mask_ellipse'], method='mask_ellipse')
+            textbox = QModCustomTextBox(self.img_viewer, title=method, value_=str(self.param_dict[method]), checkbox=True)
+            textbox.meta = [title,method]
+            textbox.widget='textbox'
+            textbox.returnPressed.connect(lambda x=textbox.value(): param_change(x))
 
 
-
-
-            inner_layout.addWidget(button)
-            inner_layout.addWidget(edit)
-            layout.addLayout(inner_layout)
+            layout.addWidget(textbox)
         button2=QPushButton('Reset')
         button2.clicked.connect(self.reset_crop)
         inner_layout = QHBoxLayout()
@@ -120,15 +122,18 @@ class CollectionButtonLabels(QWidget):
         self.setLayout(layout)
 
     def crop(self, check_state):
+        print('crop')
         self.img_viewer.canPan = not check_state
         if check_state:
             self.crop_tool = SelectAreaWidget(shape='rect', geometry=self.img_viewer.geometry)
             self.img_viewer.scene.addWidget(self.crop_tool)
         else:
+            self.emit()
             if hasattr(self, 'crop_tool'):
-                self._set_crop()
-                self.crop_tool.setParent(None)
-                self.crop_tool.deleteLater()
+                pass
+                #self._set_crop()
+                #self.crop_tool.setParent(None)
+                #self.crop_tool.deleteLater()
 
     def _set_crop(self, method='crop_box'):
         x = [self.crop_tool.begin.x(),self.crop_tool.end.x()]
@@ -138,7 +143,14 @@ class CollectionButtonLabels(QWidget):
         crop_vals = ((x[0],x[1]),(y[0],y[1]))
         self.update_crop_edit(crop_vals)
 
+    def onValueChanged(self,text: str) -> None:
+        self.valueChanged.emit(text)
+
     def update_crop_edit(self, crop_vals, method='crop_box'):
+
+
+        pass
+        '''
         if callable(crop_vals):
             crop_vals = crop_vals()
             crop_vals=crop_vals.split(':')[1]
@@ -148,12 +160,13 @@ class CollectionButtonLabels(QWidget):
             crop_vals = ((int(crop_vals[0]),int(crop_vals[1])),(int(crop_vals[2]),int(crop_vals[3])))
         self.crop_mask_vid_obj.set_crop(crop_vals)
         self.crop_mask_vid_obj.mask_none()
-        self.update_fn()
+        #self.param_change()
 
         for widget in self.edit_widget_list:
             if method in widget.text():
                 widget.setText(method + ':' + str(crop_vals))
         self.param_dict['crop_box'] = tuple(crop_vals)
+        '''
 
     def mask(self,check_state, shape='rect'):
         if check_state:
@@ -168,7 +181,7 @@ class CollectionButtonLabels(QWidget):
                     self.update_mask_edit(tuple(self.mask_tool.display_point_list), method='mask_polygon')
                 self.mask_tool.setParent(None)
                 self.mask_tool.deleteLater()
-                self.update_fn()
+                #self.param_change()
 
     def _set_mask(self, method='rect', pts=None):
         img_coords = self.crop_mask_vid_obj.crop_vals
@@ -218,7 +231,7 @@ class CollectionButtonLabels(QWidget):
                 active_methods.append(method)
         self.param_dict['crop_method'] = tuple(active_methods)
         self._set_mask(method=method, pts=mask_vals)
-        self.update_fn()
+        #self.param_change()
 
     def reset_crop(self):
         crop_vals = ((0, self.crop_mask_vid_obj.width), (0, self.crop_mask_vid_obj.height))
@@ -239,11 +252,11 @@ class CollectionButtonLabels(QWidget):
         except:
             pass
 
-
+'''
 class Frame_Range_Box(QWidget):
 
-    def __init__(self, param_name, param_dict, update_fn, *args, **kwargs):
-        self.update_fn = update_fn
+    def __init__(self, param_name, param_dict, param_change, *args, **kwargs):
+        self.param_change = param_change
         self.param_dict = param_dict
         self.param_name = param_name
         text = param_dict[param_name]
@@ -269,18 +282,18 @@ class Frame_Range_Box(QWidget):
                 values.append(int(val))
             value = tuple(values)
             self.param_dict[self.param_name] = value
-            self.update_fn()
+            self.param_change()
         except Exception as e:
             print('invalid value')
             print(e)
-
+'''
 
 
 
 class Text_Box(QWidget):
 
-    def __init__(self, param_name, method_name, param_dict, update_fn, *args, **kwargs):
-        self.update_fn = update_fn
+    def __init__(self, param_name, method_name, param_dict, param_change, *args, **kwargs):
+        self.param_change = param_change
         self.param_dict = param_dict
         self.method_name=method_name
         self.param_name = param_name
@@ -341,7 +354,7 @@ class Text_Box(QWidget):
                 self.param_dict[self.method_name][self.param_name] = value
             print(self.method_name)
             print(self.param_dict[self.method_name][self.param_name])
-            self.update_fn()
+            self.param_change()
         except Exception as e:
             print('invalid value')
             print(e)
@@ -351,7 +364,7 @@ class Spinbox_Slider(QWidget):
     Groupbox containing slider and spinbox in horizontal layout.
     """
 
-    def __init__(self, param_name,method_name, param_list,update_viewer_fn, *args, **kwargs):
+    def __init__(self, param_name,method_name, param_list,param_change, *args, **kwargs):
         """
 
         :param param_name: The name to be displayed for the combined widget eg frame
@@ -362,7 +375,7 @@ class Spinbox_Slider(QWidget):
         """
         self.param_name = param_name
         self.method_name = method_name
-        self.update_viewer = update_viewer_fn
+        self.param_change = param_change
         super(Spinbox_Slider,self).__init__(*args,**kwargs)
         self.param_list = param_list
         self.param_name = param_name
@@ -401,7 +414,7 @@ class Spinbox_Slider(QWidget):
             new_value += 1
         self.param_list[self.method_name][self.param_name][0] = new_value
         self.update_params([])
-        self.update_viewer()
+        self.param_change()
 
     def update_params(self, param_list):
         try:

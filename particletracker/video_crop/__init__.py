@@ -10,7 +10,6 @@ class ReadCropVideo(ReadVideo):
     def __init__(self, parameters=None, filename=None, frame_range=(0,None,1)):
         ReadVideo.__init__(self, filename=filename, frame_range=frame_range)
         self.parameters = parameters
-        self.crop_vals = parameters['crop_box']
         '''
         If loading a new video with different dimensions,
         then the stored crop and mask parameters may not fit.
@@ -18,12 +17,12 @@ class ReadCropVideo(ReadVideo):
         dimensions. This may not sort the gui but it will stop
         a crash.
         '''
-        crop_height = self.crop_vals[1][1] - self.crop_vals[1][0]
-        crop_width = self.crop_vals[0][1] - self.crop_vals[0][0]
+        crop_height = self.parameters['crop_box'][1][1] - self.parameters['crop_box'][1][0]
+        crop_width = self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]
         if (self.height < crop_height) or (self.width < crop_width):
             self.reset_crop()
 
-        self.set_crop(self.crop_vals)
+        self.set_crop(self.parameters['crop_box'])
 
         if 'mask_ellipse' in parameters['crop_method']:
             ellipse_pts = parameters['mask_ellipse']
@@ -36,10 +35,11 @@ class ReadCropVideo(ReadVideo):
 
     def set_crop(self, crop_coords):
         #Crops image to size specified by crop_coords and sets mask to None.
-        self.crop_vals = crop_coords
+        self.parameters['crop_box'] = crop_coords
 
     def mask_none(self):
-        self.mask = 255 * np.ones((self.crop_vals[1][1] - self.crop_vals[1][0], self.crop_vals[0][1] - self.crop_vals[0][0]),
+        self.mask = 255 * np.ones((self.parameters['crop_box'][1][1] - self.parameters['crop_box'][1][0],
+                                   self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]),
                                   dtype=np.uint8)
         if 'mask_ellipse' in self.parameters['crop_method']:
             self.parameters['mask_ellipse'] = None
@@ -87,7 +87,8 @@ class ReadCropVideo(ReadVideo):
 
     def read_frame(self, n=None):
         frame = super().read_frame(n=n)
-        frame = frame[self.crop_vals[1][0]:self.crop_vals[1][1], self.crop_vals[0][0]: self.crop_vals[0][1],:]
+        frame = frame[self.parameters['crop_box'][1][0]:self.parameters['crop_box'][1][1],
+                self.parameters['crop_box'][0][0]: self.parameters['crop_box'][0][1],:]
         return frame
 
 

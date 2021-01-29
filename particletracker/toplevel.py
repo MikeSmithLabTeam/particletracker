@@ -12,6 +12,7 @@ from .gui.image_viewer import QtImageViewer
 from .project.workflow import PTProject
 from .gui.checked_tab_widget import CheckableTabWidget
 from .general.writeread_param_dict import write_paramdict_file
+from .general.parameters import parse_values
 from .general.imageformat import bgr_to_rgb
 from qtwidgets.sliders import QCustomSlider
 
@@ -169,7 +170,10 @@ class MainWindow(QMainWindow):
                                             value_=self.tracker.cap.frame_range[0],
                                             spinbox=True,
                                             )
+
         self.frame_selector.valueChanged.connect(self.frame_selector_slot)
+        self.frame_selector_slot(0)
+
         #self.update_viewer()
         view_layout.addWidget(self.movie_label)
         view_layout.addWidget(self.settings_label)
@@ -183,7 +187,7 @@ class MainWindow(QMainWindow):
     -------------------------------------------------------------------
     '''
     def setup_settings_panel(self, settings_layout):
-        self.toplevel_settings = CheckableTabWidget(self.tracker, self.update_viewer, self.viewer, reboot=self.reboot)
+        self.toplevel_settings = CheckableTabWidget(self.tracker, self.param_change, self.viewer, reboot=self.reboot)
         settings_layout.addWidget(self.toplevel_settings)
 
     """
@@ -193,12 +197,45 @@ class MainWindow(QMainWindow):
     ------------------------------------------------------------------
     ----------------------------------------------------------------
     """
+    def open_tracker(self):
+        if self.movie_filename is None:
+            ok = False
+            while not ok:
+                ok = self.open_movie_dialog()
+        if self.settings_filename is None:
+            self.open_settings_button_click()
+
+        self.tracker = PTProject(video_filename=self.movie_filename, param_filename=self.settings_filename)
+        if hasattr(self, 'viewer_is_setup'):
+            self.reset_viewer()
 
     @pyqtSlot(int)
     def frame_selector_slot(self, value):
-        sender = self.sender()
-        print(sender.title)
         self.update_viewer()
+
+    @pyqtSlot()
+    def param_change(self, value):
+        sender = self.sender()
+        paramdict_location=sender.meta
+        print(paramdict_location)
+        print(value)
+        parsed_value = parse_values(sender, value)
+        self.update_dictionary_params(paramdict_location, parsed_value)
+        self.update_viewer()
+
+    @pyqtSlot()
+    def method_changes(self):
+        print('method_changes')
+
+    def update_dictionary_methods(self, location):
+        pass
+
+    def update_dictionary_params(self, location, value):
+        assert (len(location) > 1) & (len(location) < 4), "location list wrong length"
+        if len(location) == 2:
+            self.tracker.parameters[location[0]][location[1]] = value
+        else:
+            self.tracker.parameters[location[0]][location[1]][location[2]] = value
 
     def update_viewer(self):
         if self.live_update_button.isChecked():
@@ -230,15 +267,7 @@ class MainWindow(QMainWindow):
                                    "you asked for a incompatible set of methods / parameters."
                                    "Best suggestion undo whatever you just did!")
 
-
     def reset_viewer(self):
-        #param_dict = {}
-        #param_dict['frame'] = {}
-        #param_dict['frame']['frame'] = [self.tracker.cap.frame_range[0],
-        #                                self.tracker.cap.frame_range[0],
-        #                                self.tracker.cap.frame_range[1] - 1,
-        #                                self.tracker.cap.frame_range[2]]
-        #self.frame_selector.update_params(param_dict)
         self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],
                                            max_=self.tracker.cap.frame_range[1] - 1,
                                            step_=1,
@@ -252,17 +281,6 @@ class MainWindow(QMainWindow):
             self.toggle_img.setText("Captured Image")
         self.update_viewer()
 
-    def open_tracker(self):
-        if self.movie_filename is None:
-            ok = False
-            while not ok:
-                ok = self.open_movie_dialog()
-        if self.settings_filename is None:
-            self.open_settings_button_click()
-
-        self.tracker = PTProject(video_filename=self.movie_filename, param_filename=self.settings_filename)
-        if hasattr(self, 'viewer_is_setup'):
-            self.reset_viewer()
 
     def open_movie_dialog(self):
         options = QFileDialog.Options()
@@ -281,14 +299,6 @@ class MainWindow(QMainWindow):
         else:
             return False
 
-    def open_movie_click(self):
-        try:
-            self.open_movie_dialog()
-            self.reboot()
-        except:
-            self.movie_filename = self.recovery_movie_filename
-            self.reboot()
-
     def open_settings_dialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
@@ -300,12 +310,19 @@ class MainWindow(QMainWindow):
             settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File",
                                                                self.settings_filename.split('.')[0],
                                                                "settings (*.param)", options=options)
-
         if ok:
             self.settings_filename = settings_filename
             return True
         else:
             return False
+
+    def open_movie_click(self):
+        try:
+            self.open_movie_dialog()
+            self.reboot()
+        except:
+            self.movie_filename = self.recovery_movie_filename
+            self.reboot()
 
     def open_settings_button_click(self):
         try:

@@ -3,26 +3,16 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from ..gui.drag_drop_list import MyListWidget
 from ..gui.clickable_combo_box import ComboBoxAndButton
-from ..gui.slidergroupwidgets_pyqt5 import Collect_SB_Slider, CollectionButtonLabels
-
-
-class Color(QWidget):
-    def __init__(self, color, *args, **kwargs):
-        super(Color, self).__init__(*args, **kwargs)
-        self.setAutoFillBackground(True)
-        palette=self.palette()
-        palette.setColor(QPalette.Window, QColor(color))
-        self.setPalette(palette)
-
+from ..gui.slidergroupwidgets_pyqt5 import CollectionParamAdjustors, CropMask
 
 class CheckableTabWidget(QTabWidget):
     checkBoxList = []
-    def __init__(self, tracker, update_viewer, img_viewer, reboot=None, **kwargs):
+    def __init__(self, tracker, param_change, img_viewer, reboot=None, **kwargs):
         super(CheckableTabWidget, self).__init__()
         self.reboot=reboot
 
         self.img_viewer = img_viewer
-        self.update_img = update_viewer
+        self.param_change = param_change
         self.tracker=tracker
         self.param_dict = tracker.parameters
 
@@ -69,7 +59,7 @@ class CheckableTabWidget(QTabWidget):
         and add button.
         The bottom half the slidergroups etc to adjust the individual parameters.
         '''
-        self.draggable_list = MyListWidget(self.update_img, self.param_dict, title, self)
+        self.draggable_list = MyListWidget(self.param_change, self.param_dict, title, self)
         self.list_draggable_lists.append(self.draggable_list)
         self.draggable_list.add_draggable_list_methods(title, new_dict=self.param_dict)
         combo_button = ComboBoxAndButton(title, self)
@@ -81,13 +71,13 @@ class CheckableTabWidget(QTabWidget):
 
     def add_bottom_widgets(self, title, bottom_tab_widget_layout):
         if 'crop' not in title:
-            self.param_adjustors = Collect_SB_Slider(self.param_dict[title],
+            self.param_adjustors = CollectionParamAdjustors(self.param_dict[title], title,
                                                  self.param_dict[title][title + '_method'],
-                                                 self.update_img)
+                                                 self.param_change)
         else:
-            self.param_adjustors = CollectionButtonLabels(self.param_dict[title],
+            self.param_adjustors = CropMask(self.param_dict[title],title,
                                                  self.param_dict[title][title + '_method'],
-                                                 self.update_img, self.img_viewer, self.tracker.cap, reboot=self.reboot)
+                                                 self.param_change, self.img_viewer, self.tracker.cap, reboot=self.reboot)
         bottom_tab_widget_layout.addWidget(self.param_adjustors)
         return self.param_adjustors
 
@@ -103,4 +93,4 @@ class CheckableTabWidget(QTabWidget):
 
     def emitStateChanged(self,check_state, title):
         setattr(self.tracker, title + '_select',check_state == Qt.Checked)
-        self.update_img()
+        #self.param_change()

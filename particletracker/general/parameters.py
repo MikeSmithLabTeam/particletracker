@@ -28,3 +28,32 @@ def get_method_key(method, call_num=None):
         method_key = method + '*' + call_num
     return method_key
 
+def parse_values(sender, value):
+    '''
+    Determines the type of QWidget sending and converts data to
+    correct format for entry into the parameters dictionary.
+    '''
+    if sender.widget == 'slider':
+        return [value, sender.slider._min, sender.slider._max, sender.slider._step]
+    elif sender.widget == 'textbox':
+        if value == ('None' or 'none'):
+            return None
+        elif value == ('True' or 'true'):
+            return True
+        elif value == ('False' or 'false'):
+            return False
+        elif '((' in value:
+            'Assumes nested tuples that look like ((1,2),(2,3),(4,5).....)'
+            split_string = value[2:-2].replace(' ', '').split('),(')
+            value = tuple([tuple(map(int,split_string[i].split(','))) for i in range(len(split_string))])
+            return value
+        elif '(' in value:
+            return tuple(list(map(int, value[1:-1].replace(' ','').split(','))))
+        else:
+            return value
+    else:
+        #Purely future proofing
+        print('Parsing of this widget type not implemented')
+        return value
+
+
