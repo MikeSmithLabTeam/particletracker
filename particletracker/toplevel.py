@@ -32,6 +32,7 @@ __all__ = ['CONTOURS_VID', 'CONTOURS_PARAM', 'HOUGH_PARAM', 'HOUGH_VID', 'TRACKP
 
 
 class MainWindow(QMainWindow):
+    'test'
     def __init__(self, *args, movie_filename=None, settings_filename=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
         EXIT_CODE_REBOOT = -123
