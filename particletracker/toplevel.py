@@ -217,8 +217,6 @@ class MainWindow(QMainWindow):
     def param_change(self, value):
         sender = self.sender()
         paramdict_location=sender.meta
-        print(paramdict_location)
-        print(value)
         parsed_value = parse_values(sender, value)
         self.update_dictionary_params(paramdict_location, parsed_value)
         self.update_viewer()
@@ -235,37 +233,37 @@ class MainWindow(QMainWindow):
         if len(location) == 2:
             self.tracker.parameters[location[0]][location[1]] = value
         else:
-            self.tracker.parameters[location[0]][location[1]][location[2]] = value
+            self.tracker.parameters[location[0]][location[1]][location[2]] = value      
 
     def update_viewer(self):
         if self.live_update_button.isChecked():
             frame_number = self.frame_selector.value()
-            try:
-                #Check dictionary is updated.
+            #try:
+            #Check dictionary is updated.
 
-                if self.use_part_button.isChecked():
-                    annotated_img, proc_img = self.tracker.process_frame(frame_number, use_part=True)
-                else:
-                    annotated_img, proc_img = self.tracker.process_frame(frame_number)
+            if self.use_part_button.isChecked():
+                annotated_img, proc_img = self.tracker.process_frame(frame_number, use_part=True)
+            else:
+                annotated_img, proc_img = self.tracker.process_frame(frame_number)
 
-                toggle = self.toggle_img.isChecked()
-                if toggle:
-                    self.viewer.setImage(bgr_to_rgb(proc_img))
-                else:
-                    self.viewer.setImage(bgr_to_rgb(annotated_img))
-            except Exception as e:
+            toggle = self.toggle_img.isChecked()
+            if toggle:
+                self.viewer.setImage(bgr_to_rgb(proc_img))
+            else:
+                self.viewer.setImage(bgr_to_rgb(annotated_img))
+            #except Exception as e:
                 '''
                 This is called to reverse a settings change that was made.
                 Usually the user has asked for an impossible combination 
                 of methods to be applied. See CheckableTabWidgets --> MyListWidget
                 '''
-                print(e)
+            #    print(e)
 
                 # self.toplevel_settings.deactivate_last_added_method()
-                msgBox = QMessageBox.about(self, "Warning",
-                                   "Tracking crashed: It is likely "
-                                   "you asked for a incompatible set of methods / parameters."
-                                   "Best suggestion undo whatever you just did!")
+            #   msgBox = QMessageBox.about(self, "Warning",
+            #                       "Tracking crashed: It is likely "
+            #                       "you asked for a incompatible set of methods / parameters."
+            #                       "Best suggestion undo whatever you just did!")
 
     def reset_viewer(self):
         self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],

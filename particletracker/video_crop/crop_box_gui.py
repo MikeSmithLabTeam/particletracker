@@ -1,4 +1,4 @@
-from matplotlib import pyplot as plt
+'''from matplotlib import pyplot as plt
 from matplotlib.widgets import RectangleSelector
 import time
 
@@ -49,7 +49,7 @@ class ROIfigure():
         self.coords=(self.xoff,self.yoff,self.width,self.height)
 
 
-
+'''
 
 
 if __name__ == '__main__':
