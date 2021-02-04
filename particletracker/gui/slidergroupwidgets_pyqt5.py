@@ -111,8 +111,6 @@ class CropMask(QWidget):
             textbox.meta = [title,method]
             textbox.widget='textbox'
             textbox.returnPressed.connect(lambda x=textbox.value(): param_change(x))
-
-
             layout.addWidget(textbox)
         button2=QPushButton('Reset')
         button2.clicked.connect(self.reset_crop)
@@ -128,10 +126,11 @@ class CropMask(QWidget):
             self.crop_tool = SelectAreaWidget(shape='rect', geometry=self.img_viewer.geometry)
             self.img_viewer.scene.addWidget(self.crop_tool)
         else:
+            print('emit')
             self.emit()
-            if hasattr(self, 'crop_tool'):
-                pass
-                #self._set_crop()
+            #if hasattr(self, 'crop_tool'):
+            #    pass
+            #self._set_crop()
                 #self.crop_tool.setParent(None)
                 #self.crop_tool.deleteLater()
 

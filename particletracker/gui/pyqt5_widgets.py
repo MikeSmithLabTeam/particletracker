@@ -12,6 +12,7 @@ from matplotlib.figure import Figure
 
 from qtwidgets import QCustomTextBox, SelectAreaWidget
 
+
 class QModCustomTextBox(QCustomTextBox):
     returnPressed = pyqtSignal(str)
 
@@ -24,7 +25,9 @@ class QModCustomTextBox(QCustomTextBox):
         title=kwargs['title']
         self.method = shapes[title][0]
         self.colour = shapes[title][1]
-
+        print('created')
+        self.hasbeenchecked = False#Stops the checkboxChanged fn firing on object creation.
+        print(self.hasbeenchecked)
         super(QModCustomTextBox, self).__init__(*args, **kwargs)
         self.checkbox.setChecked(False)
 
@@ -33,16 +36,19 @@ class QModCustomTextBox(QCustomTextBox):
         #Override checkboxChanged method
         check_state = self.checkbox.isChecked()
         if check_state:
+            print('checkstate')
             self.tool = SelectAreaWidget(shape=self.method, geometry=self.img_viewer.geometry, colour=self.colour)
             self.img_viewer.scene.addWidget(self.tool)
+            self.hasbeenchecked = True
         else:
             print('tool')
-            print(self.tool.display_point_list)
-            self.tool.setParent(None)
-            self.tool.deleteLater()
-            self.text = self.value()
-            self.returnPressed.emit(self.text)
 
+            if self.hasbeenchecked:
+                self.textbox.setText(str(tuple(self.tool.points)))
+                self.returnPressed.emit(self.text)
+                self.tool.setParent(None)
+                self.tool.deleteLater()
+            self.hasbeenchecked = False
 
 
 
