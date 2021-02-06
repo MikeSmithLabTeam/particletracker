@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-from .crop_methods import crop_box
+#from .crop_methods import crop_box
 from labvision.video import ReadVideo
 
 
@@ -20,42 +20,29 @@ class ReadCropVideo(ReadVideo):
         crop_height = self.parameters['crop_box'][1][1] - self.parameters['crop_box'][1][0]
         crop_width = self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]
         if (self.height < crop_height) or (self.width < crop_width):
-            self.reset_crop()
+            self.reset()
 
-        self.set_crop(self.parameters['crop_box'])
+        self.set_mask()   
 
-        if 'mask_ellipse' in parameters['crop_method']:
-            ellipse_pts = parameters['mask_ellipse']
+    def reset(self):
+        #To set crop back to max image size
+        self.parameters['crop_box']=((0, 0),(self.width, self.height))
+        self.mask_none()
+
+    def set_mask(self):
+        if 'mask_ellipse' in self.parameters['crop_method']:
+            ellipse_pts = self.parameters['mask_ellipse']
             self.mask_ellipse(ellipse_pts)
-        elif 'mask_polygon' in parameters['crop_method']:
-            points = parameters['mask_polygon']
+        elif 'mask_polygon' in self.parameters['crop_method']:
+            points = self.parameters['mask_polygon']
             self.mask_polygon(points)
         else:
             self.mask_none()
-
-    def set_crop(self, crop_coords):
-        #Crops image to size specified by crop_coords and sets mask to None.
-        self.parameters['crop_box'] = crop_coords
-
-    def mask_none(self):
-        self.mask = 255 * np.ones((self.parameters['crop_box'][1][1] - self.parameters['crop_box'][1][0],
-                                   self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]),
-                                  dtype=np.uint8)
-        if 'mask_ellipse' in self.parameters['crop_method']:
-            self.parameters['mask_ellipse'] = None
-        elif 'mask_polygon' in self.parameters['crop_method']:
-            self.parameters['mask_polygon'] = None
-
-    def reset_crop(self):
-        #To set crop back to max image size
-        self.set_crop(((0, self.width),(0, self.height)))
-        self.mask_none()
-
+    
     def mask_ellipse(self, ellipse_pts):
         #calculate mask given ellipse pts
         if ellipse_pts is None:
             self.mask_none()
-            return self.mask
         else:
             self.mask_none()
             img=~self.mask
@@ -64,14 +51,11 @@ class ReadCropVideo(ReadVideo):
             rect=cv2.minAreaRect(ellipse)
             ellipse_mask = cv2.ellipse(img,rect,255,thickness=-1)
             self.mask = ellipse_mask
-            self.parameters['mask_ellipse'] = ellipse_pts
-            return self.mask
 
     def mask_polygon(self, point_list):
         #calculate mask given points
         if point_list is None:
             self.mask_none()
-            return self.mask
         else:
             self.mask_none()
             img=~self.mask
@@ -79,17 +63,32 @@ class ReadCropVideo(ReadVideo):
             for point in point_list:
                 poly.append([point[0],point[1]])
             self.mask = cv2.fillPoly(img,[np.array(poly, np.int32)],(255,255,255))
-            self.parameters['mask_polygon'] = point_list
-            return self.mask
+    
+    def mask_none(self):
+        self.mask = 255 * np.ones((self.parameters['crop_box'][1][1] - self.parameters['crop_box'][0][1],
+                                   self.parameters['crop_box'][1][0] - self.parameters['crop_box'][0][0]),
+                                  dtype=np.uint8)
+        if 'mask_ellipse' in self.parameters['crop_method']:
+            self.parameters['mask_ellipse'] = None
+        elif 'mask_polygon' in self.parameters['crop_method']:
+            self.parameters['mask_polygon'] = None
 
-    def apply_mask(self,img):
-        return cv2.bitwise_and(img, self.mask)
+    def apply_mask(self,frame):
+        return cv2.bitwise_and(frame, self.mask)
 
-    def read_frame(self, n=None):
-        frame = super().read_frame(n=n)
-        frame = frame[self.parameters['crop_box'][1][0]:self.parameters['crop_box'][1][1],
-                self.parameters['crop_box'][0][0]: self.parameters['crop_box'][0][1],:]
+    def apply_crop(self, frame):
+        if np.size(np.shape(frame)) == 3:
+            frame=frame[self.parameters['crop_box'][0][1]:self.parameters['crop_box'][1][1],
+                self.parameters['crop_box'][0][0]: self.parameters['crop_box'][1][0],:]
+        else:
+            frame=frame[self.parameters['crop_box'][0][1]:self.parameters['crop_box'][1][1],
+                self.parameters['crop_box'][0][0]: self.parameters['crop_box'][1][0]]
         return frame
+
+    #def read_frame(self, n=None):
+    #    frame = super().read_frame(n=n)
+    #    
+    #    return frame
 
 
 

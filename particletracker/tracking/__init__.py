@@ -95,9 +95,13 @@ class ParticleTracker:
         else:
             preprocessed_frame = self.ip.process(frame)
             preprocessed_frame = self.cap.apply_mask(preprocessed_frame)
+        preprocessed_frame = self.cap.apply_crop(preprocessed_frame)
+        frame = self.cap.apply_crop(frame)
         df_frame = getattr(tm, method)(preprocessed_frame, frame, self.parameters)
         return df_frame
-
+    
+    '''
     def update_parameters(self, parameters):
         self.parameters = parameters
         self.ip.update_parameters(self.parameters)
+    '''

@@ -74,7 +74,7 @@ class PTWorkflow:
             if self.link_select:
                 self.link.link_trajectories()
         if self.postprocess_select:
-            self.pp.process(use_part=True)
+            self.pp.process(use_part=use_part)
         if self.annotate_select:
             self.an.annotate(use_part=use_part)
 
@@ -101,31 +101,28 @@ class PTWorkflow:
 
         The software assumes the datastore is in the same folder as the video being processed.
 
-        If use_part = True the data for first 5 stages is read from file and only postprocess and annotate are
+        If use_part = True the data for first 5 stages is read from file videoname.hdf5 and only postprocess and annotate are
         being run.
 
         """
+        proc_frame = self.cap.read_frame(frame_num)
         if not use_part:
             if self.preprocess_select:
-                frame=self.cap.read_frame(frame_num)
-                proc_frame = self.ip.process(frame)
+                proc_frame = self.ip.process(proc_frame)
                 proc_frame = self.cap.apply_mask(proc_frame)
-            else:
-                proc_frame = self.cap.read_frame(frame_num)
             if self.track_select:
                 self.pt.track(f_index=frame_num)
             if self.link_select:
                 self.link.link_trajectories(f_index=frame_num)
-
         if self.postprocess_select:
             self.pp.process(f_index=frame_num, use_part=use_part)
         if self.annotate_select:
             annotatedframe = self.an.annotate(f_index=frame_num, use_part=use_part)
-            if use_part:
-                proc_frame = self.cap.read_frame(frame_num)
         else:
             annotatedframe = self.cap.read_frame(frame_num)
-            if use_part:
-                proc_frame = annotatedframe
+
+        #Crop both images        
+        annotatedframe = self.cap.apply_crop(annotatedframe)
+        proc_frame = self.cap.apply_crop(proc_frame)
         return annotatedframe, proc_frame
 

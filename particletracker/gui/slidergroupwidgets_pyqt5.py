@@ -113,20 +113,19 @@ class CropMask(QWidget):
             textbox.returnPressed.connect(lambda x=textbox.value(): param_change(x))
             layout.addWidget(textbox)
         button2=QPushButton('Reset')
-        button2.clicked.connect(self.reset_crop)
+        button2.meta = 'ResetMask'
+        button2.clicked.connect(lambda x='DummyVal': param_change(x))
         inner_layout = QHBoxLayout()
         inner_layout.addWidget(button2)
         layout.addLayout(inner_layout)
         self.setLayout(layout)
 
     def crop(self, check_state):
-        print('crop')
         self.img_viewer.canPan = not check_state
         if check_state:
             self.crop_tool = SelectAreaWidget(shape='rect', geometry=self.img_viewer.geometry)
             self.img_viewer.scene.addWidget(self.crop_tool)
         else:
-            print('emit')
             self.emit()
             #if hasattr(self, 'crop_tool'):
             #    pass

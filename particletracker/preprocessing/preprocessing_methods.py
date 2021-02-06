@@ -66,7 +66,7 @@ def grayscale(frame, parameters=None, call_num=None):
     try:
         method_key = get_method_key('grayscale', call_num=call_num)
         params = parameters['preprocess'][method_key]
-
+        
         sz = np.shape(frame)
         if np.shape(sz)[0] == 3:
             frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

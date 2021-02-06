@@ -6,6 +6,7 @@ from os.path import isfile
 from pathlib import Path
 import cv2
 import sys
+import numpy as np
 
 
 from .gui.image_viewer import QtImageViewer
@@ -216,9 +217,14 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def param_change(self, value):
         sender = self.sender()
-        paramdict_location=sender.meta
-        parsed_value = parse_values(sender, value)
-        self.update_dictionary_params(paramdict_location, parsed_value)
+        if sender.meta == 'ResetMask':
+            self.tracker.cap.reset()
+        else:
+            paramdict_location=sender.meta
+            parsed_value = parse_values(sender, value)
+            self.update_dictionary_params(paramdict_location, parsed_value)
+            if 'mask' in sender.meta[1]:
+                self.tracker.cap.set_mask()
         self.update_viewer()
 
     @pyqtSlot()
@@ -242,10 +248,11 @@ class MainWindow(QMainWindow):
             #Check dictionary is updated.
 
             if self.use_part_button.isChecked():
+                
                 annotated_img, proc_img = self.tracker.process_frame(frame_number, use_part=True)
             else:
                 annotated_img, proc_img = self.tracker.process_frame(frame_number)
-
+            
             toggle = self.toggle_img.isChecked()
             if toggle:
                 self.viewer.setImage(bgr_to_rgb(proc_img))

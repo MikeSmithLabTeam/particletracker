@@ -28,8 +28,7 @@ class QModCustomTextBox(QCustomTextBox):
         self.hasbeenchecked = False#Stops the checkboxChanged fn firing on object creation.
         super(QModCustomTextBox, self).__init__(*args, **kwargs)
         self.checkbox.setChecked(False)
-
-
+        
     def checkboxChanged(self) -> None:
         #Override checkboxChanged method
         check_state = self.checkbox.isChecked()

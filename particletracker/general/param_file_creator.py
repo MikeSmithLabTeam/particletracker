@@ -10,7 +10,7 @@ def create_param_file(filename):
                   }
 
     crop = {'crop_method': ('crop_box','mask_ellipse'),# 'mask_polygon',),
-            'crop_box':((0, 1280), (0, 720)),#{'crop_coords': (76, 119, 944, 900),},
+            'crop_box':((0, 0), (1280, 720)),#{'crop_coords': (76, 119, 944, 900),},
             'mask_ellipse': None,
             'mask_polygon': None,
             }
@@ -229,5 +229,6 @@ def create_param_file(filename):
         }
 
     write_paramdict_file(PARAMETERS, filename)
+
 
 
