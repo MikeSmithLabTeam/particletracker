@@ -65,9 +65,12 @@ class PTWorkflow:
         movie being processed according to the actions selected in the child class.
         i.e track = True
             link = True etc
+
+        if use_part == True the processing perorms the postprocessing and annotation steps only. 
+
+
         :return:
         """
-        print('start process')
         if not use_part:
             if self.track_select:
                 self.pt.track()
@@ -77,8 +80,6 @@ class PTWorkflow:
             self.pp.process(use_part=use_part)
         if self.annotate_select:
             self.an.annotate(use_part=use_part)
-
-
 
     def process_frame(self, frame_num, use_part=False):
         """Process a single frame

@@ -188,7 +188,7 @@ class MainWindow(QMainWindow):
     -------------------------------------------------------------------
     '''
     def setup_settings_panel(self, settings_layout):
-        self.toplevel_settings = CheckableTabWidget(self.tracker, self.param_change, self.viewer, reboot=self.reboot)
+        self.toplevel_settings = CheckableTabWidget(self.tracker, self.viewer, self.param_change, self.method_change, reboot=self.reboot)
         settings_layout.addWidget(self.toplevel_settings)
 
     """
@@ -218,21 +218,30 @@ class MainWindow(QMainWindow):
     def param_change(self, value):
         sender = self.sender()
         if sender.meta == 'ResetMask':
-            self.tracker.cap.reset()
+            self.tracker.cap.reset_mask()
         else:
             paramdict_location=sender.meta
             parsed_value = parse_values(sender, value)
             self.update_dictionary_params(paramdict_location, parsed_value)
-            if 'mask' in sender.meta[1]:
+            if 'mask' in paramdict_location[1]:
                 self.tracker.cap.set_mask()
         self.update_viewer()
 
-    @pyqtSlot()
-    def method_changes(self):
-        print('method_changes')
+    @pyqtSlot(tuple)
+    def method_change(self, value):
+        sender = self.sender()
+        location = [sender.title, sender.title + '_method']
+        self.update_dictionary_params(location, value)
+        self.update_param_widgets(sender.title)
+        self.update_viewer
 
-    def update_dictionary_methods(self, location):
-        pass
+    def update_param_widgets(self, title):
+        for param_adjustor in self.toplevel_settings.list_param_adjustors:
+            print(param_adjustor)
+            if param_adjustor.title == title:              
+                param_adjustor.remove_widgets()
+                param_adjustor.build_widgets(title, self.tracker.parameters[title])
+
 
     def update_dictionary_params(self, location, value):
         assert (len(location) > 1) & (len(location) < 4), "location list wrong length"

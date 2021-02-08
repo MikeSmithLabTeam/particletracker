@@ -20,11 +20,11 @@ class ReadCropVideo(ReadVideo):
         crop_height = self.parameters['crop_box'][1][1] - self.parameters['crop_box'][1][0]
         crop_width = self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]
         if (self.height < crop_height) or (self.width < crop_width):
-            self.reset()
+            self.reset_mask()
 
         self.set_mask()   
 
-    def reset(self):
+    def reset_mask(self):
         #To set crop back to max image size
         self.parameters['crop_box']=((0, 0),(self.width, self.height))
         self.mask_none()
@@ -84,11 +84,6 @@ class ReadCropVideo(ReadVideo):
             frame=frame[self.parameters['crop_box'][0][1]:self.parameters['crop_box'][1][1],
                 self.parameters['crop_box'][0][0]: self.parameters['crop_box'][1][0]]
         return frame
-
-    #def read_frame(self, n=None):
-    #    frame = super().read_frame(n=n)
-    #    
-    #    return frame
 
 
 

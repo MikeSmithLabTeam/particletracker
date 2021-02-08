@@ -7,11 +7,11 @@ from ..gui.slidergroupwidgets_pyqt5 import CollectionParamAdjustors, CropMask
 
 class CheckableTabWidget(QTabWidget):
     checkBoxList = []
-    def __init__(self, tracker, param_change, img_viewer, reboot=None, **kwargs):
+    def __init__(self, tracker, img_viewer, param_change, method_change, reboot=None, **kwargs):
         super(CheckableTabWidget, self).__init__()
         self.reboot=reboot
-
         self.img_viewer = img_viewer
+        self.method_change = method_change
         self.param_change = param_change
         self.tracker=tracker
         self.param_dict = tracker.parameters
@@ -47,7 +47,8 @@ class CheckableTabWidget(QTabWidget):
         self.tab_widget_layout.addLayout(self.top_tab_widget_layout)
         bottom_tab_widget_layout = QVBoxLayout()
         self.list_param_adjustor_layouts.append(bottom_tab_widget_layout)
-        param_adjustors = self.add_bottom_widgets(title, bottom_tab_widget_layout)
+        param_adjustors = self.add_bottom_widgets(title)
+        bottom_tab_widget_layout.addWidget(param_adjustors)
         self.list_param_adjustors.append(param_adjustors)
         self.tab_widget_layout.addLayout(bottom_tab_widget_layout)
         widget.setLayout(self.tab_widget_layout)
@@ -59,9 +60,13 @@ class CheckableTabWidget(QTabWidget):
         and add button.
         The bottom half the slidergroups etc to adjust the individual parameters.
         '''
-        self.draggable_list = MyListWidget(self.param_change, self.param_dict, title, self)
+        if title in ['track', 'link']:
+            self.draggable_list = MyListWidget(self, self.method_change, self.param_dict, title,  dynamic=False)
+        else:
+            self.draggable_list = MyListWidget(self, self.method_change, self.param_dict, title)
         self.list_draggable_lists.append(self.draggable_list)
-        self.draggable_list.add_draggable_list_methods(title, new_dict=self.param_dict)
+        self.draggable_list.add_draggable_list_methods()
+        self.draggable_list.listChanged.connect(self.method_change)
         combo_button = ComboBoxAndButton(title, self)
         self.top_tab_widget_layout.addWidget(self.draggable_list)
         self.top_tab_widget_layout.addWidget(combo_button)
@@ -69,20 +74,19 @@ class CheckableTabWidget(QTabWidget):
     def disable_tabs(self, index, enable=True):
         self.tabBar().setTabEnabled(index, enable)
 
-    def add_bottom_widgets(self, title, bottom_tab_widget_layout):
+    def add_bottom_widgets(self, title):
         if 'crop' not in title:
-            self.param_adjustors = CollectionParamAdjustors(self.param_dict[title], title,
-                                                 self.param_dict[title][title + '_method'],
-                                                 self.param_change)
+            self.param_adjustors = CollectionParamAdjustors(self.param_dict[title], title)
+                                                 
         else:
             self.param_adjustors = CropMask(self.param_dict[title],title,
                                                  self.param_dict[title][title + '_method'],
                                                  self.param_change, self.img_viewer, self.tracker.cap, reboot=self.reboot)
-        bottom_tab_widget_layout.addWidget(self.param_adjustors)
+        
         return self.param_adjustors
 
-    def update_tracker_object(self, parameters):
-        self.param_dict = parameters
+    #def update_tracker_object(self, parameters):
+    #    self.param_dict = parameters
 
     '''---------------------------------------------------------------------------------------------------------------
     Call back functions

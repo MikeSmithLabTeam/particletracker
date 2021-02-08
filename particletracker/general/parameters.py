@@ -56,4 +56,3 @@ def parse_values(sender, value):
         print('Parsing of this widget type not implemented')
         return value
 
-
