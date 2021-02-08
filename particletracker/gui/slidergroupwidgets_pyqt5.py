@@ -9,8 +9,9 @@ class CollectionParamAdjustors(QWidget):
     def __init__(self, param_dict, title,*args, **kwargs):
         super(CollectionParamAdjustors, self).__init__(*args, **kwargs)
         self.title = title
+        self.scroll_layout = QVBoxLayout()
         self.build_widgets(title, param_dict)
-        
+
         
     def build_widgets(self, title, param_dict):#, param_change):
         self.layout_outer = QVBoxLayout()
@@ -74,23 +75,20 @@ class CollectionParamAdjustors(QWidget):
                 self.layout_outer.addWidget(group_box)
             else:
                 group_box.deleteLater()     
-        widget_container = QWidget()
-        widget_container.setLayout(self.layout_outer)
+        self.widget_container = QWidget()
+        self.widget_container.setLayout(self.layout_outer)
         scroll = QScrollArea()
-        scroll.setWidget(widget_container)
-        scroll_layout = QVBoxLayout()
-        scroll_layout.addWidget(scroll)
-        self.setLayout(scroll_layout)  
+        scroll.setWidget(self.widget_container)
+        
+        self.scroll_layout.addWidget(scroll)
+        self.setLayout(self.scroll_layout)  
 
     def remove_widgets(self):     
-        num_widgets = self.layout_outer.count()
+        num_widgets = self.scroll_layout.count()
         for i in reversed(range(num_widgets)):
-            item = self.layout_outer.itemAt(i)
+            item = self.scroll_layout.itemAt(i)
             item.widget().setParent(None)
-   
             
-    
-
 
 class CropMask(QWidget):
     valueChanged = pyqtSignal(str)
@@ -104,14 +102,13 @@ class CropMask(QWidget):
         self.param_change=param_change
         self.methods = methods
         self.param_dict = param_dict
+
+        self.layout = QVBoxLayout()
         self.build_widgets(title, param_dict)
         
 
-    def build_widgets(self, title, param_dict):
-        if not hasattr(self, 'layout_outer'):
-            self.layout_outer = QVBoxLayout()
-        
-        self.layout_outer = QVBoxLayout()
+    def build_widgets(self, title, param_dict):   
+        self.layout_outer = QVBoxLayout()     
         self.edit_widget_list = []
         self.active_methods = list(self.param_dict['crop_method'])
 
@@ -124,14 +121,18 @@ class CropMask(QWidget):
         reset_button=QPushButton('Reset')
         reset_button.meta = 'ResetMask'
         reset_button.clicked.connect(lambda x='DummyVal': param_change(x))
-        layout_inner = QHBoxLayout()
-        layout_inner.addWidget(reset_button)
-        self.layout_outer.addLayout(layout_inner)
-        self.setLayout(self.layout_outer)
+        #layout_inner = QHBoxLayout()
+        self.layout_outer.addWidget(reset_button)
+        #self.layout_outer.addLayout(layout_inner)
+        self.widget_container = QWidget()
+        self.widget_container.setLayout(self.layout_outer)
+        self.layout.addWidget(self.widget_container)
+        self.setLayout(self.layout)
 
     def remove_widgets(self):
+        print('remove')
         num_widgets = self.layout_outer.count()
         for i in reversed(range(num_widgets)):
-            self.layout_outer.itemAt(i).widget().setParent(None)
-        
-    
+            item = self.layout_outer.itemAt(i)
+            item.widget().setParent(None)
+            
