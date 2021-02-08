@@ -130,7 +130,6 @@ class CropMask(QWidget):
         self.setLayout(self.layout)
 
     def remove_widgets(self):
-        print('remove')
         num_widgets = self.layout_outer.count()
         for i in reversed(range(num_widgets)):
             item = self.layout_outer.itemAt(i)

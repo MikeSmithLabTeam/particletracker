@@ -38,28 +38,10 @@ class ComboBoxAndButton(QWidget):
         title = self.parent.tabBar().tabText(tab_index)
         method = self.combo_box.currentText()
         draggable_list = self.parent.list_draggable_lists[tab_index]
-        if dynamic:
-            count = 1
-            while method in draggable_list.method_list:
-                method = method.split('*')[0] + '*' + str(count)
-                count = count + 1
-            draggable_list.addItem(method)
-            draggable_list.send_signal()
-            '''
-            self.parent.draggable_list.get_new_method_list()
+        count = 1
+        while method in draggable_list.method_list:
+            method = method.split('*')[0] + '*' + str(count)
+            count = count + 1
+        draggable_list.addItem(method)
+        draggable_list.send_signal()
             
-            draggable_list.get_new_method_list()
-            
-
-            draggable_list.add_item(method)
-            draggable_list.get_new_method_list()
-        else:
-            draggable_list.add_item(method)
-        #draggable_list.reset_param_widgets()
-
-        if dynamic:
-            inactive_index = draggable_list.method_list.index('----Inactive----')
-            self.param_dict[self.title][self.title + '_method'] = tuple(draggable_list.method_list[:inactive_index])
-        else:
-            self.param_dict[self.title][self.title + '_method'] = tuple(draggable_list.method_list)
-        '''

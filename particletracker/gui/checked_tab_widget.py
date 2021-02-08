@@ -60,7 +60,7 @@ class CheckableTabWidget(QTabWidget):
         and add button.
         The bottom half the slidergroups etc to adjust the individual parameters.
         '''
-        if title in ['track', 'link']:
+        if 'track' or 'link' in title:
             self.draggable_list = MyListWidget(self, self.method_change, self.param_dict, title,  dynamic=False)
         else:
             self.draggable_list = MyListWidget(self, self.method_change, self.param_dict, title)
