@@ -21,7 +21,8 @@ def track_gui(movie=None, settings=None):
 
     '''
  
-    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "3"
+
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
     app = QApplication(sys.argv)
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
