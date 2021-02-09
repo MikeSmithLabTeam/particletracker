@@ -1,9 +1,12 @@
 from PyQt5.QtWidgets import *
-import sys
+from PyQt5.QtCore import *
+import sys, os
 
 from .project.workflow import PTProject
 from filehandling import BatchProcess
 from .toplevel import MainWindow
+
+
 
 def track_gui(movie=None, settings=None):
     '''
@@ -17,7 +20,16 @@ def track_gui(movie=None, settings=None):
     -------
 
     '''
+ 
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "3"
+
     app = QApplication(sys.argv)
+    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+        app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+
+    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+        app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    
     window = MainWindow(
         movie_filename=movie,
         settings_filename=settings)

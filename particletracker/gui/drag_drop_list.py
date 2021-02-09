@@ -33,17 +33,15 @@ class MyListWidget(QListWidget):
 
     def add_draggable_list_methods(self):
         for item in self.method_list:
-            self.add_item(item)       
+            self.add_item(item)  
+        self.get_new_method_list()     
 
     def add_item(self, key):
-        print(key)
-        print(self.dynamic)
         if not self.dynamic:
-            print('taken')
-            self.takeItem(0)
+            self.clear()
         self.addItem(key)
-        self.get_new_method_list()
-
+        
+        
     def mousePressEvent(self, event):
         pos = self.mapFromGlobal(QCursor.pos())
         row = self.indexAt(pos).row()
@@ -98,9 +96,7 @@ class MyListWidget(QListWidget):
         if self.dynamic:
             active_method_list = self.method_list[:self.method_list.index('----Inactive----')]
         else:
-            active_method_list = self.method_list[1:]
-        print('send')
-        print(active_method_list)       
+            active_method_list = self.method_list     
         self.listChanged.emit(tuple(active_method_list))
         
 

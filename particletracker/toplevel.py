@@ -7,15 +7,15 @@ from pathlib import Path
 import cv2
 import sys
 import numpy as np
+import qimage2ndarray
 
-
-from .gui.image_viewer import QtImageViewer
 from .project.workflow import PTProject
 from .gui.checked_tab_widget import CheckableTabWidget
 from .general.writeread_param_dict import write_paramdict_file
 from .general.parameters import parse_values
 from .general.imageformat import bgr_to_rgb
 from qtwidgets.sliders import QCustomSlider
+from qtwidgets.images import QImageViewer
 
 PACKAGE_DIR = os.path.dirname(__file__)
 TESTDATA_DIR = PACKAGE_DIR+'/testdata/'
@@ -159,7 +159,8 @@ class MainWindow(QMainWindow):
         self.viewer_is_setup = True
         self.movie_label = QLabel(self.movie_filename)
         self.settings_label = QLabel(self.settings_filename)
-        self.viewer = QtImageViewer()
+        self.viewer = QImageViewer()
+        self.viewer.leftMouseButtonDoubleClicked.connect(self.coords_clicked)
         self.toggle_img = QPushButton("Preprocessed Image")
         self.toggle_img.setCheckable(True)
         self.toggle_img.setChecked(False)
@@ -175,7 +176,6 @@ class MainWindow(QMainWindow):
         self.frame_selector.valueChanged.connect(self.frame_selector_slot)
         self.frame_selector_slot(0)
 
-        #self.update_viewer()
         view_layout.addWidget(self.movie_label)
         view_layout.addWidget(self.settings_label)
         view_layout.addWidget(self.viewer)
@@ -210,6 +210,16 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
 
+
+    @pyqtSlot(float, float)
+    def coords_clicked(self, x, y):
+        print('Coords')
+        print(x, y)
+        print('Intensities [r,g,b]')
+        Qimg = self.viewer.image()
+        output = qimage2ndarray.rgb_view(Qimg)
+        print(output[int(y),int(x),:])
+
     @pyqtSlot(int)
     def frame_selector_slot(self, value):
         self.update_viewer()
@@ -233,11 +243,10 @@ class MainWindow(QMainWindow):
         location = [sender.title, sender.title + '_method']
         self.update_dictionary_params(location, value)
         self.update_param_widgets(sender.title)
-        self.update_viewer
+        self.update_viewer()
 
     def update_param_widgets(self, title):
         for param_adjustor in self.toplevel_settings.list_param_adjustors:
-            print(param_adjustor)
             if param_adjustor.title == title:              
                 param_adjustor.remove_widgets()
                 param_adjustor.build_widgets(title, self.tracker.parameters[title])
@@ -299,7 +308,7 @@ class MainWindow(QMainWindow):
     def open_movie_dialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        self.recovery_movie_filename = self.movie_filename
+        #self.recovery_movie_filename = self.movie_filename
         if self.movie_filename is None:
             movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie or Img Sequence", QDir.homePath(),
                                                             "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v)", options=options)
@@ -331,31 +340,20 @@ class MainWindow(QMainWindow):
             return False
 
     def open_movie_click(self):
-        try:
-            self.open_movie_dialog()
+        ok=self.open_movie_dialog()
+        if ok:
             self.reboot()
-        except:
-            self.movie_filename = self.recovery_movie_filename
-            self.reboot()
-
+        
     def open_settings_button_click(self):
-        try:
-            self.open_settings_dialog()
+        ok=self.open_settings_dialog()
+        if ok:
             self.reboot()#Reboots the entire GUI
-        except:
-            self.settings_filename = self.recovery_settings_filename
-            self.reboot()
-
+        
     def save_settings_button_click(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         file_settings_name, _ = QFileDialog.getSaveFileName(self, "Save Settings File", self.settings_filename.split('.')[0],
                                                         "settings (*.param)", options=options)
-
-        num_tabs = len(self.toplevel_settings.list_draggable_lists)
-        for i in range(num_tabs):
-            draggable_list = self.toplevel_settings.list_draggable_lists[i]
-            draggable_list.update_dictionary()
 
         file_settings_name=file_settings_name.split('.')[0] + '.param'
         write_paramdict_file(self.tracker.parameters, file_settings_name)

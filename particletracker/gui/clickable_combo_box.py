@@ -39,9 +39,13 @@ class ComboBoxAndButton(QWidget):
         method = self.combo_box.currentText()
         draggable_list = self.parent.list_draggable_lists[tab_index]
         count = 1
-        while method in draggable_list.method_list:
-            method = method.split('*')[0] + '*' + str(count)
-            count = count + 1
+
+        if dynamic:
+            while method in draggable_list.method_list:
+                method = method.split('*')[0] + '*' + str(count)
+                count = count + 1
+        else:
+            draggable_list.takeItem(0)
         draggable_list.addItem(method)
         draggable_list.send_signal()
             
