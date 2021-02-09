@@ -60,10 +60,10 @@ class CheckableTabWidget(QTabWidget):
         and add button.
         The bottom half the slidergroups etc to adjust the individual parameters.
         '''
-        if 'track' or 'link' in title:
+        if ('track' in title) or ('link' in title):
             self.draggable_list = MyListWidget(self, self.method_change, self.param_dict, title,  dynamic=False)
         else:
-            self.draggable_list = MyListWidget(self, self.method_change, self.param_dict, title)
+            self.draggable_list = MyListWidget(self, self.method_change, self.param_dict, title, dynamic=True)
         self.list_draggable_lists.append(self.draggable_list)
         self.draggable_list.add_draggable_list_methods()
         self.draggable_list.listChanged.connect(self.method_change)
@@ -76,12 +76,11 @@ class CheckableTabWidget(QTabWidget):
 
     def add_bottom_widgets(self, title):
         if 'crop' not in title:
-            self.param_adjustors = CollectionParamAdjustors(self.param_dict[title], title)
+            self.param_adjustors = CollectionParamAdjustors(title, self.param_dict[title], self.param_change)
                                                  
         else:
-            self.param_adjustors = CropMask(self.param_dict[title],title,
-                                                 self.param_dict[title][title + '_method'],
-                                                 self.param_change, self.img_viewer, self.tracker.cap, reboot=self.reboot)
+            self.param_adjustors = CropMask(title, self.param_dict[title],
+                                            self.param_change, self.img_viewer)
         
         return self.param_adjustors
 

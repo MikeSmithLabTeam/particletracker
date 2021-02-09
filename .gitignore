@@ -8,6 +8,9 @@ particletracker/testdata/
 # C extensions
 *.so
 
+#Datafiles
+*.hdf5
+
 # Distribution / packaging
 .Python
 build/
@@ -131,3 +134,6 @@ dmypy.json
 .pyre/
 /.idea/
 /particletracker/run.py
+particle.code-workspace
+.vscode/settings.json
+.gitignore

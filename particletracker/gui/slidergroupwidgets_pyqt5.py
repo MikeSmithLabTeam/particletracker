@@ -6,16 +6,17 @@ from qtwidgets import QCustomSlider, QCustomTextBox, SelectAreaWidget
 from ..gui.pyqt5_widgets import QModCustomTextBox
 
 class CollectionParamAdjustors(QWidget):
-    def __init__(self, param_dict, title,*args, **kwargs):
+    def __init__(self, title, param_dict, param_change, *args, **kwargs):
         super(CollectionParamAdjustors, self).__init__(*args, **kwargs)
         self.title = title
+        self.param_change = param_change
         self.scroll_layout = QVBoxLayout()
         self.build_widgets(title, param_dict)
 
         
     def build_widgets(self, title, param_dict):#, param_change):
         self.layout_outer = QVBoxLayout()
-        for method in param_dict[title + '_method']:#methods:
+        for method in param_dict[title + '_method']:
             widget_count=0
             group_box = QGroupBox(method)
             vbox = QVBoxLayout()
@@ -40,7 +41,7 @@ class CollectionParamAdjustors(QWidget):
                         slider.meta = [title, method, method_param]
                         slider.widget = 'slider'
                         #Signal connected to param_change slot. This is in toplevel.py
-                        slider.valueChanged.connect(lambda x=None: param_change(x))
+                        slider.valueChanged.connect(lambda x=None: self.param_change(x))
                         vbox.addWidget(slider)
                         widget_count += 1
 
@@ -51,7 +52,7 @@ class CollectionParamAdjustors(QWidget):
                         textbox.meta = [title, method, method_param]
                         textbox.widget = 'textbox'
                         # Signal connected to param_change slot. This is in toplevel.py
-                        textbox.returnPressed.connect(lambda x=textbox.text: param_change(x))
+                        textbox.returnPressed.connect(lambda x=textbox.text: self.param_change(x))
                         vbox.addWidget(textbox)#Text_Box(method_param,method, param_dict, param_change))
                         widget_count += 1
 
@@ -66,7 +67,7 @@ class CollectionParamAdjustors(QWidget):
                 textbox.meta = [title, method]
                 textbox.widget = 'textbox'
                 # Signal connected to param_change slot. This is in toplevel.py
-                textbox.returnPressed.connect(lambda x=None: param_change(x))
+                textbox.returnPressed.connect(lambda x=None: self.param_change(x))
                 vbox.addWidget(textbox)
                 widget_count += 1
 
@@ -93,14 +94,11 @@ class CollectionParamAdjustors(QWidget):
 class CropMask(QWidget):
     valueChanged = pyqtSignal(str)
 
-    def __init__(self, param_dict,title, methods, param_change, img_viewer, crop_mask_vid_obj, reboot=None, *args, **kwargs):
+    def __init__(self, title, param_dict, param_change, img_viewer, *args, **kwargs):
         super(CropMask, self).__init__(*args, **kwargs)
-        self.reboot=reboot
         self.img_viewer=img_viewer
         self.title = title
-        #self.crop_mask_vid_obj=crop_mask_vid_obj
         self.param_change=param_change
-        self.methods = methods
         self.param_dict = param_dict
 
         self.layout = QVBoxLayout()
@@ -116,14 +114,12 @@ class CropMask(QWidget):
             textbox = QModCustomTextBox(self.img_viewer, title=method, value_=str(self.param_dict[method]), checkbox=True)
             textbox.meta = [title, method]
             textbox.widget='textbox'
-            textbox.returnPressed.connect(lambda x=textbox.value(): param_change(x))
+            textbox.returnPressed.connect(lambda x=textbox.value(): self.param_change(x))
             self.layout_outer.addWidget(textbox)
         reset_button=QPushButton('Reset')
         reset_button.meta = 'ResetMask'
-        reset_button.clicked.connect(lambda x='DummyVal': param_change(x))
-        #layout_inner = QHBoxLayout()
+        reset_button.clicked.connect(lambda x='DummyVal': self.param_change(x))
         self.layout_outer.addWidget(reset_button)
-        #self.layout_outer.addLayout(layout_inner)
         self.widget_container = QWidget()
         self.widget_container.setLayout(self.layout_outer)
         self.layout.addWidget(self.widget_container)

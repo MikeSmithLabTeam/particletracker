@@ -19,7 +19,7 @@ class ReadCropVideo(ReadVideo):
         '''
         crop_height = self.parameters['crop_box'][1][1] - self.parameters['crop_box'][1][0]
         crop_width = self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]
-        if (self.height < crop_height) or (self.width < crop_width):
+        if (self.height != crop_height) or (self.width != crop_width):
             self.reset_mask()
 
         self.set_mask()   
