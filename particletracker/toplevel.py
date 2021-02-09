@@ -210,7 +210,6 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
 
-
     @pyqtSlot(float, float)
     def coords_clicked(self, x, y):
         print('Coords')
