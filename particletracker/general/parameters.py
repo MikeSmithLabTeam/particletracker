@@ -56,3 +56,6 @@ def parse_values(sender, value):
         print('Parsing of this widget type not implemented')
         return value
 
+def ok_to_duplicate_method_check(method):
+    not_to_be_duplicated = ['crop_box']
+    return method not in not_to_be_duplicated

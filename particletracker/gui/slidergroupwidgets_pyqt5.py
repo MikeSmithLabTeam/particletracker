@@ -25,7 +25,6 @@ class CollectionParamAdjustors(QWidget):
             Read the datatype of param dictionary. Use this to determine
             what type of gui object (slider, text box etc) to display for adjustment.
             """
-            
             if isinstance(param_dict[method], dict):
                 for method_param in list(param_dict[method].keys()):
                     # If sub dictionary contains a list [value, min, max, step] gui displays a QCustomSlider

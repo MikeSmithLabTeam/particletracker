@@ -12,7 +12,9 @@ def create_param_file(filename):
     crop = {'crop_method': ('crop_box','mask_ellipse'),# 'mask_polygon',),
             'crop_box':((0, 0), (1280, 720)),#{'crop_coords': (76, 119, 944, 900),},
             'mask_ellipse': None,
+            'mask_ellipse_invert':None,
             'mask_polygon': None,
+            'mask_polygon_invert':None,
             }
 
     preprocess = {

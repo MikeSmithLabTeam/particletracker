@@ -225,11 +225,13 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def param_change(self, value):
         sender = self.sender()
+        
         if sender.meta == 'ResetMask':
             self.tracker.cap.reset_mask()
+            self.update_param_widgets('crop')
         else:
-            paramdict_location=sender.meta
             parsed_value = parse_values(sender, value)
+            paramdict_location=sender.meta
             self.update_dictionary_params(paramdict_location, parsed_value)
             if 'mask' in paramdict_location[1]:
                 self.tracker.cap.set_mask()
@@ -249,20 +251,31 @@ class MainWindow(QMainWindow):
                 param_adjustor.remove_widgets()
                 param_adjustor.build_widgets(title, self.tracker.parameters[title])
 
-
     def update_dictionary_params(self, location, value):
-        assert (len(location) > 1) & (len(location) < 4), "location list wrong length"
         if len(location) == 2:
-            self.tracker.parameters[location[0]][location[1]] = value
+            '''Sometimes a duplicate method is added to method list which is not
+            in the dictionary. These duplicates are named method*1 etc. There will
+            already be a method in the dictionary. We copy these values to the
+            newly created method.
+            '''
+            if '_method' in location[1]:
+                for item in value:
+                    if item in self.tracker.parameters[location[0]].keys():
+                        self.tracker.parameters[location[0]][location[1]] = value
+                    else:
+                        assert '*' in item, "Key not in dict and doesn't contain *"
+                        if type(self.tracker.parameters[location[0]][item.split('*')[0]]) is dict:
+                                self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]].copy()
+                        else:
+                            self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]]
+            else:
+                self.tracker.parameters[location[0]][location[1]] = value
         else:
-            self.tracker.parameters[location[0]][location[1]][location[2]] = value      
+            self.tracker.parameters[location[0]][location[1]][location[2]] = value 
 
     def update_viewer(self):
         if self.live_update_button.isChecked():
             frame_number = self.frame_selector.value()
-            #try:
-            #Check dictionary is updated.
-
             if self.use_part_button.isChecked():
                 
                 annotated_img, proc_img = self.tracker.process_frame(frame_number, use_part=True)

@@ -1,3 +1,4 @@
+from ..general.parameters import ok_to_duplicate_method_check
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -40,12 +41,13 @@ class ComboBoxAndButton(QWidget):
         draggable_list = self.parent.list_draggable_lists[tab_index]
         count = 1
 
-        if dynamic:
-            while method in draggable_list.method_list:
-                method = method.split('*')[0] + '*' + str(count)
-                count = count + 1
-        else:
-            draggable_list.takeItem(0)
-        draggable_list.addItem(method)
-        draggable_list.send_signal()
-            
+        if ok_to_duplicate_method_check(method):
+            if dynamic:
+                while method in draggable_list.method_list:
+                    method = method.split('*')[0] + '*' + str(count)
+                    count = count + 1
+            else:
+                draggable_list.takeItem(0)
+
+            draggable_list.addItem(method)
+            draggable_list.send_signal()
