@@ -22,8 +22,12 @@ class QModCustomTextBox(QCustomTextBox):
         shapes = {'crop_box':['rect',QColor(250, 10, 10, 80)],
                   'mask_ellipse':['ellipse',QColor(10,10,250,80)],
                   'mask_polygon':['polygon',QColor(10,10,250,80)],
+                  'mask_circle':['circle', QColor(10,10,250,80)],
+                  'mask_rectangle':['rect', QColor(10,10,250,80)],
                   'mask_ellipse_invert':['ellipse',QColor(10,10,250,80)],
-                  'mask_polygon_invert':['polygon',QColor(10,10,250,80)]
+                  'mask_polygon_invert':['polygon',QColor(10,10,250,80)],
+                  'mask_circle_invert':['circle', QColor(10,10,250,80)],
+                  'mask_rectangle_invert':['rect', QColor(10,10,250,80)]
                   }
         title=kwargs['title'].split('*')[0]
         self.method = shapes[title][0]
@@ -38,7 +42,10 @@ class QModCustomTextBox(QCustomTextBox):
         check_state = self.checkbox.isChecked()
         
         if check_state:
-            self.tool = SelectAreaWidget(shape=self.method, viewer=self.img_viewer, colour=self.colour, points=list(parse_values(self, self.text)))
+            points = parse_values(self, self.text)
+            if points is not None:
+                points = list(points)
+            self.tool = SelectAreaWidget(shape=self.method, viewer=self.img_viewer, colour=self.colour, points=points)
             self.img_viewer.scene.addWidget(self.tool)
             self.hasbeenchecked = True
         else:
