@@ -8,6 +8,7 @@ import cv2
 import sys
 import numpy as np
 import qimage2ndarray
+import webbrowser
 
 from .project.workflow import PTProject
 from .gui.checked_tab_widget import CheckableTabWidget
@@ -40,12 +41,10 @@ class MainWindow(QMainWindow):
             self.movie_filename = str(Path(movie_filename))
         else:
             self.movie_filename = None
-
         if isfile(settings_filename):
             self.settings_filename = str(Path(settings_filename))
         else:
-            self.movie_filename = None
-
+            self.settings_filename = None
         self.reboot()
 
     def reboot(self):
@@ -139,6 +138,8 @@ class MainWindow(QMainWindow):
         ---------------------------------------------------------------------------------------------
         '''
         self.file_menu = menu.addMenu("&File")
+        self.help_menu = menu.addMenu(" Help")
+
         self.file_menu.addAction(open_movie_button)
         self.file_menu.addAction(open_settings_button)
         self.file_menu.addAction(save_settings_button)
@@ -150,6 +151,29 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(process_button)
         self.file_menu.addSeparator()
         self.file_menu.addAction(close_button)
+
+        docs = QAction('help', self)
+        docs.triggered.connect(self.open_docs)
+        about = QAction('about', self)
+        about.triggered.connect(self.about)
+
+        self.help_menu.addAction(docs)
+        self.help_menu.addAction(about)
+
+    def open_docs(self):
+        webbrowser.open('https://particle-tracker.readthedocs.io/en/latest/', new=1, autoraise=True)
+    
+    def about(self):
+        msg=QMessageBox(self)
+        msg.setText(
+            """Particle tracker was created by Mike Smith and James Downs. 
+            Its purpose is to provide a simple platform for quickly performing 
+            both simple and complicated tracking of objects in images / movies.
+            The software is provided free of charge and can be used as you see fit.
+            If used academically we would ask that you cite our page. 
+            We are happy to consider feature requests."""
+            )
+        msg.show()
 
     def setup_viewer(self, view_layout):
         '''
@@ -227,13 +251,14 @@ class MainWindow(QMainWindow):
         sender = self.sender()
         
         if sender.meta == 'ResetMask':
-            self.tracker.cap.reset_mask()
+            print('here')
+            self.tracker.cap.reset()
             self.update_param_widgets('crop')
         else:
             parsed_value = parse_values(sender, value)
             paramdict_location=sender.meta
             self.update_dictionary_params(paramdict_location, parsed_value)
-            if 'mask' in paramdict_location[1]:
+            if ('crop' in paramdict_location[1]) or ('mask' in paramdict_location[1]):
                 self.tracker.cap.set_mask()
         self.update_viewer()
 
@@ -244,12 +269,6 @@ class MainWindow(QMainWindow):
         self.update_dictionary_params(location, value)
         self.update_param_widgets(sender.title)
         self.update_viewer()
-
-    def update_param_widgets(self, title):
-        for param_adjustor in self.toplevel_settings.list_param_adjustors:
-            if param_adjustor.title == title:              
-                param_adjustor.remove_widgets()
-                param_adjustor.build_widgets(title, self.tracker.parameters[title])
 
     def update_dictionary_params(self, location, value):
         if len(location) == 2:
@@ -273,11 +292,16 @@ class MainWindow(QMainWindow):
         else:
             self.tracker.parameters[location[0]][location[1]][location[2]] = value 
 
+    def update_param_widgets(self, title):
+        for param_adjustor in self.toplevel_settings.list_param_adjustors:
+            if param_adjustor.title == title:              
+                param_adjustor.remove_widgets()
+                param_adjustor.build_widgets(title, self.tracker.parameters[title])
+
     def update_viewer(self):
         if self.live_update_button.isChecked():
             frame_number = self.frame_selector.value()
             if self.use_part_button.isChecked():
-                
                 annotated_img, proc_img = self.tracker.process_frame(frame_number, use_part=True)
             else:
                 annotated_img, proc_img = self.tracker.process_frame(frame_number)

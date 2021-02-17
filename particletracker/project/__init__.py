@@ -1,4 +1,5 @@
 import os.path
+import numpy as np
 
 from ..video_crop import ReadCropVideo
 from .. import tracking, preprocessing, postprocessing, \
@@ -68,7 +69,6 @@ class PTWorkflow:
 
         if use_part == True the processing perorms the postprocessing and annotation steps only. 
 
-
         :return:
         """
         if not use_part:
@@ -107,23 +107,22 @@ class PTWorkflow:
 
         """
         proc_frame = self.cap.read_frame(frame_num)
+        error = False
         if not use_part:
-            if self.preprocess_select:
-                proc_frame = self.ip.process(proc_frame)
-                proc_frame = self.cap.apply_mask(proc_frame)
-            if self.track_select:
+            if self.preprocess_select &  (not error):
+                proc_frame, error = self.ip.process(proc_frame)
+                if (not error):
+                    proc_frame, error = self.cap.apply_mask(proc_frame)
+            if self.track_select & (not error):
                 self.pt.track(f_index=frame_num)
-            if self.link_select:
+            if self.link_select & (not error):
                 self.link.link_trajectories(f_index=frame_num)
-        if self.postprocess_select:
+        if self.postprocess_select & (not error):
             self.pp.process(f_index=frame_num, use_part=use_part)
-        if self.annotate_select:
+        if self.annotate_select & (not error):
             annotatedframe = self.an.annotate(f_index=frame_num, use_part=use_part)
         else:
             annotatedframe = self.cap.read_frame(frame_num)
 
-        #Crop both images        
-        annotatedframe = self.cap.apply_crop(annotatedframe)
-        proc_frame = self.cap.apply_crop(proc_frame)
         return annotatedframe, proc_frame
 

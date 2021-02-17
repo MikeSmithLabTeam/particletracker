@@ -22,23 +22,23 @@ class ReadCropVideo(ReadVideo):
             crop_height = self.parameters['crop_box'][1][1] - self.parameters['crop_box'][1][0]
             crop_width = self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]
             if (self.height != crop_height) or (self.width != crop_width):
-                self.reset_mask()
+                self.reset()
         self.set_mask()   
 
-    def reset_mask(self):
+    def reset(self):
         #To set crop back to max image size
-        self.parameters['crop_box']=None#((0, 0),(self.width, self.height))
-        self.mask_none()
+        self.parameters['crop_box']=None
+        self.reset_mask()
         
-    def mask_none(self):
-        self.mask = 255 * np.ones((self.height, self.width),
-                                  dtype=np.uint8)
+    def reset_mask(self):
+        #None for a mask means same size as crop.
+        self.mask = self._create_ones_mask()
+
         for method in self.parameters['crop_method']:
             if 'crop' not in method:
                 self.parameters[method]=None
     
-    def create_empty_mask(self):
-        #calculate mask given ellipse pts
+    def _create_zeros_mask(self):
         if self.parameters['crop_box'] is None:
             img = np.zeros((self.height,self.width), dtype=np.uint8)    
         else:
@@ -46,15 +46,20 @@ class ReadCropVideo(ReadVideo):
                                    self.parameters['crop_box'][1][0] - self.parameters['crop_box'][0][0]),
                                   dtype=np.uint8)
         return img
-
-    def set_mask(self):
+    
+    def _create_ones_mask(self):
         if self.parameters['crop_box'] is None:
-            img = 255 * np.ones((self.height, self.width), dtype=np.uint8)
+            img = 255*np.ones((self.height,self.width), dtype=np.uint8)    
         else:
-            img = 255 * np.ones((self.parameters['crop_box'][1][1] - self.parameters['crop_box'][0][1],
+           img = 255*np.ones((self.parameters['crop_box'][1][1] - self.parameters['crop_box'][0][1],
                                    self.parameters['crop_box'][1][0] - self.parameters['crop_box'][0][0]),
                                   dtype=np.uint8)
+        return img
+
+    def set_mask(self):
+        img = self._create_ones_mask()
         self.mask = img.copy()
+
         for method in self.parameters['crop_method']:
             if 'crop' not in method:
                 points = self.parameters[method]
@@ -69,15 +74,16 @@ class ReadCropVideo(ReadVideo):
                         mask = self.mask_rect(points)
                     elif 'mask_circle' in method:
                         mask = self.mask_circle(points)
-                
+                    
                     if 'invert' in method:
                         self.mask = cv2.add(self.mask, mask)
                     else:
-                        inverted_img = cv2.subtract(img, mask)
-                        self.mask = cv2.subtract(self.mask, inverted_img)
+                        img = cv2.subtract(img, mask)
+                        self.mask = cv2.subtract(self.mask, img)
+
                     
     def mask_ellipse(self, pts):
-        img = self.create_empty_mask()
+        img = self._create_zeros_mask()
         if pts is None:
             mask = img
         else:
@@ -87,7 +93,7 @@ class ReadCropVideo(ReadVideo):
         return mask
 
     def mask_polygon(self, pt_list):
-        img = self.create_empty_mask()
+        img = self._create_zeros_mask()
 
         #calculate mask given points
         if pt_list is None:
@@ -100,7 +106,7 @@ class ReadCropVideo(ReadVideo):
         return mask
     
     def mask_circle(self, pts):
-        img = self.create_empty_mask()
+        img = self._create_zeros_mask()
 
         if pts is None:
             mask = img
@@ -110,7 +116,7 @@ class ReadCropVideo(ReadVideo):
         return mask
 
     def mask_rect(self, pts):
-        img = self.create_empty_mask()
+        img = self._create_zeros_mask()
 
         if pts is None:
             mask = img
@@ -119,24 +125,30 @@ class ReadCropVideo(ReadVideo):
         return mask
 
     def apply_mask(self,frame):
-        print(np.shape(frame))
-        print(np.shape(self.mask))
-        return cv2.bitwise_and(frame, self.mask)
+        try:
+            return cv2.bitwise_and(frame, self.mask), False
+        except Exception as e:
+            print(e)
+            print('Error applying mask')
+            return frame, True
 
     def apply_crop(self, frame):
-        if np.size(np.shape(frame)) == 3:
-            if self.parameters['crop_box'] is not None:
-                frame=frame[self.parameters['crop_box'][0][1]:self.parameters['crop_box'][1][1],
-                        self.parameters['crop_box'][0][0]: self.parameters['crop_box'][1][0],:]
-        else:
-            if self.parameters['crop_box'] is not None:
-                frame=frame[self.parameters['crop_box'][0][1]:self.parameters['crop_box'][1][1],
-                        self.parameters['crop_box'][0][0]: self.parameters['crop_box'][1][0]]
-        return frame
+        return crop(frame, self.parameters)
+        
+    def read_frame(self, n=None):
+        frame=super().read_frame(n=n)
+        cropped_frame=self.apply_crop(frame)
+        return cropped_frame
 
 
-
-
-
-
+def crop(frame, parameters):
+    if np.size(np.shape(frame)) == 3:
+            if parameters['crop_box'] is not None:
+                frame=frame[parameters['crop_box'][0][1]:parameters['crop_box'][1][1],
+                        parameters['crop_box'][0][0]: parameters['crop_box'][1][0],:]
+    else:
+        if parameters['crop_box'] is not None:
+            frame=frame[parameters['crop_box'][0][1]:parameters['crop_box'][1][1],
+                    parameters['crop_box'][0][0]: parameters['crop_box'][1][0]]
+    return frame
 

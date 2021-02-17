@@ -42,16 +42,20 @@ class QModCustomTextBox(QCustomTextBox):
         check_state = self.checkbox.isChecked()
         
         if check_state:
-            points = parse_values(self, self.text)
+            points = parse_values(self, self.value())
             if points is not None:
                 points = list(points)
-            self.tool = SelectAreaWidget(shape=self.method, viewer=self.img_viewer, colour=self.colour, points=points)
+            self.tool = SelectAreaWidget(shape=self.method, viewer=self.img_viewer, colour=self.colour, points=points, handle_rad=10)
             self.img_viewer.scene.addWidget(self.tool)
             self.hasbeenchecked = True
         else:
             if self.hasbeenchecked:
-                self.textbox.setText(str(tuple(self.tool.points)))
-                self.returnPressed.emit(str(tuple(self.tool.points)))
+                try:
+                    #Catches checking and unchecking text box without using tool
+                    self.textbox.setText(str(tuple(self.tool.points)))
+                    self.returnPressed.emit(str(tuple(self.tool.points)))   
+                except:
+                    pass                
                 self.tool.setParent(None)
                 self.tool.deleteLater()
             self.hasbeenchecked = False
