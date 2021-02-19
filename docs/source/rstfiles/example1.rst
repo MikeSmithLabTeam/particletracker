@@ -1,38 +1,42 @@
-How to use Particle Tracker
-===========================
+Example 1.  Simple use of trackpy
+================================
 
-Particle Tracker provides a bunch of options of tracking particles.
-There are 4 main methods that are used.
+Example 1 uses the trackpy library (http://soft-matter.github.io/trackpy/v0.4.2/)
 
-1. TrackPy an existing particle tracking library (`Trackpy <http://soft-matter.github.io/trackpy/v0.4.2>`_)
-2. Opencv Hough Circles
-3. a. Opencv Contour finding
-   b. Rotated Bounding Box finding. This is essentially the same as 3a
-      However, it is useful since it retrieves the orientation of objects
-      if they are not round as well as things like aspect ratio etc.
+Open the gui by running:
 
-To track an object there are several steps
+.. code-block::python
+   from ParticleTracker import track_gui
+   track_gui()
+code
 
-1. Crop and mask the image to remove any unwanted bits of images
-   that might produce spurious results.
-2. Preprocess the images for tracking. Different methods require
-   different things. Some need binary images, others need grayscale
-   it is highly likely that the software will complain a lot if you get
-   this wrong!
-3. Track. Use one of the above methods
-4. Link the tracks together so that you know which particle is
-   which in corresponding frames
-5. Postprocess. Calculate results based on the tracking. For example
-   you might want to know which particles are neighbours or how
-   fast particles are moving.
-6. Annotate. This is useful for checking your tracking is working as expected
-   but also to visualise values. eg you could colour code the value of the
-   order parameter on each particle to see if they are clustered.
+Open the movie example1.mp4 and then load the settings file example1.param. 
 
-How do you start?
------------------
+1. We'll start by cropping and masking the image to get rid of the bits we don't need.
 
-First thing to do is play with some of the testdata which are 3 short
+Select the crop tab. Next to crop box select the check box. On the image click, hold and drag to
+select a region. Once you release you can readjust it with the handles. When happy uncheck the
+check box. Since this is a 4k image we can untoggle the live_update button (circular arrow on toolbar)
+to speed things up. This saves updating after every little change. 
+
+Currently, the Methods section (top right) says mask_ellipse. Since we want to mask a
+hexagon we'll change this. Right click on mask_ellipse and then select mask_polygon from the dropping
+down menu. Click add method and then drag the method above the "----inactive----" and below the crop.
+A new set of param adjustors called mask_polygon appears bottom right. Select the checkbox and then click
+at each point inside the hexagon. Hit Enter on the keyboard if you want to adjust any of the positions
+or alternatively just uncheck the checkbox if happy. 
+
+To see the results we need to turn live_update back on so toggle the button. Inorder to see the effect
+of the mask we need to look at the preprocessed image. We can view this by clicking the button below the 
+main image. 
+
+
+
+
+
+
+
+play with some of the testdata which are 3 short
 mp4s in the testdata folder. Run the gui from Main.py and open the correct
 movie. Then open the .param file by the same name in the project > param_files folder.
 This will apply these settings to analyse that video and should work. To see

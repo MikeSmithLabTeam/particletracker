@@ -40,9 +40,17 @@ def create_param_file(filename):
                     'subtract_bkg_invert':[1,0,1,1],
                     'subtract_bkg_norm':True
                     },
-        'variance':{'variance_norm':True
+        'variance':{'variance_norm':True,
+                    'value':[125,1,255,1]
                     },
-        'flip':{},
+        'invert':{},
+        'erosion':{'erosion_kernel':[1,1,11,2],
+                    'iterations':[1,1,11,1]
+                    },
+        'dilation':{'dilation_kernel':[1,1,11,2],
+                    'iterations':[1,1,11,1]
+                    },
+        'resize':{'scale':[100,10,100,1]}
         }
 
     track = {

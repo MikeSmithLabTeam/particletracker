@@ -6,6 +6,8 @@ from ..gui.clickable_combo_box import ComboBoxAndButton
 from ..gui.slidergroupwidgets_pyqt5 import CollectionParamAdjustors, CropMask
 
 class CheckableTabWidget(QTabWidget):
+    checkBoxChanged = pyqtSignal(int)
+
     checkBoxList = []
     def __init__(self, tracker, img_viewer, param_change, method_change, reboot=None, **kwargs):
         super(CheckableTabWidget, self).__init__()
@@ -96,4 +98,5 @@ class CheckableTabWidget(QTabWidget):
 
     def emitStateChanged(self,check_state, title):
         setattr(self.tracker, title + '_select',check_state == Qt.Checked)
+        self.checkBoxChanged.emit(1)
         #self.param_change()

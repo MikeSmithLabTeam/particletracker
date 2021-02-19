@@ -76,10 +76,12 @@ class ReadCropVideo(ReadVideo):
                         mask = self.mask_circle(points)
                     
                     if 'invert' in method:
-                        self.mask = cv2.add(self.mask, mask)
+                        #self.mask = cv2.add(self.mask, mask)
+                        #img = cv2.subtract(img, 255-mask)
+                        self.mask = cv2.subtract(self.mask, mask)
                     else:
-                        img = cv2.subtract(img, mask)
-                        self.mask = cv2.subtract(self.mask, img)
+                        #img = cv2.subtract(img, mask)
+                        self.mask = cv2.subtract(self.mask, 255-mask)
 
                     
     def mask_ellipse(self, pts):

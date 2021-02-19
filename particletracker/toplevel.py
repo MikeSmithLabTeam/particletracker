@@ -37,11 +37,16 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, movie_filename=None, settings_filename=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
 
-        if isfile(movie_filename):
+        if movie_filename is None:
+            self.movie_filename = None
+        elif isfile(movie_filename):
             self.movie_filename = str(Path(movie_filename))
         else:
             self.movie_filename = None
-        if isfile(settings_filename):
+
+        if settings_filename is None:
+            self.settings_filename = None
+        elif isfile(settings_filename):
             self.settings_filename = str(Path(settings_filename))
         else:
             self.settings_filename = None
@@ -212,6 +217,7 @@ class MainWindow(QMainWindow):
     '''
     def setup_settings_panel(self, settings_layout):
         self.toplevel_settings = CheckableTabWidget(self.tracker, self.viewer, self.param_change, self.method_change, reboot=self.reboot)
+        self.toplevel_settings.checkBoxChanged.connect(self.frame_selector_slot)
         settings_layout.addWidget(self.toplevel_settings)
 
     """
@@ -249,11 +255,12 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def param_change(self, value):
         sender = self.sender()
-        
+        print(sender.meta)
         if sender.meta == 'ResetMask':
-            print('here')
             self.tracker.cap.reset()
             self.update_param_widgets('crop')
+            self.viewer.clearImage()
+            self.update_viewer()
         else:
             parsed_value = parse_values(sender, value)
             paramdict_location=sender.meta
@@ -333,11 +340,12 @@ class MainWindow(QMainWindow):
         self.movie_label.setText(self.movie_filename)
 
     def select_img_view(self):
-        if self.toggle_img.isChecked():
-            self.toggle_img.setText("Preprocessed Image")
-        else:
-            self.toggle_img.setText("Captured Image")
-        self.update_viewer()
+        if self.live_update_button.isChecked():
+            if self.toggle_img.isChecked():
+                self.toggle_img.setText("Preprocessed Image")
+            else:
+                self.toggle_img.setText("Captured Image")
+            self.update_viewer()
 
 
     def open_movie_dialog(self):

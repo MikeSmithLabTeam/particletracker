@@ -99,10 +99,8 @@ class CropMask(QWidget):
         self.title = title
         self.param_change=param_change
         self.param_dict = param_dict
-
-        self.layout = QVBoxLayout()
+        self.layout = QHBoxLayout()
         self.build_widgets(title, param_dict)
-        
 
     def build_widgets(self, title, param_dict):   
         self.layout_outer = QVBoxLayout()     

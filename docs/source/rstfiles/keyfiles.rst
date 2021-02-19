@@ -8,9 +8,12 @@ Within the software we make use of several important files
 .param files
 ------------
 .param files are a nested set of python dictionaries. They effectively
-describe all the settings. The utility > param_file_creator.py
-file provides a convenient way to create a new file from scratch but
-also makes it much easier to see how things are structured.
+describe all the settings. A new default param file can be created:
+
+.. code-block::python
+    from particletracker.general import param_file_creator
+    param_file_creator(filename)
+code
 
 The top level is a dictionary which has keys:
 
@@ -51,14 +54,15 @@ For each method there is yet another dictionary. These contain
 the individual parameters for each method. These can be several types.
 
 [startval, min, max, step] - These types will result in a spinbox slider in the gui.
-Right clicking on the slider will allow you to alter the min and max within the gui.
+Clicking the settings button will allow you to alter the min and max within the gui.
 However, there is no error checking - you can ask for impossible parameters!
 There are strings and True, False, None which will result in edit textboxes.
 
 These files can be saved and loaded directly within the gui to save sets of
 parameters appropriate for a particular experiment. Once a suitable .param file
 is created you can use this directly to batch process many files
-without needing to run the gui.
+without needing to run the gui. When a video is processed a copy of the param file is automatically
+saved to the same folder with videoname.param
 
 
 .hdf5 files
@@ -75,5 +79,3 @@ all the frames either with the "process_part" or "process". When you check the "
 the software switches from using the vidname_temp.hdf5 file to the vidname.hdf5 to perform
 postprocessing / annotation. This is sometimes necessary. For instance to calculate
 a trajectory you must work with data from other frames.
-
-vidname.hdf5 contains the tracking da

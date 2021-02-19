@@ -35,7 +35,6 @@ class ComboBoxAndButton(QWidget):
     def add_method_button_click(self):
         tab_index = self.parent.tabBar().currentIndex()
         dynamic = self.parent.list_draggable_lists[tab_index].dynamic
-
         title = self.parent.tabBar().tabText(tab_index)
         method = self.combo_box.currentText()
         draggable_list = self.parent.list_draggable_lists[tab_index]

@@ -204,6 +204,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
         thickness = get_param_val(parameters[method_key]['thickness'])
         subset_df = get_class_subset(data, f, parameters, method=method_key)
         contour_pts = subset_df[['contours']].values
+        
         colours = colour_array(subset_df, f, parameters, method=method_key)
 
         for index, contour in enumerate(contour_pts):

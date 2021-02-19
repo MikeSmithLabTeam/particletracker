@@ -5,9 +5,10 @@ Welcome to ParticleTracker's documentation!
 .. toctree::
    :maxdepth: 2
 
+   rstfiles/introduction
    rstfiles/installation
    rstfiles/orientation
-   rstfiles/tutorial
+   rstfiles/gettingstarted
    rstfiles/keyfiles
    rstfiles/extending
 
