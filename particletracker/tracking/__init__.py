@@ -71,13 +71,16 @@ class ParticleTracker:
             data.add_metadata('fps', self.cap.fps)
             data.add_metadata('video_filename', self.cap.filename)
             if f_index is None:
-                start = 0
-                stop = self.cap.num_frames
+                start = self.cap.frame_range[0]
+                stop = self.cap.frame_range[1]
+                step = self.cap.frame_range[2]
+                
             else:
                 start = f_index
                 stop = f_index + 1
+                step=1
             self.cap.set_frame(start)
-            for f in tqdm(range(start, stop, 1), 'Tracking'):
+            for f in tqdm(range(start, stop, step), 'Tracking'):
                 df_frame = self.analyse_frame()
                 data.add_tracking_data(f, df_frame)
             data.save(filename=data_filename)

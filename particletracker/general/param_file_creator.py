@@ -5,7 +5,8 @@ def create_param_file(filename):
                   'video_filename':None,
                   'sample':'Sample',
                   'fps':30,
-                  'metadata':None
+                  'metadata':None,
+                  'frame_range':(0,None,1)
                   }
 
     crop = {'crop_method': ('crop_box','mask_ellipse'),# 'mask_polygon',),
@@ -49,8 +50,7 @@ def create_param_file(filename):
                     },
         'dilation':{'dilation_kernel':[1,1,11,2],
                     'iterations':[1,1,11,1]
-                    },
-        'resize':{'scale':[100,10,100,1]}
+                    }
         }
 
     track = {
@@ -65,7 +65,7 @@ def create_param_file(filename):
                   'p2':[39, 1, 201,2],
                   'min_rad':[10, 1, 301,2],
                   'max_rad':[50, 1, 301,2],
-                 'get_intensities':False
+                  'get_intensities':False
                  },
         'contours':{'noise_cutoff':[2,1,50,1],
                     'area_min':[20, 1, 2000, 1],
@@ -145,7 +145,6 @@ def create_param_file(filename):
     annotate = {
         'annotate_method': ('circles',),
         'videowriter':'opencv',#ffmpeg
-        'frame_range':None,#(start,stop) frame numbers
         'text_label':{'text':'BP1',
                      'position':(100,100),
                      'font_colour':(255,0,0),
@@ -158,7 +157,7 @@ def create_param_file(filename):
                      'font_size':4,
                      'font_thickness':3
                      },
-        'particle_values': {'values_column': 'particle',
+        'particle_labels': {'values_column': 'particle',
                             'font_colour': (255, 0, 255),
                             'font_size': 1,
                             'font_thickness': 2

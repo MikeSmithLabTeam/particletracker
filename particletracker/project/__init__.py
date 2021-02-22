@@ -33,7 +33,7 @@ class PTWorkflow:
         self._create_processes()
 
     def _create_processes(self, n=0):
-        self.cap = ReadCropVideo(parameters=self.parameters['crop'],
+        self.cap = ReadCropVideo(parameters=self.parameters,
                                  filename=self.video_filename,
                                  )
         self.ip = preprocessing.Preprocessor(self.parameters)
@@ -56,7 +56,7 @@ class PTWorkflow:
         self.an = annotation.TrackingAnnotator(vidobject=self.cap,
                                                        data_filename=self.data_filename,
                                                        parameters=self.parameters[
-                                                           'annotate'], frame=self.cap.read_frame())
+                                                           'annotate'], frame=self.cap.read_frame(self.parameters['experiment']['frame_range'][0]))
 
     def process(self, use_part=False):
         """Process an entire video

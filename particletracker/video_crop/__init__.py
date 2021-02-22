@@ -9,8 +9,8 @@ from labvision.images import display
 class ReadCropVideo(ReadVideo):
 
     def __init__(self, parameters=None, filename=None, frame_range=(0,None,1)):
-        ReadVideo.__init__(self, filename=filename, frame_range=frame_range)
-        self.parameters = parameters
+        ReadVideo.__init__(self, filename=filename, frame_range=parameters['experiment']['frame_range'])
+        self.parameters = parameters['crop']
         '''
         If loading a new video with different dimensions,
         then the stored crop and mask parameters may not fit.
@@ -18,6 +18,7 @@ class ReadCropVideo(ReadVideo):
         dimensions. This may not sort the gui but it will stop
         a crash.
         '''
+        
         if self.parameters['crop_box'] is not None:
             crop_height = self.parameters['crop_box'][1][1] - self.parameters['crop_box'][1][0]
             crop_width = self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]
@@ -141,7 +142,6 @@ class ReadCropVideo(ReadVideo):
         frame=super().read_frame(n=n)
         cropped_frame=self.apply_crop(frame)
         return cropped_frame
-
 
 def crop(frame, parameters):
     if np.size(np.shape(frame)) == 3:

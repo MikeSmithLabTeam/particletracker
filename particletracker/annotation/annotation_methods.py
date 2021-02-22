@@ -73,7 +73,7 @@ def var_label(frame, data, f, parameters=None, call_num=None):
         print(e)
         return frame
 
-def particle_values(frame, data, f, parameters=None, call_num=None):
+def particle_labels(frame, data, f, parameters=None, call_num=None):
     '''
     Function annotates image with particle ids
     This function only makes sense if run on linked trajectories
@@ -338,3 +338,48 @@ def frame_range(frame, data, f, parameters=None, call_num=None):
     '''
     return frame
 
+"""
+def resize(frame, data, f, parameters=None, call_num=None):
+    ''' Resize an image
+
+    Notes
+    -----
+
+    resizes an input image by the scale specified
+
+    options
+    ~~~~~~~
+
+    parameters['resize scale'] : factor for scale operation
+
+    Parameters
+    ----------
+
+    frame: np.ndarray
+        frame
+    parameters: dict, optional
+        parameters dictionary
+    call_num: int or None
+        number specifying the call number to this function. allows multiple calls
+
+    Returns
+    -------
+
+    Resized frame
+
+    '''
+    method_key = get_method_key('resize', call_num=call_num)
+    params = parameters['preprocess'][method_key]
+
+    scale = get_param_val(params['scale'])/100
+    width = int(frame.shape[1] * scale)
+    height = int(frame.shape[0] * scale)
+    dim = (width, height)
+    try:
+        return cv2.resize(frame, dim), False
+    except Exception as e:
+        print(e)
+        print('Error in preprocessing_methods.resize')
+        return frame, True
+
+"""

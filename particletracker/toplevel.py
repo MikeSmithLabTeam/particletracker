@@ -56,6 +56,11 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'main_panel'):
             self.main_panel.deleteLater()
             self.main_panel.setParent(None)
+            try:
+                #This allows for continuity of parameters after processing.
+                self.settings_filename = self.movie_filename[:-4] + '_expt.param'
+            except:
+                print('tried to load current params - falling back on initial settings file')
         self.open_tracker()
 
         self.setWindowTitle("Particle Tracker")
@@ -193,23 +198,38 @@ class MainWindow(QMainWindow):
         self.toggle_img.setCheckable(True)
         self.toggle_img.setChecked(False)
         self.toggle_img.clicked.connect(self.select_img_view)
+        frame_selector_layout = QHBoxLayout()
+
+        if self.tracker.parameters['experiment']['frame_range'][1] is None:
+            max_val = self.tracker.cap.num_frames
+        else:
+            max_val=self.tracker.parameters['experiment']['frame_range'][1]
         self.frame_selector = QCustomSlider(title='Frame',
-                                            min_=self.tracker.cap.frame_range[0],
-                                            max_=self.tracker.cap.frame_range[1]-1,
-                                            step_=1,
+                                            min_=self.tracker.parameters['experiment']['frame_range'][0],#self.tracker.cap.frame_range[0],
+                                            max_=max_val,#self.tracker.cap.frame_range[1]-1,
+                                            step_=self.tracker.parameters['experiment']['frame_range'][2],#1,
                                             value_=self.tracker.cap.frame_range[0],
                                             spinbox=True,
                                             )
-
-        self.frame_selector.valueChanged.connect(self.frame_selector_slot)
-        self.frame_selector_slot(0)
+        self.frame_selector.meta = ['experiment','frame']
+        self.frame_selector.slider.meta = ['experiment','frame_range']
+        self.frame_selector.valueChanged.connect(lambda x=self.frame_selector.value():self.param_change(x))
+        self.frame_selector.slider.rangeChanged.connect(lambda x='dummy':self.param_change(x))
+        self.frame_selector.widget = 'slider'
+        self.frame_selector.slider.widget = 'slider'
+        self.reset_frame_range = QPushButton('Reset frame range')
+        self.reset_frame_range.clicked.connect(self.reset_frame_range_click)
+        self.reset_frame_range.meta = 'ResetFrameRange'
 
         view_layout.addWidget(self.movie_label)
         view_layout.addWidget(self.settings_label)
         view_layout.addWidget(self.viewer)
         view_layout.addWidget(self.toggle_img)
-        view_layout.addWidget(self.frame_selector)
+        frame_selector_layout.addWidget(self.frame_selector)
+        frame_selector_layout.addWidget(self.reset_frame_range)
+        view_layout.addLayout(frame_selector_layout)
 
+        self.update_viewer()
     '''
     -------------------------------------------------------------------
     Settings panel is the rhs of gui containing all the param adjustors
@@ -255,18 +275,23 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def param_change(self, value):
         sender = self.sender()
-        print(sender.meta)
+        paramdict_location=sender.meta
         if sender.meta == 'ResetMask':
             self.tracker.cap.reset()
             self.update_param_widgets('crop')
             self.viewer.clearImage()
-            self.update_viewer()
+        elif sender.meta == 'ResetFrameRange':
+            self.update_dictionary_params(['experiment','frame_range'],(0,self.tracker.cap.num_frames-1,1))
+            self.tracker.cap.set_frame_range((0,self.tracker.cap.num_frames,1))
+        elif 'frame_range' in paramdict_location[1]:
+            frame_range = (self.frame_selector.slider._min,self.frame_selector.slider._max+1,self.frame_selector.slider._step)
+            self.update_dictionary_params(['experiment','frame_range'],frame_range)
+            self.tracker.cap.set_frame_range(frame_range)
         else:
             parsed_value = parse_values(sender, value)
-            paramdict_location=sender.meta
             self.update_dictionary_params(paramdict_location, parsed_value)
             if ('crop' in paramdict_location[1]) or ('mask' in paramdict_location[1]):
-                self.tracker.cap.set_mask()
+                self.tracker.cap.set_mask()          
         self.update_viewer()
 
     @pyqtSlot(tuple)
@@ -285,15 +310,18 @@ class MainWindow(QMainWindow):
             newly created method.
             '''
             if '_method' in location[1]:
-                for item in value:
-                    if item in self.tracker.parameters[location[0]].keys():
-                        self.tracker.parameters[location[0]][location[1]] = value
-                    else:
-                        assert '*' in item, "Key not in dict and doesn't contain *"
-                        if type(self.tracker.parameters[location[0]][item.split('*')[0]]) is dict:
-                                self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]].copy()
+                if value == ():
+                    self.tracker.parameters[location[0]][location[1]] = value
+                else:
+                    for item in value:
+                        if item in self.tracker.parameters[location[0]].keys():
+                            self.tracker.parameters[location[0]][location[1]] = value
                         else:
-                            self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]]
+                            assert '*' in item, "Key not in dict and doesn't contain *"
+                            if type(self.tracker.parameters[location[0]][item.split('*')[0]]) is dict:
+                                    self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]].copy()
+                            else:
+                                self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]]
             else:
                 self.tracker.parameters[location[0]][location[1]] = value
         else:
@@ -301,7 +329,7 @@ class MainWindow(QMainWindow):
 
     def update_param_widgets(self, title):
         for param_adjustor in self.toplevel_settings.list_param_adjustors:
-            if param_adjustor.title == title:              
+            if param_adjustor.title == title:  
                 param_adjustor.remove_widgets()
                 param_adjustor.build_widgets(title, self.tracker.parameters[title])
 
@@ -318,26 +346,17 @@ class MainWindow(QMainWindow):
                 self.viewer.setImage(bgr_to_rgb(proc_img))
             else:
                 self.viewer.setImage(bgr_to_rgb(annotated_img))
-            #except Exception as e:
-                '''
-                This is called to reverse a settings change that was made.
-                Usually the user has asked for an impossible combination 
-                of methods to be applied. See CheckableTabWidgets --> MyListWidget
-                '''
-            #    print(e)
-
-                # self.toplevel_settings.deactivate_last_added_method()
-            #   msgBox = QMessageBox.about(self, "Warning",
-            #                       "Tracking crashed: It is likely "
-            #                       "you asked for a incompatible set of methods / parameters."
-            #                       "Best suggestion undo whatever you just did!")
-
+        
     def reset_viewer(self):
         self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],
                                            max_=self.tracker.cap.frame_range[1] - 1,
                                            step_=1,
                                            )
         self.movie_label.setText(self.movie_filename)
+
+    def reset_frame_range_click(self):
+        self.tracker.cap.set_frame_range((0,None,1))
+        self.reset_viewer()        
 
     def select_img_view(self):
         if self.live_update_button.isChecked():
