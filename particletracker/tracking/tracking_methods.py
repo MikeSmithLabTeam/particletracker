@@ -5,6 +5,7 @@ import pandas as pd
 
 from ..general.parameters import get_param_val, get_method_key
 from ..tracking import intensity_methods as im
+from ..customexceptions.track_error import *
 
 
 '''
@@ -34,7 +35,7 @@ def trackpy(frame,_, parameters=None, call_num=None):
                     # Try because some circles overlap the edge giving meaningless answers
                     cut_out_frame = frame[int(yc - rc):int(yc + rc), int(xc - rc):int(xc + rc)]
                     h, w = cut_out_frame.shape[:2]
-                    mask = create_circular_mask(h, w)
+                    mask = _create_circular_mask(h, w)
                     masked_img = cut_out_frame.copy()
                     masked_img[~mask] = 0
                     value = getattr(im, parameters[method_key]['get_intensities'])(masked_img)
@@ -45,8 +46,8 @@ def trackpy(frame,_, parameters=None, call_num=None):
             df['intensities'] = np.array(intensity)
         return df
     except Exception as e:
-        print('Error in tracking_methods.trackpy')
-        print(e)
+        raise TrackpyError(e)
+        
 
 
 def hough(frame, _,parameters=None, call_num=None):
@@ -88,7 +89,7 @@ def hough(frame, _,parameters=None, call_num=None):
                     #Try because some circles overlap the edge giving meaningless answers
                     cut_out_frame = frame[int(yc - rc):int(yc + rc), int(xc - rc):int(xc + rc)]
                     h,w= cut_out_frame.shape[:2]
-                    mask = create_circular_mask(h, w)
+                    mask = _create_circular_mask(h, w)
                     masked_img = cut_out_frame.copy()
                     masked_img[~mask] = 0
                     value = getattr(im, parameters[method_key]['get_intensities'])(masked_img)
@@ -103,8 +104,7 @@ def hough(frame, _,parameters=None, call_num=None):
 
         return df
     except Exception as e:
-        print('Error in tracking_methods.hough')
-        print(e)
+        raise HoughCirclesError(e)
 
 
 
@@ -112,7 +112,8 @@ def boxes(frame, _,parameters=None, call_num=None):
     '''
     boxes method finds contour of object but reduces the info to
     a rotated bounding box. Use for finding an angle of object or
-    estimate of size.
+    estimate of size. If you need to do something with the pixels
+    use contours instead.
     '''
     try:
         method_key = get_method_key('boxes',call_num=call_num)
@@ -148,19 +149,13 @@ def boxes(frame, _,parameters=None, call_num=None):
         df = pd.DataFrame(data=info, columns=info_headings)
         return df
     except Exception as e:
-        print('Error in tracking_methods.boxes')
-        print(e)
+        raise BoxesError(e)
 
 
 def contours(pp_frame, frame, parameters=None, call_num=None):
     '''
-    boxes method finds contour of object but reduces the info to
-    a rotated bounding box. Use for finding an angle of object or
-    estimate of size. If you need to do something with the pixels
-    use contours instead.
-
     contours stores: the centroid cx, cy, area enclosed by contour,
-    the bounding rectangle which is used with contour to generate
+    the bounding rectangle (not rotated) which is used with contour to generate
     mask so that you can extract pixels from original image
     and perform some analysis.
     '''
@@ -203,8 +198,7 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
 
         return df
     except Exception as e:
-        print('Error in tracking_methods.contours')
-        print(e)
+        raise ContoursError(e)
 
 
 '''
@@ -212,21 +206,17 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
 Supporting functions
 ------------------------------------------------------------------------
 '''
-def create_circular_mask(h, w, center=None, radius=None):
-    try:
-        if center is None: # use the middle of the image
-            center = (int(w/2), int(h/2))
-        if radius is None: # use the smallest distance between the center and image walls
-            radius = min(center[0], center[1], w-center[0], h-center[1])
+def _create_circular_mask(h, w, center=None, radius=None):
+    if center is None: # use the middle of the image
+        center = (int(w/2), int(h/2))
+    if radius is None: # use the smallest distance between the center and image walls
+        radius = min(center[0], center[1], w-center[0], h-center[1])
 
-        Y, X = np.ogrid[:h, :w]
-        dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
-
-        mask = dist_from_center <= radius
-        return mask
-    except Exception as e:
-        print('Error in tracking_methods.create_circular_mask')
-        print(e)
+    Y, X = np.ogrid[:h, :w]
+    dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
+    mask = dist_from_center <= radius
+    return mask
+    
 
 
 def _find_contours(img, hierarchy=False):
@@ -234,20 +224,18 @@ def _find_contours(img, hierarchy=False):
     contours is a tuple containing (img, contours)
     """
     # work for any version of opencv
+
     try:
-        try:
-            im, contours, hier = cv2.findContours(
-                img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-        except:
-            contours, hier = cv2.findContours(
-                img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-        if hierarchy:
-            return contours, hier
-        else:
-            return contours
-    except Exception as e:
-        print('Error in tracking_methods._find_contours')
-        print(e)
+        im, contours, hier = cv2.findContours(
+            img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    except:
+        contours, hier = cv2.findContours(
+            img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    if hierarchy:
+        return contours, hier
+    else:
+        return contours
+    
 
 
 

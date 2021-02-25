@@ -4,14 +4,16 @@ import numpy as np
 from ..video_crop import ReadCropVideo
 from .. import tracking, preprocessing, postprocessing, \
     annotation, linking
+from ..customexceptions import BaseError, flash_error_msg
 
 class PTWorkflow:
     '''
     PTWorkflow is a parent class that handles the workflow of a particle tracking project.
     '''
 
-    def __init__(self, video_filename=None):
+    def __init__(self, video_filename=None, parent=None):
         self.video_filename = video_filename
+        self.parent=parent
         self.filename = os.path.splitext(self.video_filename)[0]
         self.data_filename = self.filename + '.hdf5'
 
@@ -29,7 +31,9 @@ class PTWorkflow:
         ''' Setup is a internal class method it instantiates the reader object
         Depending on the settings in PARAMETERS this may also crop the video frames
         as they are requested.'''
+        datapath=os.path.dirname(self.video_filename)
         self.parameters['experiment']['video_filename'] = self.video_filename
+        self.parameters['postprocess']['add_frame_data']['data_path'] = datapath
         self._create_processes()
 
     def _create_processes(self, n=0):
@@ -37,6 +41,7 @@ class PTWorkflow:
                                  filename=self.video_filename,
                                  )
         self.ip = preprocessing.Preprocessor(self.parameters)
+        
         self.pt = tracking.ParticleTracker(
             parameters=self.parameters['track'], preprocessor=self.ip,
             vidobject=self.cap, data_filename=self.data_filename)
@@ -107,22 +112,29 @@ class PTWorkflow:
 
         """
         proc_frame = self.cap.read_frame(frame_num)
-        error = False
-        if not use_part:
-            if self.preprocess_select &  (not error):
-                proc_frame, error = self.ip.process(proc_frame)
-                if (not error):
-                    proc_frame, error = self.cap.apply_mask(proc_frame)
-            if self.track_select & (not error):
-                self.pt.track(f_index=frame_num)
-            if self.link_select & (not error):
-                self.link.link_trajectories(f_index=frame_num)
-        if self.postprocess_select & (not error):
-            self.pp.process(f_index=frame_num, use_part=use_part)
-        if self.annotate_select & (not error):
-            annotatedframe = self.an.annotate(f_index=frame_num, use_part=use_part)
-        else:
-            annotatedframe = self.cap.read_frame(frame_num)
-
+        
+        try:
+            if not use_part:
+                if self.preprocess_select:
+                    proc_frame = self.ip.process(proc_frame)
+                    proc_frame = self.cap.apply_mask(proc_frame)
+                if self.track_select:
+                    self.pt.track(f_index=frame_num)            
+                if self.link_select:
+                    self.link.link_trajectories(f_index=frame_num)
+            if self.postprocess_select:
+                self.pp.process(f_index=frame_num, use_part=use_part)
+            if self.annotate_select:
+                annotatedframe = self.an.annotate(f_index=frame_num, use_part=use_part)
+            else:
+                annotatedframe = self.cap.read_frame(frame_num)
+        except BaseError as e:         
+            print(self.parent)
+            print(e)
+            if self.parent is not None:
+                flash_error_msg(e, self.parent)
+            annotatedframe = proc_frame
+            
+        
         return annotatedframe, proc_frame
 

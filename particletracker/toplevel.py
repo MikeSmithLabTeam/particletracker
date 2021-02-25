@@ -37,32 +37,37 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, movie_filename=None, settings_filename=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
 
-        if movie_filename is None:
-            self.movie_filename = None
-        elif isfile(movie_filename):
-            self.movie_filename = str(Path(movie_filename))
+        if movie_filename is not None:
+            if isfile(movie_filename):
+                self.movie_filename = str(Path(movie_filename))
         else:
             self.movie_filename = None
+            
+        if self.movie_filename is None:
+            self.open_movie_dialog()
 
-        if settings_filename is None:
-            self.settings_filename = None
-        elif isfile(settings_filename):
-            self.settings_filename = str(Path(settings_filename))
+        if settings_filename is not None:
+            if isfile(settings_filename):
+                self.settings_filename = str(Path(settings_filename))
         else:
             self.settings_filename = None
+               
+        if self.settings_filename is None:
+            self.open_settings_button_click()
+
         self.reboot()
 
-    def reboot(self):
+    def reboot(self, open_settings=True):
         if hasattr(self, 'main_panel'):
             self.main_panel.deleteLater()
             self.main_panel.setParent(None)
-            try:
-                #This allows for continuity of parameters after processing.
-                self.settings_filename = self.movie_filename[:-4] + '_expt.param'
-            except:
-                print('tried to load current params - falling back on initial settings file')
+            if not open_settings:
+                try:
+                    #This allows for continuity of parameters after processing.
+                    self.settings_filename = self.movie_filename[:-4] + '_expt.param'
+                except:
+                    print('tried to load current params - falling back on initial settings file')
         self.open_tracker()
-
         self.setWindowTitle("Particle Tracker")
         self.main_panel = QWidget()
         self.main_layout = QHBoxLayout()  # Contains view and settings layout
@@ -78,8 +83,10 @@ class MainWindow(QMainWindow):
     def init_ui(self, view_layout, settings_layout, reboot=True):
         if not hasattr(self, 'file_menu'):
             self.setup_menus_toolbar()
+        
         self.setup_viewer(view_layout)# Contains image window, frame slider and spinbox.
         self.setup_settings_panel(settings_layout)# Contains all widgets on rhs.
+      
 
     def setup_menus_toolbar(self):
         dir = os.path.abspath(__file__)
@@ -228,8 +235,10 @@ class MainWindow(QMainWindow):
         frame_selector_layout.addWidget(self.frame_selector)
         frame_selector_layout.addWidget(self.reset_frame_range)
         view_layout.addLayout(frame_selector_layout)
-
+        
         self.update_viewer()
+        
+
     '''
     -------------------------------------------------------------------
     Settings panel is the rhs of gui containing all the param adjustors
@@ -248,14 +257,7 @@ class MainWindow(QMainWindow):
     ----------------------------------------------------------------
     """
     def open_tracker(self):
-        if self.movie_filename is None:
-            ok = False
-            while not ok:
-                ok = self.open_movie_dialog()
-        if self.settings_filename is None:
-            self.open_settings_button_click()
-
-        self.tracker = PTProject(video_filename=self.movie_filename, param_filename=self.settings_filename)
+        self.tracker = PTProject(video_filename=self.movie_filename, param_filename=self.settings_filename, parent=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
 
@@ -340,7 +342,7 @@ class MainWindow(QMainWindow):
                 annotated_img, proc_img = self.tracker.process_frame(frame_number, use_part=True)
             else:
                 annotated_img, proc_img = self.tracker.process_frame(frame_number)
-            
+
             toggle = self.toggle_img.isChecked()
             if toggle:
                 self.viewer.setImage(bgr_to_rgb(proc_img))
@@ -418,6 +420,7 @@ class MainWindow(QMainWindow):
                                                         "settings (*.param)", options=options)
 
         file_settings_name=file_settings_name.split('.')[0] + '.param'
+        print(self.tracker.parameters['preprocess']['preprocess_method'])
         write_paramdict_file(self.tracker.parameters, file_settings_name)
 
     def live_update_button_click(self):
@@ -466,7 +469,7 @@ class MainWindow(QMainWindow):
 
         write_paramdict_file(self.tracker.parameters, self.movie_filename[:-4] + '_expt.param')
         QMessageBox.about(self, "", "Processing Finished")
-        self.reboot()
+        self.reboot(open_settings=False)
 
     def close_button_click(self):
         sys.exit()

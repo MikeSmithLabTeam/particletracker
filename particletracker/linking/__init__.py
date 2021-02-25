@@ -2,6 +2,7 @@ from ..general import dataframes
 from ..general.parameters import  get_param_val
 import trackpy
 import numpy as np
+from ..customexceptions import LinkError
 
 class LinkTrajectory:
     def __init__(self, data_filename=None, parameters=None):
@@ -33,6 +34,5 @@ class LinkTrajectory:
 
                 # Save DataStore
                 data.save(filename=data_filename)
-        except Exception as e:
-            print('Error in linking')
-            print(e)
+        except:
+            raise LinkError

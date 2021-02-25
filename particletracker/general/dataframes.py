@@ -108,13 +108,12 @@ class DataStore:
         self.df = self.df.append(data.set_index('frame'))
 
     def _add_tracking_array(self, frame, data, col_names):
+        print(type(data))
         if isinstance(data, np.ndarray):
             col_names = ['x', 'y', 'r'] if col_names is None else col_names
             data_dict = {name: data[:, i] for i, name in enumerate(col_names)}
-
         elif isinstance(data, list):
             data_dict = {name: data[i] for i, name in enumerate(col_names)}
-
         else:
             print('type wrong')
         data_dict['frame'] = frame

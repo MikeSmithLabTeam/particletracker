@@ -8,7 +8,7 @@ from .toplevel import MainWindow
 
 
 
-def track_gui(movie=None, settings=None):
+def track_gui(movie_filename=None, settings_filename=None):
     '''
 
     Parameters
@@ -22,7 +22,7 @@ def track_gui(movie=None, settings=None):
     '''
  
 
-    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "3"
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
     app = QApplication(sys.argv)
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
@@ -32,8 +32,8 @@ def track_gui(movie=None, settings=None):
         app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     
     window = MainWindow(
-        movie_filename=movie,
-        settings_filename=settings)
+        movie_filename=movie_filename,
+        settings_filename=settings_filename)
     window.show()
     #Start event loop
     app.exec_()

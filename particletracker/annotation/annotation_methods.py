@@ -2,6 +2,7 @@ from ..general.parameters import get_param_val, get_method_key
 from ..general.cmap import colour_array
 import cv2
 import numpy as np
+from ..customexceptions.annotator_error import *
 
 '''
 --------------------------------------------------------------------------------------
@@ -35,10 +36,8 @@ def text_label(frame, data, f, parameters=None, call_num=None):
                                     cv2.LINE_AA)
 
         return annotated_frame
-    except Exception as e:
-        print('Error in annotation_methods.text_label')
-        print(e)
-        return annotated_frame
+    except:
+        raise TextLabelError
 
 def var_label(frame, data, f, parameters=None, call_num=None):
     '''
@@ -68,10 +67,8 @@ def var_label(frame, data, f, parameters=None, call_num=None):
                                     cv2.LINE_AA)
 
         return annotated_frame
-    except Exception as e:
-        print('Error in annotation_methods.var_label')
-        print(e)
-        return frame
+    except:
+        raise VarLabelError
 
 def particle_labels(frame, data, f, parameters=None, call_num=None):
     '''
@@ -102,10 +99,8 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
                                 cv2.LINE_AA)
 
         return frame
-    except Exception as e:
-        print('Error in annotation_method.particle_values')
-        print(e)
-        return frame
+    except:
+        raise ParticleLabelsError
 
 '''
 --------------------------------------------------------------------------------------
@@ -124,9 +119,8 @@ def get_class_subset(data, f, parameters, method=None):
             temp = data.df.loc[f]
             subset_df = temp[temp[classifier_column] == classifier]
         return subset_df
-    except Exception as e:
-        print('Error in annotation_methods.get_class_subset')
-        print(e)
+    except:
+        raise GetClassSubsetError
 
 
 
@@ -154,16 +148,10 @@ def circles(frame, data, f, parameters=None, call_num=None):
         circles = subset_df[['x', 'y', 'r']].values
         colours = colour_array(subset_df, f, parameters, method=method_key)
         for i, circle in enumerate(circles):
-            try:
-                frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), int(circle[2]), colours[i], int(thickness))
-            except:
-                print('Failed plotting circle, check data is valid')
+            frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), int(circle[2]), colours[i], int(thickness))
         return frame
-    except Exception as e:
-        print('Error in annotation_methods.circles')
-        print(e)
-        print('Have you actually tracked any objects?')
-        return frame
+    except:
+        raise CirclesError
 
 def boxes(frame, data, f, parameters=None, call_num=None):
     try:
@@ -179,10 +167,8 @@ def boxes(frame, data, f, parameters=None, call_num=None):
                 frame = _draw_contours(frame, box, col=colours[index],
                                            thickness=int(get_param_val(parameters[method_key]['thickness'])))
         return frame
-    except Exception as e:
-        print('Error in annotation_methods.boxes')
-        print(e)
-        print('Have you actually tracked any objects?')
+    except:
+        raise BoxesError
 
 def contour_inside_img(sz, contour):
     try:
@@ -193,10 +179,7 @@ def contour_inside_img(sz, contour):
                 inside = False
         return inside
     except Exception as e:
-        print('Error in annotation_methods.contour_inside_img')
-        print(e)
-
-
+        raise ContourInsideImageError
 
 def contours(frame, data, f, parameters=None, call_num=None):
     try:
@@ -212,9 +195,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
                                            thickness=int(thickness))
         return frame
     except Exception as e:
-        print('Error in annotation_methods.contours')
-        print(e)
-        print('Have you actually tracked anything?')
+        raise ContoursError
 
 def _draw_contours(img, contours, col=(0,0,255), thickness=1):
 
@@ -226,18 +207,12 @@ def _draw_contours(img, contours, col=(0,0,255), thickness=1):
     :param thickness: -1 fills the contour.
     :return:
     """
-    try:
-        if (np.size(np.shape(col)) == 0) | (np.size(np.shape(col)) == 1):
-            img = cv2.drawContours(img, contours, -1, col, thickness)
-        else:
-            for i, contour in enumerate(contours):
-                img = cv2.drawContours(img, contour, -1, col[i], int(thickness))
-        return img
-    except Exception as e:
-        print('Error in annotation methods._draw_contours')
-        print(e)
-        print('Has your tracking found any contours?')
-        return img
+    if (np.size(np.shape(col)) == 0) | (np.size(np.shape(col)) == 1):
+        img = cv2.drawContours(img, contours, -1, col, thickness)
+    else:
+        for i, contour in enumerate(contours):
+            img = cv2.drawContours(img, contour, -1, col[i], int(thickness))
+    return img        
 
 
 def networks(frame, data, f, parameters=None, call_num=None):
@@ -257,12 +232,8 @@ def networks(frame, data, f, parameters=None, call_num=None):
                 pt = df.loc[neighbour, ['x','y']].values
                 pt2 = (int(pt[0]), int(pt[1]))
                 frame = cv2.line(frame,pt1, pt2, colours[index], int(thickness), lineType=cv2.LINE_AA)
-    except Exception as e:
-        print('Error in annotation_methods.networks')
-        print(e)
-        print("Probably no neighbours for network or you haven't calculated neighbours")
-        print(df)
-    return frame
+    except:
+        raise NetworksError
 '''
 --------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------
@@ -290,9 +261,8 @@ def vectors(frame, data, f, parameters=None, call_num=None):
                                     (int(vector[0]+vector[2]*vector_scale),int(vector[1]+vector[3]*vector_scale)),
                                     color=colours[i], thickness=int(thickness),line_type=line_type,shift=0,tipLength=tipLength)
         return frame
-    except Exception as e:
-        print('Error in annotation_methods.vectors')
-        print(e)
+    except:
+        raise VectorsError
 
 def trajectories(frame, data, f, parameters=None, call_num=None):
     try:
@@ -325,61 +295,4 @@ def trajectories(frame, data, f, parameters=None, call_num=None):
             frame = cv2.polylines(frame,[traj_pts],False,colours[index],int(thickness))
         return frame
     except Exception as e:
-        print('Error in annotation_methods.trajectories')
-        print(e)
-        print('This only works in the gui if you "use_part"')
-        return frame
-
-def frame_range(frame, data, f, parameters=None, call_num=None):
-    '''
-    This method performs no operation. It is included because
-    the dictionary cycles through every active method. If this
-    method is active
-    '''
-    return frame
-
-"""
-def resize(frame, data, f, parameters=None, call_num=None):
-    ''' Resize an image
-
-    Notes
-    -----
-
-    resizes an input image by the scale specified
-
-    options
-    ~~~~~~~
-
-    parameters['resize scale'] : factor for scale operation
-
-    Parameters
-    ----------
-
-    frame: np.ndarray
-        frame
-    parameters: dict, optional
-        parameters dictionary
-    call_num: int or None
-        number specifying the call number to this function. allows multiple calls
-
-    Returns
-    -------
-
-    Resized frame
-
-    '''
-    method_key = get_method_key('resize', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-
-    scale = get_param_val(params['scale'])/100
-    width = int(frame.shape[1] * scale)
-    height = int(frame.shape[0] * scale)
-    dim = (width, height)
-    try:
-        return cv2.resize(frame, dim), False
-    except Exception as e:
-        print(e)
-        print('Error in preprocessing_methods.resize')
-        return frame, True
-
-"""
+        raise TrajectoriesError

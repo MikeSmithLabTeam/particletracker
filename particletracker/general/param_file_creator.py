@@ -109,6 +109,8 @@ def create_param_file(filename):
                     'output_name':'median_r',},
         'max':{'column_name':'r_diff',
                'output_name':'max_r',},
+        'min':{'column_name':'r_diff',
+               'output_name':'min_r',},
         'classify':{'column_name':'max_r',
                     'output_name':'classifier',
                     'lower_threshold':[1, 1, 100, 1],
@@ -138,13 +140,16 @@ def create_param_file(filename):
         'neighbours':{'method':'delaunay',#kdtree
                       'neighbours':6,
                       'cutoff':[50,1,200,1],
-                    }
+                    },
+        'add_frame_data':{
+            'new_column_name':'data',
+            'data_filename':None
+        }
 
         }
 
     annotate = {
         'annotate_method': ('circles',),
-        'videowriter':'opencv',#ffmpeg
         'text_label':{'text':'BP1',
                      'position':(100,100),
                      'font_colour':(255,0,0),

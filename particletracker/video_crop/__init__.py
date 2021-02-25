@@ -128,12 +128,7 @@ class ReadCropVideo(ReadVideo):
         return mask
 
     def apply_mask(self,frame):
-        try:
-            return cv2.bitwise_and(frame, self.mask), False
-        except Exception as e:
-            print(e)
-            print('Error applying mask')
-            return frame, True
+        return cv2.bitwise_and(frame, self.mask)        
 
     def apply_crop(self, frame):
         return crop(frame, self.parameters)

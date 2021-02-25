@@ -2,13 +2,60 @@ import numpy as np
 import scipy.spatial as sp
 import trackpy as tp
 import cv2
-
+import os
+import pandas as pd
 from ..general.parameters import get_method_key, get_param_val
+from ..customexceptions.postprocessor_error import *
+
 '''
 -----------------------------------------------------------------------------------------------------
 All these methods operate on all frames simultaneously
 -------------------------------------------------------------------------------------------------------
 '''
+def angle(data, f_index=None, parameters=None, call_num=None):
+    '''Angle between 2 sets of data at a given time
+
+    Notes
+    -----
+
+    Angle assumes you want to calculate from column_data[0] as x and column_data[1] as y
+    it uses tan2 so that -x and +y give a different result to +x and -y
+    Angles are output in radians or degrees given by parameters['angle']['units']
+    If you want to get the angle along a trajectory you need to run the running difference
+    method on each column of x and y coords to create dx,dy then send this to angle.
+
+    Returns
+    -------
+
+    dataframe with new angle column.
+
+    '''
+    try:
+        method_key = get_method_key('angle', call_num)
+        columns = parameters[method_key]['column_names']
+        output_name = parameters[method_key]['output_name']
+        data[output_name] = np.arctan2(data[columns[0]]/data[data[columns[1]]])
+        return data
+    except Exception as e:
+        raise AngleError(e)
+
+
+def contour_area(data, f_index=None, parameters=None, call_num=None):
+    '''
+    Designed to work with contours and boxes
+    '''
+    try:
+        method_key = get_method_key('contour_area', call_num)
+        output_name = parameters[method_key]['output_name']
+        contours = data['contours'].tolist()
+        areas = []
+        for contour in contours:
+            areas.append(cv2.contourArea(contour))
+
+        data[output_name] = np.array(areas)
+        return data
+    except Exception as e:
+        raise ContourAreaError(e)
 
 def difference(data, f_index=None, parameters=None, call_num=None):
     '''Difference in time of a column of dataframe.
@@ -40,8 +87,119 @@ def difference(data, f_index=None, parameters=None, call_num=None):
         data.drop(labels='nan',axis=1)
         return data
     except Exception as e:
-        print('Error in postprocessing_methods.difference')
-        print(e)
+        raise DifferenceError(e)
+
+def magnitude(data, f_index=None, parameters=None, call_num=None):
+    ''' Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
+
+    Notes
+    -----
+
+    Combines 2 columns according to (x**2 + y**2)**0.5
+
+    Returns
+    -------
+
+    Pandas dataframe with new column named according to outputname in PARAMETERS
+
+    '''
+    try:
+        method_key=get_method_key('magnitude', call_num)
+        column = parameters[method_key]['column_name']
+        column2 = parameters[method_key]['column_name2']
+        output_name = parameters[method_key]['output_name']
+        data[output_name] = (data[column]**2 + data[column2]**2)**0.5
+        return data
+    except Exception as e:
+        raise MagnitudeError(e)
+
+def max(data, f_index=None, parameters=None, call_num=None):
+    ''' Max of a columns values
+
+    Notes
+    -----
+
+    Returns the max of a particle's trajectory values to a new
+    column. The value is repeated next to all entries for that trajectory
+
+    :return: dataframe with new column defined in output_name of parameters
+
+    '''
+    try:
+        method_key = get_method_key('max', call_num)
+        column = parameters[method_key]['column_name']
+        output_name = parameters[method_key]['output_name']
+        temp=data.groupby('particle')[column].transform('max')
+        data[output_name] = temp
+        return data
+    except Exception as e:
+        raise MaxError(e)
+
+def mean(data, f_index=None, parameters=None, call_num=None):
+    ''' Mean of a columns values
+
+    Notes
+    -----
+
+    Returns the mean of a particle's trajectory values to a new
+    column. The value is repeated next to all entries for that trajectory
+
+    :return: dataframe with new column defined in output_name of parameters
+
+    '''
+    try:
+        method_key = get_method_key('mean', call_num)
+        column = parameters[method_key]['column_name']
+        output_name = parameters[method_key]['output_name']
+        temp=data.groupby('particle')[column].transform('mean')
+        data[output_name] = temp
+        return data
+    except Exception as e:
+        raise MeanError(e)
+
+def median(data, f_index=None, parameters=None, call_num=None):
+    ''' Mean of a columns values
+
+    Notes
+    -----
+
+    Returns the median of a particle's trajectory values to a new
+    column. The value is repeated next to all entries for that trajectory
+
+    :return: dataframe with new column defined in output_name of parameters
+
+    '''
+    try:
+        method_key = get_method_key('median', call_num)
+        column = parameters[method_key]['column_name']
+        output_name = parameters[method_key]['output_name']
+        temp=data.groupby('particle')[column].transform('median')
+        data[output_name] = temp
+        return data
+    except Exception as e:
+        raise MedianError(e)
+
+def min(data, f_index=None, parameters=None, call_num=None):
+    ''' Max of a columns values
+
+    Notes
+    -----
+
+    Returns the max of a particle's trajectory values to a new
+    column. The value is repeated next to all entries for that trajectory
+
+    :return: dataframe with new column defined in output_name of parameters
+
+    '''
+    try:
+        method_key = get_method_key('min', call_num)
+        column = parameters[method_key]['column_name']
+        output_name = parameters[method_key]['output_name']
+        temp=data.groupby('particle')[column].transform('min')
+        data[output_name] = temp
+        return data
+    except Exception as e:
+        raise MinError(e)
 
 def rate(data, f_index=None, parameters=None, call_num=None):
     '''Rate of change of data in a column
@@ -86,153 +244,7 @@ def rate(data, f_index=None, parameters=None, call_num=None):
         data.drop(labels=['nan','temp_diff','dt'], axis=1)
         return data
     except Exception as e:
-        print('Error in postprocessing_methods.rate')
-        print(e)
-
-
-def magnitude(data, f_index=None, parameters=None, call_num=None):
-    ''' Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
-
-    Notes
-    -----
-
-    Combines 2 columns according to (x**2 + y**2)**0.5
-
-    Returns
-    -------
-
-    Pandas dataframe with new column named according to outputname in PARAMETERS
-
-    '''
-    try:
-        method_key=get_method_key('magnitude', call_num)
-        column = parameters[method_key]['column_name']
-        column2 = parameters[method_key]['column_name2']
-        output_name = parameters[method_key]['output_name']
-        data[output_name] = (data[column]**2 + data[column2]**2)**0.5
-        return data
-    except Exception as e:
-        print('Error in postprocessing_methods.magnitude')
-        print(e)
-
-def angle(data, f_index=None, parameters=None, call_num=None):
-    '''Angle between 2 sets of data at a given time
-
-    Notes
-    -----
-
-    Angle assumes you want to calculate from column_data[0] as x and column_data[1] as y
-    it uses tan2 so that -x and +y give a different result to +x and -y
-    Angles are output in radians or degrees given by parameters['angle']['units']
-    If you want to get the angle along a trajectory you need to run the running difference
-    method on each column of x and y coords to create dx,dy then send this to angle.
-
-    Returns
-    -------
-
-    dataframe with new angle column.
-
-    '''
-    try:
-        method_key = get_method_key('angle', call_num)
-        columns = parameters[method_key]['column_names']
-        output_name = parameters[method_key]['output_name']
-        data[output_name] = np.arctan2(data[columns[0]]/data[data[columns[1]]])
-        return data
-    except Exception as e:
-        print('Error in postprocessing_methods.angle')
-        print(e)
-
-def contour_area(data, f_index=None, parameters=None, call_num=None):
-    '''
-    Designed to work with contours and boxes
-    '''
-    try:
-        method_key = get_method_key('contour_area', call_num)
-        output_name = parameters[method_key]['output_name']
-        contours = data['contours'].tolist()
-        areas = []
-        for contour in contours:
-            areas.append(cv2.contourArea(contour))
-
-        data[output_name] = np.array(areas)
-        return data
-    except Exception as e:
-        print('Error in postprocessing_methods.contour_area')
-        print(e)
-
-
-
-
-def mean(data, f_index=None, parameters=None, call_num=None):
-    ''' Mean of a columns values
-
-    Notes
-    -----
-
-    Returns the mean of a particle's trajectory values to a new
-    column. The value is repeated next to all entries for that trajectory
-
-    :return: dataframe with new column defined in output_name of parameters
-
-    '''
-    try:
-        method_key = get_method_key('mean', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        temp=data.groupby('particle')[column].transform('mean')
-        data[output_name] = temp
-        return data
-    except Exception as e:
-        print('Error in postprocessing_methods.mean')
-        print(e)
-
-def median(data, f_index=None, parameters=None, call_num=None):
-    ''' Mean of a columns values
-
-    Notes
-    -----
-
-    Returns the median of a particle's trajectory values to a new
-    column. The value is repeated next to all entries for that trajectory
-
-    :return: dataframe with new column defined in output_name of parameters
-
-    '''
-    try:
-        method_key = get_method_key('median', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        temp=data.groupby('particle')[column].transform('median')
-        data[output_name] = temp
-        return data
-    except Exception as e:
-        print('Error in postprocessing_methods.median')
-        print(e)
-
-def max(data, f_index=None, parameters=None, call_num=None):
-    ''' Max of a columns values
-
-    Notes
-    -----
-
-    Returns the max of a particle's trajectory values to a new
-    column. The value is repeated next to all entries for that trajectory
-
-    :return: dataframe with new column defined in output_name of parameters
-
-    '''
-    try:
-        method_key = get_method_key('max', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        temp=data.groupby('particle')[column].transform('max')
-        data[output_name] = temp
-        return data
-    except Exception as e:
-        print('Error in postprocessing_methods.max')
-        print(e)
-
+        raise RateError(e)
 
 def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
     ''' classify
@@ -241,15 +253,11 @@ def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
         -----
 
         '''
-    try:
-        if (x > lower_threshold_value) and (x < upper_threshold_value):
-            return True
-        else:
-            return False
-    except Exception as e:
-        print('Error in postprocessing_methods._classify_fn')
-        print(e)
-
+    if (x > lower_threshold_value) and (x < upper_threshold_value):
+        return True
+    else:
+        return False
+    
 def classify_most(data, f_index=None, parameters=None, call_num=None):
     '''
     Takes a columns of boolean values for each particle and returns a column which takes
@@ -263,8 +271,7 @@ def classify_most(data, f_index=None, parameters=None, call_num=None):
         data[output_name] = temp
         return data
     except Exception as e:
-        print('Error in postprocessing_methods.classify_most')
-        print(e)
+        raise ClassifyMostError(e)
 
 def classify(data, f_index=None, parameters=None, call_num=None):
     try:
@@ -276,9 +283,7 @@ def classify(data, f_index=None, parameters=None, call_num=None):
         data[output_name] = data[column].apply(_classify_fn, lower_threshold_value=lower_threshold_value, upper_threshold_value=upper_threshold_value)
         return data
     except Exception as e:
-        print('Error in postprocessing_methods.classify')
-        print(e)
-
+        raise ClassifyError(e)
 
 def logic_NOT(data, f_index=None, parameters=None, call_num=None):
     try:
@@ -287,8 +292,7 @@ def logic_NOT(data, f_index=None, parameters=None, call_num=None):
         output_name = parameters[method_key]['output_name']
         data[output_name] = ~data[column]
     except Exception as e:
-        print('Error in postprocessing_methods.logic_NOT')
-        print(e)
+        raise LogicNotError(e)
 
 def logic_AND(data, f_index=None, parameters=None, call_num=None):
     try:
@@ -298,9 +302,7 @@ def logic_AND(data, f_index=None, parameters=None, call_num=None):
         output_name = parameters[method_key]['output_name']
         data[output_name] = data[column1] * data[column2]
     except Exception as e:
-        print('Error in postprocessing_methods.logic_AND')
-        print(e)
-
+        raise LogicAndError(e)
 
 def logic_OR(data, f_index=None, parameters=None, call_num=None):
     try:
@@ -310,11 +312,8 @@ def logic_OR(data, f_index=None, parameters=None, call_num=None):
 
         output_name = parameters[method_key]['output_name']
         data[output_name] = data[column1] + data[column2]
-    except Exception as e:
-        print('Error in postprocessing_methods.logic_combine')
-        print(e)
-
-
+    except  Exception as e:
+        raise LogicOrError(e)
 
 def subtract_drift(data, f_index=None, parameters=None, call_num=None):
     ''' subtract drift from an x,y coordinate trajectory
@@ -341,8 +340,25 @@ def subtract_drift(data, f_index=None, parameters=None, call_num=None):
         data[['x_drift','y_drift']] = drift_corrected[['x','y']]
         return data
     except Exception as e:
-        print('Error in postprocessing_methods.subtract_drift')
-        print(e)
+        raise SubtractDriftError(e)
+
+def add_frame_data(data, f_index=None, parameters=None, call_num=None):
+    try:
+        method_key = get_method_key('add_frame_data', call_num)
+        datapath = parameters[method_key]['data_path']
+
+        if '.csv' in parameters[method_key]['data_filename']:
+            filename = os.path.join(datapath,parameters[method_key]['data_filename'])
+            new_data = pd.read_csv(filename, header=None)
+        elif '.xlsx' in parameters[method_key]['data_filename']:
+            new_data = pd.read_excel(parameters[method_key]['data_filename'],squeeze=True)
+        else:
+            print('Unknown file type')
+        data[parameters[method_key]['new_column_name']] = new_data
+        return data
+    except  Exception as e:
+        raise AddFrameDataError(e)
+    
 
 '''
 --------------------------------------------------------------------------------------------------------------
@@ -351,19 +367,15 @@ All methods below here need to be run on each frame sequentially.
 '''
 
 def _every_frame(data, f_index):
-    try:
-        if f_index is None:
-            frame_numbers = data['frame'].values
-            start=np.min(frame_numbers)
-            stop=np.max(frame_numbers)
-        else:
-            start=f_index
-            stop=f_index+1
-        return range(start, stop, 1)
-    except Exception as e:
-        print('Error in postprocessing_methods._every_frame')
-        print(e)
-
+    if f_index is None:
+        frame_numbers = data['frame'].values
+        start=np.min(frame_numbers)
+        stop=np.max(frame_numbers)
+    else:
+        start=f_index
+        stop=f_index+1
+    return range(start, stop, 1)
+    
 def neighbours(df, f_index=None, parameters=None, call_num=None,):
     try:
         #https: // docs.scipy.org / doc / scipy / reference / generated / scipy.spatial.Delaunay.html
@@ -380,65 +392,49 @@ def neighbours(df, f_index=None, parameters=None, call_num=None,):
             df.loc[f] = df_temp
         return df
     except Exception as e:
-        print('Error in postprocessing_methods.neighbours')
-        print(e)
+        raise NeighboursError(e)
 
 
 def _find_kdtree(df, parameters=None):
-    try:
-        method_key = get_method_key('neighbours')
-        cutoff = get_param_val(parameters[method_key]['cutoff'])
-        num_neighbours = get_param_val(parameters[method_key]['neighbours'])
-
-        points = df[['x', 'y']].values
-        particle_ids = df[['particle']].values.flatten()
-        tree = sp.KDTree(points)
-        _, indices = tree.query(points, k=num_neighbours+1, distance_upper_bound=cutoff)
-        neighbour_ids = []
-        fill_val = np.size(particle_ids)
-        for index, row in enumerate(indices):
-            neighbour_ids.append([particle_ids[row[i+1]] for i in range(num_neighbours) if row[i+1] != fill_val])
-        df.loc[:, ['neighbours']] = neighbour_ids
-        return df
-    except Exception as e:
-        print('Error in postprocessing_methods._find_kdtree')
-        print(e)
-
+    method_key = get_method_key('neighbours')
+    cutoff = get_param_val(parameters[method_key]['cutoff'])
+    num_neighbours = get_param_val(parameters[method_key]['neighbours'])
+    points = df[['x', 'y']].values
+    particle_ids = df[['particle']].values.flatten()
+    tree = sp.KDTree(points)
+    _, indices = tree.query(points, k=num_neighbours+1, distance_upper_bound=cutoff)
+    neighbour_ids = []
+    fill_val = np.size(particle_ids)
+    for index, row in enumerate(indices):
+        neighbour_ids.append([particle_ids[row[i+1]] for i in range(num_neighbours) if row[i+1] != fill_val])
+    df.loc[:, ['neighbours']] = neighbour_ids
+    return df
+    
 
 def _find_delaunay(df, parameters=None, call_num=None):
-    try:
-        method_key = get_method_key('neighbours')
-        cutoff = get_param_val(parameters[method_key]['cutoff'])
+    method_key = get_method_key('neighbours')
+    cutoff = get_param_val(parameters[method_key]['cutoff'])
+    points = df[['x', 'y']].values
+    particle_ids = df[['particle']].values.flatten()
+    tess = sp.Delaunay(points)
+    list_indices, point_indices = tess.vertex_neighbor_vertices
 
-        points = df[['x', 'y']].values
-        particle_ids = df[['particle']].values.flatten()
-        tess = sp.Delaunay(points)
-        list_indices, point_indices = tess.vertex_neighbor_vertices
-        # neighbour_ids = [particle_ids[point_indices[a:b].tolist()] for a, b in zip(list_indices[:-1], list_indices[1:])]
-        neighbour_ids = [point_indices[a:b].tolist() for a, b in zip(list_indices[:-1], list_indices[1:])]
-        dist = sp.distance.squareform(sp.distance.pdist(points))
+    neighbour_ids = [point_indices[a:b].tolist() for a, b in zip(list_indices[:-1], list_indices[1:])]
+    dist = sp.distance.squareform(sp.distance.pdist(points))
 
-        neighbour_dists = [(dist[i, row]<cutoff).tolist() for i, row in enumerate(neighbour_ids)]
-        indices = []
-        for index, row in enumerate(neighbour_ids):
-            indices.append([particle_ids[neighbour_ids[index][j]] for j,dummy in enumerate(row) if neighbour_dists[index][j]])
-        df.loc[:, ['neighbours']] = indices
-        return df
-
-    except Exception as e:
-        print('Error in postprocessing_methods.delaunay')
-        print(e)
+    neighbour_dists = [(dist[i, row]<cutoff).tolist() for i, row in enumerate(neighbour_ids)]
+    indices = []
+    for index, row in enumerate(neighbour_ids):
+        indices.append([particle_ids[neighbour_ids[index][j]] for j,dummy in enumerate(row) if neighbour_dists[index][j]])
+    df.loc[:, ['neighbours']] = indices
+    return df
 
 def _get_class_subset(data, f, parameters, method=None):
-    try:
-        classifier_column= parameters[method]['classifier_column']
-        if classifier_column is None:
-            subset_df = data.df.loc[f]
-        else:
-            classifier = parameters[method]['classifier']
-            temp = data.df.loc[f]
-            subset_df = temp[temp[classifier_column] == classifier]
-        return subset_df
-    except Exception as e:
-        print('Error in annotation_methods.get_class_subset')
-        print(e)
+    classifier_column= parameters[method]['classifier_column']
+    if classifier_column is None:
+        subset_df = data.df.loc[f]
+    else:
+        classifier = parameters[method]['classifier']
+        temp = data.df.loc[f]
+        subset_df = temp[temp[classifier_column] == classifier]
+    return subset_df

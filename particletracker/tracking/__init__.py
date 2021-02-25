@@ -74,11 +74,11 @@ class ParticleTracker:
                 start = self.cap.frame_range[0]
                 stop = self.cap.frame_range[1]
                 step = self.cap.frame_range[2]
-                
             else:
                 start = f_index
                 stop = f_index + 1
                 step=1
+
             self.cap.set_frame(start)
             for f in tqdm(range(start, stop, step), 'Tracking'):
                 df_frame = self.analyse_frame()
@@ -96,8 +96,8 @@ class ParticleTracker:
         if self.ip is None:
             preprocessed_frame = frame
         else:
-            preprocessed_frame, error = self.ip.process(frame)
-            if (not error):
-                    preprocessed_frame, error = self.cap.apply_mask(preprocessed_frame)
+            preprocessed_frame = self.ip.process(frame)
+            preprocessed_frame = self.cap.apply_mask(preprocessed_frame)
         df_frame = getattr(tm, method)(preprocessed_frame, frame, self.parameters)
         return df_frame
+        
