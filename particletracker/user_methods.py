@@ -29,11 +29,11 @@ def example_method_name(frame, parameters=None, call_num=None):
     Inputs: 
 
         frame from previous step
-        parameters = dictionary like object (same as .param files or 
+        parameters : dictionary like object (same as .param files or 
                         output from general.param_file_creator.py
 
-        call_num = Usually None but if multiple calls are made modifies
-                    method name with get_method_key
+        call_num   : Usually None but if multiple calls are made modifies
+                     method name with get_method_key
 
     Output:
 

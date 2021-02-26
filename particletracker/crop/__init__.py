@@ -3,10 +3,13 @@ import cv2
 
 from labvision.video import ReadVideo
 from labvision.images import display
+from ..customexceptions import CropMaskError, flash_error_msg
 
 class ReadCropVideo(ReadVideo):
 
-    def __init__(self, parameters=None, filename=None, frame_range=(0,None,1)):
+    def __init__(self, parameters=None, filename=None, frame_range=(0,None,1), error_reporting=None):
+        if error_reporting is not None:
+            self.error = error_reporting
         ReadVideo.__init__(self, filename=filename, frame_range=parameters['experiment']['frame_range'])
         self.parameters = parameters['crop']
         '''
@@ -126,10 +129,21 @@ class ReadCropVideo(ReadVideo):
         return mask
 
     def apply_mask(self,frame):
-        return cv2.bitwise_and(frame, self.mask)        
+        try:
+            return cv2.bitwise_and(frame, self.mask)        
+        except Exception as e:
+            error = CropMaskError()
+            flash_error_msg(error, self.error)
+            return frame
 
     def apply_crop(self, frame):
-        return crop(frame, self.parameters)
+        try:
+            return crop(frame, self.parameters)
+        except Exception as e:
+            error = CropMaskError()
+            flash_error_msg(error, self.error)
+            return frame
+
         
     def read_frame(self, n=None):
         frame=super().read_frame(n=n)

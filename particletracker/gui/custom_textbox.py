@@ -13,12 +13,15 @@ from matplotlib.figure import Figure
 from qtwidgets import QCustomTextBox, SelectAreaWidget
 
 from ..general.parameters import parse_values
+from ..customexceptions import *
 
 
 class QModCustomTextBox(QCustomTextBox):
     returnPressed = pyqtSignal(str)
 
-    def __init__(self, img_viewer, *args, **kwargs):
+    def __init__(self, img_viewer, parent=None, *args, **kwargs):
+        if parent is not None:
+            self.parent=parent
         self.img_viewer = img_viewer
         shapes = {'crop_box':['rect',QColor(250, 10, 10, 80)],
                   'mask_ellipse':['ellipse',QColor(10,10,250,80)],
@@ -56,7 +59,10 @@ class QModCustomTextBox(QCustomTextBox):
                     self.textbox.setText(str(tuple(self.tool.points)))
                     self.returnPressed.emit(str(tuple(self.tool.points)))   
                 except:
-                    pass                
+                    e=CropMaskError()
+                    print(self.parent)
+                    flash_error_msg(e, self.parent)
+                    
                 self.tool.setParent(None)
                 self.tool.deleteLater()
             self.hasbeenchecked = False

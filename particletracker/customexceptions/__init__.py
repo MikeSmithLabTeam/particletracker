@@ -49,7 +49,8 @@ class ExperimentError(BaseError):
 class CropMaskError(BaseError):
     def __init__(self):
         super().__init__()
-        self.error_process = 'Crop or Mask Error'
+        self.error_process = 'Crop or Mask Error - '
+        self.error_msg = 'Check the input image type you need to convert to single colour channel. Crop or Mask tools also throw error if no or wrong values inputted via selection tools'
 
 class PreprocessorError(BaseError):
     def __init__(self):

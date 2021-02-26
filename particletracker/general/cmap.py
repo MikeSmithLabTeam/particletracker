@@ -10,7 +10,7 @@ def colour_array(subset_df, f, parameters, method=None):
         if cmap_type == 'static':
             colour_val = parameters[method]['colour']
             colours = colour_val*np.ones((sz[0],3))
-        elif cmap_type == 'continuous':
+        elif cmap_type == 'dynamic':
             cmap_column = parameters[method]['cmap_column']
             colour_data = subset_df[[cmap_column]].values
             cmap_max = get_param_val(parameters[method]['cmap_max']) / parameters[method]['cmap_scale']

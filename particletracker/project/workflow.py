@@ -46,9 +46,9 @@ class PTProject(PTWorkflow):
 
     '''
 
-    def __init__(self, video_filename=None, param_filename=None, parent=None):
+    def __init__(self, video_filename=None, param_filename=None, error_reporting=None):
         #Select operations to be performed'output_name':'x_smooth',
-        PTWorkflow.__init__(self, video_filename=video_filename, parent=parent)
+        PTWorkflow.__init__(self, video_filename=video_filename, error_reporting=error_reporting)
         self.crop_select = True
         self.preprocess_select = True
         self.track_select = True

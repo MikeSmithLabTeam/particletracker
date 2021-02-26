@@ -10,8 +10,10 @@ class CheckableTabWidget(QTabWidget):
     checkBoxChanged = pyqtSignal(int)
 
     checkBoxList = []
-    def __init__(self, tracker, img_viewer, param_change, method_change, reboot=None, **kwargs):
+    def __init__(self, tracker, img_viewer, param_change, method_change, reboot=None, parent=None, *args, **kwargs):
         super(CheckableTabWidget, self).__init__()
+        if parent is not None:
+            self.parent=parent
         self.reboot=reboot
         self.img_viewer = img_viewer
         self.method_change = method_change
@@ -19,10 +21,9 @@ class CheckableTabWidget(QTabWidget):
         self.tracker=tracker
         self.param_dict = tracker.parameters
 
-        #Contains all the draggable list widgets
         self.list_draggable_lists = []
         self.list_param_adjustors = []
-        self.list_param_adjustor_layouts = [] #Each item is the bottom_tab_widget_layout on an individual tab
+        self.list_param_adjustor_layouts = []
         for index, key in enumerate(list(self.param_dict.keys())):
             self.add_tab(QLabel(), key, index)
 
@@ -83,12 +84,10 @@ class CheckableTabWidget(QTabWidget):
                                                  
         else:
             self.param_adjustors = CropMask(title, self.param_dict[title],
-                                            self.param_change, self.img_viewer)
+                                            self.param_change, self.img_viewer, parent=self.parent)
         
         return self.param_adjustors
 
-    #def update_tracker_object(self, parameters):
-    #    self.param_dict = parameters
 
     '''---------------------------------------------------------------------------------------------------------------
     Call back functions
@@ -100,4 +99,4 @@ class CheckableTabWidget(QTabWidget):
     def emitStateChanged(self,check_state, title):
         setattr(self.tracker, title + '_select',check_state == Qt.Checked)
         self.checkBoxChanged.emit(1)
-        #self.param_change()
+        

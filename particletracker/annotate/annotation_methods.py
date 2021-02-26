@@ -16,17 +16,32 @@ Text annotation
 
 def text_label(frame, data, f, parameters=None, call_num=None):
     '''
-    Function puts text on an image at specific location.
-    This function is for adding metadata or info not labelling
-    particles with their ids.
+    Text labels place a static label on an image at specific location.
+    This function is for adding titles or info that doesn't change
 
-    :param frame: frame to be annotated should be 3 colour channel
-    :param data: datastore with particle information
-    :param f: frame number
-    :param parameters: annotation sub dictionary
+    Parameters  :
 
-    :return: annotated frame
+    text            :   Text to be displayed
+    position        :   Coordinates of upper left corner of text
+    font_colour     :   Colour of font specified in (B,G,R) format where values are integers from 0-255
+    font_size       :   Size of font
+    font_thickness  :   Thickness of font
+
+    Inputs:
+
+    frame       :   This is the unmodified frame of the input movie
+    data        :   This is the dataframe that stores all the tracked data
+    f           :   An integer that references the current frame number
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    annotated frame : Annotated frame of type numpy ndarray.
     '''
+
     try:
         method_key = get_method_key('text_label', call_num=call_num)
         text=parameters[method_key]['text']
@@ -43,18 +58,34 @@ def text_label(frame, data, f, parameters=None, call_num=None):
 
 def var_label(frame, data, f, parameters=None, call_num=None):
     '''
-    Function puts text on an image at specific location.
-    This function is for adding data specific to a single frame or info not labelling
-    particles with their ids. The data for a given frame should be stored in 'var_column'
-    ie all particles have this value stored. You could use it to put the "temperature" on
-    a frame or the mean order parameter etc.
+    Var labelsn put text on an image at specific location.
+    This function is for adding data specific to a single frame. For example
+    you could indicate the temperature of the sample or time.
+    The data for a given frame should be stored in a particular column
+    specified in the 'var_column' section of the dictionary.
+    
+    Parameters  :
 
-    :param frame: frame to be annotated should be 3 colour channel
-    :param data: datastore with particle information
-    :param f: frame number
-    :param parameters: annotation sub dictionary.
+    var_column      :   Column name containing the info to be displayed on each frame
+    position        :   Coordinates of upper left corner of text
+    font_colour     :   Colour of font specified in (B,G,R) format where values are integers from 0-255
+    font_size       :   Size of font
+    font_thickness  :   Thickness of font
 
-    :return: annotated frame
+    Inputs:
+
+    frame       :   This is the unmodified frame of the input movie
+    data        :   This is the dataframe that stores all the tracked data
+    f           :   An integer that references the current frame number
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    annotated frame : Annotated frame of type numpy ndarray.
+    
     '''
     try:
         method_key = get_method_key('var_label', call_num=call_num)
@@ -70,19 +101,40 @@ def var_label(frame, data, f, parameters=None, call_num=None):
 
         return annotated_frame
     except:
-        raise VarLabelError
+        raise VarLabelError(e)
 
 def particle_labels(frame, data, f, parameters=None, call_num=None):
     '''
-    Function annotates image with particle ids
-    This function only makes sense if run on linked trajectories
+    Annotates image with particle ids. For this to be meaningful
+    you must have already run processed part with linking selected.
+    This is particularly useful if you want to extract information about
+    specific particles. Annotate their ids to identify the reference
+    id of the one you are interested in and then you can pull the subset
+    of processed data out. See examples in Jupyter notebook. Any particle
+    level data can however be displayed.
 
-    :param frame: frame to be annotated should be 3 colour channel
-    :param data: datastore with particle information
-    :param f: frame number
-    :param parameters: annotation sub dictionary
+    Parameters  :
 
-    :return: annotated frame
+    values_column   :   Name of column containing particle info to be displayed.
+    position        :   Coordinates of upper left corner of text
+    font_colour     :   Colour of font specified in (B,G,R) format where values are integers from 0-255
+    font_size       :   Size of font
+    font_thickness  :   Thickness of font
+
+
+    Inputs:
+
+    frame       :   This is the unmodified frame of the input movie
+    data        :   This is the dataframe that stores all the tracked data
+    f           :   An integer that references the current frame number
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    annotated frame : Annotated frame of type numpy ndarray.
     '''
     try:
 
@@ -111,9 +163,13 @@ Particle annotation
 --------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------
 '''
-def get_class_subset(data, f, parameters, method=None):
+
+def _get_class_subset(data, f, parameters, method=None):
+    '''
+    Internal function to get subset of particles
+    '''    
     try:
-        classifier_column= parameters[method]['classifier_column']
+        classifier_column= parameters[method]['classifier_col']
         if classifier_column is None:
             subset_df = data.df.loc[f]
         else:
@@ -125,19 +181,37 @@ def get_class_subset(data, f, parameters, method=None):
         raise GetClassSubsetError
 
 
-
 def circles(frame, data, f, parameters=None, call_num=None):
     '''
-    Function draws circles on an image at x,y locations. If data.df['r'] exists
-    circles have this radius, else 'r' col is created with value set from annotation
-    sub dictionary.
+    Circles places a ring on every specified particle.
 
-    :param frame: frame to be annotated should be 3 colour channel
-    :param data: datastore with particle information
-    :param f: frame number
-    :param parameters: annotation sub dictionary
+    Parameters  :
 
-    :return: annotated frame
+    radius          :   If tracking method specifies radius this is set automatically.
+                        Otherwise this can be adjusted arbitrarily.
+    cmap_type       :   Options are 1. static  2. dynamic
+    cmap_column     :   Name of column containing data to specify colour in dynamic mode,#for dynamic
+    cmap_max        :   Specifies max data value for colour map in dynamic mode
+    cmap_scale      :   Scale factor for colour map
+    colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
+    classifier_col  : None - selects all particles, column name of classifier values to apply to subset of particles
+    classifier      :   The value in the classifier column to apply colour map to. 
+    thickness       :   Thickness of circle. -1 fills the circle in solidly.
+
+
+    Inputs:
+
+    frame       :   This is the unmodified frame of the input movie
+    data        :   This is the dataframe that stores all the tracked data
+    f           :   An integer that references the current frame number
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    annotated frame : Annotated frame of type numpy ndarray.
     '''
     try:
 
@@ -156,6 +230,37 @@ def circles(frame, data, f, parameters=None, call_num=None):
         raise CirclesError
 
 def boxes(frame, data, f, parameters=None, call_num=None):
+    '''
+    Boxes places a rectangle that encloses the contour of specified particle. This method is only
+    valid if the tracking method results in a bounding box being stored in the dataframe. This is
+    not the case for trackpy.
+
+    Parameters  :
+
+    cmap_type       :   Options are 1. static  2. dynamic
+    cmap_column     :   Name of column containing data to specify colour in dynamic mode,#for dynamic
+    cmap_max        :   Specifies max data value for colour map in dynamic mode
+    cmap_scale      :   Scale factor for colour map
+    colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
+    classifier_col  : None - selects all particles, column name of classifier values to apply to subset of particles
+    classifier      :   The value in the classifier column to apply colour map to. 
+    thickness       :   Thickness of box. -1 fills the box in
+
+    Inputs:
+
+    frame       :   This is the unmodified frame of the input movie
+    data        :   This is the dataframe that stores all the tracked data
+    f           :   An integer that references the current frame number
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    annotated frame : Annotated frame of type numpy ndarray.
+    '''
+
     try:
         method_key = get_method_key('boxes', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
@@ -165,25 +270,53 @@ def boxes(frame, data, f, parameters=None, call_num=None):
         colours = colour_array(subset_df, f, parameters, method=method_key)
         sz = np.shape(frame)
         for index, box in enumerate(box_pts):
-            if contour_inside_img(sz, box):
+            if _contour_inside_img(sz, box):
                 frame = _draw_contours(frame, box, col=colours[index],
                                            thickness=int(get_param_val(parameters[method_key]['thickness'])))
         return frame
     except:
         raise BoxesError
 
-def contour_inside_img(sz, contour):
-    try:
-        inside=True
-        frame_contour = np.array([[0,0],[0,sz[0]],[sz[1],sz[0]],[sz[1],0]])
-        for pt in contour[0]:
-            if cv2.pointPolygonTest(frame_contour, tuple(pt), False) < 0:
-                inside = False
-        return inside
-    except Exception as e:
-        raise ContourInsideImageError
+def _contour_inside_img(sz, contour):
+    inside=True
+    frame_contour = np.array([[0,0],[0,sz[0]],[sz[1],sz[0]],[sz[1],0]])
+    for pt in contour[0]:
+        if cv2.pointPolygonTest(frame_contour, tuple(pt), False) < 0:
+            inside = False
+    return inside
+    
 
 def contours(frame, data, f, parameters=None, call_num=None):
+    '''
+    Contours draws the tracked contour returned from Contours tracking
+    method onto the image.
+
+    Parameters  :
+
+    cmap_type       :   Options are 1. static  2. dynamic
+    cmap_column     :   Name of column containing data to specify colour in dynamic mode,#for dynamic
+    cmap_max        :   Specifies max data value for colour map in dynamic mode
+    cmap_scale      :   Scale factor for colour map
+    colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
+    classifier_col  : None - selects all particles, column name of classifier values to apply to subset of particles
+    classifier      :   The value in the classifier column to apply colour map to. 
+    thickness       :   Thickness of contour. -1 will fill in contour
+
+
+    Inputs:
+
+    frame       :   This is the unmodified frame of the input movie
+    data        :   This is the dataframe that stores all the tracked data
+    f           :   An integer that references the current frame number
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs
+    
+    annotated frame : Annotated frame of type numpy ndarray.
+    '''
     try:
         method_key = get_method_key('contours', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
@@ -200,15 +333,6 @@ def contours(frame, data, f, parameters=None, call_num=None):
         raise ContoursError
 
 def _draw_contours(img, contours, col=(0,0,255), thickness=1):
-
-    """
-
-    :param img:
-    :param contours:
-    :param col: Can be a defined colour in colors.py or a list of tuples(3,1) of colors of length contours
-    :param thickness: -1 fills the contour.
-    :return:
-    """
     if (np.size(np.shape(col)) == 0) | (np.size(np.shape(col)) == 1):
         img = cv2.drawContours(img, contours, -1, col, thickness)
     else:
@@ -218,6 +342,36 @@ def _draw_contours(img, contours, col=(0,0,255), thickness=1):
 
 
 def networks(frame, data, f, parameters=None, call_num=None):
+    '''
+    Networks draws a network of particles that must previously have been 
+    calculated in postprocessing. See "neighbours" in postprocessing.
+
+    Parameters  :
+
+    cmap_type       :   Options are 1. static  2. dynamic
+    cmap_column     :   Name of column containing data to specify colour in dynamic mode,#for dynamic
+    cmap_max        :   Specifies max data value for colour map in dynamic mode
+    cmap_scale      :   Scale factor for colour map
+    colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
+    classifier_col  : None - selects all particles, column name of classifier values to apply to subset of particles
+    classifier      :   The value in the classifier column to apply colour map to. 
+    thickness       :   Thickness of network lines
+
+
+    Inputs:
+
+    frame       :   This is the unmodified frame of the input movie
+    data        :   This is the dataframe that stores all the tracked data
+    f           :   An integer that references the current frame number
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs
+    
+    annotated frame : Annotated frame of type numpy ndarray.
+    '''
     try:
         method_key = get_method_key('networks', call_num=call_num)
         df = get_class_subset(data, f, parameters, method=method_key)
@@ -244,6 +398,40 @@ Particle motion annotation
 --------------------------------------------------------------------------------------
 '''
 def vectors(frame, data, f, parameters=None, call_num=None):
+    '''
+    Vectors draw info onto images in the form of arrows. 
+
+    Parameters  :
+
+    x_column        :  Column name of x coordinates, defaults to 'x'
+    y_column        :  Column name of y coordinates, defaults to 'y'
+    traj_length'    :  How many frames into the past to draw the trajectory. This is truncated by ends
+                       of the movie. If you are on frame 0 it won't draw anything!
+    cmap_type       :   Options are 1. static  2. dynamic
+    cmap_column     :   Name of column containing data to specify colour in dynamic mode,#for dynamic
+    cmap_max        :   Specifies max data value for colour map in dynamic mode
+    cmap_scale      :   Scale factor for colour map
+    colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
+    classifier_col  :  None - selects all particles, column name of classifier values to apply to subset of particles
+    classifier      :   The value in the classifier column to apply colour map to. 
+    thickness       :   Thickness of line. 
+
+
+    Inputs:
+
+    frame       :   This is the unmodified frame of the input movie
+    data        :   This is the dataframe that stores all the tracked data
+    f           :   An integer that references the current frame number
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs
+    
+    annotated frame : Annotated frame of type numpy ndarray.
+    '''
+
     try:
         method_key = get_method_key('vectors', call_num=call_num)
         dx = parameters[method_key]['dx_column']
@@ -267,6 +455,40 @@ def vectors(frame, data, f, parameters=None, call_num=None):
         raise VectorsError
 
 def trajectories(frame, data, f, parameters=None, call_num=None):
+    '''
+    Vectors draw info onto images in the form of arrows. 
+
+    Parameters  :
+
+    dx_column       :   Column name that specifies the x component of vector,
+    dy_column       :   Column name that specifies the y component of vector,
+    line_type       :   OpenCV line type
+    tip_length      :   Length of the vector arrow tip
+    vector_scale    :   How to scale the data to the displayed vector length                
+    cmap_type       :   Options are 1. static  2. dynamic
+    cmap_column     :   Name of column containing data to specify colour in dynamic mode,#for dynamic
+    cmap_max        :   Specifies max data value for colour map in dynamic mode
+    cmap_scale      :   Scale factor for colour map
+    colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
+    classifier_column': None - selects all particles, column name of classifier values to apply to subset of particles
+    classifier      :   The value in the classifier column to apply colour map to. 
+    thickness       :   Thickness of line. 
+
+
+    Inputs:
+
+    frame       :   This is the unmodified frame of the input movie
+    data        :   This is the dataframe that stores all the tracked data
+    f           :   An integer that references the current frame number
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs
+    
+    annotated frame : Annotated frame of type numpy ndarray.
+    '''
     try:
         #This can only be run on a linked trajectory
         method_key = get_method_key('trajectories', call_num=call_num)

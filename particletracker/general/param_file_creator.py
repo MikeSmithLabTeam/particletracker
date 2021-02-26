@@ -168,37 +168,37 @@ def create_param_file(filename):
                             'font_thickness': 2
                             },
         'circles':{'radius':[6,1,1000,1],#This is overridden in Hough Circles
-                   'cmap_type':'static',#'continuous',
-                   'cmap_column':'x',#For continuous
-                   'cmap_max':[470,1,2000,1],#For continuous
-                   'cmap_scale':1,
-                   'colour': (0,255,0),#For static
-                   'classifier_column': None,#For discrete or continuous
-                   'classifier': 1,#For discrete or continuous
-                   'thickness':2
+                    'cmap_type':'static',#'dynamic',
+                    'cmap_column':'x',#for dynamic
+                    'cmap_max':[470,1,2000,1],#For dynamic
+                    'cmap_scale':1,
+                    'colour': (0,255,0),#For static
+                    'classifier_column': None,#For static or dynamic
+                    'classifier': 1,#For static or dynamic
+                    'thickness':2
                    },
         'boxes':{  'cmap_type':'static',#static
                    'cmap_column':'x',  #None
                    'cmap_max':[1,1,2000,1],
                    'cmap_scale':1,
                    'colour': (0, 255, 0),  # For static
-                   'classifier_column': None,  # For discrete or continuous
+                   'classifier_column': None,  # For static or dynamic
                    'classifier':1,
                    'thickness': 2
                    },
-        'contours':{'cmap_type':'static',#'continuous',
-                   'cmap_column':'x',#For continuous
-                   'cmap_max':[470,1,2000,1],#For continuous
+        'contours':{'cmap_type':'static',#'dynamic',
+                   'cmap_column':'x',#For dynamic
+                   'cmap_max':[470,1,2000,1],#For dynamic
                    'cmap_scale':1,
                    'colour': (0,255,0),#For static
-                   'classifier_column': None,#For discrete or continuous
-                   'classifier': None,#For discrete or continuous
+                   'classifier_column': None,#For static or dynamic
+                   'classifier': None,#For static or dynamic
                    'thickness':2
                    },
         'networks':{
-                    'cmap_type':'static',#'continuous',
-                    'cmap_column':'x',#For continuous                      'classifier': 1,#For discrete or continuous
-                    'cmap_max':[470,1,2000,1],#For continuous              thickness':2
+                    'cmap_type':'static',#'dynamic',
+                    'cmap_column':'x',#For dynamic                      'classifier': 1,#For static or dynamic
+                    'cmap_max':[470,1,2000,1],#For dynamic              thickness':2
                     'cmap_scale':1,
                     'classifier_column': None,
                     'classifier': None,
@@ -211,25 +211,25 @@ def create_param_file(filename):
                    'line_type':8,
                    'tip_length':[1,1,100,1],
                    'vector_scale':[1,1,2000,1],
-                   'cmap_type':'static',#'continuous',
-                   'cmap_column':'x',#For continuous
-                   'cmap_max':[470,1,2000,1],#For continuous
+                   'cmap_type':'static',#'dynamic',
+                   'cmap_column':'x',#For dynamic
+                   'cmap_max':[470,1,2000,1],#For dynamic
                    'cmap_scale':1,
                    'colour': (0,0,255),#For static
-                   'classifier_column':None,#For discrete or continuous
-                   'classifier': None,#For discrete or continuous
+                   'classifier_column':None,#For static or dynamic
+                   'classifier': None,#For static or dynamic
                    'thickness':2
                     },
         'trajectories':{'x_column':'x',
                     'y_column':'y',
                     'traj_length': [1000,0,1000,1],
-                    'cmap_type':'static',#'continuous',
-                    'cmap_column':'x',#For continuous
-                    'cmap_max':[470,1,2000,1],#For continuous
+                    'cmap_type':'static',#'dynamic',
+                    'cmap_column':'x',#For dynamic
+                    'cmap_max':[470,1,2000,1],#For dynamic
                     'cmap_scale':1,
                     'colour': (64,224,208),#For static
-                    'classifier_column':'classifier',#For discrete or continuous
-                    'classifier': None,#For discrete or continuous
+                    'classifier_column':'classifier',#For static or dynamic
+                    'classifier': None,#For static or dynamic
                     'thickness':2
                    },
         }

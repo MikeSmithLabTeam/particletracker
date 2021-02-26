@@ -11,9 +11,9 @@ class PTWorkflow:
     PTWorkflow is a parent class that handles the workflow of a particle tracking project.
     '''
 
-    def __init__(self, video_filename=None, parent=None):
+    def __init__(self, video_filename=None, error_reporting=None):
         self.video_filename = video_filename
-        self.parent=parent
+        self.error_reporting=error_reporting
         self.filename = os.path.splitext(self.video_filename)[0]
         self.data_filename = self.filename + '.hdf5'
 
@@ -38,7 +38,7 @@ class PTWorkflow:
 
     def _create_processes(self, n=0):
         self.cap = ReadCropVideo(parameters=self.parameters,
-                                 filename=self.video_filename,
+                                 filename=self.video_filename,error_reporting=self.error_reporting
                                  )
         self.ip = preprocess.Preprocessor(self.parameters)
         
@@ -130,7 +130,7 @@ class PTWorkflow:
                 annotatedframe = self.cap.read_frame(frame_num)
         except BaseError as e:         
             if self.parent is not None:
-                flash_error_msg(e, self.parent)
+                flash_error_msg(e, self.error_reporting)
             annotatedframe = proc_frame
             
         

@@ -235,7 +235,7 @@ class MainWindow(QMainWindow):
     -------------------------------------------------------------------
     '''
     def setup_settings_panel(self, settings_layout):
-        self.toplevel_settings = CheckableTabWidget(self.tracker, self.viewer, self.param_change, self.method_change, reboot=self.reboot)
+        self.toplevel_settings = CheckableTabWidget(self.tracker, self.viewer, self.param_change, self.method_change, reboot=self.reboot, parent=self)
         self.toplevel_settings.checkBoxChanged.connect(self.frame_selector_slot)
         settings_layout.addWidget(self.toplevel_settings)
 
@@ -247,7 +247,7 @@ class MainWindow(QMainWindow):
     ----------------------------------------------------------------
     """
     def open_tracker(self):
-        self.tracker = PTProject(video_filename=self.movie_filename, param_filename=self.settings_filename, parent=self)
+        self.tracker = PTProject(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
 
@@ -259,6 +259,20 @@ class MainWindow(QMainWindow):
         Qimg = self.viewer.image()
         output = qimage2ndarray.rgb_view(Qimg)
         print(output[int(y),int(x),:])
+
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.status_bar.hide)
+        self.timer.start(4000)
+        self.status_bar.setStyleSheet("background-color : green")
+        self.status_bar.showMessage("Coords (x,y): ("+str(x)+','+str(y) +') \t Intensities [r,g,b]:'+str(output[int(y),int(x),:]))    
+        self.show()
+    
+
+    def reset_statusbar(status_bar):
+        status_bar.hide()
+
 
     @pyqtSlot(int)
     def frame_selector_slot(self, value):
