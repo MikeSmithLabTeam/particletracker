@@ -1,9 +1,9 @@
 import os.path
 import numpy as np
 
-from ..video_crop import ReadCropVideo
-from .. import tracking, preprocessing, postprocessing, \
-    annotation, linking
+from ..crop import ReadCropVideo
+from .. import preprocess, track, link, postprocess, \
+    annotate
 from ..customexceptions import BaseError, flash_error_msg
 
 class PTWorkflow:
@@ -40,25 +40,25 @@ class PTWorkflow:
         self.cap = ReadCropVideo(parameters=self.parameters,
                                  filename=self.video_filename,
                                  )
-        self.ip = preprocessing.Preprocessor(self.parameters)
+        self.ip = preprocess.Preprocessor(self.parameters)
         
-        self.pt = tracking.ParticleTracker(
+        self.pt = track.ParticleTracker(
             parameters=self.parameters['track'], preprocessor=self.ip,
             vidobject=self.cap, data_filename=self.data_filename)
-        self.link = linking.LinkTrajectory(
+        self.link = link.LinkTrajectory(
             data_filename=self.data_filename,
             parameters=self.parameters['link'])
-        self.pp = postprocessing.PostProcessor(
+        self.pp = postprocess.PostProcessor(
             data_filename=self.data_filename,
             parameters=self.parameters['postprocess'])
-        self.an = annotation.TrackingAnnotator(vidobject=self.cap,
+        self.an = annotate.TrackingAnnotator(vidobject=self.cap,
                                                data_filename=self.data_filename,
                                                parameters=self.parameters[
                                                    'annotate'], frame=self.cap.read_frame(n=n))
         self.frame = self.cap.read_frame()
 
     def reset_annotator(self):
-        self.an = annotation.TrackingAnnotator(vidobject=self.cap,
+        self.an = annotate.TrackingAnnotator(vidobject=self.cap,
                                                        data_filename=self.data_filename,
                                                        parameters=self.parameters[
                                                            'annotate'], frame=self.cap.read_frame(self.parameters['experiment']['frame_range'][0]))
@@ -129,8 +129,6 @@ class PTWorkflow:
             else:
                 annotatedframe = self.cap.read_frame(frame_num)
         except BaseError as e:         
-            print(self.parent)
-            print(e)
             if self.parent is not None:
                 flash_error_msg(e, self.parent)
             annotatedframe = proc_frame

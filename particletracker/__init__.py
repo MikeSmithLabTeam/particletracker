@@ -2,9 +2,11 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import sys, os
 
-from .project.workflow import PTProject
 from filehandling import BatchProcess
-from .toplevel import MainWindow
+
+from .project.workflow import PTProject
+from particletracker.gui.main_gui import MainWindow
+
 
 
 

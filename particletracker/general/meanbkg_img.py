@@ -1,10 +1,9 @@
-from filehandling import BatchProcess
-
 import numpy as np
 import cv2
 
-from particletracker.video_crop import ReadCropVideo
-from ..project.bacteria import PARAMETERS
+from filehandling import BatchProcess
+
+from particletracker.crop import ReadCropVideo
 
 def create_bkg_img(parameters=None, filename=None):
     """Create a background image based on an average of the video
@@ -52,8 +51,3 @@ def create_bkg_img(parameters=None, filename=None):
 
     readvid.close()
 
-
-if __name__ == '__main__':
-    print(PARAMETERS['crop'])
-    for file in BatchProcess('/media/ppzmis/data/ActiveMatter/Microscopy/191218_MP_particles_bacteria/streams/BacteriaParticles*.mp4'):
-        create_bkg_img(parameters=PARAMETERS['crop'], filename=file)

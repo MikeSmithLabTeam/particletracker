@@ -1,8 +1,6 @@
 import numpy as np
 import cv2
 
-
-
 def bgr_2_grayscale(img):
     """Converts a BGR image to grayscale"""
     sz = np.shape(img)

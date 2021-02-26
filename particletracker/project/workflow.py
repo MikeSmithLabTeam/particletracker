@@ -1,6 +1,8 @@
+from filehandling import BatchProcess
+
 from ..project import PTWorkflow
 from ..general.writeread_param_dict import read_paramdict_file
-from filehandling import BatchProcess
+
 
 
 class PTProject(PTWorkflow):
