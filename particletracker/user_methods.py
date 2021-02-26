@@ -111,7 +111,7 @@ def track_method_name(preprocessed_frame, unprocessed_frame, parameters=None, ca
         Each function should have a corresponding entry in the dictionary. This is created by 
         the function in general.param_file_creator.py. Add a dictionary like this
 
-        'example_method_name':{'param_produces_slider':[startval, minval, maxval, step],
+        'track_method_name':{'param_produces_slider':[startval, minval, maxval, step],
                               'basic_text_box': True,
                               'basic_text_box2': (0,255,0)
                               }
@@ -135,6 +135,56 @@ class ExampleMethodNameTrackError(TrackError):
         super().__init__()
         self.error_msg = 'specific error message to show user in status bar'
         self.e=e
+
+"""
+get_intensities_methods------------------------------------------------------------------------
+"""
+
+
+def get_intensities_method_name(masked_img):
+    """
+
+    Docstring for method. Replace 'get_intensities_method_name' in function name 
+    and below.
+
+    Tracking methods such as Hough Circles or Contours have an option called get_intensities.
+    In order to use a get_intensities_method you enter the name of the function directly into 
+    the gui. This sends a small image bounding one particle which has been masked so that only
+    the pixels inside the contour or circle are visible. You can then perform any calculation
+    you want on these pixels. These functions return a single value which is stored in the 
+    dataframe for each particle. You could perhaps want to analyse the stress on a particle made of
+    birefringent material by analysing the intensity pattern. You'd therefore calculate the stress
+    and return this value.
+
+    Inputs:
+        masked_img  :   a masked image cropped tightly around a single particle.
+
+    Output:
+        A single numerical value.
+
+    """
+
+    try:
+        
+        """
+        Write the body of your code
+
+       """
+        value=1#delete this
+        return value
+    except Exception as e:
+        raise GetIntensitiesMethodNameTrackError(e)
+
+class GetIntensitiesMethodNameTrackError(TrackError):
+    def __init__(self,e):
+        super().__init__()
+        self.error_msg = 'specific error message to show user in status bar'
+        self.e=e
+
+
+
+
+
 
 """
 ---------------------------------------------------------------------------------------------

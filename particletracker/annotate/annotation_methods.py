@@ -54,7 +54,7 @@ def text_label(frame, data, f, parameters=None, call_num=None):
 
         return annotated_frame
     except:
-        raise TextLabelError
+        raise TextLabelError(e)
 
 def var_label(frame, data, f, parameters=None, call_num=None):
     '''
@@ -154,7 +154,7 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
 
         return frame
     except:
-        raise ParticleLabelsError
+        raise ParticleLabelsError(e)
 
 '''
 --------------------------------------------------------------------------------------
@@ -177,8 +177,8 @@ def _get_class_subset(data, f, parameters, method=None):
             temp = data.df.loc[f]
             subset_df = temp[temp[classifier_column] == classifier]
         return subset_df
-    except:
-        raise GetClassSubsetError
+    except Exception as e:
+        raise GetClassSubsetError(e)
 
 
 def circles(frame, data, f, parameters=None, call_num=None):
@@ -226,8 +226,8 @@ def circles(frame, data, f, parameters=None, call_num=None):
         for i, circle in enumerate(circles):
             frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), int(circle[2]), colours[i], int(thickness))
         return frame
-    except:
-        raise CirclesError
+    except Exception as e:
+        raise CirclesError(e)
 
 def boxes(frame, data, f, parameters=None, call_num=None):
     '''
@@ -274,8 +274,8 @@ def boxes(frame, data, f, parameters=None, call_num=None):
                 frame = _draw_contours(frame, box, col=colours[index],
                                            thickness=int(get_param_val(parameters[method_key]['thickness'])))
         return frame
-    except:
-        raise BoxesError
+    except Exception as e:
+        raise BoxesError(e)
 
 def _contour_inside_img(sz, contour):
     inside=True
@@ -330,7 +330,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
                                            thickness=int(thickness))
         return frame
     except Exception as e:
-        raise ContoursError
+        raise ContoursError(e)
 
 def _draw_contours(img, contours, col=(0,0,255), thickness=1):
     if (np.size(np.shape(col)) == 0) | (np.size(np.shape(col)) == 1):
@@ -388,8 +388,8 @@ def networks(frame, data, f, parameters=None, call_num=None):
                 pt = df.loc[neighbour, ['x','y']].values
                 pt2 = (int(pt[0]), int(pt[1]))
                 frame = cv2.line(frame,pt1, pt2, colours[index], int(thickness), lineType=cv2.LINE_AA)
-    except:
-        raise NetworksError
+    except Exception as e:
+        raise NetworksError(e)
 '''
 --------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------
@@ -451,8 +451,8 @@ def vectors(frame, data, f, parameters=None, call_num=None):
                                     (int(vector[0]+vector[2]*vector_scale),int(vector[1]+vector[3]*vector_scale)),
                                     color=colours[i], thickness=int(thickness),line_type=line_type,shift=0,tipLength=tipLength)
         return frame
-    except:
-        raise VectorsError
+    except Exception as e:
+        raise VectorsError(e)
 
 def trajectories(frame, data, f, parameters=None, call_num=None):
     '''
@@ -519,4 +519,4 @@ def trajectories(frame, data, f, parameters=None, call_num=None):
             frame = cv2.polylines(frame,[traj_pts],False,colours[index],int(thickness))
         return frame
     except Exception as e:
-        raise TrajectoriesError
+        raise TrajectoriesError(e)

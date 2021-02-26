@@ -129,7 +129,7 @@ class PTWorkflow:
             else:
                 annotatedframe = self.cap.read_frame(frame_num)
         except BaseError as e:         
-            if self.parent is not None:
+            if self.error_reporting is not None:
                 flash_error_msg(e, self.error_reporting)
             annotatedframe = proc_frame
             

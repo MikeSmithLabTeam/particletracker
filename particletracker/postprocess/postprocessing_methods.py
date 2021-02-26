@@ -15,28 +15,41 @@ All these methods operate on all frames simultaneously
 -------------------------------------------------------------------------------------------------------
 '''
 def angle(data, f_index=None, parameters=None, call_num=None):
-    '''Angle between 2 sets of data at a given time
-
-    Notes
-    -----
-
-    Angle assumes you want to calculate from column_data[0] as x and column_data[1] as y
+    '''
+    Angle assumes you want to calculate from x_column as x and y_column as y
     it uses tan2 so that -x and +y give a different result to +x and -y
     Angles are output in radians or degrees given by parameters['angle']['units']
     If you want to get the angle along a trajectory you need to run the running difference
     method on each column of x and y coords to create dx,dy then send this to angle.
 
-    Returns
-    -------
 
-    dataframe with new angle column.
+    Parameters  :
+    
+    x_column    :   x component of the data for calculating angle
+    y_column    :   y component of the data for calculating angle
+    output_name :   New column name to store angle data
+    units     :   'degrees' or 'radians'
+    
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
 
     '''
     try:
         method_key = get_method_key('angle', call_num)
-        columns = parameters[method_key]['column_names']
+        columnx = parameters[method_key]['x_column']
+        columny = parameters[method_key]['y_column']
         output_name = parameters[method_key]['output_name']
-        data[output_name] = np.arctan2(data[columns[0]]/data[data[columns[1]]])
+        data[output_name] = np.arctan2(data[columnx]/data[columny])
         return data
     except Exception as e:
         raise AngleError(e)
@@ -44,7 +57,25 @@ def angle(data, f_index=None, parameters=None, call_num=None):
 
 def contour_area(data, f_index=None, parameters=None, call_num=None):
     '''
-    Designed to work with contours and boxes
+    Calculate the area of a contour. 
+
+    Parameters  :
+    
+    output_name :   New column name to store area data
+    
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
+
     '''
     try:
         method_key = get_method_key('contour_area', call_num)
@@ -60,19 +91,30 @@ def contour_area(data, f_index=None, parameters=None, call_num=None):
         raise ContourAreaError(e)
 
 def difference(data, f_index=None, parameters=None, call_num=None):
-    '''Difference in time of a column of dataframe.
-
-    Notes
-    -----
-
+    '''
+    Difference in frames of a column of dataframe.
     The differences are calculated at separations equal
     to span along the column. Where this is not possible
     or at both ends of column, the value np.Nan is inserted.
+    
+    Parameters  :
+    
+    column_name     :   Column name to calculate differences on
+    output_name     :   Name to give to calculated data'x_diff',
+    span            :   Gap in frames to calculate difference on
+    
+    Inputs:
 
-    Returns
-    -------
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
 
-    Dataframe with new column of rolling differences named according to outputname in PARAMETERS
+    Outputs:
+    
+    updated dataframe of all data
 
     '''
     try:
@@ -92,17 +134,27 @@ def difference(data, f_index=None, parameters=None, call_num=None):
         raise DifferenceError(e)
 
 def magnitude(data, f_index=None, parameters=None, call_num=None):
-    ''' Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
+    '''
+    Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
 
-    Notes
-    -----
+    Parameters  :
+    
+    column_name     :   First column
+    column_name     :   Second column
+    output_name     :   Column name for magnitude data
+    
+    Inputs:
 
-    Combines 2 columns according to (x**2 + y**2)**0.5
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
 
-    Returns
-    -------
-
-    Pandas dataframe with new column named according to outputname in PARAMETERS
+    Outputs:
+    
+    updated dataframe of all data
 
     '''
     try:
@@ -116,15 +168,28 @@ def magnitude(data, f_index=None, parameters=None, call_num=None):
         raise MagnitudeError(e)
 
 def max(data, f_index=None, parameters=None, call_num=None):
-    ''' Max of a columns values
-
-    Notes
-    -----
-
-    Returns the max of a particle's trajectory values to a new
+    '''
+    Max of a columns values. Returns the max of a particle's trajectory values to a new
     column. The value is repeated next to all entries for that trajectory
+    Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
 
-    :return: dataframe with new column defined in output_name of parameters
+    Parameters  :
+    
+    column_name     :   First column
+    output_name     :   Column name for max data
+    
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
 
     '''
     try:
@@ -138,17 +203,30 @@ def max(data, f_index=None, parameters=None, call_num=None):
         raise MaxError(e)
 
 def mean(data, f_index=None, parameters=None, call_num=None):
-    ''' Mean of a columns values
-
-    Notes
-    -----
-
-    Returns the mean of a particle's trajectory values to a new
+    '''
+     Mean of a columns values. Returns the mean of a particle's trajectory values to a new
     column. The value is repeated next to all entries for that trajectory
 
-    :return: dataframe with new column defined in output_name of parameters
+    Parameters  :
+    
+    column_name     :   Input column name
+    output_name     :   Column name for max data
+    
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
 
     '''
+    
     try:
         method_key = get_method_key('mean', call_num)
         column = parameters[method_key]['column_name']
@@ -160,17 +238,30 @@ def mean(data, f_index=None, parameters=None, call_num=None):
         raise MeanError(e)
 
 def median(data, f_index=None, parameters=None, call_num=None):
-    ''' Mean of a columns values
-
-    Notes
-    -----
-
-    Returns the median of a particle's trajectory values to a new
+    '''
+     Median of a columns values. Returns the median of a particle's trajectory values to a new
     column. The value is repeated next to all entries for that trajectory
 
-    :return: dataframe with new column defined in output_name of parameters
+    Parameters  :
+    
+    column_name     :   Input column name
+    output_name     :   Column name for max data
+    
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
 
     '''
+    
     try:
         method_key = get_method_key('median', call_num)
         column = parameters[method_key]['column_name']
@@ -182,15 +273,27 @@ def median(data, f_index=None, parameters=None, call_num=None):
         raise MedianError(e)
 
 def min(data, f_index=None, parameters=None, call_num=None):
-    ''' Max of a columns values
-
-    Notes
-    -----
-
-    Returns the max of a particle's trajectory values to a new
+    '''
+     Minimum of a columns values. Returns the minimum of a particle's trajectory values to a new
     column. The value is repeated next to all entries for that trajectory
 
-    :return: dataframe with new column defined in output_name of parameters
+    Parameters  :
+    
+    column_name     :   Input column name
+    output_name     :   Column name for max data
+    
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
 
     '''
     try:
@@ -204,12 +307,8 @@ def min(data, f_index=None, parameters=None, call_num=None):
         raise MinError(e)
 
 def rate(data, f_index=None, parameters=None, call_num=None):
-    '''Rate of change of data in a column
-
-    Notes
-    -----
-
-    rate function takes an input column and calculates the
+    '''
+    Rate of change of data in a column. Rate function takes an input column and calculates the
     rate of change of the quantity. It takes into account
     the fact that particles go missing from frames. Where this
     is the case the rate = change in quantity between observations
@@ -221,10 +320,25 @@ def rate(data, f_index=None, parameters=None, call_num=None):
     between pairs of particles above one another in dataframe. We then backfill
     these slots with Nans.
 
-    Returns
-    -------
+    Parameters  :
 
-    Pandas dataframe with new column named according to outputname in PARAMETERS
+    column_name     :   Input column names
+    output_name     :   Output column name
+    fps             :   numerical value indicating the number of frames per second
+    method          :   finite_difference
+    
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
 
     '''
     try:
@@ -249,12 +363,6 @@ def rate(data, f_index=None, parameters=None, call_num=None):
         raise RateError(e)
 
 def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
-    ''' classify
-
-        Notes
-        -----
-
-        '''
     if (x > lower_threshold_value) and (x < upper_threshold_value):
         return True
     else:
@@ -262,9 +370,33 @@ def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
     
 def classify_most(data, f_index=None, parameters=None, call_num=None):
     '''
-    Takes a columns of boolean values for each particle and returns a column which takes
-    the most common value. ie True, True, False, True, True becomes True, True, True, True, True.
+    Takes a columns of boolean values and for each particle returns the 
+    most common value. ie Particle 1: True, True, False, True, True becomes 
+    True, True, True, True, True. Particle 2: False, True, False, False, False
+    becomes False, False, False, False, False. This is useful because measurements
+    fluctuate and so you want to colour code particles that generally are or are 
+    not something.
+    
+    Parameters  :
+
+    column_name     :    input column name
+    output_name     :    output column name
+   
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
+
     '''
+    
     try:
         method_key = get_method_key('classify_most', call_num)
         column = parameters[method_key]['column_name']
@@ -276,6 +408,31 @@ def classify_most(data, f_index=None, parameters=None, call_num=None):
         raise ClassifyMostError(e)
 
 def classify(data, f_index=None, parameters=None, call_num=None):
+    '''
+    Takes a column of data and classifies the data. 
+
+    Parameters  :
+
+    column_name     :   input data column
+    output_name     :   column name for classier
+    lower_threshold :   min value to belong to classifier
+    upper_threshold':   max value to belong to classifier
+    
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
+
+    '''
+
     try:
         method_key = get_method_key('classify', call_num)
         column = parameters[method_key]['column_name']
@@ -288,6 +445,30 @@ def classify(data, f_index=None, parameters=None, call_num=None):
         raise ClassifyError(e)
 
 def logic_NOT(data, f_index=None, parameters=None, call_num=None):
+    '''
+    Apply a logical not operation to a column of boolean values.
+
+    Parameters  :
+
+    column_name     :   input data column
+    output_name     :   column name for classier
+        
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
+
+    '''
+
+       
     try:
         method_key = get_method_key('logic_NOT', call_num)
         column = parameters[method_key]['column_name']
@@ -297,6 +478,32 @@ def logic_NOT(data, f_index=None, parameters=None, call_num=None):
         raise LogicNotError(e)
 
 def logic_AND(data, f_index=None, parameters=None, call_num=None):
+    '''
+    Applys a logical and operation to two columns of boolean values.
+
+    Parameters  :
+
+    column_name     :   input data column
+    column_name2    :   input data column 2
+    output_name     :   column name for classier
+        
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
+
+    '''
+
+    
+    
     try:
         method_key = get_method_key('logic_AND', call_num)
         column1 = parameters[method_key]['column_name']
@@ -307,6 +514,31 @@ def logic_AND(data, f_index=None, parameters=None, call_num=None):
         raise LogicAndError(e)
 
 def logic_OR(data, f_index=None, parameters=None, call_num=None):
+    '''
+    Apply a logical or operation to two columns of boolean values.
+
+    Parameters  :
+
+    column_name     :   input data column
+    column_name2     :   input data column 2
+    output_name     :   column name for classier
+        
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data
+
+    '''
+
+    
     try:
         method_key = get_method_key('logic_OR', call_num)
         column1 = parameters[method_key]['column_name']
@@ -318,21 +550,29 @@ def logic_OR(data, f_index=None, parameters=None, call_num=None):
         raise LogicOrError(e)
 
 def subtract_drift(data, f_index=None, parameters=None, call_num=None):
-    ''' subtract drift from an x,y coordinate trajectory
+    '''
+    subtract drift from an x,y coordinate trajectory.
 
-    Notes
-    -----
+    Parameters  :
 
-    Returns the median of a particle's trajectory values to a new
-    column. The value is repeated next to all entries for that trajectory
+    No Parameters
 
-    Returns
-    -------
+    Inputs:
 
-    dataframe with new columns defined in output_name of parameters
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data. The input data is automatically pulled from x, y
+    The output data is placed in columns x_drift, y_drift
 
     '''
-
+    
     try:
         method_key = get_method_key('subtract_drift', call_num)
         drift = tp.motion.compute_drift(data)
@@ -345,6 +585,32 @@ def subtract_drift(data, f_index=None, parameters=None, call_num=None):
         raise SubtractDriftError(e)
 
 def add_frame_data(data, f_index=None, parameters=None, call_num=None):
+    '''
+    Allows you to manually add a new column of data to the dataframe. The data
+    is data which has a single value per frame. This is done by creating a .csv
+    or .xlsx file and reading it in within the gui. The file should have two columns
+    The first column should have a complete list of all the frame numbers starting at zero
+    The second column should have the data for each frame listed. It can either be a .csv 
+    or a .xlsx file.
+
+    Parameters  :
+    data_filename       :   Filename with extension for the data to be loaded.
+    new_column_name     :   Name for column to which data is to be imported.    
+
+    Inputs:
+
+    data        :   The dataframe of all collected data
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dataframe of all data. 
+
+    '''
     try:
         method_key = get_method_key('add_frame_data', call_num)
         datapath = parameters[method_key]['data_path']

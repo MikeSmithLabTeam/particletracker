@@ -366,7 +366,7 @@ def medianblur(frame, parameters=None, call_num=None):
     grayscale image 
 
     '''
-      try:
+    try:
         method_key = get_method_key('medianblur', call_num=call_num)
         params = parameters['preprocess'][method_key]
         kernel = get_param_val(params['kernel'])
@@ -477,7 +477,7 @@ def threshold(frame, parameters=None, call_num=None):
     binary image with 255 above threshold else 0.
 
     '''
-     try:
+    try:
         method_key = get_method_key('threshold', call_num=call_num)
         params = parameters['preprocess'][method_key]
         threshold = get_param_val(params['threshold'])

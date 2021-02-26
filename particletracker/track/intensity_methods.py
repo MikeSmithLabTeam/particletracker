@@ -15,6 +15,7 @@ tracking algorithm.
 '''
 
 def mean_intensity(masked_img):
+    
     try:
         mean_intensity =  np.mean(masked_img)
         return mean_intensity

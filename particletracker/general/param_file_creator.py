@@ -126,7 +126,8 @@ def create_param_file(filename):
                       'output_name': None},
         'logic_NOT': {'column_name': None,
                       'output_name': None},
-        'angle':{'column_names':('x','y'),
+        'angle':{'x_column':'x',
+                 'y_column':'y',
                  'output_name':'theta',
                  'units':'degrees'
 
