@@ -8,15 +8,20 @@ Within the software we make use of several important files
 .param files
 ------------
 .param files are a nested set of python dictionaries. They effectively
-describe all the settings. A new default param file can be created:
+describe all the settings for a particle tracking project. 
+The testdata contains a default.param which you can modify in the software
+and save. Alternatively if you are using python you can create one.
+A new default param file can be created:
 
 .. code-block::python
     from particletracker.general import param_file_creator
+    filename = 'path/to/file.param'
     param_file_creator(filename)
 code
 
 The top level is a dictionary which has keys:
 
+.. code-block::python
 PARAMETERS = {
     'experiment': experiment,
     'crop': crop,
@@ -26,10 +31,12 @@ PARAMETERS = {
     'postprocess':postprocess,
     'annotate':annotate
     }
+code
 
 One key for each key step in the tracking process. The value for
 each key is another dictionary which specifies the settings for that stage.
 
+.. code-block::python
 preprocess = {
     'preprocess_method': ('grayscale','medianblur',),#'variance'
     'grayscale':{},#'load_bkg_img':False,
@@ -39,24 +46,22 @@ preprocess = {
                           'C': [-23, -30, 30, 1],
                           'ad_mode': [0, 0, 1, 1]
                           },
-
     }
+code
 
 Above is a slimmed down version of the preprocess dictionary but all
 dictionaries are structured in the same way. The top line is always
 "dictionaryname"_method:(method1, method2,). Only the methods named in
 this tuple are actually active methods eg grayscale and medianblur.
-Note below there are many methods that are not listed here.
+Note below this there are many methods that are not listed here.
 These methods are not active but they are setup with default params
 so you can add them in.
 
 For each method there is yet another dictionary. These contain
-the individual parameters for each method. These can be several types.
+the individual parameters for each method. These can be of several types.
 
-[startval, min, max, step] - These types will result in a spinbox slider in the gui.
-Clicking the settings button will allow you to alter the min and max within the gui.
-However, there is no error checking - you can ask for impossible parameters!
-There are strings and True, False, None which will result in edit textboxes.
+- [startval, min, max, step] - These types will result in a spinbox slider in the gui.
+- There are strings and True, False, None which will result in edit textboxes.
 
 These files can be saved and loaded directly within the gui to save sets of
 parameters appropriate for a particular experiment. Once a suitable .param file
@@ -78,4 +83,4 @@ This is what one is usually accessing. The second is the result from analysing
 all the frames either with the "process_part" or "process". When you check the "use_part"
 the software switches from using the vidname_temp.hdf5 file to the vidname.hdf5 to perform
 postprocessing / annotation. This is sometimes necessary. For instance to calculate
-a trajectory you must work with data from other frames.
+a trajectory you must work with data from other frames. 

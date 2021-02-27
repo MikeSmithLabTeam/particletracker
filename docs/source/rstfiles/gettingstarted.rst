@@ -1,6 +1,8 @@
 How do you start?
 =================
 
+If you installed the executable you can skip to "Building a tracking project"
+
 The place to start is with the track_gui() function which is contained in the ParticleTracker. 
 To start the tracking gui you simply need to run the following very simple script.
 
@@ -41,18 +43,18 @@ which will walk you through from start to finish.
 Working with the output data
 ----------------------------
 
-Once you have done these examples there is also a jupyter notebook in the testdata folder which
+If you are doing a really small project and absolutely have to avoid programming it is possible
+to export data as an excel file. Please bear in mind though that this is pretty clunky and that
+as soon as your projects increase in file size, number of particles etc this becomes pretty much
+unworkable.
+
+A better way to work is to use a Jupyter notebook to look at the data. The installation for python
+set this up. Simply open the anaconda command prompt and activate the "particle" environment.
+To do this you type "conda activate particle". At the command prompt you then need to navigate to
+the testdata folder. Type "cd path/to/testdata". Finally type "jupyter notebook". This will open the 
+server from where you can open the data_example.ipynb file. This jupyter notebook
 helps explain the format of the output data and shows you how to manipulate it to extract the data
 you want. 
 
-- Working with the data
-
-Extending the functionality
----------------------------
-
-Finally, if you require something more complicated and are reasonably comfortable coding in python 
-
-- Structure of the software
-- Adding your own methods
 
 

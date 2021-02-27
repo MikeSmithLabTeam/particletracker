@@ -3,7 +3,8 @@ Example 2. Using Contours tracking
 
 Open track_gui and load the movie example2.mp4 and the settings file example2.param
 
-In this example we have some hydrogel beads that change size and shape during the movie.
+In this example we have some setup a few initial stages as defaults in the example2.param 
+hydrogel beads that change size and shape during the movie.
 The contours method requires a binary image from which the different separate objects can be 
 identified.
 
