@@ -123,10 +123,14 @@ def difference(data, f_index=None, parameters=None, call_num=None):
         column = parameters[method_key]['column_name']
         output_name = parameters[method_key]['output_name']
         data.index.name = 'index'
-        data = data.sort_values(['particle', 'frame'])
+        data = data.sort_values(['frame', 'particle'])
+        #data = data.sort_values(['particle', 'frame'])
+        data.set_index('particle')
+        print(data.head(n=100))
         data[output_name] = data[column].diff(periods=span)
+        print(data[[output_name,column]].head(n=100))
         data['nan'] = data['particle'].diff(periods=span).astype(bool)
-
+        print(data[['nan',output_name]].head(n=100))
         data[output_name][data['nan'] == True] = np.NaN
         data.drop(labels='nan',axis=1)
         return data

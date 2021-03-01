@@ -53,7 +53,7 @@ def text_label(frame, data, f, parameters=None, call_num=None):
                                     cv2.LINE_AA)
 
         return annotated_frame
-    except:
+    except Exception as e:
         raise TextLabelError(e)
 
 def var_label(frame, data, f, parameters=None, call_num=None):
@@ -100,7 +100,7 @@ def var_label(frame, data, f, parameters=None, call_num=None):
                                     cv2.LINE_AA)
 
         return annotated_frame
-    except:
+    except Exception as e:
         raise VarLabelError(e)
 
 def particle_labels(frame, data, f, parameters=None, call_num=None):
@@ -125,7 +125,7 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
     Inputs:
 
     frame       :   This is the unmodified frame of the input movie
-    data        :   This is the dataframe that stores all the tracked data
+    data        :   This is the dataframe store that stores all the tracked data
     f           :   An integer that references the current frame number
     parameters  :   Dictionary like object (same as .param files or 
                         output from general.param_file_creator.py
@@ -136,14 +136,15 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
     
     annotated frame : Annotated frame of type numpy ndarray.
     '''
+
     try:
 
-        method_key = get_method_key('particle_values', call_num=None)
+        method_key = get_method_key('particle_labels', call_num=None)
         x = data.get_info(f, 'x')
         y = data.get_info(f, 'y')
-
-        particle_values = data.get_info(f, parameters[method_key]['values_column']).astype(int)
-
+    
+        particle_values = data.get_info(f, parameters[method_key]['values_column'])#.astype(int)
+    
         for index, particle_val in enumerate(particle_values):
             frame = cv2.putText(frame, str(particle_val), (int(x[index]), int(y[index])),
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL,
@@ -153,7 +154,7 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
                                 cv2.LINE_AA)
 
         return frame
-    except:
+    except Exception as e:
         raise ParticleLabelsError(e)
 
 '''

@@ -18,20 +18,13 @@ class TrackingAnnotator:
         #frame_size = (self.cap.height, self.cap.width, 3)
 
 
-    def annotate(self, f_index=None, use_part=False, bitrate='HIGH1080', framerate=30):
+    def annotate(self, f_index=None, use_part=False, framerate=30):
         frame = self.cap.read_frame(n=0)
         if f_index is None:
-            if self.parameters['videowriter'] == 'opencv':
-                self.out = WriteVideo(filename=self.output_filename, frame=frame)
-            elif self.parameters['videowriter'] == 'ffmpeg':
-                self.out = WriteVideoFFMPEG(self.output_filename, bitrate=bitrate, framerate=framerate)
+            self.out = WriteVideo(filename=self.output_filename, frame=frame)
             data_filename = self.data_filename
-
         elif use_part:
-            if self.parameters['videowriter'] == 'opencv':
-                self.out = WriteVideo(filename=self.output_filename, frame=frame)
-            elif self.parameters['videowriter'] == 'ffmpeg':
-                self.out = WriteVideoFFMPEG(self.output_filename, bitrate=bitrate, framerate=framerate)
+            #self.out = WriteVideo(filename=self.output_filename, frame=frame)
             data_filename = self.data_filename
         else:
             data_filename = self.data_filename[:-5] + '_temp.hdf5'

@@ -43,7 +43,7 @@ def adaptive_threshold(frame, parameters=None, call_num=None):
         invert = get_param_val(params['ad_mode'])
 
     
-        if invert == 1:
+        if invert:
             out = cv2.adaptiveThreshold(frame,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, block, const)
         else:
             out = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block, const)
@@ -482,7 +482,10 @@ def threshold(frame, parameters=None, call_num=None):
         params = parameters['preprocess'][method_key]
         threshold = get_param_val(params['threshold'])
         mode = get_param_val(params['th_mode'])
-        ret, out = cv2.threshold(frame,threshold,255,mode)
+        if mode:
+            ret, out = cv2.threshold(frame,threshold,255,1)
+        else:
+            ret, out = cv2.threshold(frame,threshold,255,0)
         return out
     except Exception as e:
         raise ThresholdError(e)

@@ -25,10 +25,10 @@ def create_param_file(filename):
         'preprocess_method': ('grayscale','medianblur',),#'variance'
         'grayscale':{},#'load_bkg_img':False,
         'threshold':{'threshold':[1,0,255,1],
-                     'th_mode':[1,0,1,1]},
+                     'th_mode':[True,('True', 'False')]},
         'adaptive_threshold':{'block_size': [29,1,300,2],
                               'C': [-23, -30, 30, 1],
-                              'ad_mode': [0, 0, 1, 1]
+                              'ad_mode': [0, (0, 1, 1)]
                               },
         'colour_channel':{'colour':['red',('red','green','blue')]},
         'distance':{},
