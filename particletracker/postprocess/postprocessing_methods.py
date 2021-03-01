@@ -648,7 +648,7 @@ def neighbours(df, f_index=None, parameters=None, call_num=None,):
     try:
         #https: // docs.scipy.org / doc / scipy / reference / generated / scipy.spatial.Delaunay.html
         method_key = get_method_key('neighbours', call_num)
-        method = parameters[method_key]['method']
+        method = get_param_val(parameters[method_key]['method'])
         df['neighbours'] = np.NaN
         for f in _every_frame(df, f_index):
             df_temp = df.loc[f]

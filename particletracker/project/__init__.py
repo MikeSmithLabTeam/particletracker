@@ -1,5 +1,6 @@
 import os.path
 import numpy as np
+import pandas as pd
 
 from ..crop import ReadCropVideo
 from .. import preprocess, track, link, postprocess, \
@@ -63,7 +64,7 @@ class PTWorkflow:
                                                        parameters=self.parameters[
                                                            'annotate'], frame=self.cap.read_frame(self.parameters['experiment']['frame_range'][0]))
 
-    def process(self, use_part=False):
+    def process(self, use_part=False, excel=False):
         """Process an entire video
 
         Process is called on the main instance using the command
@@ -73,6 +74,8 @@ class PTWorkflow:
             link = True etc
 
         if use_part == True the processing perorms the postprocessing and annotation steps only. 
+
+        if excel == True this will export the data as an excel file with the name videoname.xlsx
 
         :return:
         """
@@ -85,6 +88,10 @@ class PTWorkflow:
             self.pp.process(use_part=use_part)
         if self.annotate_select:
             self.an.annotate(use_part=use_part)
+        if excel:
+            df = pd.read_hdf(self.data_filename)
+            df.to_excel(self.data_filename[:-5] + '.xlsx')
+
 
     def process_frame(self, frame_num, use_part=False):
         """Process a single frame
@@ -128,10 +135,12 @@ class PTWorkflow:
                 annotatedframe = self.an.annotate(f_index=frame_num, use_part=use_part)
             else:
                 annotatedframe = self.cap.read_frame(frame_num)
-        except BaseError as e:         
+        except BaseError as e:     
             if self.error_reporting is not None:
                 flash_error_msg(e, self.error_reporting)
-            annotatedframe = proc_frame
+            annotatedframe = self.cap.read_frame(frame_num)
+            self.error_reporting.toggle_img.setChecked(False)
+            self.error_reporting.toggle_img.setText("Captured Image")
             
         
         return annotatedframe, proc_frame

@@ -111,9 +111,8 @@ def colour_channel(frame, parameters=None, call_num=None):
     try:
         if np.size(np.shape(frame)) == 3:
             method_key = get_method_key('colour_channel', call_num=call_num)
-            params = parameters['preprocess'][method_key]
-            colour = params['colour']
-            colour = colour.lower()
+            params = get_param_val(parameters['preprocess'][method_key])
+            colour = get_param_val(params['colour'])
         
             #Assumes frame has bgr format.
             if colour == 'red':
@@ -412,11 +411,12 @@ def subtract_bkg(frame, parameters=None, call_num=None):
         method_key = get_method_key('subtract_bkg', call_num=call_num)
         params = parameters['preprocess'][method_key]
     
-        if params['subtract_bkg_type'] == 'mean':
+        bkgtype = get_param_val(params['subtract_bkg_type'])
+        if  bkgtype == 'mean':
             mean_val = int(np.mean(frame))
             subtract_frame = mean_val * np.ones(np.shape(frame), dtype=np.uint8)
             frame2=frame
-        elif params['subtract_bkg_type'] == 'img':
+        elif bkgtype == 'image':
             # This option subtracts the previously created image which is added to dictionary.
             #These parameters are fed to the blur function
             temp_params = {}
@@ -446,7 +446,7 @@ def subtract_bkg(frame, parameters=None, call_num=None):
         if np.max(frame) == 0:
             frame2 = frame
 
-        if params['subtract_bkg_norm']==True:
+        if get_param_val(params['subtract_bkg_norm'])==True:
             frame2 = cv2.normalize(frame2, None, alpha=0, beta=255,
                                   norm_type=cv2.NORM_MINMAX)
         return frame2
@@ -524,7 +524,7 @@ def variance(frame, parameters=None, call_num=None):
         frame2 = cv2.normalize(frame2, frame2,0,255,cv2.NORM_MINMAX)
         frame = cv2.add(frame1, frame2)
 
-        if params['variance_norm'] == True:
+        if get_param_val(params['variance_norm']) == True:
             frame = cv2.normalize(frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
 
         return frame

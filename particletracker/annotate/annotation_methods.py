@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 from ..general.parameters import get_param_val, get_method_key
-from ..general.cmap import colour_array
+from .cmap import colour_array
 from ..customexceptions.annotator_error import *
 from ..user_methods import *
 
@@ -169,7 +169,8 @@ def _get_class_subset(data, f, parameters, method=None):
     Internal function to get subset of particles
     '''    
     try:
-        classifier_column= parameters[method]['classifier_col']
+        classifier_column= parameters[method]['classifier_column']
+        
         if classifier_column is None:
             subset_df = data.df.loc[f]
         else:
@@ -220,7 +221,7 @@ def circles(frame, data, f, parameters=None, call_num=None):
             data.add_particle_property('r', get_param_val(parameters[method_key]['radius']))
         thickness = get_param_val(parameters[method_key]['thickness'])
 
-        subset_df = get_class_subset(data, f, parameters, method=method_key)
+        subset_df = _get_class_subset(data, f, parameters, method=method_key)
         circles = subset_df[['x', 'y', 'r']].values
         colours = colour_array(subset_df, f, parameters, method=method_key)
         for i, circle in enumerate(circles):
@@ -264,7 +265,7 @@ def boxes(frame, data, f, parameters=None, call_num=None):
     try:
         method_key = get_method_key('boxes', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
-        subset_df = get_class_subset(data, f, parameters, method=method_key)
+        subset_df = _get_class_subset(data, f, parameters, method=method_key)
         box_pts = subset_df[['box']].values
 
         colours = colour_array(subset_df, f, parameters, method=method_key)
@@ -320,7 +321,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
     try:
         method_key = get_method_key('contours', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
-        subset_df = get_class_subset(data, f, parameters, method=method_key)
+        subset_df = _get_class_subset(data, f, parameters, method=method_key)
         contour_pts = subset_df[['contours']].values
         
         colours = colour_array(subset_df, f, parameters, method=method_key)
@@ -374,7 +375,7 @@ def networks(frame, data, f, parameters=None, call_num=None):
     '''
     try:
         method_key = get_method_key('networks', call_num=call_num)
-        df = get_class_subset(data, f, parameters, method=method_key)
+        df = _get_class_subset(data, f, parameters, method=method_key)
         df = df.set_index('particle')
         particle_ids = df.index.values
         colours = colour_array(df, f, parameters, method=method_key)
@@ -440,8 +441,8 @@ def vectors(frame, data, f, parameters=None, call_num=None):
         vectors = data.get_info(f, ['x', 'y',dx, dy])
 
         thickness = get_param_val(parameters[method_key]['thickness'])
-        line_type = 8
-        tipLength = 0.01*get_param_val(parameters[method_key]['tip_length'])
+        line_type = get_param_val(parameters[method_key]['line_type'])
+        tip_length = 0.01*get_param_val(parameters[method_key]['tip_length'])
         vector_scale = 0.01*get_param_val(parameters[method_key]['vector_scale'])
 
         colours = colour_array(data.df, f, parameters, method=method_key)
@@ -449,7 +450,7 @@ def vectors(frame, data, f, parameters=None, call_num=None):
         for i, vector in enumerate(vectors):
             frame = cv2.arrowedLine(frame, (int(vector[0]), int(vector[1])),
                                     (int(vector[0]+vector[2]*vector_scale),int(vector[1]+vector[3]*vector_scale)),
-                                    color=colours[i], thickness=int(thickness),line_type=line_type,shift=0,tipLength=tipLength)
+                                    color=colours[i], thickness=int(thickness),line_type=line_type,shift=0,tipLength=tip_length)
         return frame
     except Exception as e:
         raise VectorsError(e)
@@ -496,7 +497,7 @@ def trajectories(frame, data, f, parameters=None, call_num=None):
         y_col_name = parameters[method_key]['y_column']
 
         #In this case subset_df is only used to get the particle_ids and colours of trajectories.
-        subset_df = get_class_subset(data, f, parameters, method=method_key)
+        subset_df = _get_class_subset(data, f, parameters, method=method_key)
         particle_ids = subset_df['particle'].values
 
         colours = colour_array(subset_df, f, parameters, method=method_key)

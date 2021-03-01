@@ -55,7 +55,6 @@ class TrackingAnnotator:
                     self.out.add_frame(frame)
             if f_index is None:
                 self.out.close()
-                print('vid written')
             else:
                 return frame
 

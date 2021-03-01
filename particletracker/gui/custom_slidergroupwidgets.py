@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 
 from qtwidgets import QCustomSlider, QCustomTextBox, SelectAreaWidget
 from .custom_textbox import QModCustomTextBox
+from .custom_dropdown import QCustomDropdown
 
 class CollectionParamAdjustors(QWidget):
     def __init__(self, title, param_dict, param_change, *args, **kwargs):
@@ -29,21 +30,28 @@ class CollectionParamAdjustors(QWidget):
                 for method_param in list(param_dict[method].keys()):
                     # If sub dictionary contains a list [value, min, max, step] gui displays a QCustomSlider
                     if isinstance(param_dict[method][method_param], list):
-                        slider = QCustomSlider(title = method_param,
+                        if len(param_dict[method][method_param]) == 4:
+                            slider = QCustomSlider(title = method_param,
                                                 min_ = param_dict[method][method_param][1],
                                                 max_ = param_dict[method][method_param][2],
                                                 step_ = param_dict[method][method_param][3],
                                                 value_ = param_dict[method][method_param][0],
                                                 spinbox = True,
                                                 )
-                        #Add location within dictionary as metadata
-                        slider.meta = [title, method, method_param]
-                        slider.widget = 'slider'
-                        #Signal connected to param_change slot. This is in toplevel.py
-                        slider.valueChanged.connect(lambda x=None: self.param_change(x))
-                        vbox.addWidget(slider)
-                        widget_count += 1
-
+                            #Add location within dictionary as metadata
+                            slider.meta = [title, method, method_param]
+                            slider.widget = 'slider'
+                            #Signal connected to param_change slot. This is in toplevel.py
+                            slider.valueChanged.connect(lambda x=None: self.param_change(x))
+                            vbox.addWidget(slider)
+                            widget_count += 1
+                        else:
+                            dropdown=QCustomDropdown(title=method_param, value_=param_dict[method][method_param][0],options=param_dict[method][method_param][1])
+                            dropdown.meta = [title, method, method_param]
+                            dropdown.widget = 'dropdown'
+                            dropdown.returnPressed.connect(lambda x=None: self.param_change(x))
+                            vbox.addWidget(dropdown)
+                            widget_count += 1
                     #if some other datatype display edit text boxes
                     else:
                         textbox = QCustomTextBox(title=method_param, value_=param_dict[method][method_param])

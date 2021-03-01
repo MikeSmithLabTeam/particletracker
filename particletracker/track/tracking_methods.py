@@ -24,7 +24,7 @@ def trackpy(frame,_, parameters=None, call_num=None):
         method_key = get_method_key('trackpy', call_num)
         df = tp.locate(frame, get_param_val(parameters[method_key]['size_estimate']), invert=get_param_val(parameters[method_key]['invert']))
 
-        if parameters[method_key]['get_intensities']:
+        if get_param_val(parameters[method_key]['get_intensities']):
             x = df['x'].to_numpy()
             y = df['y'].to_numpy()
             intensity = []
@@ -40,7 +40,7 @@ def trackpy(frame,_, parameters=None, call_num=None):
                     mask = _create_circular_mask(h, w)
                     masked_img = cut_out_frame.copy()
                     masked_img[~mask] = 0
-                    value = getattr(im, parameters[method_key]['get_intensities'])(masked_img)
+                    value = getattr(im, get_param_val(parameters[method_key]['get_intensities']))(masked_img)
                 except:
                     value = np.Nan
 
@@ -94,7 +94,7 @@ def hough(frame, _,parameters=None, call_num=None):
                     mask = _create_circular_mask(h, w)
                     masked_img = cut_out_frame.copy()
                     masked_img[~mask] = 0
-                    value = getattr(im, parameters[method_key]['get_intensities'])(masked_img)
+                    value = getattr(im, get_param_val(parameters[method_key]['get_intensities']))(masked_img)
                 except:
                     value = np.Nan
 
@@ -120,7 +120,7 @@ def boxes(frame, _,parameters=None, call_num=None):
     try:
         method_key = get_method_key('boxes',call_num=call_num)
         params = parameters[method_key]
-        get_intensities = params['get_intensities']
+        get_intensities = get_param_val(params['get_intensities'])
 
         area_min = get_param_val(params['area_min'])
         area_max = get_param_val(params['area_max'])
@@ -168,7 +168,7 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
 
         method_key = get_method_key('contours',call_num=call_num)
         params = parameters[method_key]
-        get_intensities = params['get_intensities']
+        get_intensities = get_param_val(params['get_intensities'])
 
         area_min = get_param_val(params['area_min'])
         area_max = get_param_val(params['area_max'])
@@ -186,7 +186,7 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
 
                     box = cv2.boundingRect(contour)
                     if get_intensities:
-                        intensity = _find_intensity_inside_contour(contour, frame, params['get_intensities'])
+                        intensity = _find_intensity_inside_contour(contour, frame, get_intensities)
                         info_contour = [cx, cy, area, contour, box, intensity]
                     else:
                         info_contour = [cx, cy, area, contour, box]

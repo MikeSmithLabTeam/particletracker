@@ -30,18 +30,18 @@ def create_param_file(filename):
                               'C': [-23, -30, 30, 1],
                               'ad_mode': [0, 0, 1, 1]
                               },
-        'colour_channel':{'colour':'red'},#'green','blue'
+        'colour_channel':{'colour':['red',('red','green','blue')]},
         'distance':{},
         'blur':{'kernel':[1,1,15,2]},
         'medianblur':{'kernel':[3,1,15,2]},
         'gamma':{'gamma':[1,-1000,1000,1]},
-        'subtract_bkg':{'subtract_bkg_type':'mean',
+        'subtract_bkg':{'subtract_bkg_type':['mean',('mean','image')],
                     'subtract_bkg_filename':None,
                     'subtract_bkg_blur_kernel': [3,1,15,2],
-                    'subtract_bkg_invert':[1,0,1,1],
-                    'subtract_bkg_norm':True
+                    'subtract_bkg_invert':[True,('True','False')],
+                    'subtract_bkg_norm':[True,('True','False')]
                     },
-        'variance':{'variance_norm':True,
+        'variance':{'variance_norm':[True,('True','False')],
                     'value':[125,1,255,1]
                     },
         'invert':{},
@@ -57,7 +57,7 @@ def create_param_file(filename):
         'track_method':('trackpy',),
         'trackpy':{'size_estimate':[7,1, 101,2],
                    'invert':[0,0,1,1],
-                   'get_intensities':False,
+                   'get_intensities':[False,('True','False')],
                    'intensity_radius':[2,1,200,1]
                    },
         'hough':{'min_dist':[105,1,501,2],
@@ -65,19 +65,19 @@ def create_param_file(filename):
                   'p2':[39, 1, 201,2],
                   'min_rad':[10, 1, 301,2],
                   'max_rad':[50, 1, 301,2],
-                  'get_intensities':False
+                  'get_intensities':[False,('True','False')]
                  },
         'contours':{'noise_cutoff':[2,1,50,1],
                     'area_min':[20, 1, 2000, 1],
                     'area_max':[2000, 1, 20000, 1],
                     'aspect':[1,1,20,1],
-                    'get_intensities':False
+                    'get_intensities':[False,('True','False')]
                     },
         'boxes':{'noise_cutoff':[2,1,50,1],
                     'area_min':[2, 1, 2000, 1],
                     'area_max':[2000, 1, 20000, 1],
                     'aspect':[1,1,20,1],
-                    'get_intensities':False
+                    'get_intensities':[False,('True','False')]
                  },
         }
 
@@ -129,16 +129,15 @@ def create_param_file(filename):
         'angle':{'x_column':'x',
                  'y_column':'y',
                  'output_name':'theta',
-                 'units':'degrees'
+                 'units':['degrees',('radians','degrees')]
 
         },
         'contour_area': {'output_name':'area'},
         'rate':{'column_name':'x',
                 'output_name':'vx',
                 'fps':50.0,
-                'method':'finite_difference'
                   },
-        'neighbours':{'method':'delaunay',#kdtree
+        'neighbours':{'method':['delaunay',('delaunay','kdtree')],
                       'neighbours':6,
                       'cutoff':[50,1,200,1],
                     },
@@ -169,38 +168,34 @@ def create_param_file(filename):
                             'font_thickness': 2
                             },
         'circles':{'radius':[6,1,1000,1],#This is overridden in Hough Circles
-                    'cmap_type':'static',#'dynamic',
+                    'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#for dynamic
                     'cmap_max':[470,1,2000,1],#For dynamic
-                    'cmap_scale':1,
                     'colour': (0,255,0),#For static
                     'classifier_column': None,#For static or dynamic
                     'classifier': 1,#For static or dynamic
                     'thickness':2
                    },
-        'boxes':{  'cmap_type':'static',#static
+        'boxes':{  'cmap_type':['static',('dynamic','static')],
                    'cmap_column':'x',  #None
                    'cmap_max':[1,1,2000,1],
-                   'cmap_scale':1,
                    'colour': (0, 255, 0),  # For static
                    'classifier_column': None,  # For static or dynamic
                    'classifier':1,
                    'thickness': 2
                    },
-        'contours':{'cmap_type':'static',#'dynamic',
+        'contours':{'cmap_type':['static',('dynamic','static')],
                    'cmap_column':'x',#For dynamic
                    'cmap_max':[470,1,2000,1],#For dynamic
-                   'cmap_scale':1,
                    'colour': (0,255,0),#For static
                    'classifier_column': None,#For static or dynamic
                    'classifier': None,#For static or dynamic
                    'thickness':2
                    },
         'networks':{
-                    'cmap_type':'static',#'dynamic',
+                    'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#For dynamic                      'classifier': 1,#For static or dynamic
                     'cmap_max':[470,1,2000,1],#For dynamic              thickness':2
-                    'cmap_scale':1,
                     'classifier_column': None,
                     'classifier': None,
                     'colour': (0,255,0),#For static
@@ -209,13 +204,12 @@ def create_param_file(filename):
         'vectors':{'dx_column':'x',
                    'dy_column':'y',
                    'thickness':2,
-                   'line_type':8,
+                   'line_type':[8,(-1,4,8,16)],
                    'tip_length':[1,1,100,1],
                    'vector_scale':[1,1,2000,1],
                    'cmap_type':'static',#'dynamic',
                    'cmap_column':'x',#For dynamic
                    'cmap_max':[470,1,2000,1],#For dynamic
-                   'cmap_scale':1,
                    'colour': (0,0,255),#For static
                    'classifier_column':None,#For static or dynamic
                    'classifier': None,#For static or dynamic
@@ -224,10 +218,9 @@ def create_param_file(filename):
         'trajectories':{'x_column':'x',
                     'y_column':'y',
                     'traj_length': [1000,0,1000,1],
-                    'cmap_type':'static',#'dynamic',
+                    'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#For dynamic
                     'cmap_max':[470,1,2000,1],#For dynamic
-                    'cmap_scale':1,
                     'colour': (64,224,208),#For static
                     'classifier_column':'classifier',#For static or dynamic
                     'classifier': None,#For static or dynamic

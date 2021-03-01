@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
             self.movie_filename = None
             
         if self.movie_filename is None:
-            self.open_movie_dialog()
+            ok, self.movie_filename = self.open_movie_dialog()
 
         if settings_filename is not None:
             if isfile(settings_filename):
@@ -78,9 +78,7 @@ class MainWindow(QMainWindow):
 
     def setup_menus_toolbar(self):
         dir = os.path.abspath(__file__)
-        print(dir)
         resources_dir = os.path.join(dir[:-11],'icons','icons')
-        print(resources_dir)
         self.toolbar = QToolBar('Toolbar')
         self.toolbar.setIconSize(QSize(16,16))
         self.addToolBar(self.toolbar)
@@ -115,6 +113,12 @@ class MainWindow(QMainWindow):
 
         self.toolbar.addSeparator()
 
+        self.excel=False
+        self.export_to_excel = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to Excel', self)
+        self.export_to_excel.triggered.connect(self.export_to_excel_click)
+        self.export_to_excel.setCheckable(True)
+        self.toolbar.addAction(self.export_to_excel)
+
         process_part_button = QAction(QIcon(os.path.join(resources_dir,"clapperboard--minus.png")), "Process part", self)
         process_part_button.triggered.connect(self.process_part_button_click)
         self.toolbar.addAction(process_part_button)
@@ -145,7 +149,8 @@ class MainWindow(QMainWindow):
         ---------------------------------------------------------------------------------------------
         '''
         self.file_menu = menu.addMenu("&File")
-        self.help_menu = menu.addMenu(" Help")
+        self.process_menu = menu.addMenu("Process options")
+        self.help_menu = menu.addMenu("Help")
 
         self.file_menu.addAction(open_movie_button)
         self.file_menu.addAction(open_settings_button)
@@ -158,6 +163,13 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(process_button)
         self.file_menu.addSeparator()
         self.file_menu.addAction(close_button)
+
+        
+        self.process_menu.addAction(self.export_to_excel)
+        self.process_menu.addAction(process_part_button)
+        self.process_menu.addAction(self.use_part_button)
+        self.process_menu.addAction(process_button)
+        
 
         docs = QAction('help', self)
         docs.triggered.connect(self.open_docs)
@@ -191,10 +203,11 @@ class MainWindow(QMainWindow):
         self.settings_label = QLabel(self.settings_filename)
         self.viewer = QImageViewer()
         self.viewer.leftMouseButtonDoubleClicked.connect(self.coords_clicked)
-        self.toggle_img = QPushButton("Preprocessed Image")
+        self.toggle_img = QPushButton("Captured Image")
         self.toggle_img.setCheckable(True)
-        self.toggle_img.setChecked(False)
         self.toggle_img.clicked.connect(self.select_img_view)
+        self.toggle_img.setChecked(False)
+        
         frame_selector_layout = QHBoxLayout()
 
         if self.tracker.parameters['experiment']['frame_range'][1] is None:
@@ -386,9 +399,9 @@ class MainWindow(QMainWindow):
                                                             "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v)", options=options)
         if ok:
             self.movie_filename = movie_filename
-            return True
+            return True, movie_filename
         else:
-            return False
+            return False, movie_filename
 
     def open_settings_dialog(self):
         options = QFileDialog.Options()
@@ -408,7 +421,7 @@ class MainWindow(QMainWindow):
             return False
 
     def open_movie_click(self):
-        ok=self.open_movie_dialog()
+        ok, self.movie_filename=self.open_movie_dialog()
         if ok:
             self.reboot()
         
@@ -430,6 +443,9 @@ class MainWindow(QMainWindow):
     def live_update_button_click(self):
         if self.live_update_button.isChecked():
             self.update_viewer()
+
+    def export_to_excel_click(self):
+        self.excel = self.export_to_excel.isChecked
 
     def process_part_button_click(self):
         '''
@@ -467,9 +483,9 @@ class MainWindow(QMainWindow):
     def process_button_click(self):
         self.tracker.reset_annotator()
         if self.use_part_button.isChecked():
-            self.tracker.process(use_part=True)
+            self.tracker.process(use_part=True, excel=self.excel)
         else:
-            self.tracker.process()
+            self.tracker.process(excel=self.excel)
 
         write_paramdict_file(self.tracker.parameters, self.movie_filename[:-4] + '_expt.param')
         QMessageBox.about(self, "", "Processing Finished")

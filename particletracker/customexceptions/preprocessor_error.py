@@ -17,6 +17,7 @@ class ColorChannelError(PreprocessorError):
         super().__init__()
         self.error_msg = "color channel error : valid options are 'red','green','blue'; requires a coloured image as input"
         self.e=e
+        print(self.e)
 
 class DilationError(PreprocessorError):
     def __init__(self,e):

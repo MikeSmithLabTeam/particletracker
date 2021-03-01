@@ -2,10 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..general.parameters import get_param_val
+from ..customexceptions.annotator_error import CmapError
 
 def colour_array(subset_df, f, parameters, method=None):
     try:
-        cmap_type = parameters[method]['cmap_type']
+        cmap_type = get_param_val(parameters[method]['cmap_type'])
         sz = np.shape(subset_df.index.values)
         if cmap_type == 'static':
             colour_val = parameters[method]['colour']
@@ -13,7 +14,7 @@ def colour_array(subset_df, f, parameters, method=None):
         elif cmap_type == 'dynamic':
             cmap_column = parameters[method]['cmap_column']
             colour_data = subset_df[[cmap_column]].values
-            cmap_max = get_param_val(parameters[method]['cmap_max']) / parameters[method]['cmap_scale']
+            cmap_max = get_param_val(parameters[method]['cmap_max'])
             cmap_name = 'jet'
             colour_obj = plt.get_cmap(cmap_name, np.size(colour_data))
             colour_vals = 255 * colour_obj(colour_data / cmap_max)
@@ -23,10 +24,9 @@ def colour_array(subset_df, f, parameters, method=None):
             colours = np.array(colours)
         return colours
     except Exception as e:
-        print('Error in general.cmap.colour_array')
-        print(e)
+        raise CmapError(e)
 
-
+"""
 def cmap_variables(data, f, parameters, method=None):
     '''
     Convenience method to extract the inputs necessary for building a colourmap
@@ -38,31 +38,32 @@ def cmap_variables(data, f, parameters, method=None):
 
     :return: Numpy array of data to be used in colour coding, type of colour map, maximum value to scale data.
     '''
+    print('var')
     try:
         cmap_column = parameters[method]['cmap_column']
         if cmap_column is None:
             sz = np.shape(data.df.loc[f].index.values)
             colour_data = np.ones(sz)
-            cmap_type='discrete'
+            cmap_type='static'
         else:
             colour_data = data.get_info(f, cmap_column)
             cmap_type = parameters[method]['cmap_type']
         cmax_max = get_param_val(parameters[method]['cmap_max'])/10
         return colour_data, cmap_type, cmax_max
     except Exception as e:
-        print('Error in general.cmap.cmap_variables')
-        print(e)
-
-
+        raise CmapError(e)
+"""
+"""
 def colourmap(colour_data, cmap_type=None, cmax_max=None):
+    print('maop')
     '''
     cmap could have different use cases:
-    1: 'discrete' data is colour coded according to some classifier
-    2: 'continuous' data is colour coded according to continuous scale
+    1: 'static' data is colour coded according to some classifier
+    2: 'dynamic' data is colour coded according to continuous scale
 
     Colormap definitions: https://matplotlib.org/3.1.1/gallery/color/colormap_reference.html
     case 1 colourmap is Set1 of Matplotlibs Qualitative color maps
-    case 2 colourmap is seismic from diverging colormaps
+    case 2 colourmap is jet from diverging colormaps
 
 
     :param data: Datastore object containing column upon which to perform the mapping
@@ -73,9 +74,9 @@ def colourmap(colour_data, cmap_type=None, cmax_max=None):
     :return: a
     '''
     try:
-        if cmap_type == 'discrete':
+        if cmap_type == 'static':
             cmap_name = 'Set1'
-        elif cmap_type == 'continuous':
+        elif cmap_type == 'dynamic':
             cmap_name='jet'
         else:
             cmap_name = cmap_type
@@ -90,8 +91,7 @@ def colourmap(colour_data, cmap_type=None, cmax_max=None):
             colours.append((colour[0],colour[1],colour[2]))
         return np.array(colours)
     except Exception as e:
-        print('Error in general.cmap.colourmap')
-        print(e)
+        raise CmapError(e)
 
-
+"""
 
