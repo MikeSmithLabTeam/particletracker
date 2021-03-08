@@ -14,6 +14,7 @@ from ..user_methods import *
 All these methods operate on all frames simultaneously
 -------------------------------------------------------------------------------------------------------
 '''
+
 def angle(data, f_index=None, parameters=None, call_num=None):
     '''
     Angle assumes you want to calculate from x_column as x and y_column as y
@@ -44,12 +45,20 @@ def angle(data, f_index=None, parameters=None, call_num=None):
     updated dataframe of all data
 
     '''
+    
+    method_key = get_method_key('angle', call_num)
+    columnx = parameters[method_key]['x_column']
+    columny = parameters[method_key]['y_column']
+    output_name = parameters[method_key]['output_name']
+    units=parameters[method_key]['units']
+    
+    if units == 'degrees':
+        data[output_name] = np.arctan2(data[columny],data[columnx])*(180/np.pi)
+    else:
+        data[output_name] = np.arctan2(data[columny],data[columnx])
     try:
-        method_key = get_method_key('angle', call_num)
-        columnx = parameters[method_key]['x_column']
-        columny = parameters[method_key]['y_column']
-        output_name = parameters[method_key]['output_name']
-        data[output_name] = np.arctan2(data[columnx]/data[columny])
+        print(data.head(n=50))
+        print(data['theta'])
         return data
     except Exception as e:
         raise AngleError(e)
@@ -95,7 +104,7 @@ def difference(data, f_index=None, parameters=None, call_num=None):
     Difference in frames of a column of dataframe.
     The differences are calculated at separations equal
     to span along the column. Where this is not possible
-    or at both ends of column, the value np.Nan is inserted.
+    eg at both ends of column, the value np.Nan is inserted.
     
     Parameters  :
     
@@ -117,22 +126,14 @@ def difference(data, f_index=None, parameters=None, call_num=None):
     updated dataframe of all data
 
     '''
+    method_key = get_method_key('difference', call_num)
+    column = parameters[method_key]['column_name']
+    output_name = parameters[method_key]['output_name']
+    span = get_param_val(parameters[method_key]['span'])
+    df=data.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+    
+    data[output_name]=df[output_name]
     try:
-        method_key = get_method_key('difference', call_num)
-        span = get_param_val(parameters[method_key]['span'])
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        data.index.name = 'index'
-        data = data.sort_values(['frame', 'particle'])
-        #data = data.sort_values(['particle', 'frame'])
-        data.set_index('particle')
-        print(data.head(n=100))
-        data[output_name] = data[column].diff(periods=span)
-        print(data[[output_name,column]].head(n=100))
-        data['nan'] = data['particle'].diff(periods=span).astype(bool)
-        print(data[['nan',output_name]].head(n=100))
-        data[output_name][data['nan'] == True] = np.NaN
-        data.drop(labels='nan',axis=1)
         return data
     except Exception as e:
         raise DifferenceError(e)
@@ -171,50 +172,16 @@ def magnitude(data, f_index=None, parameters=None, call_num=None):
     except Exception as e:
         raise MagnitudeError(e)
 
-def max(data, f_index=None, parameters=None, call_num=None):
-    '''
-    Max of a columns values. Returns the max of a particle's trajectory values to a new
-    column. The value is repeated next to all entries for that trajectory
-    Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
-
-    Parameters  :
-    
-    column_name     :   First column
-    output_name     :   Column name for max data
-    
-    Inputs:
-
-    data        :   The dataframe of all collected data
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    updated dataframe of all data
-
-    '''
-    try:
-        method_key = get_method_key('max', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        temp=data.groupby('particle')[column].transform('max')
-        data[output_name] = temp
-        return data
-    except Exception as e:
-        raise MaxError(e)
-
 def mean(data, f_index=None, parameters=None, call_num=None):
     '''
-     Mean of a columns values. Returns the mean of a particle's trajectory values to a new
-    column. The value is repeated next to all entries for that trajectory
+    Rolling Mean of a column of values. Returns the mean of a particle's values to a new
+    column.
 
     Parameters  :
     
     column_name     :   Input column name
     output_name     :   Column name for max data
+    span            :   number of frames over which to calculate rolling mean
     
     Inputs:
 
@@ -231,25 +198,35 @@ def mean(data, f_index=None, parameters=None, call_num=None):
 
     '''
     
+
     try:
         method_key = get_method_key('mean', call_num)
         column = parameters[method_key]['column_name']
         output_name = parameters[method_key]['output_name']
-        temp=data.groupby('particle')[column].transform('mean')
-        data[output_name] = temp
+        span = get_param_val(parameters[method_key]['span'])
+
+        frame_index = data.index.get_level_values('frame')
+        
+        df=data.groupby('particle')[column].rolling(span).mean().transform(lambda x:x).to_frame(name=output_name)
+        df['frame']=frame_index
+        df.set_index('frame', append=True, inplace=True)
+        data[output_name]=df[output_name]
+        print(data.head())
+        print(data[output_name])
         return data
     except Exception as e:
         raise MeanError(e)
 
 def median(data, f_index=None, parameters=None, call_num=None):
     '''
-     Median of a columns values. Returns the median of a particle's trajectory values to a new
-    column. The value is repeated next to all entries for that trajectory
+    Median of a columns values. Returns the median of a particle's values to a new
+    column.
 
     Parameters  :
     
     column_name     :   Input column name
-    output_name     :   Column name for max data
+    output_name     :   Column name for median data
+    span            :   number of frames over which to calculate rolling median
     
     Inputs:
 
@@ -270,45 +247,18 @@ def median(data, f_index=None, parameters=None, call_num=None):
         method_key = get_method_key('median', call_num)
         column = parameters[method_key]['column_name']
         output_name = parameters[method_key]['output_name']
-        temp=data.groupby('particle')[column].transform('median')
-        data[output_name] = temp
+        span = get_param_val(parameters[method_key]['span'])
+
+        frame_index = data.index.get_level_values('frame')
+        
+        df=data.groupby('particle')[column].rolling(span).median().transform(lambda x:x).to_frame(name=output_name)
+        df['frame']=frame_index
+        df.set_index('frame', append=True, inplace=True)
+        data[output_name]=df[output_name]
+    
         return data
     except Exception as e:
         raise MedianError(e)
-
-def min(data, f_index=None, parameters=None, call_num=None):
-    '''
-     Minimum of a columns values. Returns the minimum of a particle's trajectory values to a new
-    column. The value is repeated next to all entries for that trajectory
-
-    Parameters  :
-    
-    column_name     :   Input column name
-    output_name     :   Column name for max data
-    
-    Inputs:
-
-    data        :   The dataframe of all collected data
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    updated dataframe of all data
-
-    '''
-    try:
-        method_key = get_method_key('min', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        temp=data.groupby('particle')[column].transform('min')
-        data[output_name] = temp
-        return data
-    except Exception as e:
-        raise MinError(e)
 
 def rate(data, f_index=None, parameters=None, call_num=None):
     '''
@@ -329,7 +279,8 @@ def rate(data, f_index=None, parameters=None, call_num=None):
     column_name     :   Input column names
     output_name     :   Output column name
     fps             :   numerical value indicating the number of frames per second
-    method          :   finite_difference
+    span            :   number of frames over which to calculate rolling difference
+    
     
     Inputs:
 
@@ -349,19 +300,11 @@ def rate(data, f_index=None, parameters=None, call_num=None):
         method_key = get_method_key('rate', call_num)
         column = parameters[method_key]['column_name']
         output_name = parameters[method_key]['output_name']
+        span = get_param_val(parameters[method_key]['span'])
+        fps= parameters[method_key]['fps']
 
-        data = data.sort_values(['particle', 'index'])
-        #Change and time over which change happened
-        data['temp_diff'] = data[column].diff()
-        data['nan'] = data['particle'].diff().astype(bool)
-        data['temp_diff'][data['nan'] == True] = np.NaN
-        data['time'] = (1/parameters[method_key]['fps'])*data.index
-        data['dt']=data['time'].diff()
-        #Put Nans in values crossing particles.
-        data[data['dt'] < 0]['dt'] == np.NaN
-        data[output_name] = data['temp_diff'] / data['dt']
-        #remove temporary columns
-        data.drop(labels=['nan','temp_diff','dt'], axis=1)
+        df=data.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)/fps
+        data[output_name]=df[output_name]
         return data
     except Exception as e:
         raise RateError(e)

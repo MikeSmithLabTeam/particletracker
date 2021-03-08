@@ -28,7 +28,7 @@ def create_param_file(filename):
                      'th_mode':[True,('True', 'False')]},
         'adaptive_threshold':{'block_size': [29,1,300,2],
                               'C': [-23, -30, 30, 1],
-                              'ad_mode': [0, (0, 1, 1)]
+                              'ad_mode': [True, ('True', 'False')]
                               },
         'colour_channel':{'colour':['red',('red','green','blue')]},
         'distance':{},
@@ -90,14 +90,14 @@ def create_param_file(filename):
         }
 
     postprocess = {
-        'postprocess_method': ('max',),
+        'postprocess_method': (),
         'smooth':{'column_name':'y',
                   'output_name':'y_smooth',
                   'span':[5,1,50,1],
                   'method':'default'
                   },
         'subtract_drift':{},
-        'difference':{'column_name':'x_drift',
+        'difference':{'column_name':'x',
                       'output_name':'x_diff',
                       'span':[10,1,50,1]
                       },
@@ -106,11 +106,12 @@ def create_param_file(filename):
                      'output_name':'r_diff'
         },
         'median':{'column_name':'r_diff',
-                    'output_name':'median_r',},
-        'max':{'column_name':'r_diff',
-               'output_name':'max_r',},
-        'min':{'column_name':'r_diff',
-               'output_name':'min_r',},
+                    'output_name':'median_r',
+                    'span':[5,1,20,1]},
+        'mean':{'column_name':'x',
+                'output_name':'x_mean',
+                'span':[5,1,20,1]
+                },
         'classify':{'column_name':'max_r',
                     'output_name':'classifier',
                     'lower_threshold':[1, 1, 100, 1],
@@ -136,6 +137,7 @@ def create_param_file(filename):
         'rate':{'column_name':'x',
                 'output_name':'vx',
                 'fps':50.0,
+                'span':[5,1,20,1]
                   },
         'neighbours':{'method':['delaunay',('delaunay','kdtree')],
                       'neighbours':6,

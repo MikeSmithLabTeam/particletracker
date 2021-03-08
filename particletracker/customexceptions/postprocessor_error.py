@@ -33,7 +33,7 @@ class MaxError(PostprocessorError):
 class MeanError(PostprocessorError):
     def __init__(self, e):
         super().__init__()
-        self.error_msg = 'mean error'
+        self.error_msg = 'mean error  -  Check that you are operating on multiframe data. Have you "processed part"? Is the use-part button checked?'
         self.e = e
 
 class MedianError(PostprocessorError):

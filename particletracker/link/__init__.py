@@ -33,8 +33,7 @@ class LinkTrajectory:
                     num_particles = np.shape(data.df)[0]
                     pids = np.linspace(0,num_particles-1, num=num_particles).astype(int)
                     data.df['particle'] = pids
-
                 # Save DataStore
                 data.save(filename=data_filename)
-        except:
+        except Exception as e:
             raise LinkError

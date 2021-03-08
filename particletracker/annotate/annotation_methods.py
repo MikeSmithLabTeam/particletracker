@@ -1,11 +1,13 @@
 import cv2
 import numpy as np
+import warnings
 
 from ..general.parameters import get_param_val, get_method_key
 from .cmap import colour_array
 from ..customexceptions.annotator_error import *
 from ..user_methods import *
 
+warnings.simplefilter('ignore')
 '''
 --------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------
@@ -87,6 +89,7 @@ def var_label(frame, data, f, parameters=None, call_num=None):
     annotated frame : Annotated frame of type numpy ndarray.
     
     '''
+
     try:
         method_key = get_method_key('var_label', call_num=call_num)
         var_column=parameters[method_key]['var_column']
@@ -136,25 +139,24 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
     
     annotated frame : Annotated frame of type numpy ndarray.
     '''
-
-    try:
-
-        method_key = get_method_key('particle_labels', call_num=None)
-        x = data.get_info(f, 'x')
-        y = data.get_info(f, 'y')
     
-        particle_values = data.get_info(f, parameters[method_key]['values_column'])#.astype(int)
+    method_key = get_method_key('particle_labels', call_num=None)
+    x = data.get_info(f, 'x')
+    y = data.get_info(f, 'y')
     
-        for index, particle_val in enumerate(particle_values):
-            frame = cv2.putText(frame, str(particle_val), (int(x[index]), int(y[index])),
+    particle_values = data.get_info(f, parameters[method_key]['values_column'])#.astype(int)
+
+    for index, particle_val in enumerate(particle_values):
+        frame = cv2.putText(frame, str(particle_val), (int(x[index]), int(y[index])),
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL,
                                 int(parameters[method_key]['font_size']),
                                 parameters[method_key]['font_colour'],
                                 int(parameters[method_key]['font_thickness']),
                                 cv2.LINE_AA)
-
+    try:
         return frame
     except Exception as e:
+        print(e)
         raise ParticleLabelsError(e)
 
 '''
