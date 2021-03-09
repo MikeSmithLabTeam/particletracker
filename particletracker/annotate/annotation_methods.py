@@ -156,7 +156,6 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
     try:
         return frame
     except Exception as e:
-        print(e)
         raise ParticleLabelsError(e)
 
 '''

@@ -103,9 +103,10 @@ def hough(frame, _,parameters=None, call_num=None):
             circles_dict['intensities']=np.array(intensity)
 
         df = pd.DataFrame(circles_dict)
-
+        print(df.head())
         return df
     except Exception as e:
+        return pd.DataFrame({'x':np.nan,'y':np.nan})
         raise HoughCirclesError(e)
 
 
@@ -161,14 +162,16 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
     mask so that you can extract pixels from original image
     and perform some analysis.
     '''
+    method_key = get_method_key('contours',call_num=call_num)
+    params = parameters[method_key]
+    get_intensities = get_param_val(params['get_intensities'])
+    
     try:
         sz = np.shape(frame)
         if np.shape(sz)[0] == 3:
             frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        method_key = get_method_key('contours',call_num=call_num)
-        params = parameters[method_key]
-        get_intensities = get_param_val(params['get_intensities'])
+        
 
         area_min = get_param_val(params['area_min'])
         area_max = get_param_val(params['area_max'])
@@ -197,11 +200,9 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
         else:
             info_headings = ['x', 'y', 'area', 'contours', 'boxes']
         df = pd.DataFrame(data=info, columns=info_headings)
-
         return df
     except Exception as e:
         raise ContoursError(e)
-
 
 '''
 ------------------------------------------------------------------------

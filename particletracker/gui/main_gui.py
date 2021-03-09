@@ -300,15 +300,15 @@ class MainWindow(QMainWindow):
             self.update_param_widgets('crop')
             self.viewer.clearImage()
         elif sender.meta == 'ResetFrameRange':
-            self.update_dictionary_params(['experiment','frame_range'],(0,self.tracker.cap.num_frames-1,1))
+            self.update_dictionary_params(['experiment','frame_range'],(0,self.tracker.cap.num_frames-1,1), 'button')
             self.tracker.cap.set_frame_range((0,self.tracker.cap.num_frames,1))
         elif 'frame_range' in paramdict_location[1]:
             frame_range = (self.frame_selector.slider._min,self.frame_selector.slider._max+1,self.frame_selector.slider._step)
-            self.update_dictionary_params(['experiment','frame_range'],frame_range)
+            self.update_dictionary_params(['experiment','frame_range'],frame_range, 'slider')
             self.tracker.cap.set_frame_range(frame_range)
         else:
             parsed_value = parse_values(sender, value)
-            self.update_dictionary_params(paramdict_location, parsed_value)
+            self.update_dictionary_params(paramdict_location, parsed_value, sender.widget)
             if ('crop' in paramdict_location[1]) or ('mask' in paramdict_location[1]):
                 self.tracker.cap.set_mask()          
         self.update_viewer()
@@ -317,11 +317,11 @@ class MainWindow(QMainWindow):
     def method_change(self, value):
         sender = self.sender()
         location = [sender.title, sender.title + '_method']
-        self.update_dictionary_params(location, value)
+        self.update_dictionary_params(location, value, 'list')
         self.update_param_widgets(sender.title)
         self.update_viewer()
 
-    def update_dictionary_params(self, location, value):
+    def update_dictionary_params(self, location, value, widget_type):
         if len(location) == 2:
             '''Sometimes a duplicate method is added to method list which is not
             in the dictionary. These duplicates are named method*1 etc. There will
@@ -342,9 +342,15 @@ class MainWindow(QMainWindow):
                             else:
                                 self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]]
             else:
-                self.tracker.parameters[location[0]][location[1]] = value
+                if widget_type == 'dropdown':
+                    self.tracker.parameters[location[0]][location[1]][0] = value
+                else:
+                    self.tracker.parameters[location[0]][location[1]] = value
         else:
-            self.tracker.parameters[location[0]][location[1]][location[2]] = value 
+            if widget_type == 'dropdown':
+                self.tracker.parameters[location[0]][location[1]][location[2]][0] = value 
+            else:
+                self.tracker.parameters[location[0]][location[1]][location[2]] = value 
 
     def update_param_widgets(self, title):
         for param_adjustor in self.toplevel_settings.list_param_adjustors:

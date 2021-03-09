@@ -407,6 +407,7 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     grayscale image 
 
     '''
+    
     try:
         method_key = get_method_key('subtract_bkg', call_num=call_num)
         params = parameters['preprocess'][method_key]
@@ -422,20 +423,18 @@ def subtract_bkg(frame, parameters=None, call_num=None):
             temp_params = {}
             temp_params['preprocess'] = {
                 'blur': {'kernel': get_param_val(params['subtract_bkg_blur_kernel'])}}
-
             #Load bkg img
             if params['subtract_bkg_filename'] is None:
                 name = parameters['experiment']['video_filename']
                 subtract_frame = cv2.imread(name[:-4] + '_bkgimg.png',cv2.IMREAD_GRAYSCALE)
             else:
                 subtract_frame = cv2.imread(params['subtract_bkg_filename'],cv2.IMREAD_GRAYSCALE)
-            
+         
             subtract_frame = crop(subtract_frame, parameters['crop'])
-
             #blur frames
-            frame2, error = blur(frame, temp_params)
+            frame2 = blur(frame, temp_params)
             frame2 = frame2.astype(np.uint8)
-            subtract_frame, error = blur(subtract_frame, temp_params)
+            subtract_frame  = blur(subtract_frame, temp_params)
             subtract_frame =subtract_frame.astype(np.uint8)
 
         if get_param_val(params['subtract_bkg_invert']):
@@ -448,9 +447,11 @@ def subtract_bkg(frame, parameters=None, call_num=None):
 
         if get_param_val(params['subtract_bkg_norm'])==True:
             frame2 = cv2.normalize(frame2, None, alpha=0, beta=255,
-                                  norm_type=cv2.NORM_MINMAX)
+                             norm_type=cv2.NORM_MINMAX)
+   
         return frame2
     except Exception as e:
+        print(e)
         raise SubtractBkgError(e)
        
 

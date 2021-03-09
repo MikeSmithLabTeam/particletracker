@@ -88,8 +88,11 @@ class PTWorkflow:
             self.pp.process(use_part=use_part)
         if self.annotate_select:
             self.an.annotate(use_part=use_part)
+        print(excel)
+        
         if excel:
             df = pd.read_hdf(self.data_filename)
+            print(df.head())
             df.to_excel(self.data_filename[:-5] + '.xlsx')
 
 
@@ -142,6 +145,5 @@ class PTWorkflow:
             self.error_reporting.toggle_img.setChecked(False)
             self.error_reporting.toggle_img.setText("Captured Image")
             
-        
         return annotatedframe, proc_frame
 

@@ -1,5 +1,6 @@
 import os
 from tqdm import tqdm
+import numpy as np
 
 from ..general import dataframes
 from ..track import tracking_methods as tm
@@ -99,5 +100,8 @@ class ParticleTracker:
             preprocessed_frame = self.ip.process(frame)
             preprocessed_frame = self.cap.apply_mask(preprocessed_frame)
         df_frame = getattr(tm, method)(preprocessed_frame, frame, self.parameters)
+        if df_frame.empty:
+            for column in df_frame.columns:
+                df_frame[column] = [np.nan]
         return df_frame
         
