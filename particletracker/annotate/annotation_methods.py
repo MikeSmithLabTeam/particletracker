@@ -60,7 +60,7 @@ def text_label(frame, data, f, parameters=None, call_num=None):
 
 def var_label(frame, data, f, parameters=None, call_num=None):
     '''
-    Var labelsn put text on an image at specific location.
+    Var labels put text on an image at specific location.
     This function is for adding data specific to a single frame. For example
     you could indicate the temperature of the sample or time.
     The data for a given frame should be stored in a particular column
@@ -139,21 +139,26 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
     
     annotated frame : Annotated frame of type numpy ndarray.
     '''
-    
-    method_key = get_method_key('particle_labels', call_num=None)
-    x = data.get_info(f, 'x')
-    y = data.get_info(f, 'y')
-    
-    particle_values = data.get_info(f, parameters[method_key]['values_column'])#.astype(int)
+    try:
+        method_key = get_method_key('particle_labels', call_num=None)
+        x = data.get_info(f, 'x')
+        y = data.get_info(f, 'y')
 
-    for index, particle_val in enumerate(particle_values):
-        frame = cv2.putText(frame, str(particle_val), (int(x[index]), int(y[index])),
+    
+        particle_values = data.get_info(f, parameters[method_key]['values_column'])#.astype(int)     
+
+        df_empty = np.isnan(particle_values[0])
+        if np.all(df_empty):
+            return frame
+
+        for index, particle_val in enumerate(particle_values):
+            frame = cv2.putText(frame, str(particle_val), (int(x[index]), int(y[index])),
                                 cv2.FONT_HERSHEY_COMPLEX_SMALL,
                                 int(parameters[method_key]['font_size']),
                                 parameters[method_key]['font_colour'],
                                 int(parameters[method_key]['font_thickness']),
                                 cv2.LINE_AA)
-    try:
+    
         return frame
     except Exception as e:
         raise ParticleLabelsError(e)
@@ -216,19 +221,33 @@ def circles(frame, data, f, parameters=None, call_num=None):
     
     annotated frame : Annotated frame of type numpy ndarray.
     '''
+    
     try:
-
+    
         method_key = get_method_key('circles', call_num=call_num)
         if 'r' not in list(data.df.columns):
             data.add_particle_property('r', get_param_val(parameters[method_key]['radius']))
         thickness = get_param_val(parameters[method_key]['thickness'])
 
         subset_df = _get_class_subset(data, f, parameters, method=method_key)
+        
         circles = subset_df[['x', 'y', 'r']].values
+        
+        #No objects found
+        df_empty = np.isnan(circles[0])
+        if np.all(df_empty):
+            return frame
+        
         colours = colour_array(subset_df, f, parameters, method=method_key)
-        for i, circle in enumerate(circles):
-            frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), int(circle[2]), colours[i], int(thickness))
+        
+        if np.shape(circles) == (3,):#One object
+            frame = cv2.circle(frame, (int(circles[0]), int(circles[1])), int(circles[2]), colours[0], int(thickness))
+        else:
+            for i, circle in enumerate(circles):
+                frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), int(circle[2]), colours[i], int(thickness))
+    
         return frame
+    
     except Exception as e:
         raise CirclesError(e)
 
@@ -264,18 +283,28 @@ def boxes(frame, data, f, parameters=None, call_num=None):
     annotated frame : Annotated frame of type numpy ndarray.
     '''
 
-    try:
+    if True:
         method_key = get_method_key('boxes', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
         subset_df = _get_class_subset(data, f, parameters, method=method_key)
-        box_pts = subset_df[['box']].values
+        box_pts = subset_df[['boxes']].values
+        print('boxes')
+        print(box_pts)
+    
+        if np.shape(box_pts)[0] == 1:
+            df_empty = np.isnan(box_pts[0])
+            if np.all(df_empty):
+                #0 boxes
+                return frame
 
         colours = colour_array(subset_df, f, parameters, method=method_key)
         sz = np.shape(frame)
+
         for index, box in enumerate(box_pts):
-            if _contour_inside_img(sz, box):
-                frame = _draw_contours(frame, box, col=colours[index],
-                                           thickness=int(get_param_val(parameters[method_key]['thickness'])))
+            #if _contour_inside_img(sz, box):
+            frame = _draw_contours(frame, box, col=colours[index],
+                                   thickness=int(get_param_val(parameters[method_key]['thickness'])))
+    try:
         return frame
     except Exception as e:
         raise BoxesError(e)
@@ -323,14 +352,20 @@ def contours(frame, data, f, parameters=None, call_num=None):
     try:
         method_key = get_method_key('contours', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
+        
         subset_df = _get_class_subset(data, f, parameters, method=method_key)
         contour_pts = subset_df[['contours']].values
-        
         colours = colour_array(subset_df, f, parameters, method=method_key)
 
+        if np.shape(contour_pts)[0] == 1:
+            df_empty = np.isnan(contour_pts[0])
+            if np.all(df_empty):
+                #0 contours
+                return frame
         for index, contour in enumerate(contour_pts):
-           frame = _draw_contours(frame, contour, col=colours[index],
+            frame = _draw_contours(frame, contour, col=colours[index],
                                            thickness=int(thickness))
+        
         return frame
     except Exception as e:
         raise ContoursError(e)

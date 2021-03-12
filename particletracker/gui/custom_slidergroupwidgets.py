@@ -15,7 +15,7 @@ class CollectionParamAdjustors(QWidget):
         self.build_widgets(title, param_dict)
 
         
-    def build_widgets(self, title, param_dict):#, param_change):
+    def build_widgets(self, title, param_dict):
         self.layout_outer = QVBoxLayout()
         for method in param_dict[title + '_method']:
             widget_count=0

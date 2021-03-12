@@ -24,21 +24,22 @@ class CheckableTabWidget(QTabWidget):
         self.list_draggable_lists = []
         self.list_param_adjustors = []
         self.list_param_adjustor_layouts = []
-        for index, key in enumerate(list(self.param_dict.keys())):
+        tab_list = list(self.param_dict.keys()).copy()
+        if 'selected' in tab_list: tab_list.remove('selected')
+        for index, key in enumerate(tab_list):
             self.add_tab(QLabel(), key, index)
 
     def add_tab(self, widget, title, index):
-
         QTabWidget.addTab(self, widget, title)
         checkBox = QCheckBox()
         checkBox.setCheckable(True)
 
         #The default value for the postprocess checkstate is set when tracker is opened from gui.open_tracker()
         # in PTProject. Here we just set the opening default of the ticked tab in the gui.
-        if (title == 'postprocess') or (title == 'annotate'):
-            checkBox.setCheckState(Qt.Unchecked)
-        else:
+        if self.param_dict['selected'][title]:
             checkBox.setCheckState(Qt.Checked)
+        else:
+            checkBox.setCheckState(Qt.Unchecked)
         checkBox.title = title
 
         self.tabBar().setTabButton(self.tabBar().count()-1, QTabBar.LeftSide, checkBox)
@@ -98,5 +99,9 @@ class CheckableTabWidget(QTabWidget):
 
     def emitStateChanged(self,check_state, title):
         setattr(self.tracker, title + '_select',check_state == Qt.Checked)
+        if check_state == Qt.Checked:
+            self.param_dict['selected'][title] = True
+        else:
+            self.param_dict['selected'][title] = False
         self.checkBoxChanged.emit(1)
         

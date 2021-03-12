@@ -5,6 +5,7 @@ import pandas as pd
 from ..crop import ReadCropVideo
 from .. import preprocess, track, link, postprocess, \
     annotate
+from ..general.writeread_param_dict import read_paramdict_file
 from ..customexceptions import BaseError, flash_error_msg
 
 class PTWorkflow:
@@ -12,21 +13,33 @@ class PTWorkflow:
     PTWorkflow is a parent class that handles the workflow of a particle tracking project.
     '''
 
-    def __init__(self, video_filename=None, error_reporting=None):
+    def __init__(self, video_filename=None, param_filename=None, error_reporting=None):
         self.video_filename = video_filename
         self.error_reporting=error_reporting
         self.filename = os.path.splitext(self.video_filename)[0]
         self.data_filename = self.filename + '.hdf5'
 
         #These should be overwritten in child class
-        self.crop_select = False
-        self.preprocess_select = False
-        self.track_select = False
-        self.link_select = False
-        self.postprocess_select = False
-        self.annotate_select = False
+        #self.crop_select = False
+        #self.preprocess_select = False
+        #self.track_select = False
+        #self.link_select = False
+        #self.postprocess_select = False
+        #self.annotate_select = False
+        self.param_filename = param_filename
+        self.select_tabs()
+        self._setup()
 
-        self.parameters = {}
+
+    def select_tabs(self):
+        self.parameters = read_paramdict_file(self.param_filename)
+        self.experiment_select = self.parameters['selected']['experiment']
+        self.crop_select = self.parameters['selected']['crop']
+        self.preprocess_select = self.parameters['selected']['preprocess']
+        self.track_select = self.parameters['selected']['track']
+        self.link_select = self.parameters['selected']['link']
+        self.postprocess_select = self.parameters['selected']['postprocess']
+        self.annotate_select = self.parameters['selected']['annotate']
 
     def _setup(self):
         ''' Setup is a internal class method it instantiates the reader object
@@ -88,11 +101,9 @@ class PTWorkflow:
             self.pp.process(use_part=use_part)
         if self.annotate_select:
             self.an.annotate(use_part=use_part)
-        print(excel)
         
         if excel:
             df = pd.read_hdf(self.data_filename)
-            print(df.head())
             df.to_excel(self.data_filename[:-5] + '.xlsx')
 
 

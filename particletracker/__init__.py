@@ -4,7 +4,7 @@ import sys, os
 
 from filehandling import BatchProcess
 
-from .project.workflow import PTProject
+from .project import PTWorkflow
 from particletracker.gui.main_gui import MainWindow
 
 
@@ -67,7 +67,7 @@ def track_batchprocess(moviefilter, settings,
     '''
 
     for filename in BatchProcess(moviefilter):
-        tracker = PTProject(video_filename=filename, param_filename=settings)
+        tracker = PTWorkflow(video_filename=filename, param_filename=settings)
         tracker.crop_select = crop
         tracker.preprocess_select = preprocess
         tracker.track_select = track

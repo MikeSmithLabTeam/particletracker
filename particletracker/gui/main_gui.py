@@ -14,7 +14,7 @@ from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
 
 from .custom_tab_widget import CheckableTabWidget
-from ..project.workflow import PTProject
+from ..project.workflow import PTWorkflow#PTProject
 from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.imageformat import bgr_to_rgb
@@ -103,7 +103,13 @@ class MainWindow(QMainWindow):
         save_settings_button.triggered.connect(self.save_settings_button_click)
         self.toolbar.addAction(save_settings_button)
 
+        self.autosave_on_process = QAction(QIcon(os.path.join(resources_dir,"autosave.png")), 'Autosave settings on process', self)
+        self.autosave_on_process.setCheckable(True)
+        self.autosave_on_process.setChecked(True)
+        self.toolbar.addAction(self.autosave_on_process)
+
         self.toolbar.addSeparator()
+
 
         self.live_update_button = QAction(QIcon(os.path.join(resources_dir,"arrow-circle.png")), "Live Updates", self)
         self.live_update_button.setCheckable(True)
@@ -112,6 +118,9 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.live_update_button)
 
         self.toolbar.addSeparator()
+
+
+
 
         self.excel=False
         self.export_to_excel = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to Excel', self)
@@ -164,7 +173,7 @@ class MainWindow(QMainWindow):
         self.file_menu.addSeparator()
         self.file_menu.addAction(close_button)
 
-        
+        self.process_menu.addAction(self.autosave_on_process)
         self.process_menu.addAction(self.export_to_excel)
         self.process_menu.addAction(process_part_button)
         self.process_menu.addAction(self.use_part_button)
@@ -260,7 +269,8 @@ class MainWindow(QMainWindow):
     ----------------------------------------------------------------
     """
     def open_tracker(self):
-        self.tracker = PTProject(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
+        #PTProject
+        self.tracker = PTWorkflow(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
 
@@ -488,6 +498,9 @@ class MainWindow(QMainWindow):
 
     def process_button_click(self):
         self.tracker.reset_annotator()
+        if self.autosave_on_process.isChecked():
+            write_paramdict_file(self.tracker.parameters, self.settings_filename)
+
         if self.use_part_button.isChecked():
             self.tracker.process(use_part=True, excel=self.excel)
         else:

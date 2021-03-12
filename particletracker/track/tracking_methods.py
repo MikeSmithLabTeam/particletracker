@@ -136,19 +136,19 @@ def boxes(frame, _,parameters=None, call_num=None):
                 angle = info_contour[2]
                 width = info_contour[3]
                 length = info_contour[4]
-                box = info_contour[5]
+                boxes = info_contour[5]
 
                 if get_intensities:
                     intensity = _find_intensity_inside_contour(contour, frame, parameters['get_intensities'])
-                    info_contour = [cx, cy, angle, width, length, contour, box, intensity]
+                    info_contour = [cx, cy, angle, width, length, contour, boxes, intensity]
                 else:
-                    info_contour = [cx, cy, angle, width, length, contour, box]
+                    info_contour = [cx, cy, angle, width, length, contour, boxes]
                 info.append(info_contour)
 
         if get_intensities:
-            info_headings = ['x', 'y', 'theta', 'width', 'length', 'contours','box', 'intensities']
+            info_headings = ['x', 'y', 'theta', 'width', 'length', 'contours','boxes', 'intensities']
         else:
-            info_headings = ['x', 'y', 'theta', 'width', 'length', 'contours','box']
+            info_headings = ['x', 'y', 'theta', 'width', 'length', 'contours','boxes']
         df = pd.DataFrame(data=info, columns=info_headings)
         return df
     except Exception as e:

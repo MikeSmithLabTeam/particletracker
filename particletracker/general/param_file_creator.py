@@ -230,6 +230,15 @@ def create_param_file(filename):
                    },
         }
 
+    selected = {'experiment':True,
+                'crop':True,
+                'preprocess':True,
+                'track':True,
+                'link':True,
+                'postprocess':False,
+                'annotate':False
+                }
+
     PARAMETERS = {
         'experiment': experiment,
         'crop': crop,
@@ -237,7 +246,8 @@ def create_param_file(filename):
         'track':track,
         'link':link,
         'postprocess':postprocess,
-        'annotate':annotate
+        'annotate':annotate,
+        'selected':selected
         }
 
     write_paramdict_file(PARAMETERS, filename)
