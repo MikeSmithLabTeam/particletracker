@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from labvision.images.basics import display
 
 def bgr_2_grayscale(img):
     """Converts a BGR image to grayscale"""

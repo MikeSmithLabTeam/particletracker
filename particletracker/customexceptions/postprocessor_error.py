@@ -12,6 +12,12 @@ class ContourAreaError(PostprocessorError):
         self.error_msg = 'contour area error'
         self.e = e
 
+class ContourBoxesError(PostprocessorError):
+    def __init__(self, e):
+        super().__init__()
+        self.error_msg = 'contour boxes error'
+        self.e = e
+
 class DifferenceError(PostprocessorError):
     def __init__(self, e):
         super().__init__()
@@ -102,3 +108,10 @@ class NeighboursError(PostprocessorError):
         super().__init__()
         self.error_msg = 'neighbours error'
         self.e = e
+
+class VoronoiError(PostprocessorError):
+    def __init__(self, e):
+        super().__init__()
+        self.error_msg = 'voronoi error'
+        self.e = e
+

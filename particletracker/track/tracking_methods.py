@@ -110,51 +110,6 @@ def hough(frame, _,parameters=None, call_num=None):
         raise HoughCirclesError(e)
 
 
-
-def boxes(frame, _,parameters=None, call_num=None):
-    '''
-    boxes method finds contour of object but reduces the info to
-    a rotated bounding box. Use for finding an angle of object or
-    estimate of size. If you need to do something with the pixels
-    use contours instead.
-    '''
-    try:
-        method_key = get_method_key('boxes',call_num=call_num)
-        params = parameters[method_key]
-        get_intensities = get_param_val(params['get_intensities'])
-
-        area_min = get_param_val(params['area_min'])
-        area_max = get_param_val(params['area_max'])
-        info = []
-        contour_pts = _find_contours(frame)
-
-        for index, contour in enumerate(contour_pts):
-            area = int(cv2.contourArea(contour))
-            if (area < area_max) and (area >= area_min):
-                info_contour = _rotated_bounding_rectangle(contour)
-                cx, cy = np.mean(info_contour[5], axis=0)
-                angle = info_contour[2]
-                width = info_contour[3]
-                length = info_contour[4]
-                boxes = info_contour[5]
-
-                if get_intensities:
-                    intensity = _find_intensity_inside_contour(contour, frame, parameters['get_intensities'])
-                    info_contour = [cx, cy, angle, width, length, contour, boxes, intensity]
-                else:
-                    info_contour = [cx, cy, angle, width, length, contour, boxes]
-                info.append(info_contour)
-
-        if get_intensities:
-            info_headings = ['x', 'y', 'theta', 'width', 'length', 'contours','boxes', 'intensities']
-        else:
-            info_headings = ['x', 'y', 'theta', 'width', 'length', 'contours','boxes']
-        df = pd.DataFrame(data=info, columns=info_headings)
-        return df
-    except Exception as e:
-        raise BoxesError(e)
-
-
 def contours(pp_frame, frame, parameters=None, call_num=None):
     '''
     contours stores: the centroid cx, cy, area enclosed by contour,
@@ -175,6 +130,8 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
 
         area_min = get_param_val(params['area_min'])
         area_max = get_param_val(params['area_max'])
+        aspect_min = get_param_val['aspect_min']
+        aspect_max = get_param_val['aspect_max']
         info = []
 
         contour_pts = _find_contours(pp_frame)
@@ -183,22 +140,27 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
             M = cv2.moments(contour)
             if M['m00'] > 0:
                 area = cv2.contourArea(contour)
+                
                 if (area < area_max) & (area > area_min):
                     cx = int(M['m10'] / M['m00'])
                     cy = int(M['m01'] / M['m00'])
 
-                    box = cv2.boundingRect(contour)
-                    if get_intensities:
-                        intensity = _find_intensity_inside_contour(contour, frame, get_intensities)
-                        info_contour = [cx, cy, area, contour, box, intensity]
-                    else:
-                        info_contour = [cx, cy, area, contour, box]
-                    info.append(info_contour)
+                    x,y,w,h = cv2.boundingRect(contour)
+                    aspect = float(w)/h
+
+                    if (aspect < aspect_max) & (aspect > aspect_min):
+                        #box = cv2.boundingRect(contour)
+                        if get_intensities:
+                            intensity = _find_intensity_inside_contour(contour, frame, get_intensities)
+                            info_contour = [cx, cy, area, contour, intensity]
+                        else:
+                            info_contour = [cx, cy, area, contour]
+                        info.append(info_contour)
 
         if get_intensities:
-            info_headings = ['x', 'y', 'area', 'contours', 'boxes', 'intensities']
+            info_headings = ['x', 'y', 'area', 'contours', 'intensities']
         else:
-            info_headings = ['x', 'y', 'area', 'contours', 'boxes']
+            info_headings = ['x', 'y', 'area', 'contours']
         df = pd.DataFrame(data=info, columns=info_headings)
         return df
     except Exception as e:
@@ -239,23 +201,6 @@ def _find_contours(img, hierarchy=False):
     else:
         return contours
     
-
-
-
-def _rotated_bounding_rectangle(contour):
-    try:
-        rect = cv2.minAreaRect(contour)
-        box = cv2.boxPoints(rect)
-        box = np.int0(box)
-        dim = np.sort(rect[1])
-
-        #[centrex, centrey, angle, length, width, box_corners]
-        info = [rect[0][0], rect[0][1], rect[2], dim[0], dim[1], box]
-        return info
-    except Exception as e:
-        print('Error in tracking_methods._rotated_bounding_rectangle')
-        print(e)
-
 
 def _draw_contours(img, contours, col=(0,0,255), thickness=1):
     """

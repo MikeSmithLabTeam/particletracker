@@ -54,7 +54,7 @@ def create_param_file(filename):
         }
 
     track = {
-        'track_method':('trackpy',),
+        'track_method':('contours',),
         'trackpy':{'size_estimate':[7,1, 101,2],
                    'invert':[0,0,1,1],
                    'get_intensities':[False,('True','False')],
@@ -70,15 +70,10 @@ def create_param_file(filename):
         'contours':{'noise_cutoff':[2,1,50,1],
                     'area_min':[20, 1, 2000, 1],
                     'area_max':[2000, 1, 20000, 1],
-                    'aspect':[1,1,20,1],
+                    'aspect_min':[1,1,20,1],
+                    'aspect_max':[20,1,20,1],
                     'get_intensities':[False,('True','False')]
                     },
-        'boxes':{'noise_cutoff':[2,1,50,1],
-                    'area_min':[2, 1, 2000, 1],
-                    'area_max':[2000, 1, 20000, 1],
-                    'aspect':[1,1,20,1],
-                    'get_intensities':[False,('True','False')]
-                 },
         }
 
     link = {
@@ -133,7 +128,8 @@ def create_param_file(filename):
                  'units':['degrees',('radians','degrees')]
 
         },
-        'contour_area': {'output_name':'area'},
+        'contour_area': {'output_name':'contour_area'},
+        'contour_boxes':{},
         'rate':{'column_name':'x',
                 'output_name':'vx',
                 'fps':50.0,
@@ -143,6 +139,7 @@ def create_param_file(filename):
                       'neighbours':6,
                       'cutoff':[50,1,200,1],
                     },
+        'voronoi':{},
         'add_frame_data':{
             'new_column_name':'data',
             'data_filename':None
@@ -173,6 +170,7 @@ def create_param_file(filename):
                     'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#for dynamic
                     'cmap_max':[470,1,2000,1],#For dynamic
+                    'cmap_min':[1,1,2000,1],
                     'colour': (0,255,0),#For static
                     'classifier_column': None,#For static or dynamic
                     'classifier': 1,#For static or dynamic
@@ -181,6 +179,7 @@ def create_param_file(filename):
         'boxes':{  'cmap_type':['static',('dynamic','static')],
                    'cmap_column':'x',  #None
                    'cmap_max':[1,1,2000,1],
+                   'cmap_min':[1,1,2000,1],
                    'colour': (0, 255, 0),  # For static
                    'classifier_column': None,  # For static or dynamic
                    'classifier':1,
@@ -189,6 +188,7 @@ def create_param_file(filename):
         'contours':{'cmap_type':['static',('dynamic','static')],
                    'cmap_column':'x',#For dynamic
                    'cmap_max':[470,1,2000,1],#For dynamic
+                   'cmap_min':[1,1,2000,1],
                    'colour': (0,255,0),#For static
                    'classifier_column': None,#For static or dynamic
                    'classifier': None,#For static or dynamic
@@ -198,6 +198,17 @@ def create_param_file(filename):
                     'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#For dynamic                      'classifier': 1,#For static or dynamic
                     'cmap_max':[470,1,2000,1],#For dynamic              thickness':2
+                    'cmap_min':[1,1,2000,1],
+                    'classifier_column': None,
+                    'classifier': None,
+                    'colour': (0,255,0),#For static
+                    'thickness':2
+                    },
+        'voronoi':{
+                    'cmap_type':['static',('dynamic','static')],
+                    'cmap_column':'voronoi_area',#For dynamic                      'classifier': 1,#For static or dynamic
+                    'cmap_max':[470,1,2000,1],#For dynamic              thickness':2
+                    'cmap_min':[1,1,2000,1],
                     'classifier_column': None,
                     'classifier': None,
                     'colour': (0,255,0),#For static
@@ -212,6 +223,7 @@ def create_param_file(filename):
                    'cmap_type':'static',#'dynamic',
                    'cmap_column':'x',#For dynamic
                    'cmap_max':[470,1,2000,1],#For dynamic
+                   'cmap_min':[1,1,2000,1],
                    'colour': (0,0,255),#For static
                    'classifier_column':None,#For static or dynamic
                    'classifier': None,#For static or dynamic
@@ -223,6 +235,7 @@ def create_param_file(filename):
                     'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#For dynamic
                     'cmap_max':[470,1,2000,1],#For dynamic
+                    'cmap_min':[1,1,2000,1],
                     'colour': (64,224,208),#For static
                     'classifier_column':'classifier',#For static or dynamic
                     'classifier': None,#For static or dynamic

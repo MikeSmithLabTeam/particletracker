@@ -82,8 +82,11 @@ class ParticleTracker:
 
             self.cap.set_frame(start)
             for f in tqdm(range(start, stop, step), 'Tracking'):
-                df_frame = self.analyse_frame()
-                data.add_tracking_data(f, df_frame)
+                try:
+                    df_frame = self.analyse_frame()
+                    data.add_tracking_data(f, df_frame)
+                except:
+                    pass
             data.save(filename=data_filename)
 
     def analyse_frame(self):

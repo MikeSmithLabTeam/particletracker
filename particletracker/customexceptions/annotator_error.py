@@ -54,6 +54,12 @@ class ContoursError(AnnotatorError):
         self.error_msg = 'contours error'
         self.e=e
 
+class VoronoiError(AnnotatorError):
+    def __init__(self,e):
+        super().__init__()
+        self.error_msg = 'polygons error'
+        self.e=e
+
 class NetworksError(AnnotatorError):
     def __init__(self,e):
         super().__init__()

@@ -11,11 +11,11 @@ from ..customexceptions.postprocessor_error import *
 from ..user_methods import *
 '''
 -----------------------------------------------------------------------------------------------------
-All these methods operate on all frames simultaneously
+All these methods operate on single frames
 -------------------------------------------------------------------------------------------------------
 '''
 
-def angle(data, f_index=None, parameters=None, call_num=None):
+def angle(df, f_index=None, parameters=None, call_num=None):
     '''
     Angle assumes you want to calculate from x_column as x and y_column as y
     it uses tan2 so that -x and +y give a different result to +x and -y
@@ -26,14 +26,14 @@ def angle(data, f_index=None, parameters=None, call_num=None):
 
     Parameters  :
     
-    x_column    :   x component of the data for calculating angle
-    y_column    :   y component of the data for calculating angle
-    output_name :   New column name to store angle data
+    x_column    :   x component of the df for calculating angle
+    y_column    :   y component of the df for calculating angle
+    output_name :   New column name to store angle df
     units     :   'degrees' or 'radians'
     
     Inputs:
 
-    data        :   The dataframe of all collected data
+    df        :   The dfframe of all collected df
     f_index     :   Integer specifying the frame for which calculations need to be made.
     parameters  :   Dictionary like object (same as .param files or 
                         output from general.param_file_creator.py
@@ -42,39 +42,43 @@ def angle(data, f_index=None, parameters=None, call_num=None):
 
     Outputs:
     
-    updated dataframe of all data
+    updated dfframe of all df
 
     '''
-    
-    method_key = get_method_key('angle', call_num)
-    columnx = parameters[method_key]['x_column']
-    columny = parameters[method_key]['y_column']
-    output_name = parameters[method_key]['output_name']
-    units=parameters[method_key]['units']
-    
-    if units == 'degrees':
-        data[output_name] = np.arctan2(data[columny],data[columnx])*(180/np.pi)
-    else:
-        data[output_name] = np.arctan2(data[columny],data[columnx])
     try:
-        print(data.head(n=50))
-        print(data['theta'])
-        return data
+        method_key = get_method_key('angle', call_num)
+        columnx = parameters[method_key]['x_column']
+        columny = parameters[method_key]['y_column']
+        output_name = parameters[method_key]['output_name']
+        units=parameters[method_key]['units']
+
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+    
+        df_frame = df.loc[f_index]
+
+        if units == 'degrees':
+            df_frame[output_name] = np.arctan2(df_frame[columny],df_frame[columnx])*(180/np.pi)
+        else:
+            df_frame[output_name] = np.arctan2(df_frame[columny],df_frame[columnx])
+    
+        df.loc[f_index] = df_frame
+        return df
     except Exception as e:
         raise AngleError(e)
 
 
-def contour_area(data, f_index=None, parameters=None, call_num=None):
+def contour_area(df, f_index=None, parameters=None, call_num=None):
     '''
     Calculate the area of a contour. 
 
     Parameters  :
     
-    output_name :   New column name to store area data
+    output_name :   New column name to store area df
     
     Inputs:
 
-    data        :   The dataframe of all collected data
+    df        :   The dfframe of all collected df
     f_index     :   Integer specifying the frame for which calculations need to be made.
     parameters  :   Dictionary like object (same as .param files or 
                         output from general.param_file_creator.py
@@ -83,62 +87,108 @@ def contour_area(data, f_index=None, parameters=None, call_num=None):
 
     Outputs:
     
-    updated dataframe of all data
+    updated dfframe of all df
 
     '''
     try:
         method_key = get_method_key('contour_area', call_num)
         output_name = parameters[method_key]['output_name']
-        contours = data['contours'].tolist()
-        areas = []
-        for contour in contours:
-            areas.append(cv2.contourArea(contour))
 
-        data[output_name] = np.array(areas)
-        return data
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+        
+        df_frame = df.loc[f_index]
+        contours = df_frame[['contours']].values
+        areas = []
+
+        if np.shape(contours)[0] == 1:
+            df_empty = np.isnan(contours[0])
+            if np.all(df_empty):
+                #0 contours
+                return df
+        
+        for index, contour in enumerate(contours):
+            areas.append(cv2.contourArea(contour[0]))
+
+        df_frame[output_name] = np.array(areas)
+        df.loc[f_index] = df_frame
+        return df
     except Exception as e:
         raise ContourAreaError(e)
 
-def difference(data, f_index=None, parameters=None, call_num=None):
-    '''
-    Difference in frames of a column of dataframe.
-    The differences are calculated at separations equal
-    to span along the column. Where this is not possible
-    eg at both ends of column, the value np.Nan is inserted.
-    
-    Parameters  :
-    
-    column_name     :   Column name to calculate differences on
-    output_name     :   Name to give to calculated data'x_diff',
-    span            :   Gap in frames to calculate difference on
-    
-    Inputs:
+def contour_boxes(df, f_index=None, parameters=None, call_num=None):
 
-    data        :   The dataframe of all collected data
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    updated dataframe of all data
-
-    '''
-    method_key = get_method_key('difference', call_num)
-    column = parameters[method_key]['column_name']
-    output_name = parameters[method_key]['output_name']
-    span = get_param_val(parameters[method_key]['span'])
-    df=data.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
-    
-    data[output_name]=df[output_name]
     try:
-        return data
-    except Exception as e:
-        raise DifferenceError(e)
+        method_key = get_method_key('contour_boxes', call_num)
+        if 'box_cx' not in df.columns:
+            df['box_cx'] = np.nan
+            df['box_cy'] = np.nan
+            df['box_angle'] = np.nan
+            df['box_length'] = np.nan
+            df['box_width'] = np.nan
+            df['box_area'] = np.nan
+            df['box_pts'] = np.nan
+        
+        df_frame = df.loc[f_index]
+        contours = df_frame[['contours']].values
+        
+        box_cx = []
+        box_cy = []
+        box_angle = []
+        box_length = []
+        box_width = []
+        box_area = [] 
+            
+        if np.shape(contours)[0] == 1:
+            df_empty = np.isnan(contours[0])
+            if np.all(df_empty):
+                #0 contours
+                return df
 
-def magnitude(data, f_index=None, parameters=None, call_num=None):
+        for index, contour in enumerate(contours):
+            info_contour = _rotated_bounding_rectangle(contour)
+            cx, cy = np.mean(info_contour[5], axis=0)
+            box_cx.append(cx)
+            box_cy.append(cy)
+            box_angle.append(info_contour[2])
+            box_width.append(info_contour[3])
+            box_length.append(info_contour[4])
+            box_area.append(info_contour[3]*info_contour[4])
+            if index == 0:   
+                box_pts=[info_contour[5]]
+            else:
+                box_pts.append(info_contour[5])
+
+        df_frame['box_cx'] = box_cx
+        df_frame['box_cy'] = box_cy
+        df_frame['box_angle'] = box_angle
+        df_frame['box_width'] = box_width
+        df_frame['box_length'] = box_length
+        df_frame['box_area'] = box_area
+        df_frame['box_pts'] = box_pts
+
+        df.loc[f_index] = df_frame
+
+        return df
+    except Exception as e:
+        ContourBoxesError(e)
+
+def _rotated_bounding_rectangle(contour):
+    #Helper method
+
+    try:
+        rect = cv2.minAreaRect(contour[0])
+        box = cv2.boxPoints(rect)
+        box = np.int0(box)
+        dim = np.sort(rect[1])
+        #[centrex, centrey, angle, length, width, box_corners]
+        info = [rect[0][0], rect[0][1], rect[2], dim[0], dim[1], box]
+        return info
+    except Exception as e:
+        print('Error in tracking_methods._rotated_bounding_rectangle')
+        print(e)
+
+def magnitude(df, f_index=None, parameters=None, call_num=None):
     '''
     Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
 
@@ -146,11 +196,11 @@ def magnitude(data, f_index=None, parameters=None, call_num=None):
     
     column_name     :   First column
     column_name     :   Second column
-    output_name     :   Column name for magnitude data
+    output_name     :   Column name for magnitude df
     
     Inputs:
 
-    data        :   The dataframe of all collected data
+    df        :   The dfframe of all collected df
     f_index     :   Integer specifying the frame for which calculations need to be made.
     parameters  :   Dictionary like object (same as .param files or 
                         output from general.param_file_creator.py
@@ -159,7 +209,7 @@ def magnitude(data, f_index=None, parameters=None, call_num=None):
 
     Outputs:
     
-    updated dataframe of all data
+    updated dfframe of all df
 
     '''
     try:
@@ -167,207 +217,32 @@ def magnitude(data, f_index=None, parameters=None, call_num=None):
         column = parameters[method_key]['column_name']
         column2 = parameters[method_key]['column_name2']
         output_name = parameters[method_key]['output_name']
-        data[output_name] = (data[column]**2 + data[column2]**2)**0.5
-        return data
+        
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+        df_frame = df.loc[f_index]
+
+        df_frame[output_name] = (df_frame[column]**2 + df_frame[column2]**2)**0.5
+        df.loc[f_index] = df_frame
+        return df
     except Exception as e:
         raise MagnitudeError(e)
 
-def mean(data, f_index=None, parameters=None, call_num=None):
+def classify(df, f_index=None, parameters=None, call_num=None):
     '''
-    Rolling Mean of a column of values. Returns the mean of a particle's values to a new
-    column.
-
-    Parameters  :
-    
-    column_name     :   Input column name
-    output_name     :   Column name for max data
-    span            :   number of frames over which to calculate rolling mean
-    
-    Inputs:
-
-    data        :   The dataframe of all collected data
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    updated dataframe of all data
-
-    '''
-    
-
-    try:
-        method_key = get_method_key('mean', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        span = get_param_val(parameters[method_key]['span'])
-
-        frame_index = data.index.get_level_values('frame')
-        
-        df=data.groupby('particle')[column].rolling(span).mean().transform(lambda x:x).to_frame(name=output_name)
-        df['frame']=frame_index
-        df.set_index('frame', append=True, inplace=True)
-        data[output_name]=df[output_name]
-        print(data.head())
-        print(data[output_name])
-        return data
-    except Exception as e:
-        raise MeanError(e)
-
-def median(data, f_index=None, parameters=None, call_num=None):
-    '''
-    Median of a columns values. Returns the median of a particle's values to a new
-    column.
-
-    Parameters  :
-    
-    column_name     :   Input column name
-    output_name     :   Column name for median data
-    span            :   number of frames over which to calculate rolling median
-    
-    Inputs:
-
-    data        :   The dataframe of all collected data
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    updated dataframe of all data
-
-    '''
-    
-    try:
-        method_key = get_method_key('median', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        span = get_param_val(parameters[method_key]['span'])
-
-        frame_index = data.index.get_level_values('frame')
-        
-        df=data.groupby('particle')[column].rolling(span).median().transform(lambda x:x).to_frame(name=output_name)
-        df['frame']=frame_index
-        df.set_index('frame', append=True, inplace=True)
-        data[output_name]=df[output_name]
-    
-        return data
-    except Exception as e:
-        raise MedianError(e)
-
-def rate(data, f_index=None, parameters=None, call_num=None):
-    '''
-    Rate of change of data in a column. Rate function takes an input column and calculates the
-    rate of change of the quantity. It takes into account
-    the fact that particles go missing from frames. Where this
-    is the case the rate = change in quantity between observations
-    divided by the gap between observations.
-    Nans are inserted at end and beginning of particle trajectories
-    where calc is not possible.
-
-    We sort by particle and then calculate diffs. This leads to differences
-    between pairs of particles above one another in dataframe. We then backfill
-    these slots with Nans.
+    Takes a column of df and classifies whether its values are within 
+    the specified range. 
 
     Parameters  :
 
-    column_name     :   Input column names
-    output_name     :   Output column name
-    fps             :   numerical value indicating the number of frames per second
-    span            :   number of frames over which to calculate rolling difference
-    
-    
-    Inputs:
-
-    data        :   The dataframe of all collected data
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    updated dataframe of all data
-
-    '''
-    try:
-        method_key = get_method_key('rate', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        span = get_param_val(parameters[method_key]['span'])
-        fps= parameters[method_key]['fps']
-
-        df=data.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)/fps
-        data[output_name]=df[output_name]
-        return data
-    except Exception as e:
-        raise RateError(e)
-
-def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
-    if (x > lower_threshold_value) and (x < upper_threshold_value):
-        return True
-    else:
-        return False
-    
-def classify_most(data, f_index=None, parameters=None, call_num=None):
-    '''
-    Takes a columns of boolean values and for each particle returns the 
-    most common value. ie Particle 1: True, True, False, True, True becomes 
-    True, True, True, True, True. Particle 2: False, True, False, False, False
-    becomes False, False, False, False, False. This is useful because measurements
-    fluctuate and so you want to colour code particles that generally are or are 
-    not something.
-    
-    Parameters  :
-
-    column_name     :    input column name
-    output_name     :    output column name
-   
-    Inputs:
-
-    data        :   The dataframe of all collected data
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    updated dataframe of all data
-
-    '''
-    
-    try:
-        method_key = get_method_key('classify_most', call_num)
-        column = parameters[method_key]['column_name']
-        output_name=parameters[method_key]['output_name']
-        temp=data.groupby('particle')[column].transform('median')
-        data[output_name] = temp
-        return data
-    except Exception as e:
-        raise ClassifyMostError(e)
-
-def classify(data, f_index=None, parameters=None, call_num=None):
-    '''
-    Takes a column of data and classifies the data. 
-
-    Parameters  :
-
-    column_name     :   input data column
+    column_name     :   input df column
     output_name     :   column name for classier
     lower_threshold :   min value to belong to classifier
     upper_threshold':   max value to belong to classifier
     
     Inputs:
 
-    data        :   The dataframe of all collected data
+    df        :   The entire stored dataframe
     f_index     :   Integer specifying the frame for which calculations need to be made.
     parameters  :   Dictionary like object (same as .param files or 
                         output from general.param_file_creator.py
@@ -376,7 +251,7 @@ def classify(data, f_index=None, parameters=None, call_num=None):
 
     Outputs:
     
-    updated dataframe of all data
+    updated dfframe of all df
 
     '''
 
@@ -386,23 +261,36 @@ def classify(data, f_index=None, parameters=None, call_num=None):
         output_name=parameters[method_key]['output_name']
         lower_threshold_value = get_param_val(parameters[method_key]['lower_threshold'])
         upper_threshold_value = get_param_val(parameters[method_key]['upper_threshold'])
-        data[output_name] = data[column].apply(_classify_fn, lower_threshold_value=lower_threshold_value, upper_threshold_value=upper_threshold_value)
-        return data
+
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+        df_frame = df.loc[f_index]
+
+        df_frame[output_name] = df_frame[column].apply(_classify_fn, lower_threshold_value=lower_threshold_value, upper_threshold_value=upper_threshold_value)
+        df.loc[f_index]=df_frame
+        return df
     except Exception as e:
         raise ClassifyError(e)
 
-def logic_NOT(data, f_index=None, parameters=None, call_num=None):
+
+def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
+    if (x > lower_threshold_value) and (x < upper_threshold_value):
+        return True
+    else:
+        return False
+    
+def logic_NOT(df, f_index=None, parameters=None, call_num=None):
     '''
     Apply a logical not operation to a column of boolean values.
 
     Parameters  :
 
-    column_name     :   input data column
+    column_name     :   input df column
     output_name     :   column name for classier
         
     Inputs:
 
-    data        :   The dataframe of all collected data
+    df        :   The dfframe of all collected df
     f_index     :   Integer specifying the frame for which calculations need to be made.
     parameters  :   Dictionary like object (same as .param files or 
                         output from general.param_file_creator.py
@@ -411,7 +299,7 @@ def logic_NOT(data, f_index=None, parameters=None, call_num=None):
 
     Outputs:
     
-    updated dataframe of all data
+    updated dfframe of all df
 
     '''
 
@@ -420,23 +308,29 @@ def logic_NOT(data, f_index=None, parameters=None, call_num=None):
         method_key = get_method_key('logic_NOT', call_num)
         column = parameters[method_key]['column_name']
         output_name = parameters[method_key]['output_name']
-        data[output_name] = ~data[column]
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+        df_frame = df.loc[f_index]
+
+        df_frame[output_name] = ~df_frame[column]
+        df.loc[f_index] = df_frame
+        return df
     except Exception as e:
         raise LogicNotError(e)
 
-def logic_AND(data, f_index=None, parameters=None, call_num=None):
+def logic_AND(df, f_index=None, parameters=None, call_num=None):
     '''
     Applys a logical and operation to two columns of boolean values.
 
     Parameters  :
 
-    column_name     :   input data column
-    column_name2    :   input data column 2
+    column_name     :   input df column
+    column_name2    :   input df column 2
     output_name     :   column name for classier
         
     Inputs:
 
-    data        :   The dataframe of all collected data
+    df        :   The dfframe of all collected df
     f_index     :   Integer specifying the frame for which calculations need to be made.
     parameters  :   Dictionary like object (same as .param files or 
                         output from general.param_file_creator.py
@@ -445,7 +339,7 @@ def logic_AND(data, f_index=None, parameters=None, call_num=None):
 
     Outputs:
     
-    updated dataframe of all data
+    updated dfframe of all df
 
     '''
 
@@ -456,23 +350,29 @@ def logic_AND(data, f_index=None, parameters=None, call_num=None):
         column1 = parameters[method_key]['column_name']
         column2 = parameters[method_key]['column_name2']
         output_name = parameters[method_key]['output_name']
-        data[output_name] = data[column1] * data[column2]
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+        df_frame = df.loc[f_index]
+        
+        df_frame[output_name] = df_frame[column1] * df_frame[column2]
+        df.loc[f_index] = df_frame
+        return df
     except Exception as e:
         raise LogicAndError(e)
 
-def logic_OR(data, f_index=None, parameters=None, call_num=None):
+def logic_OR(df, f_index=None, parameters=None, call_num=None):
     '''
     Apply a logical or operation to two columns of boolean values.
 
     Parameters  :
 
-    column_name     :   input data column
-    column_name2     :   input data column 2
+    column_name     :   input df column
+    column_name2     :   input df column 2
     output_name     :   column name for classier
         
     Inputs:
 
-    data        :   The dataframe of all collected data
+    df        :   The dfframe of all collected df
     f_index     :   Integer specifying the frame for which calculations need to be made.
     parameters  :   Dictionary like object (same as .param files or 
                         output from general.param_file_creator.py
@@ -481,7 +381,7 @@ def logic_OR(data, f_index=None, parameters=None, call_num=None):
 
     Outputs:
     
-    updated dataframe of all data
+    updated dfframe of all df
 
     '''
 
@@ -490,121 +390,74 @@ def logic_OR(data, f_index=None, parameters=None, call_num=None):
         method_key = get_method_key('logic_OR', call_num)
         column1 = parameters[method_key]['column_name']
         column2 = parameters[method_key]['column_name2']
-
         output_name = parameters[method_key]['output_name']
-        data[output_name] = data[column1] + data[column2]
+
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+        df_frame = df.loc[f_index]
+
+        df_frame[output_name] = df_frame[column1] + df_frame[column2]
+        df.loc[f_index] = df_frame
+        return df
     except  Exception as e:
         raise LogicOrError(e)
 
-def subtract_drift(data, f_index=None, parameters=None, call_num=None):
-    '''
-    subtract drift from an x,y coordinate trajectory.
-
-    Parameters  :
-
-    No Parameters
-
-    Inputs:
-
-    data        :   The dataframe of all collected data
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    updated dataframe of all data. The input data is automatically pulled from x, y
-    The output data is placed in columns x_drift, y_drift
-
-    '''
-    
-    try:
-        method_key = get_method_key('subtract_drift', call_num)
-        drift = tp.motion.compute_drift(data)
-        drift_corrected = tp.motion.subtract_drift(data.copy(), drift)
-        drift_corrected.index.name = 'index'
-        drift_corrected=drift_corrected.sort_values(['particle','index'])
-        data[['x_drift','y_drift']] = drift_corrected[['x','y']]
-        return data
-    except Exception as e:
-        raise SubtractDriftError(e)
-
-def add_frame_data(data, f_index=None, parameters=None, call_num=None):
-    '''
-    Allows you to manually add a new column of data to the dataframe. The data
-    is data which has a single value per frame. This is done by creating a .csv
-    or .xlsx file and reading it in within the gui. The file should have two columns
-    The first column should have a complete list of all the frame numbers starting at zero
-    The second column should have the data for each frame listed. It can either be a .csv 
-    or a .xlsx file.
-
-    Parameters  :
-    data_filename       :   Filename with extension for the data to be loaded.
-    new_column_name     :   Name for column to which data is to be imported.    
-
-    Inputs:
-
-    data        :   The dataframe of all collected data
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    updated dataframe of all data. 
-
-    '''
-    try:
-        method_key = get_method_key('add_frame_data', call_num)
-        datapath = parameters[method_key]['data_path']
-
-        if '.csv' in parameters[method_key]['data_filename']:
-            filename = os.path.join(datapath,parameters[method_key]['data_filename'])
-            new_data = pd.read_csv(filename, header=None)
-        elif '.xlsx' in parameters[method_key]['data_filename']:
-            new_data = pd.read_excel(parameters[method_key]['data_filename'],squeeze=True)
-        else:
-            print('Unknown file type')
-        data[parameters[method_key]['new_column_name']] = new_data
-        return data
-    except  Exception as e:
-        raise AddFrameDataError(e)
-    
 
 '''
---------------------------------------------------------------------------------------------------------------
-All methods below here need to be run on each frame sequentially.
----------------------------------------------------------------------------------------------------------------
-'''
-
-def _every_frame(data, f_index):
+def _every_frame(df, f_index):
     if f_index is None:
-        frame_numbers = data['frame'].values
+        frame_numbers = df['frame'].values
         start=np.min(frame_numbers)
         stop=np.max(frame_numbers)
     else:
         start=f_index
         stop=f_index+1
     return range(start, stop, 1)
+'''
+
+def neighbours(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Neighbours uses either a kdtree or a delaunay method to locate the neighbours
+    of particles in a particular frame. It returns the indices of the particles
+    found to be neighbours in a list. You can also select a cutoff distance above which
+    two particles are no longer considered to be neighbours. The kdtree essentially finds
+    those particles closest. The delaunay method is explained here: https://en.wikipedia.org/wiki/Delaunay_triangulation
+
+    Parameters  :
+
+    method     :   'delaunay' or 'kdtree'
+    neighbours     :   max number of neighbours to find. This is only relevant for the kdtree.
+    output_name     :   column name for classier
+        
+    Inputs:
+
+    df        :   The dfframe of all collected df
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
     
-def neighbours(df, f_index=None, parameters=None, call_num=None,):
+    updated dfframe of all df
+
+    '''
     try:
         #https: // docs.scipy.org / doc / scipy / reference / generated / scipy.spatial.Delaunay.html
         method_key = get_method_key('neighbours', call_num)
         method = get_param_val(parameters[method_key]['method'])
-        df['neighbours'] = np.NaN
-        for f in _every_frame(df, f_index):
-            df_temp = df.loc[f]
+        
+        if 'neighbours' not in df.columns:
+            df['neighbours'] = np.nan
+        df_frame = df.loc[f_index]
 
-            if method == 'delaunay':
-                df_temp =_find_delaunay(df_temp, parameters=parameters)
-            elif method == 'kdtree':
-                df_temp =_find_kdtree(df_temp, parameters=parameters)
-            df.loc[f] = df_temp
+        if method == 'delaunay':
+            df_frame =_find_delaunay(df_frame, parameters=parameters)
+        elif method == 'kdtree':
+             df_frame =_find_kdtree(df_frame, parameters=parameters)     
+        df.loc[f_index] = df_frame
+    
         return df
     except Exception as e:
         raise NeighboursError(e)
@@ -613,7 +466,7 @@ def neighbours(df, f_index=None, parameters=None, call_num=None,):
 def _find_kdtree(df, parameters=None):
     method_key = get_method_key('neighbours')
     cutoff = get_param_val(parameters[method_key]['cutoff'])
-    num_neighbours = get_param_val(parameters[method_key]['neighbours'])
+    num_neighbours = int(get_param_val(parameters[method_key]['neighbours']))
     points = df[['x', 'y']].values
     particle_ids = df[['particle']].values.flatten()
     tree = sp.KDTree(points)
@@ -625,7 +478,6 @@ def _find_kdtree(df, parameters=None):
     df.loc[:, ['neighbours']] = neighbour_ids
     return df
     
-
 def _find_delaunay(df, parameters=None, call_num=None):
     method_key = get_method_key('neighbours')
     cutoff = get_param_val(parameters[method_key]['cutoff'])
@@ -644,12 +496,357 @@ def _find_delaunay(df, parameters=None, call_num=None):
     df.loc[:, ['neighbours']] = indices
     return df
 
-def _get_class_subset(data, f, parameters, method=None):
+def voronoi(df, f_index=None, parameters=None, call_num=None):
+    try:
+        method_key = get_method_key('voronoi')
+        
+        if 'voronoi' not in df.columns:
+            df['voronoi'] = np.nan
+            df['voronoi_area'] = np.nan
+
+        df_frame = df.loc[f_index]
+
+        points = df_frame[['x', 'y']].values
+        vor = sp.Voronoi(points)
+        df_frame['voronoi']=_get_voronoi_coords(vor)
+        df_frame['voronoi_area']=_voronoi_props(vor)
+        df.loc[f_index] = df_frame
+    
+        return df
+    except Exception as e:
+        raise VoronoiError(e)
+
+def _get_voronoi_coords(vor):
+    voronoi_coords = []
+    for index, point in enumerate(vor.points):
+        region = vor.point_region[index]
+        region_pt_indices = vor.regions[region]
+        if -1 in region_pt_indices:
+            voronoi_coords.append(np.nan)
+        else:
+            region_pt_coords = vor.vertices[region_pt_indices]
+            voronoi_coords.append(region_pt_coords)
+    return voronoi_coords
+
+def _voronoi_props(vor):
+    area = np.zeros(vor.npoints)
+    perimeter = np.zeros(vor.npoints)
+    for i, reg_num in enumerate(vor.point_region):
+        indices = vor.regions[reg_num]
+        if -1 in indices: # some regions can be opened
+            area[i] = np.inf
+            #perimeter[i] = np.inf
+        else:
+            area[i] = sp.ConvexHull(vor.vertices[indices]).volume
+            #perimeter[i] = sp.ConvexHull(vor.vertices[indices]).area
+    return area
+
+def _get_class_subset(df, f, parameters, method=None):
     classifier_column= parameters[method]['classifier_column']
     if classifier_column is None:
-        subset_df = data.df.loc[f]
+        subset_df = df.df.loc[f]
     else:
         classifier = parameters[method]['classifier']
-        temp = data.df.loc[f]
+        temp = df.df.loc[f]
         subset_df = temp[temp[classifier_column] == classifier]
     return subset_df
+
+
+'''
+---------------------------------------------------------------------------------------------
+All these methods depend on information from other frames. ie they won't work unless
+multiple frames have been processed and you are using part.
+---------------------------------------------------------------------------------------------
+'''
+def difference(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Difference in frames of a column of dfframe.
+    The differences are calculated at separations equal
+    to span along the column. Where this is not possible
+    eg at both ends of column, the value np.Nan is inserted.
+    
+    Parameters  :
+    
+    column_name     :   Column name to calculate differences on
+    output_name     :   Name to give to calculated df'x_diff',
+    span            :   Gap in frames to calculate difference on
+    
+    Inputs:
+
+    df        :   The dfframe of all collected df
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dfframe of all df
+
+    '''
+    method_key = get_method_key('difference', call_num)
+    column = parameters[method_key]['column_name']
+    output_name = parameters[method_key]['output_name']
+    span = get_param_val(parameters[method_key]['span'])
+    df=df.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+    
+    df[output_name]=df[output_name]
+    try:
+        return df
+    except Exception as e:
+        raise DifferenceError(e)
+
+def add_frame_df(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Allows you to manually add a new column of df to the dfframe. The df
+    is df which has a single value per frame. This is done by creating a .csv
+    or .xlsx file and reading it in within the gui. The file should have two columns
+    The first column should have a complete list of all the frame numbers starting at zero
+    The second column should have the df for each frame listed. It can either be a .csv 
+    or a .xlsx file.
+
+    Parameters  :
+    df_filename       :   Filename with extension for the df to be loaded.
+    new_column_name     :   Name for column to which df is to be imported.    
+
+    Inputs:
+
+    df        :   The dfframe of all collected df
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dfframe of all df. 
+
+    '''
+    try:
+        method_key = get_method_key('add_frame_df', call_num)
+        dfpath = parameters[method_key]['df_path']
+
+        if '.csv' in parameters[method_key]['df_filename']:
+            filename = os.path.join(dfpath,parameters[method_key]['df_filename'])
+            new_df = pd.read_csv(filename, header=None)
+        elif '.xlsx' in parameters[method_key]['df_filename']:
+            new_df = pd.read_excel(parameters[method_key]['df_filename'],squeeze=True)
+        else:
+            print('Unknown file type')
+        df[parameters[method_key]['new_column_name']] = new_df
+        return df
+    except  Exception as e:
+        raise AddFrameDfError(e)
+    
+def subtract_drift(df, f_index=None, parameters=None, call_num=None):
+    '''
+    subtract drift from an x,y coordinate trajectory.
+
+    Parameters  :
+
+    No Parameters
+
+    Inputs:
+
+    df        :   The dfframe of all collected df
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dfframe of all df. The input df is automatically pulled from x, y
+    The output df is placed in columns x_drift, y_drift
+
+    '''
+    
+    try:
+        method_key = get_method_key('subtract_drift', call_num)
+        drift = tp.motion.compute_drift(df)
+        drift_corrected = tp.motion.subtract_drift(df.copy(), drift)
+        drift_corrected.index.name = 'index'
+        drift_corrected=drift_corrected.sort_values(['particle','index'])
+        df[['x_drift','y_drift']] = drift_corrected[['x','y']]
+        return df
+    except Exception as e:
+        raise SubtractDriftError(e)
+
+def mean(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Rolling Mean of a column of values. Returns the mean of a particle's values to a new
+    column.
+
+    Parameters  :
+    
+    column_name     :   Input column name
+    output_name     :   Column name for max df
+    span            :   number of frames over which to calculate rolling mean
+    
+    Inputs:
+
+    df        :   The dfframe of all collected df
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dfframe of all df
+
+    '''
+    
+
+    try:
+        method_key = get_method_key('mean', call_num)
+        column = parameters[method_key]['column_name']
+        output_name = parameters[method_key]['output_name']
+        span = get_param_val(parameters[method_key]['span'])
+
+        frame_index = df.index.get_level_values('frame')
+        
+        df=df.groupby('particle')[column].rolling(span).mean().transform(lambda x:x).to_frame(name=output_name)
+        df['frame']=frame_index
+        df.set_index('frame', append=True, inplace=True)
+        df[output_name]=df[output_name]
+        print(df.head())
+        print(df[output_name])
+        return df
+    except Exception as e:
+        raise MeanError(e)
+
+def median(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Median of a columns values. Returns the median of a particle's values to a new
+    column.
+
+    Parameters  :
+    
+    column_name     :   Input column name
+    output_name     :   Column name for median df
+    span            :   number of frames over which to calculate rolling median
+    
+    Inputs:
+
+    df        :   The dfframe of all collected df
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dfframe of all df
+
+    '''
+    
+    try:
+        method_key = get_method_key('median', call_num)
+        column = parameters[method_key]['column_name']
+        output_name = parameters[method_key]['output_name']
+        span = get_param_val(parameters[method_key]['span'])
+
+        frame_index = df.index.get_level_values('frame')
+        
+        df=df.groupby('particle')[column].rolling(span).median().transform(lambda x:x).to_frame(name=output_name)
+        df['frame']=frame_index
+        df.set_index('frame', append=True, inplace=True)
+        df[output_name]=df[output_name]
+    
+        return df
+    except Exception as e:
+        raise MedianError(e)
+
+def rate(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Rate of change of df in a column. Rate function takes an input column and calculates the
+    rate of change of the quantity. It takes into account
+    the fact that particles go missing from frames. Where this
+    is the case the rate = change in quantity between observations
+    divided by the gap between observations.
+    Nans are inserted at end and beginning of particle trajectories
+    where calc is not possible.
+
+    We sort by particle and then calculate diffs. This leads to differences
+    between pairs of particles above one another in dfframe. We then backfill
+    these slots with Nans.
+
+    Parameters  :
+
+    column_name     :   Input column names
+    output_name     :   Output column name
+    fps             :   numerical value indicating the number of frames per second
+    span            :   number of frames over which to calculate rolling difference
+    
+    
+    Inputs:
+
+    df        :   The dfframe of all collected df
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dfframe of all df
+
+    '''
+    try:
+        method_key = get_method_key('rate', call_num)
+        column = parameters[method_key]['column_name']
+        output_name = parameters[method_key]['output_name']
+        span = get_param_val(parameters[method_key]['span'])
+        fps= parameters[method_key]['fps']
+
+        df=df.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)/fps
+        df[output_name]=df[output_name]
+        return df
+    except Exception as e:
+        raise RateError(e)
+
+def classify_most(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Takes a column of boolean values and for each particle returns the 
+    most common value. ie Particle 1: True, True, False, True, True becomes 
+    True, True, True, True, True. Particle 2: False, True, False, False, False
+    becomes False, False, False, False, False. This is useful because measurements
+    fluctuate and so you want for example to colour code particles that generally are or are 
+    not something.
+    
+    Parameters  :
+
+    column_name     :    input column name
+    output_name     :    output column name
+   
+    Inputs:
+
+    df        :   The dfframe of all collected df
+    f_index     :   Integer specifying the frame for which calculations need to be made.
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    updated dfframe of all df
+
+    '''
+    
+    try:
+        method_key = get_method_key('classify_most', call_num)
+        column = parameters[method_key]['column_name']
+        output_name=parameters[method_key]['output_name']
+        temp=df.groupby('particle')[column].transform('median')
+        df[output_name] = temp
+        return df
+    except Exception as e:
+        raise ClassifyMostError(e)

@@ -62,8 +62,8 @@ class MainWindow(QMainWindow):
         self.view_layout = QVBoxLayout()  # Contains image, image toggle button and frame slider
         self.settings_layout = QVBoxLayout()  # Contains tab widget with all tracking controls
         self.init_ui(self.view_layout, self.settings_layout)
-        self.main_layout.addLayout(self.view_layout)
-        self.main_layout.addLayout(self.settings_layout)
+        self.main_layout.addLayout(self.view_layout,3)
+        self.main_layout.addLayout(self.settings_layout,2)
         self.main_panel.setLayout(self.main_layout)
         self.setCentralWidget(self.main_panel)
         self.showMaximized()

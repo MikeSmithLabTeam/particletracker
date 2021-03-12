@@ -283,14 +283,13 @@ def boxes(frame, data, f, parameters=None, call_num=None):
     annotated frame : Annotated frame of type numpy ndarray.
     '''
 
-    if True:
+    try:
         method_key = get_method_key('boxes', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
         subset_df = _get_class_subset(data, f, parameters, method=method_key)
-        box_pts = subset_df[['boxes']].values
-        print('boxes')
-        print(box_pts)
-    
+        print(subset_df.columns)
+        box_pts = subset_df[['box_pts']].values
+       
         if np.shape(box_pts)[0] == 1:
             df_empty = np.isnan(box_pts[0])
             if np.all(df_empty):
@@ -304,7 +303,7 @@ def boxes(frame, data, f, parameters=None, call_num=None):
             #if _contour_inside_img(sz, box):
             frame = _draw_contours(frame, box, col=colours[index],
                                    thickness=int(get_param_val(parameters[method_key]['thickness'])))
-    try:
+    
         return frame
     except Exception as e:
         raise BoxesError(e)
@@ -349,6 +348,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
     
     annotated frame : Annotated frame of type numpy ndarray.
     '''
+
     try:
         method_key = get_method_key('contours', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
@@ -362,6 +362,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
             if np.all(df_empty):
                 #0 contours
                 return frame
+
         for index, contour in enumerate(contour_pts):
             frame = _draw_contours(frame, contour, col=colours[index],
                                            thickness=int(thickness))
@@ -377,6 +378,8 @@ def _draw_contours(img, contours, col=(0,0,255), thickness=1):
         for i, contour in enumerate(contours):
             img = cv2.drawContours(img, contour, -1, col[i], int(thickness))
     return img        
+
+
 
 
 def networks(frame, data, f, parameters=None, call_num=None):
@@ -426,8 +429,48 @@ def networks(frame, data, f, parameters=None, call_num=None):
                 pt = df.loc[neighbour, ['x','y']].values
                 pt2 = (int(pt[0]), int(pt[1]))
                 frame = cv2.line(frame,pt1, pt2, colours[index], int(thickness), lineType=cv2.LINE_AA)
+        return frame
     except Exception as e:
         raise NetworksError(e)
+
+
+def voronoi(frame, data, f, parameters=None, call_num=None):
+    '''
+    voronoi is used to draw a voronoi cell or network.
+    '''
+    try:
+        method_key = get_method_key('voronoi', call_num=call_num)
+        thickness = get_param_val(parameters[method_key]['thickness'])
+
+        subset_df = _get_class_subset(data, f, parameters, method=method_key)
+        contour_pts = subset_df[['voronoi']].values
+        colours = colour_array(subset_df, f, parameters, method=method_key)
+
+        if np.shape(contour_pts)[0] == 1:
+            df_empty = np.isnan(contour_pts[0])
+            if np.all(df_empty):
+                #0 contours
+                return frame
+
+        for index, contour in enumerate(contour_pts):
+            frame = _draw_polygon(frame, contour, col=colours[index],
+                                          thickness=int(thickness))
+
+    
+        return frame
+    except Exception as e:
+        VoronoiError(e)
+
+def _draw_polygon(img, pts, col=(0,0,255), thickness=1, closed=True):
+    if np.any(np.isnan(pts[0])):
+        return img
+    
+    if thickness == -1:
+        img = cv2.fillPoly(img, [pts[0].astype(np.int32)], col)
+    else:
+        img = cv2.polylines(img, [pts[0].astype(np.int32)], closed, col, thickness) 
+    return img
+
 '''
 --------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------

@@ -64,7 +64,7 @@ class PTWorkflow:
             parameters=self.parameters['link'])
         self.pp = postprocess.PostProcessor(
             data_filename=self.data_filename,
-            parameters=self.parameters['postprocess'])
+            parameters=self.parameters)
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
                                                data_filename=self.data_filename,
                                                parameters=self.parameters[
