@@ -132,7 +132,7 @@ class ReadCropVideo(ReadVideo):
         try:
             return cv2.bitwise_and(frame, self.mask)        
         except Exception as e:
-            error = CropMaskError()
+            error = CropMaskError(e)
             flash_error_msg(error, self.error)
             return frame
 
@@ -140,7 +140,7 @@ class ReadCropVideo(ReadVideo):
         try:
             return crop(frame, self.parameters)
         except Exception as e:
-            error = CropMaskError()
+            error = CropMaskError(e)
             flash_error_msg(error, self.error)
             return frame
 

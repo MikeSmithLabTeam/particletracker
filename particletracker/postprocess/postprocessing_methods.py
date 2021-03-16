@@ -746,10 +746,10 @@ def rate(df, f_index=None, parameters=None, call_num=None):
         if start < 0:
             start = 0
         
+        
         df_frames = df.loc[start:f_index,[column,'particle']]
         df_output=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
         df.loc[f_index,[output_name]]=df_output.loc[f_index]*float(fps)
-
         return df
     except Exception as e:
         raise RateError(e)

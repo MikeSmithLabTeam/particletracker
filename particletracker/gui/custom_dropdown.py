@@ -24,6 +24,10 @@ class QCustomDropdown(QWidget):
                 value_='False'
         if value_ is None:
             value_ = 'None'
+        if type(value_) == int:
+            value_ = str(value_)
+        elif type(value_) == float:
+            value_ = str(value_)
         self.dropdown.setCurrentText(value_)
         self.vbox.addWidget(self.label)
         self.vbox.addWidget(self.dropdown)

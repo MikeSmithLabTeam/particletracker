@@ -225,7 +225,6 @@ def boxes(frame, data, f, parameters=None, call_num=None):
         method_key = get_method_key('boxes', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
         subset_df = _get_class_subset(data, f, parameters, method=method_key)
-        print(subset_df.columns)
         box_pts = subset_df[['box_pts']].values
        
         if np.shape(box_pts)[0] == 1:
@@ -519,7 +518,9 @@ def vectors(frame, data, f, parameters=None, call_num=None):
         method_key = get_method_key('vectors', call_num=call_num)
         dx = parameters[method_key]['dx_column']
         dy = parameters[method_key]['dy_column']
-
+        print(dx)
+        print(dy)
+        print(data.df.loc[f])
         vectors = data.get_info(f, ['x', 'y',dx, dy])
 
         thickness = get_param_val(parameters[method_key]['thickness'])
@@ -529,6 +530,10 @@ def vectors(frame, data, f, parameters=None, call_num=None):
 
         colours = colour_array(data.df, f, parameters, method=method_key)
 
+        print(line_type)
+        print(type(line_type))
+        print(vectors)
+        print(type(vectors[0]))
         for i, vector in enumerate(vectors):
             frame = cv2.arrowedLine(frame, (int(vector[0]), int(vector[1])),
                                     (int(vector[0]+vector[2]*vector_scale),int(vector[1]+vector[3]*vector_scale)),
@@ -537,6 +542,12 @@ def vectors(frame, data, f, parameters=None, call_num=None):
     except Exception as e:
         raise VectorsError(e)
 
+
+
+'''
+These methods require more than one frames data to be analysed so you'll need to run use part first.
+
+'''
 def trajectories(frame, data, f, parameters=None, call_num=None):
     '''
     Vectors draw info onto images in the form of arrows. 

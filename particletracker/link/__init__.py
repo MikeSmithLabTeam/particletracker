@@ -26,7 +26,7 @@ class LinkTrajectory:
                 if f_index is None:
                     # Trackpy methods
                     data.reset_index()
-                    data.df = trackpy.link_df(data.df, get_param_val(self.parameters['default']['max_frame_displacement']),memory=get_param_val(self.parameters['default']['memory']))
+                    data.df = trackpy.link_df(data.df, get_param_val(self.parameters['default']['max_frame_displacement']),memory=get_param_val(self.parameters['default']['memory']), link_strategy='auto', adaptive_step=0.75)
                     data.df = trackpy.filter_stubs(data.df, get_param_val(self.parameters['default']['min_frame_life']))
                 else:
                     #Adds a particle id to single temporary dataframes for convenience
@@ -34,6 +34,6 @@ class LinkTrajectory:
                     pids = np.linspace(0,num_particles-1, num=num_particles).astype(int)
                     data.df['particle'] = pids
                 # Save DataStore
-                data.save(filename=data_filename)
+            data.save(filename=data_filename)
         except Exception as e:
-            raise LinkError
+            raise LinkError(e)

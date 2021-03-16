@@ -78,7 +78,7 @@ def create_param_file(filename):
 
     link = {
         'link_method':('default',),
-        'default':{ 'max_frame_displacement': [10,1,1000,1],
+        'default':{ 'max_frame_displacement': [10,1,50,1],
                     'memory': [3,1,30,1],
                     'min_frame_life': [10,1,100,1]
                     }
@@ -199,20 +199,10 @@ def create_param_file(filename):
                     'colour': (0,255,0),#For static
                     'thickness':2
                     },
-        'voronoi':{
-                    'cmap_type':['static',('dynamic','static')],
-                    'cmap_column':'voronoi_area',#For dynamic                      'classifier': 1,#For static or dynamic
-                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
-                    'cmap_min':[0.0,0.0,1000.0,0.1],
-                    'classifier_column': None,
-                    'classifier': [True, ('True','False')],
-                    'colour': (0,255,0),#For static
-                    'thickness':2
-                    },
         'vectors':{ 'dx_column':'x',
                     'dy_column':'y',
                     'thickness':2,
-                    'line_type':[8,(-1,4,8,16)],
+                    'line_type':[8,('-1','4','8','16')],
                     'tip_length':[1,1,100,1],
                     'vector_scale':[1,1,2000,1],
                     'cmap_type':'static',#'dynamic',
@@ -222,6 +212,16 @@ def create_param_file(filename):
                     'colour': (0,0,255),#For static
                     'classifier_column':None,#For static or dynamic
                     'classifier': [True, ('True','False')],
+                    'thickness':2
+                    },
+        'voronoi':{
+                    'cmap_type':['static',('dynamic','static')],
+                    'cmap_column':'voronoi_area',#For dynamic                      'classifier': 1,#For static or dynamic
+                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
+                    'cmap_min':[0.0,0.0,1000.0,0.1],
+                    'classifier_column': None,
+                    'classifier': [True, ('True','False')],
+                    'colour': (0,255,0),#For static
                     'thickness':2
                     },
         'trajectories':{'x_column':'x',

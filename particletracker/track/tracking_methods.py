@@ -103,7 +103,6 @@ def hough(frame, _,parameters=None, call_num=None):
             circles_dict['intensities']=np.array(intensity)
 
         df = pd.DataFrame(circles_dict)
-        print(df.head())
         return df
     except Exception as e:
         return pd.DataFrame({'x':np.nan,'y':np.nan})

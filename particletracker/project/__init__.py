@@ -19,13 +19,6 @@ class PTWorkflow:
         self.filename = os.path.splitext(self.video_filename)[0]
         self.data_filename = self.filename + '.hdf5'
 
-        #These should be overwritten in child class
-        #self.crop_select = False
-        #self.preprocess_select = False
-        #self.track_select = False
-        #self.link_select = False
-        #self.postprocess_select = False
-        #self.annotate_select = False
         self.param_filename = param_filename
         self.select_tabs()
         self._setup()
@@ -92,20 +85,27 @@ class PTWorkflow:
 
         :return:
         """
-        if not use_part:
-            if self.track_select:
-                self.pt.track()
-            if self.link_select:
-                self.link.link_trajectories()
-        if self.postprocess_select:
-            self.pp.process(use_part=use_part)
-        if self.annotate_select:
-            self.an.annotate(use_part=use_part)
+        try:
+            if not use_part:
+                if self.track_select:
+                    self.pt.track()
+                if self.link_select:
+                    self.link.link_trajectories()
+            if self.postprocess_select:
+                self.pp.process(use_part=use_part)
+            if self.annotate_select:
+                self.an.annotate(use_part=use_part)
         
-        if excel:
-            df = pd.read_hdf(self.data_filename)
-            df.to_excel(self.data_filename[:-5] + '.xlsx')
-
+            if excel:
+                try:
+                    df = pd.read_hdf(self.data_filename)
+                    df.to_excel(self.data_filename[:-5] + '.xlsx')
+                except Exception as e:
+                    ExcelError(e)
+        except BaseError as e:
+            if self.error_reporting is not None:
+                flash_error_msg(e, self.error_reporting)
+            
 
     def process_frame(self, frame_num, use_part=False):
         """Process a single frame
