@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from qtwidgets import QCustomSlider, QCustomTextBox, SelectAreaWidget
+from qtwidgets import QCustomSlider, QCustomSliderDecimal, QCustomTextBox, SelectAreaWidget
 from .custom_textbox import QModCustomTextBox
 from .custom_dropdown import QCustomDropdown
 
@@ -31,12 +31,22 @@ class CollectionParamAdjustors(QWidget):
                     # If sub dictionary contains a list [value, min, max, step] gui displays a QCustomSlider
                     if isinstance(param_dict[method][method_param], list):
                         if len(param_dict[method][method_param]) == 4:
-                            slider = QCustomSlider(title = method_param,
+                            if type(param_dict[method][method_param][0]) == int:
+                                slider = QCustomSlider(title = method_param,
+                                                min_ = param_dict[method][method_param][1],
+                                                max_ = param_dict[method][method_param][2],
+                                                step_ = param_dict[method][method_param][3],
+                                                value_ = param_dict[method][method_param][0],
+                                                spinbox = True
+                                                )
+                            else:
+                                slider = QCustomSliderDecimal(title = method_param,
                                                 min_ = param_dict[method][method_param][1],
                                                 max_ = param_dict[method][method_param][2],
                                                 step_ = param_dict[method][method_param][3],
                                                 value_ = param_dict[method][method_param][0],
                                                 spinbox = True,
+                                                decimals=2
                                                 )
                             #Add location within dictionary as metadata
                             slider.meta = [title, method, method_param]

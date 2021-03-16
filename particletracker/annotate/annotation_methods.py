@@ -181,75 +181,13 @@ def _get_class_subset(data, f, parameters, method=None):
         if classifier_column is None:
             subset_df = data.df.loc[f]
         else:
-            classifier = parameters[method]['classifier']
+            classifier = get_param_val(parameters[method]['classifier'])
             temp = data.df.loc[f]
             subset_df = temp[temp[classifier_column] == classifier]
         return subset_df
     except Exception as e:
         raise GetClassSubsetError(e)
 
-
-def circles(frame, data, f, parameters=None, call_num=None):
-    '''
-    Circles places a ring on every specified particle.
-
-    Parameters  :
-
-    radius          :   If tracking method specifies radius this is set automatically.
-                        Otherwise this can be adjusted arbitrarily.
-    cmap_type       :   Options are 1. static  2. dynamic
-    cmap_column     :   Name of column containing data to specify colour in dynamic mode,#for dynamic
-    cmap_max        :   Specifies max data value for colour map in dynamic mode
-    cmap_scale      :   Scale factor for colour map
-    colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
-    classifier_col  : None - selects all particles, column name of classifier values to apply to subset of particles
-    classifier      :   The value in the classifier column to apply colour map to. 
-    thickness       :   Thickness of circle. -1 fills the circle in solidly.
-
-
-    Inputs:
-
-    frame       :   This is the unmodified frame of the input movie
-    data        :   This is the dataframe that stores all the tracked data
-    f           :   An integer that references the current frame number
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    annotated frame : Annotated frame of type numpy ndarray.
-    '''
-    
-    try:
-    
-        method_key = get_method_key('circles', call_num=call_num)
-        if 'r' not in list(data.df.columns):
-            data.add_particle_property('r', get_param_val(parameters[method_key]['radius']))
-        thickness = get_param_val(parameters[method_key]['thickness'])
-
-        subset_df = _get_class_subset(data, f, parameters, method=method_key)
-        
-        circles = subset_df[['x', 'y', 'r']].values
-        
-        #No objects found
-        df_empty = np.isnan(circles[0])
-        if np.all(df_empty):
-            return frame
-        
-        colours = colour_array(subset_df, f, parameters, method=method_key)
-        
-        if np.shape(circles) == (3,):#One object
-            frame = cv2.circle(frame, (int(circles[0]), int(circles[1])), int(circles[2]), colours[0], int(thickness))
-        else:
-            for i, circle in enumerate(circles):
-                frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), int(circle[2]), colours[i], int(thickness))
-    
-        return frame
-    
-    except Exception as e:
-        raise CirclesError(e)
 
 def boxes(frame, data, f, parameters=None, call_num=None):
     '''
@@ -317,6 +255,70 @@ def _contour_inside_img(sz, contour):
     return inside
     
 
+def circles(frame, data, f, parameters=None, call_num=None):
+    '''
+    Circles places a ring on every specified particle.
+
+    Parameters  :
+
+    radius          :   If tracking method specifies radius this is set automatically.
+                        Otherwise this can be adjusted arbitrarily.
+    cmap_type       :   Options are 1. static  2. dynamic
+    cmap_column     :   Name of column containing data to specify colour in dynamic mode,#for dynamic
+    cmap_max        :   Specifies max data value for colour map in dynamic mode
+    cmap_scale      :   Scale factor for colour map
+    colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
+    classifier_col  : None - selects all particles, column name of classifier values to apply to subset of particles
+    classifier      :   The value in the classifier column to apply colour map to. 
+    thickness       :   Thickness of circle. -1 fills the circle in solidly.
+
+
+    Inputs:
+
+    frame       :   This is the unmodified frame of the input movie
+    data        :   This is the dataframe that stores all the tracked data
+    f           :   An integer that references the current frame number
+    parameters  :   Dictionary like object (same as .param files or 
+                        output from general.param_file_creator.py
+    call_num    :   Usually None but if multiple calls are made modifies
+                    method name with get_method_key
+
+    Outputs:
+    
+    annotated frame : Annotated frame of type numpy ndarray.
+    '''
+    
+    try:
+    
+        method_key = get_method_key('circles', call_num=call_num)
+        if 'r' not in list(data.df.columns):
+            data.add_particle_property('r', get_param_val(parameters[method_key]['radius']))
+        thickness = get_param_val(parameters[method_key]['thickness'])
+
+        
+        subset_df = _get_class_subset(data, f, parameters, method=method_key)
+        circles = subset_df[['x', 'y', 'r']].values
+        
+        #No objects found
+        df_empty = np.isnan(circles[0])
+        if np.all(df_empty):
+            return frame
+        
+        colours = colour_array(subset_df, f, parameters, method=method_key)
+        
+        if np.shape(circles) == (3,):#One object
+            frame = cv2.circle(frame, (int(circles[0]), int(circles[1])), int(circles[2]), colours[0], int(thickness))
+        else:
+            for i, circle in enumerate(circles):
+                frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), int(circle[2]), colours[i], int(thickness))
+    
+        return frame
+    
+    except Exception as e:
+        raise CirclesError(e)
+
+
+
 def contours(frame, data, f, parameters=None, call_num=None):
     '''
     Contours draws the tracked contour returned from Contours tracking
@@ -349,7 +351,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
     annotated frame : Annotated frame of type numpy ndarray.
     '''
 
-    try:
+    if True:
         method_key = get_method_key('contours', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
         
@@ -366,7 +368,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
         for index, contour in enumerate(contour_pts):
             frame = _draw_contours(frame, contour, col=colours[index],
                                            thickness=int(thickness))
-        
+    try:    
         return frame
     except Exception as e:
         raise ContoursError(e)

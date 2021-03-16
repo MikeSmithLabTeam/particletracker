@@ -9,6 +9,7 @@ import sys
 import numpy as np
 import qimage2ndarray
 import webbrowser
+import shutil
 
 from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
@@ -18,16 +19,23 @@ from ..project.workflow import PTWorkflow#PTProject
 from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.imageformat import bgr_to_rgb
+from .. import project
 
-
+#DEFAULT_SETTINGS  = 'particletracker/project/default.param
 
 class MainWindow(QMainWindow):
+    DEFAULT_SETTINGS_PATH = project.__file__[:-11]
+    DEFAULT_SETTINGS = DEFAULT_SETTINGS_PATH + 'default.param'
+    CURRENT_SETTINGS = DEFAULT_SETTINGS_PATH + 'current.param'
+    
     def __init__(self, *args, movie_filename=None, settings_filename=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
-
+        
         if movie_filename is not None:
             if isfile(movie_filename):
                 self.movie_filename = str(Path(movie_filename))
+            else:
+                self.movie_filename = None
         else:
             self.movie_filename = None
             
@@ -37,11 +45,19 @@ class MainWindow(QMainWindow):
         if settings_filename is not None:
             if isfile(settings_filename):
                 self.settings_filename = str(Path(settings_filename))
-        else:
-            self.settings_filename = None
+            else:
+                settings_filename = None
+        
+        if settings_filename is None:
+            self.load_default_settings()
+            self.settings_filename = MainWindow.CURRENT_SETTINGS
+    
+
+            
+            #self.settings_filename = None
                
-        if self.settings_filename is None:
-            self.open_settings_button_click()
+        #if self.settings_filename is None:
+        #    self.open_settings_button_click()
 
         self.reboot()
 
@@ -110,7 +126,6 @@ class MainWindow(QMainWindow):
 
         self.toolbar.addSeparator()
 
-
         self.live_update_button = QAction(QIcon(os.path.join(resources_dir,"arrow-circle.png")), "Live Updates", self)
         self.live_update_button.setCheckable(True)
         self.live_update_button.setChecked(True)
@@ -118,9 +133,6 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.live_update_button)
 
         self.toolbar.addSeparator()
-
-
-
 
         self.excel=False
         self.export_to_excel = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to Excel', self)
@@ -161,9 +173,16 @@ class MainWindow(QMainWindow):
         self.process_menu = menu.addMenu("Process options")
         self.help_menu = menu.addMenu("Help")
 
+        select_default_settings = QAction('Select default settings', self)
+        select_default_settings.triggered.connect(self.set_default_settings)
+        load_defaults = QAction('Load default settings', self)
+        load_defaults.triggered.connect(self.load_default_settings)
+
         self.file_menu.addAction(open_movie_button)
         self.file_menu.addAction(open_settings_button)
         self.file_menu.addAction(save_settings_button)
+        self.file_menu.addAction(select_default_settings)
+        self.file_menu.addAction(load_defaults)
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.live_update_button)
         self.file_menu.addSeparator()
@@ -405,7 +424,7 @@ class MainWindow(QMainWindow):
     def open_movie_dialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        #self.recovery_movie_filename = self.movie_filename
+
         if self.movie_filename is None:
             movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie or Img Sequence", QDir.homePath(),
                                                             "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v)", options=options)
@@ -436,6 +455,19 @@ class MainWindow(QMainWindow):
         else:
             return False
 
+    def set_default_settings(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File", '',
+                                                               "settings (*.param)", options=options)
+        if ok:
+            shutil.copy(settings_filename, MainWindow.DEFAULT_SETTINGS)
+    
+    def load_default_settings(self):
+        shutil.copy(MainWindow.DEFAULT_SETTINGS, MainWindow.CURRENT_SETTINGS)
+        self.settings_filename = MainWindow.CURRENT_SETTINGS
+        self.reboot()
+
     def open_movie_click(self):
         ok, self.movie_filename=self.open_movie_dialog()
         if ok:
@@ -453,7 +485,6 @@ class MainWindow(QMainWindow):
                                                         "settings (*.param)", options=options)
 
         file_settings_name=file_settings_name.split('.')[0] + '.param'
-        print(self.tracker.parameters['preprocess']['preprocess_method'])
         write_paramdict_file(self.tracker.parameters, file_settings_name)
 
     def live_update_button_click(self):

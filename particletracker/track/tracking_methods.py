@@ -117,25 +117,22 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
     mask so that you can extract pixels from original image
     and perform some analysis.
     '''
-    method_key = get_method_key('contours',call_num=call_num)
-    params = parameters[method_key]
-    get_intensities = get_param_val(params['get_intensities'])
+    try:  
+        method_key = get_method_key('contours',call_num=call_num)
+        params = parameters[method_key]
+        get_intensities = get_param_val(params['get_intensities'])
     
-    try:
         sz = np.shape(frame)
         if np.shape(sz)[0] == 3:
-            frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        
+            frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)       
 
         area_min = get_param_val(params['area_min'])
         area_max = get_param_val(params['area_max'])
-        aspect_min = get_param_val['aspect_min']
-        aspect_max = get_param_val['aspect_max']
+        aspect_min = get_param_val(params['aspect_min'])
+        aspect_max = get_param_val(params['aspect_max'])
         info = []
-
+        
         contour_pts = _find_contours(pp_frame)
-
         for index, contour in enumerate(contour_pts):
             M = cv2.moments(contour)
             if M['m00'] > 0:
@@ -145,11 +142,11 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
                     cx = int(M['m10'] / M['m00'])
                     cy = int(M['m01'] / M['m00'])
 
-                    x,y,w,h = cv2.boundingRect(contour)
-                    aspect = float(w)/h
+                    rect = cv2.minAreaRect(contour)
+                    (x, y), (w, h), angle = rect
+                    aspect = max(w,h)/min(w,h)
 
-                    if (aspect < aspect_max) & (aspect > aspect_min):
-                        #box = cv2.boundingRect(contour)
+                    if (aspect <= aspect_max) & (aspect >= aspect_min):  
                         if get_intensities:
                             intensity = _find_intensity_inside_contour(contour, frame, get_intensities)
                             info_contour = [cx, cy, area, contour, intensity]
@@ -162,6 +159,7 @@ def contours(pp_frame, frame, parameters=None, call_num=None):
         else:
             info_headings = ['x', 'y', 'area', 'contours']
         df = pd.DataFrame(data=info, columns=info_headings)
+
         return df
     except Exception as e:
         raise ContoursError(e)

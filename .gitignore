@@ -137,3 +137,4 @@ dmypy.json
 particle.code-workspace
 .vscode/settings.json
 .gitignore
+testdata/contours_annotate.mp4

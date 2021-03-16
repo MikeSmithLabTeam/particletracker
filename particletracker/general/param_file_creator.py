@@ -34,7 +34,7 @@ def create_param_file(filename):
         'distance':{},
         'blur':{'kernel':[1,1,15,2]},
         'medianblur':{'kernel':[3,1,15,2]},
-        'gamma':{'gamma':[1,-1000,1000,1]},
+        'gamma':{'gamma':[0.00,0.00,10.00,0.01]},
         'subtract_bkg':{'subtract_bkg_type':['mean',('mean','image')],
                     'subtract_bkg_filename':None,
                     'subtract_bkg_blur_kernel': [3,1,15,2],
@@ -70,8 +70,8 @@ def create_param_file(filename):
         'contours':{'noise_cutoff':[2,1,50,1],
                     'area_min':[20, 1, 2000, 1],
                     'area_max':[2000, 1, 20000, 1],
-                    'aspect_min':[1,1,20,1],
-                    'aspect_max':[20,1,20,1],
+                    'aspect_min':[1.0,1.0,10.0,0.1],
+                    'aspect_max':[10.0,1.0,10.0,0.1],
                     'get_intensities':[False,('True','False')]
                     },
         }
@@ -86,20 +86,43 @@ def create_param_file(filename):
 
     postprocess = {
         'postprocess_method': (),
+        'angle':{'x_column':'x',
+                 'y_column':'y',
+                 'output_name':'theta',
+                 'units':['degrees',('radians','degrees')]},
+        'classify':{'column_name':'x',
+                    'output_name':'classifier',
+                    'lower_threshold':[0.01, 0.01, 100.00, 0.01],
+                    'upper_threshold':[100.00, 1.00, 2000.00, 0.01]
+                    },
+        'contour_area': {'output_name':'contour_area'},
+        'contour_boxes':{},
+        'logic_AND':{'column_name':'classifier1',
+                     'column_name2':'classifier2',
+                     'output_name':'classifier'},
+        'logic_OR': {'column_name': 'classifier1',
+                      'column_name2': 'classifier2',
+                      'output_name': 'classifier'},
+        'logic_NOT': {'column_name': 'classifier',
+                      'output_name': 'classifier1'},
+        'magnitude':{'column_name':'x_diff',
+                     'column_name2':'y_diff',
+                     'output_name':'r_diff'},
+        'neighbours':{'method':['delaunay',('delaunay','kdtree')],
+                      'neighbours':6,
+                      'cutoff':[50,1,200,1],
+                    },
+        'voronoi':{},
         'smooth':{'column_name':'y',
                   'output_name':'y_smooth',
                   'span':[5,1,50,1],
                   'method':'default'
                   },
-        'subtract_drift':{},
         'difference':{'column_name':'x',
                       'output_name':'x_diff',
                       'span':[10,1,50,1]
                       },
-        'magnitude':{'column_name':'x_diff',
-                     'column_name2':'y_diff',
-                     'output_name':'r_diff'
-        },
+
         'median':{'column_name':'r_diff',
                     'output_name':'median_r',
                     'span':[5,1,20,1]},
@@ -107,43 +130,15 @@ def create_param_file(filename):
                 'output_name':'x_mean',
                 'span':[5,1,20,1]
                 },
-        'classify':{'column_name':'max_r',
-                    'output_name':'classifier',
-                    'lower_threshold':[1, 1, 100, 1],
-                    'upper_threshold':[2000, 1, 2000, 1]
-                    },
-        'classify_most':{'column_name':'classifier',
-                         'output_name':'output'},
-        'logic_AND':{'column_name':None,
-                     'column_name2':None,
-                     'output_name':None},
-        'logic_OR': {'column_name': None,
-                      'column_name2': None,
-                      'output_name': None},
-        'logic_NOT': {'column_name': None,
-                      'output_name': None},
-        'angle':{'x_column':'x',
-                 'y_column':'y',
-                 'output_name':'theta',
-                 'units':['degrees',('radians','degrees')]
-
-        },
-        'contour_area': {'output_name':'contour_area'},
-        'contour_boxes':{},
         'rate':{'column_name':'x',
                 'output_name':'vx',
                 'fps':50.0,
                 'span':[5,1,20,1]
                   },
-        'neighbours':{'method':['delaunay',('delaunay','kdtree')],
-                      'neighbours':6,
-                      'cutoff':[50,1,200,1],
-                    },
-        'voronoi':{},
         'add_frame_data':{
             'new_column_name':'data',
             'data_filename':None
-        }
+                  }
 
         }
 
@@ -169,76 +164,76 @@ def create_param_file(filename):
         'circles':{'radius':[6,1,1000,1],#This is overridden in Hough Circles
                     'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#for dynamic
-                    'cmap_max':[470,1,2000,1],#For dynamic
-                    'cmap_min':[1,1,2000,1],
+                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
+                    'cmap_min':[0.0,0.0,2000.0,0.1],
                     'colour': (0,255,0),#For static
                     'classifier_column': None,#For static or dynamic
-                    'classifier': 1,#For static or dynamic
+                    'classifier': [True, ('True','False')],#For static or dynamic
                     'thickness':2
                    },
-        'boxes':{  'cmap_type':['static',('dynamic','static')],
-                   'cmap_column':'x',  #None
-                   'cmap_max':[1,1,2000,1],
-                   'cmap_min':[1,1,2000,1],
-                   'colour': (0, 255, 0),  # For static
-                   'classifier_column': None,  # For static or dynamic
-                   'classifier':1,
-                   'thickness': 2
-                   },
+        'boxes':{   'cmap_type':['static',('dynamic','static')],
+                    'cmap_column':'x',  #None
+                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
+                    'cmap_min':[0.0,0.0,1000.0,0.1],
+                    'colour': (0, 255, 0),  # For static
+                    'classifier_column': None,  # For static or dynamic
+                    'classifier': [True, ('True','False')],
+                    'thickness': 2
+                    },
         'contours':{'cmap_type':['static',('dynamic','static')],
-                   'cmap_column':'x',#For dynamic
-                   'cmap_max':[470,1,2000,1],#For dynamic
-                   'cmap_min':[1,1,2000,1],
-                   'colour': (0,255,0),#For static
-                   'classifier_column': None,#For static or dynamic
-                   'classifier': None,#For static or dynamic
-                   'thickness':2
-                   },
+                    'cmap_column':'x',#For dynamic
+                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
+                    'cmap_min':[0.0,0.0,1000.0,0.1],
+                    'colour': (0,255,0),#For static
+                    'classifier_column': None,#For static or dynamic
+                    'classifier': [True, ('True','False')],
+                    'thickness':2
+                    },
         'networks':{
                     'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#For dynamic                      'classifier': 1,#For static or dynamic
-                    'cmap_max':[470,1,2000,1],#For dynamic              thickness':2
-                    'cmap_min':[1,1,2000,1],
+                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
+                    'cmap_min':[0.0,0.0,1000.0,0.1],
                     'classifier_column': None,
-                    'classifier': None,
+                    'classifier': [True, ('True','False')],
                     'colour': (0,255,0),#For static
                     'thickness':2
                     },
         'voronoi':{
                     'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'voronoi_area',#For dynamic                      'classifier': 1,#For static or dynamic
-                    'cmap_max':[470,1,2000,1],#For dynamic              thickness':2
-                    'cmap_min':[1,1,2000,1],
+                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
+                    'cmap_min':[0.0,0.0,1000.0,0.1],
                     'classifier_column': None,
-                    'classifier': None,
+                    'classifier': [True, ('True','False')],
                     'colour': (0,255,0),#For static
                     'thickness':2
                     },
-        'vectors':{'dx_column':'x',
-                   'dy_column':'y',
-                   'thickness':2,
-                   'line_type':[8,(-1,4,8,16)],
-                   'tip_length':[1,1,100,1],
-                   'vector_scale':[1,1,2000,1],
-                   'cmap_type':'static',#'dynamic',
-                   'cmap_column':'x',#For dynamic
-                   'cmap_max':[470,1,2000,1],#For dynamic
-                   'cmap_min':[1,1,2000,1],
-                   'colour': (0,0,255),#For static
-                   'classifier_column':None,#For static or dynamic
-                   'classifier': None,#For static or dynamic
-                   'thickness':2
+        'vectors':{ 'dx_column':'x',
+                    'dy_column':'y',
+                    'thickness':2,
+                    'line_type':[8,(-1,4,8,16)],
+                    'tip_length':[1,1,100,1],
+                    'vector_scale':[1,1,2000,1],
+                    'cmap_type':'static',#'dynamic',
+                    'cmap_column':'x',#For dynamic
+                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
+                    'cmap_min':[0.0,0.0,1000.0,0.1],
+                    'colour': (0,0,255),#For static
+                    'classifier_column':None,#For static or dynamic
+                    'classifier': [True, ('True','False')],
+                    'thickness':2
                     },
         'trajectories':{'x_column':'x',
                     'y_column':'y',
                     'traj_length': [1000,0,1000,1],
                     'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#For dynamic
-                    'cmap_max':[470,1,2000,1],#For dynamic
-                    'cmap_min':[1,1,2000,1],
+                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
+                    'cmap_min':[0.0,0.0,1000.0,0.1],
                     'colour': (64,224,208),#For static
                     'classifier_column':'classifier',#For static or dynamic
-                    'classifier': None,#For static or dynamic
+                    'classifier': [True, ('True','False')],
                     'thickness':2
                    },
         }

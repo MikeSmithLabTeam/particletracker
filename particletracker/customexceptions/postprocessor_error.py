@@ -60,13 +60,6 @@ class RateError(PostprocessorError):
         self.error_msg = 'rate error'
         self.e = e
 
-
-class ClassifyMostError(PostprocessorError):
-    def __init__(self, e):
-        super().__init__()
-        self.error_msg = 'classify_most error'
-        self.e = e
-
 class ClassifyError(PostprocessorError):
     def __init__(self, e):
         super().__init__()
@@ -89,12 +82,6 @@ class LogicOrError(PostprocessorError):
     def __init__(self, e):
         super().__init__()
         self.error_msg = 'logic_OR error'
-        self.e = e
-
-class SubtractDriftError(PostprocessorError):
-    def __init__(self, e):
-        super().__init__()
-        self.error_msg = 'subtract_drift error'
         self.e = e
 
 class AddFrameDataError(PostprocessorError):
