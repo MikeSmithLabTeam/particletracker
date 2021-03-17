@@ -431,7 +431,7 @@ def subtract_bkg(frame, parameters=None, call_num=None):
                 subtract_frame = cv2.imread(params['subtract_bkg_filename'],cv2.IMREAD_GRAYSCALE)
          
             subtract_frame = crop(subtract_frame, parameters['crop'])
-            #blur frames
+           
             frame2 = blur(frame, temp_params)
             frame2 = frame2.astype(np.uint8)
             subtract_frame  = blur(subtract_frame, temp_params)

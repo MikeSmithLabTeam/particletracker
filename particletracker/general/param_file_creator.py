@@ -232,7 +232,7 @@ def create_param_file(filename):
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
                     'cmap_min':[0.0,0.0,1000.0,0.1],
                     'colour': (64,224,208),#For static
-                    'classifier_column':'classifier',#For static or dynamic
+                    'classifier_column':None,#For static or dynamic
                     'classifier': [True, ('True','False')],
                     'thickness':2
                    },

@@ -177,7 +177,6 @@ def _get_class_subset(data, f, parameters, method=None):
     '''    
     try:
         classifier_column= parameters[method]['classifier_column']
-        
         if classifier_column is None:
             subset_df = data.df.loc[f]
         else:
@@ -286,9 +285,7 @@ def circles(frame, data, f, parameters=None, call_num=None):
     
     annotated frame : Annotated frame of type numpy ndarray.
     '''
-    
     try:
-    
         method_key = get_method_key('circles', call_num=call_num)
         if 'r' not in list(data.df.columns):
             data.add_particle_property('r', get_param_val(parameters[method_key]['radius']))
@@ -350,7 +347,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
     annotated frame : Annotated frame of type numpy ndarray.
     '''
 
-    if True:
+    try: 
         method_key = get_method_key('contours', call_num=call_num)
         thickness = get_param_val(parameters[method_key]['thickness'])
         
@@ -367,7 +364,7 @@ def contours(frame, data, f, parameters=None, call_num=None):
         for index, contour in enumerate(contour_pts):
             frame = _draw_contours(frame, contour, col=colours[index],
                                            thickness=int(thickness))
-    try:    
+       
         return frame
     except Exception as e:
         raise ContoursError(e)
@@ -379,8 +376,6 @@ def _draw_contours(img, contours, col=(0,0,255), thickness=1):
         for i, contour in enumerate(contours):
             img = cv2.drawContours(img, contour, -1, col[i], int(thickness))
     return img        
-
-
 
 
 def networks(frame, data, f, parameters=None, call_num=None):
@@ -456,8 +451,6 @@ def voronoi(frame, data, f, parameters=None, call_num=None):
         for index, contour in enumerate(contour_pts):
             frame = _draw_polygon(frame, contour, col=colours[index],
                                           thickness=int(thickness))
-
-    
         return frame
     except Exception as e:
         VoronoiError(e)
@@ -484,20 +477,21 @@ def vectors(frame, data, f, parameters=None, call_num=None):
     Vectors draw info onto images in the form of arrows. 
 
     Parameters  :
-
-    x_column        :  Column name of x coordinates, defaults to 'x'
-    y_column        :  Column name of y coordinates, defaults to 'y'
-    traj_length'    :  How many frames into the past to draw the trajectory. This is truncated by ends
-                       of the movie. If you are on frame 0 it won't draw anything!
-    cmap_type       :   Options are 1. static  2. dynamic
-    cmap_column     :   Name of column containing data to specify colour in dynamic mode,#for dynamic
-    cmap_max        :   Specifies max data value for colour map in dynamic mode
-    cmap_scale      :   Scale factor for colour map
-    colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
+   
+    dx_column        :  Column name of x component of vector, defaults to 'x'
+    dy_column        :  Column name of y component of vector, defaults to 'y'
+    vector_scale    :   scaling between vector data and length of displayed line
     classifier_col  :  None - selects all particles, column name of classifier values to apply to subset of particles
     classifier      :   The value in the classifier column to apply colour map to. 
-    thickness       :   Thickness of line. 
-
+    cmap_type       :   Options are 1. static  2. dynamic
+    cmap_column     :   Name of column containing data to specify colour in dynamic mode,
+    cmap_max        :   Specifies max data value for colour map in dynamic mode
+    cmap_min        :   Specifies min data value for colour map in dynamic mode
+    cmap_scale      :   Scale factor for colour map
+    colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
+    line_type       :   OpenCV parameter can be -1, 4, 8, 16
+    thickness       :   Thickness of line. Defaults to 2
+    tip_length      :   Controls length of arrow head
 
     Inputs:
 
@@ -509,7 +503,7 @@ def vectors(frame, data, f, parameters=None, call_num=None):
     call_num    :   Usually None but if multiple calls are made modifies
                     method name with get_method_key
 
-    Outputs
+    Outputs:
     
     annotated frame : Annotated frame of type numpy ndarray.
     '''
@@ -518,9 +512,6 @@ def vectors(frame, data, f, parameters=None, call_num=None):
         method_key = get_method_key('vectors', call_num=call_num)
         dx = parameters[method_key]['dx_column']
         dy = parameters[method_key]['dy_column']
-        print(dx)
-        print(dy)
-        print(data.df.loc[f])
         vectors = data.get_info(f, ['x', 'y',dx, dy])
 
         thickness = get_param_val(parameters[method_key]['thickness'])
@@ -530,10 +521,6 @@ def vectors(frame, data, f, parameters=None, call_num=None):
 
         colours = colour_array(data.df, f, parameters, method=method_key)
 
-        print(line_type)
-        print(type(line_type))
-        print(vectors)
-        print(type(vectors[0]))
         for i, vector in enumerate(vectors):
             frame = cv2.arrowedLine(frame, (int(vector[0]), int(vector[1])),
                                     (int(vector[0]+vector[2]*vector_scale),int(vector[1]+vector[3]*vector_scale)),
@@ -550,24 +537,22 @@ These methods require more than one frames data to be analysed so you'll need to
 '''
 def trajectories(frame, data, f, parameters=None, call_num=None):
     '''
-    Vectors draw info onto images in the form of arrows. 
+    Trajectories draws the historical track of each particle onto an image
 
     Parameters  :
 
-    dx_column       :   Column name that specifies the x component of vector,
-    dy_column       :   Column name that specifies the y component of vector,
-    line_type       :   OpenCV line type
-    tip_length      :   Length of the vector arrow tip
-    vector_scale    :   How to scale the data to the displayed vector length                
+    x_column       :   column name of x coordinates of particle,
+    y_column       :   column name of y coordinates of particle, 
+    traj_length     :   number of historical frames to include in each trajectory.               
+    classifier_column : None - selects all particles, column name of classifier values to apply to subset of particles
+    classifier      :   The value in the classifier column to apply colour map to (True or False). 
     cmap_type       :   Options are 1. static  2. dynamic
-    cmap_column     :   Name of column containing data to specify colour in dynamic mode,#for dynamic
+    cmap_column     :   Name of column containing data to specify colour in dynamic mode,
     cmap_max        :   Specifies max data value for colour map in dynamic mode
-    cmap_scale      :   Scale factor for colour map
+    cmap_min        :   Specifies min data value for colour map in dynamic mode
     colour          :   Colour to be used for static cmap_type (B,G,R) values from 0-255
-    classifier_column': None - selects all particles, column name of classifier values to apply to subset of particles
-    classifier      :   The value in the classifier column to apply colour map to. 
     thickness       :   Thickness of line. 
-
+    
 
     Inputs:
 
@@ -583,6 +568,8 @@ def trajectories(frame, data, f, parameters=None, call_num=None):
     
     annotated frame : Annotated frame of type numpy ndarray.
     '''
+    import time
+    
     try:
         #This can only be run on a linked trajectory
         method_key = get_method_key('trajectories', call_num=call_num)
@@ -600,17 +587,16 @@ def trajectories(frame, data, f, parameters=None, call_num=None):
         if (f-traj_length) < 0:
             traj_length = f
 
-        df = data.df.sort_index()
+        #tests showed mucking about with the index was faster than selecting on particle column
+        df = data.df
         df.index.name='frame'
-        df['frame'] = df.index
-        df2 = df.loc[f-traj_length:f]
-
-        df3 = df2.set_index(['particle','frame']).sort_index(level='particle')
-
+        df2 = df.loc[f-traj_length:f]     
+        df3 = df2.set_index(['particle'], append=True).swaplevel(i=0,j=1).sort_index(level='particle')
         for index, particle in enumerate(particle_ids):
             traj_pts = df3[[x_col_name,y_col_name]].loc[particle]
             traj_pts = np.array(traj_pts.values, np.int32).reshape((-1,1,2))
             frame = cv2.polylines(frame,[traj_pts],False,colours[index],int(thickness))
+        
         return frame
     except Exception as e:
         raise TrajectoriesError(e)

@@ -58,9 +58,9 @@ class QModCustomTextBox(QCustomTextBox):
                     #Catches checking and unchecking text box without using tool
                     self.textbox.setText(str(tuple(self.tool.points)))
                     self.returnPressed.emit(str(tuple(self.tool.points)))   
-                except:
-                    e=CropMaskError()
-                    print(self.parent)
+                except Exception as e:
+                    e=CropMaskError(e)
+
                     flash_error_msg(e, self.parent)
                     
                 self.tool.setParent(None)

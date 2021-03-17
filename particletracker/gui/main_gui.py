@@ -15,7 +15,7 @@ from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
 
 from .custom_tab_widget import CheckableTabWidget
-from ..project.workflow import PTWorkflow#PTProject
+from ..project import PTWorkflow
 from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.imageformat import bgr_to_rgb
@@ -521,8 +521,12 @@ class MainWindow(QMainWindow):
             for i in range(5):
                 if self.use_part_button.isChecked():
                     self.toplevel_settings.disable_tabs(i,enable=False)
+                    self.toggle_img.setChecked(False)
+                    self.select_img_view()
+                    self.toggle_img.setCheckable(False)
                 else:
                     self.toplevel_settings.disable_tabs(i, enable=True)
+                    self.toggle_img.setCheckable(True)
         else:
             self.use_part_button.setChecked(False)
             QMessageBox.about(self, "", "You must run 'Process Part' before you can use this")

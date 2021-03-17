@@ -60,9 +60,10 @@ class TrackError(BaseError):
         self.error_process = 'Tracking Error - '
 
 class LinkError(BaseError):
-    def __init__(self):
+    def __init__(self, e):
         super().__init__(e)
-        self.error_process = 'Linking Error'
+        self.error_msg = 'A common error is to set max_frame_displacement too large.'
+        self.error_process = 'Linking Error  - '
 
 class PostprocessorError(BaseError):
     def __init__(self, e):

@@ -15,8 +15,6 @@ class TrackingAnnotator:
         self.cap = vidobject
         self.data_filename=data_filename
         self.output_filename = self.cap.filename[:-4] + '_annotate.mp4'
-        #frame_size = (self.cap.height, self.cap.width, 3)
-
 
     def annotate(self, f_index=None, use_part=False, framerate=30):
         frame = self.cap.read_frame(n=0)
@@ -24,7 +22,6 @@ class TrackingAnnotator:
             self.out = WriteVideo(filename=self.output_filename, frame=frame)
             data_filename = self.data_filename
         elif use_part:
-            #self.out = WriteVideo(filename=self.output_filename, frame=frame)
             data_filename = self.data_filename
         else:
             data_filename = self.data_filename[:-5] + '_temp.hdf5'
