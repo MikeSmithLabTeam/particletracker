@@ -68,9 +68,6 @@ class ParticleTracker:
             data_filename = self.data_filename[:-5] + '_temp.hdf5'
 
         with dataframes.DataStore(data_filename) as data:
-            data.add_metadata('number_of_frames', self.cap.num_frames)
-            data.add_metadata('fps', self.cap.fps)
-            data.add_metadata('video_filename', self.cap.filename)
             if f_index is None:
                 start = self.cap.frame_range[0]
                 stop = self.cap.frame_range[1]

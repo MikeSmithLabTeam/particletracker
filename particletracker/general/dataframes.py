@@ -5,14 +5,11 @@ import pandas as pd
 
 class DataStore:
     """
-    Manages HDFStore containing particle data and metadata
-    Attributes
+    Dataframe Management
     ----------
     df : pandas dataframe
         Contains info on particle positions and properties.
         Index of dataframe is the video frame.
-    metadata : dict
-        Dictionary containing any metadata values.
     """
 
     def __init__(self, filename, load=False):
@@ -21,16 +18,13 @@ class DataStore:
             self.load()
         else:
             self.df = pd.DataFrame()
-            self.metadata = {}
             self.save()
 
 
     def load(self):
-        """Load HDFStore"""
+        """Load DataFrame"""
         try:
-            with pd.HDFStore(self.filename) as store:
-                self.df = store.get('df')
-                self.metadata = store.get_storer('df').attrs.metadata
+            self.df = pd.read_hdf(self.filename, key='data')           
         except Exception as e:
             print('Error in general.dataframes')
             print(e)
@@ -48,31 +42,6 @@ class DataStore:
             if self.df[key].dtype != value:
                 self.df[key] = self.df[key].astype(value)
 
-    def add_frame_property(self, heading, values):
-        """
-        Add data for each frame.
-        Parameters
-        ----------
-        heading: str
-            title of dataframe column
-        values: arraylike
-            array of values with length = num_frames
-        """
-        prop = pd.Series(values,
-                         index=pd.Index(np.arange(len(values)), name='frame'))
-        self.df[heading] = prop
-
-    def add_metadata(self, name, data):
-        """
-        Add metadata to store.
-        Parameters
-        ----------
-        name: str
-            string key for dictionary
-        data: Any
-            Anything that can be saved as a dictionary item
-        """
-        self.metadata[name] = data
 
     def add_particle_property(self, heading, values):
         """
@@ -127,7 +96,6 @@ class DataStore:
         store: seperate instance of this class
         """
         self.df = self.df.append(store.df)
-        self.metadata = {**self.metadata, **store.metadata}
 
     def get_column(self, name):
         return self.df[name].values
@@ -147,34 +115,20 @@ class DataStore:
         """
         return self.df.loc[frame, headings].values
 
-
-
     def reset_index(self):
         """Move frame index to column"""
         self.df = self.df.reset_index()
 
     def save(self, filename=None):
         try:
-            """Save HDFStore"""
-            self.add_headings_to_metadata()
             if filename is None:
-                with pd.HDFStore(self.filename) as store:
-                    store.put('df', self.df)
-                    store.get_storer('df').attrs.metadata = self.metadata
-                    store.close()
+                self.df.to_hdf(self.filename,'data')
             else:
-                with pd.HDFStore(filename) as store:
-                    store.put('df', self.df)
-                    store.get_storer('df').attrs.metadata = self.metadata
-                    store.close()
-
+                self.df.to_hdf(filename, 'data')
         except Exception as e:
             print('Error in general.dataframes')
             print(e)
             print('Error in DataStore.save')
-
-    def add_headings_to_metadata(self):
-        self.metadata['headings'] = self.headings
 
     def set_frame_index(self):
         """Move frame column to index"""
@@ -184,18 +138,12 @@ class DataStore:
             else:
                 self.df = self.df.set_index('frame')
 
-
-def load_metadata(filename):
-    with pd.HDFStore(filename) as store:
-        metadata = store.get_storer('df').attrs.metadata
-    return metadata
-
-
+'''
 def concatenate_datastore(datastore_list, new_filename):
     DS_out = DataStore(new_filename, load=False)
     for file in datastore_list:
         DS = DataStore(file, load=True)
         DS_out.append_store(DS)
     DS_out.save()
-
+'''
 
