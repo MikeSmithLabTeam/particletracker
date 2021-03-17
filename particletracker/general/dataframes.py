@@ -138,12 +138,5 @@ class DataStore:
             else:
                 self.df = self.df.set_index('frame')
 
-'''
-def concatenate_datastore(datastore_list, new_filename):
-    DS_out = DataStore(new_filename, load=False)
-    for file in datastore_list:
-        DS = DataStore(file, load=True)
-        DS_out.append_store(DS)
-    DS_out.save()
-'''
+
 
