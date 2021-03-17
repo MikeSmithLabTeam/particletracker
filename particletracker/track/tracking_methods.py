@@ -6,7 +6,6 @@ import pandas as pd
 from ..general.parameters import get_param_val, get_method_key
 from ..track import intensity_methods as im
 from ..customexceptions.track_error import *
-
 from ..user_methods import *
 
 

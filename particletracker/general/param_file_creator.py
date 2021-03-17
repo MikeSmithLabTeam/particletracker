@@ -23,6 +23,10 @@ def create_param_file(filename):
 
     preprocess = {
         'preprocess_method': ('grayscale','medianblur',),#'variance'
+        'check_method_name':{'block_size': [29,1,300,2],
+                              'C': [-23, -30, 30, 1],
+                              'ad_mode': [True, ('True', 'False')]
+                              },
         'grayscale':{},#'load_bkg_img':False,
         'threshold':{'threshold':[1,0,255,1],
                      'th_mode':[True,('True', 'False')]},
@@ -189,16 +193,18 @@ def create_param_file(filename):
                     'classifier': [True, ('True','False')],
                     'thickness':2
                     },
-        'networks':{
+        'trajectories':{'x_column':'x',
+                    'y_column':'y',
+                    'traj_length': [1000,0,1000,1],
                     'cmap_type':['static',('dynamic','static')],
-                    'cmap_column':'x',#For dynamic                  
+                    'cmap_column':'x',#For dynamic
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
                     'cmap_min':[0.0,0.0,1000.0,0.1],
-                    'classifier_column': None,
+                    'colour': (64,224,208),#For static
+                    'classifier_column':None,#For static or dynamic
                     'classifier': [True, ('True','False')],
-                    'colour': (0,255,0),#For static
                     'thickness':2
-                    },
+                   },
         'vectors':{ 'dx_column':'x',
                     'dy_column':'y',
                     'thickness':2,
@@ -214,6 +220,16 @@ def create_param_file(filename):
                     'classifier': [True, ('True','False')],
                     'thickness':2
                     },
+        'networks':{
+                    'cmap_type':['static',('dynamic','static')],
+                    'cmap_column':'x',#For dynamic                  
+                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
+                    'cmap_min':[0.0,0.0,1000.0,0.1],
+                    'classifier_column': None,
+                    'classifier': [True, ('True','False')],
+                    'colour': (0,255,0),#For static
+                    'thickness':2
+                    },
         'voronoi':{
                     'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'voronoi_area',#For dynamic                      'classifier': 1,#For static or dynamic
@@ -224,18 +240,7 @@ def create_param_file(filename):
                     'colour': (0,255,0),#For static
                     'thickness':2
                     },
-        'trajectories':{'x_column':'x',
-                    'y_column':'y',
-                    'traj_length': [1000,0,1000,1],
-                    'cmap_type':['static',('dynamic','static')],
-                    'cmap_column':'x',#For dynamic
-                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
-                    'cmap_min':[0.0,0.0,1000.0,0.1],
-                    'colour': (64,224,208),#For static
-                    'classifier_column':None,#For static or dynamic
-                    'classifier': [True, ('True','False')],
-                    'thickness':2
-                   },
+        
         }
 
     selected = {'experiment':True,

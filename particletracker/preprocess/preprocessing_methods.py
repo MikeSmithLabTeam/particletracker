@@ -6,7 +6,7 @@ from labvision.images import display
 from ..general.parameters import  get_param_val, get_method_key
 from ..crop import crop
 from ..customexceptions.preprocessor_error import *
-
+from ..user_methods import *
 
 def adaptive_threshold(frame, parameters=None, call_num=None):
     '''

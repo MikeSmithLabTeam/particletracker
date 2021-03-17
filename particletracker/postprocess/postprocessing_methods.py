@@ -7,7 +7,6 @@ import pandas as pd
 
 from ..general.parameters import get_method_key, get_param_val
 from ..customexceptions.postprocessor_error import *
-
 from ..user_methods import *
 '''
 -----------------------------------------------------------------------------------------------------

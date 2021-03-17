@@ -39,23 +39,23 @@ Custom process class - inherited by all custom method exceptions
 --------------------------------------------------------------
 """
 class ExperimentError(BaseError):
-    def __init__(self):
+    def __init__(self, e):
         super().__init__(e)
         self.error_process = 'Experiment Error - '
 
 class CropMaskError(BaseError):
-    def __init__(self):
+    def __init__(self, e):
         super().__init__(e)
         self.error_process = 'Crop or Mask Error - '
         self.error_msg = 'Check the input image type you need to convert to single colour channel. Crop or Mask tools also throw error if no or wrong values inputted via selection tools'
 
 class PreprocessorError(BaseError):
-    def __init__(self):
+    def __init__(self, e):
         super().__init__(e)
         self.error_process = 'Preprocessing Error - '
         
 class TrackError(BaseError):
-    def __init__(self):
+    def __init__(self, e):
         super().__init__(e)
         self.error_process = 'Tracking Error - '
 

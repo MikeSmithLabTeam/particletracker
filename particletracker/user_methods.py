@@ -12,8 +12,9 @@ The methods in a given section all take the same inputs and outputs.
 
 #Other imports as needed
 
+
 from .customexceptions import *
-from .general.parameters import get_method_name, get_method_key
+from .general.parameters import get_method_name, get_method_key, get_param_val
 
 '''
 --------------------------------------------------------------------------------------
@@ -21,7 +22,7 @@ Preprocessing Methods
 --------------------------------------------------------------------------------------
 '''
 
-def example_method_name(frame, parameters=None, call_num=None):
+def preprocess_method_name(frame, parameters=None, call_num=None):
     """
     Docstring for method. Replace 'example_method_name' in function name 
     and below.
@@ -41,27 +42,31 @@ def example_method_name(frame, parameters=None, call_num=None):
     """
 
     try:
-        method_key = get_method_key('example_method_name', call_num=call_num)
+        method_key = get_method_key('preprocess_method_name', call_num=call_num)
         params = parameters['preprocess'][method_key]
 
         """
         Write the body of your code
 
-        Each function should have a corresponding entry in the dictionary. This is created by 
-        the function in general.param_file_creator.py. Add a dictionary like this
+        Each function should have a corresponding entry in the dictionary. This can be created by 
+        the function in general.param_file_creator.py. Add a dictionary entry like this
 
-        'example_method_name':{'param_produces_slider':[startval, minval, maxval, step],
+        'preprocess_method_name':{'param_produces_slider':[startval, minval, maxval, step],
+                               'drop_down_with_fixed_options':[value,('value', 'value1', 'value2')],
                               'basic_text_box': True,
                               'basic_text_box2': (0,255,0)
                               }
-
+        
         You can access other parameters associated with your method in the dictionary like this
         params['basic_text_box']. All data is parsed so that 'None','True','False' become None, 
         True, False. '(0,0,0,2)' becomes a tuple. '1' becomes 1 and other strings remain strings. 
         If your param is a slider which has format [startval, min, max, step]then you need to 
         wrap the return value:
 
-        value = get_param_val(params['param_produces_slider])
+        value = get_param_val(params['param_produces_slider'])
+
+        There are two types of slider: integers and floats. The software looks at the type of step and uses this
+        to decide which to build. So if you want the ability to change to floats but to start with 1 write 1.0 in step.
 
         """
         
@@ -72,7 +77,7 @@ def example_method_name(frame, parameters=None, call_num=None):
 class ExampleMethodNameError(PreprocessorError):
     """Implement this custom exception."""
     def __init__(self,e):
-        super().__init__()
+        super().__init__(e)
         self.error_msg = 'specific error message to show user in status bar'
         self.e=e
 
@@ -112,6 +117,7 @@ def track_method_name(preprocessed_frame, unprocessed_frame, parameters=None, ca
         the function in general.param_file_creator.py. Add a dictionary like this
 
         'track_method_name':{'param_produces_slider':[startval, minval, maxval, step],
+                             'drop_down_with_fixed_options':[value,('value', 'value1', 'value2')],
                               'basic_text_box': True,
                               'basic_text_box2': (0,255,0)
                               }
@@ -122,7 +128,10 @@ def track_method_name(preprocessed_frame, unprocessed_frame, parameters=None, ca
         If your param is a slider which has format [startval, min, max, step]then you need to 
         wrap the return value:
 
-        value = get_param_val(params['param_produces_slider])
+        value = get_param_val(params['param_produces_slider'])
+
+        There are two types of slider: integers and floats. The software looks at the type of step and uses this
+        to decide which to build. So if you want the ability to change to floats but to start with 1 write 1.0 in step.
 
        """
         
@@ -132,7 +141,7 @@ def track_method_name(preprocessed_frame, unprocessed_frame, parameters=None, ca
 
 class ExampleMethodNameTrackError(TrackError):
     def __init__(self,e):
-        super().__init__()
+        super().__init__(e)
         self.error_msg = 'specific error message to show user in status bar'
         self.e=e
 
@@ -177,7 +186,7 @@ def get_intensities_method_name(masked_img):
 
 class GetIntensitiesMethodNameTrackError(TrackError):
     def __init__(self,e):
-        super().__init__()
+        super().__init__(e)
         self.error_msg = 'specific error message to show user in status bar'
         self.e=e
 
@@ -222,6 +231,7 @@ def postprocessor_method_name(data, f_index=None, parameters=None, call_num=None
         the function in general.param_file_creator.py. Add a dictionary like this
 
         'example_method_name':{'param_produces_slider':[startval, minval, maxval, step],
+                               'drop_down_with_fixed_options':[value,('value', 'value1', 'value2')],
                               'basic_text_box': True,
                               'basic_text_box2': (0,255,0)
                               }
@@ -232,7 +242,11 @@ def postprocessor_method_name(data, f_index=None, parameters=None, call_num=None
         If your param is a slider which has format [startval, min, max, step]then you need to 
         wrap the return value:
 
-        value = get_param_val(params['param_produces_slider])
+        value = get_param_val(params['param_produces_slider'])
+
+        There are two types of slider: integers and floats. The software looks at the type of step and uses this
+        to decide which to build. So if you want the ability to change to floats but to start with 1 write 1.0 in step.
+
 
         """
         
@@ -243,7 +257,7 @@ def postprocessor_method_name(data, f_index=None, parameters=None, call_num=None
 class PPMethodNameError(PostprocessorError):
     """Implement this custom exception."""
     def __init__(self,e):
-        super().__init__()
+        super().__init__(e)
         self.error_msg = 'specific error message to show user in status bar'
         self.e=e
 
@@ -286,6 +300,7 @@ def annotate_method_name(frame, data, f, parameters=None, call_num=None):
         the function in general.param_file_creator.py. Add a dictionary like this
 
         'annotate_method_name':{'param_produces_slider':[startval, minval, maxval, step],
+                              'drop_down_with_fixed_options':[value,('value', 'value1', 'value2')],
                               'basic_text_box': True,
                               'basic_text_box2': (0,255,0)
                               }
@@ -296,7 +311,11 @@ def annotate_method_name(frame, data, f, parameters=None, call_num=None):
         If your param is a slider which has format [startval, min, max, step]then you need to 
         wrap the return value:
 
-        value = get_param_val(params['param_produces_slider])
+        value = get_param_val(params['param_produces_slider'])
+
+        There are two types of slider: integers and floats. The software looks at the type of step and uses this
+        to decide which to build. So if you want the ability to change to floats but to start with 1 write 1.0 in step.
+
 
         """
         annotated_frame = frame # This can be deleted
@@ -307,6 +326,6 @@ def annotate_method_name(frame, data, f, parameters=None, call_num=None):
 class AnnotateMethodNameError(AnnotatorError):
     """Implement this custom exception."""
     def __init__(self,e):
-        super().__init__()
+        super().__init__(e)
         self.error_msg = 'specific error message to show user in status bar'
         self.e=e
