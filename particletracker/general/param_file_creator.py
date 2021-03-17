@@ -161,6 +161,15 @@ def create_param_file(filename):
                             'font_size': 1,
                             'font_thickness': 2
                             },
+        'boxes':{'cmap_type':['static',('dynamic','static')],
+                'cmap_column':'x',  #None
+                'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
+                'cmap_min':[0.0,0.0,1000.0,0.1],
+                'colour': (0, 255, 0),  # For static
+                'classifier_column': None,  # For static or dynamic
+                'classifier': [True, ('True','False')],
+                'thickness': 2
+                },
         'circles':{'radius':[6,1,1000,1],#This is overridden in Hough Circles
                     'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#for dynamic
@@ -171,15 +180,6 @@ def create_param_file(filename):
                     'classifier': [True, ('True','False')],#For static or dynamic
                     'thickness':2
                    },
-        'boxes':{   'cmap_type':['static',('dynamic','static')],
-                    'cmap_column':'x',  #None
-                    'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
-                    'cmap_min':[0.0,0.0,1000.0,0.1],
-                    'colour': (0, 255, 0),  # For static
-                    'classifier_column': None,  # For static or dynamic
-                    'classifier': [True, ('True','False')],
-                    'thickness': 2
-                    },
         'contours':{'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#For dynamic
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
@@ -191,7 +191,7 @@ def create_param_file(filename):
                     },
         'networks':{
                     'cmap_type':['static',('dynamic','static')],
-                    'cmap_column':'x',#For dynamic                      'classifier': 1,#For static or dynamic
+                    'cmap_column':'x',#For dynamic                  
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
                     'cmap_min':[0.0,0.0,1000.0,0.1],
                     'classifier_column': None,
