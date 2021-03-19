@@ -1,10 +1,12 @@
 How do you start?
 =================
+Test
 
-If you installed the executable you can skip to "Building a tracking project"
+If you installed the bundled software start the gui by double clicking the executable in the particletracker folder
+after that you can skip to "Building a tracking project" below.
 
-The place to start is with the track_gui() function which is contained in the ParticleTracker. 
-To start the tracking gui you simply need to run the following very simple script.
+If you installed the python version, the place to start is with the track_gui() function which is contained in the ParticleTracker. 
+To start the tracking gui you need to  run the following very simple script within your conda environment (see installation).
 
 .. code-block:: python
    
@@ -18,7 +20,7 @@ the code above to include a filename for each where you need to include the full
 .. code-block:: python
 
    from ParticleTracker import track_gui
-   track_gui(movie="FullPathToMovie.mp4", settings="FullPathToSettings.param")
+   track_gui(movie_filename="FullPathToMovie.mp4", settings_filename="FullPathToSettings.param")
 
 
 Building a tracking project
