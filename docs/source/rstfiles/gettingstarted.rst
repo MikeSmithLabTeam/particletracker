@@ -1,6 +1,5 @@
 How do you start?
 =================
-Test
 
 If you installed the bundled software start the gui by double clicking the executable in the particletracker folder
 after that you can skip to "Building a tracking project" below.
