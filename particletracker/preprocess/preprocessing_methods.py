@@ -599,5 +599,5 @@ def absolute_diff(frame, parameters=None, call_num=None):
 
         return frame
     except Exception as e:
-        raise VarianceError(e)
+        raise AbsDiffError(e)
         

@@ -9,6 +9,7 @@ process using a pattern matching moviefilter. It accepts wildcard characters.
 So if you have a folder with files:
 
 .. code-block:: python
+
    [movieAB001.mp4, movieGOBBLEDYGOOK001.mp4,movieAB002.mp4,movieAB003.mp4,movieAB101.mp4, movieAB001.avi]
 
 a moviefilter = 'movie*00?.mp4' would process:

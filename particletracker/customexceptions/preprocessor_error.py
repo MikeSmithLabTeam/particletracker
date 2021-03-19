@@ -73,10 +73,10 @@ class ThresholdError(PreprocessorError):
         self.error_msg = 'threshold error'
         self.e=e
 
-class VarianceError(PreprocessorError):
+class AbsDiffError(PreprocessorError):
     def __init__(self,e):
         super().__init__(e)
-        self.error_msg = 'variance error'
+        self.error_msg = 'absolute difference error'
         self.e=e
 
 
