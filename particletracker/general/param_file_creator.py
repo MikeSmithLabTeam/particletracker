@@ -22,7 +22,7 @@ def create_param_file(filename):
             }
 
     preprocess = {
-        'preprocess_method': ('grayscale','medianblur',),#'variance'
+        'preprocess_method': ('grayscale','medianblur',),
         'check_method_name':{'block_size': [29,1,300,2],
                               'C': [-23, -30, 30, 1],
                               'ad_mode': [True, ('True', 'False')]
@@ -45,7 +45,7 @@ def create_param_file(filename):
                     'subtract_bkg_invert':[True,('True','False')],
                     'subtract_bkg_norm':[True,('True','False')]
                     },
-        'variance':{'variance_norm':[True,('True','False')],
+        'absolute_diff':{'variance_norm':[True,('True','False')],
                     'value':[125,1,255,1]
                     },
         'invert':{},
@@ -61,7 +61,7 @@ def create_param_file(filename):
         'track_method':('contours',),
         'trackpy':{'size_estimate':[7,1, 101,2],
                    'invert':[0,0,1,1],
-                   'get_intensities':[False,('True','False')],
+                   'get_intensities':'False',
                    'intensity_radius':[2,1,200,1]
                    },
         'hough':{'min_dist':[105,1,501,2],
@@ -69,14 +69,14 @@ def create_param_file(filename):
                   'p2':[39, 1, 201,2],
                   'min_rad':[10, 1, 301,2],
                   'max_rad':[50, 1, 301,2],
-                  'get_intensities':[False,('True','False')]
+                  'get_intensities':'False'
                  },
         'contours':{'noise_cutoff':[2,1,50,1],
                     'area_min':[20, 1, 2000, 1],
                     'area_max':[2000, 1, 20000, 1],
                     'aspect_min':[1.0,1.0,10.0,0.1],
                     'aspect_max':[10.0,1.0,10.0,0.1],
-                    'get_intensities':[False,('True','False')]
+                    'get_intensities':'False'
                     },
         }
 

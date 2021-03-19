@@ -16,32 +16,40 @@ All these methods operate on single frames
 
 def angle(df, f_index=None, parameters=None, call_num=None):
     '''
-    Angle assumes you want to calculate from x_column as x and y_column as y
-    it uses tan2 so that -x and +y give a different result to +x and -y
+    Angle calculates the angle specified by two components.
+    
+    Notes
+    -----
+    Usually angle is used following calculating the difference along x and y trajectories.
+    It assumes you want to calculate from x_column as dx and y_column as dy
+    it uses tan2 so that -dx and +dy give a different result to +dx and -dy
     Angles are output in radians or degrees given by parameters['angle']['units']
-    If you want to get the angle along a trajectory you need to run the running difference
-    method on each column of x and y coords to create dx,dy then send this to angle.
-
-
-    Parameters  :
     
-    x_column    :   x component of the df for calculating angle
-    y_column    :   y component of the df for calculating angle
-    output_name :   New column name to store angle df
-    units     :   'degrees' or 'radians'
+       
+    x_column
+        x component for calculating angle
+    y_column
+        y component for calculating angle
+    output_name
+        New column name to store angle df
+    units
+        'degrees' or 'radians'
     
-    Inputs:
+    Args
+    ----
 
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
 
-    Outputs:
-    
-    updated dfframe of all df
+    Returns
+    -------
+        updated dataframe including new column
 
     '''
     try:
@@ -69,28 +77,44 @@ def angle(df, f_index=None, parameters=None, call_num=None):
 
 def classify(df, f_index=None, parameters=None, call_num=None):
     '''
-    Takes a column of df and classifies whether its values are within 
-    the specified range. 
+    Classifies particles based on values in a particular column
 
-    Parameters  :
 
-    column_name     :   input df column
-    output_name     :   column name for classier
-    lower_threshold :   min value to belong to classifier
-    upper_threshold':   max value to belong to classifier
+    Notes
+    -----
+    Takes a column of data and classifies whether its values are within 
+    the specified range. If it is a True is put next to that particle in
+    that frame in a new classifier column. This can be used to select 
+    subsets of particles for later operations.
+
     
-    Inputs:
 
-    df        :   The entire stored dataframe
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
+    column_name
+        input data column
+    output_name
+        column name for classification (True or False)
+    lower_threshold
+        min value to belong to classifier
+    upper_threshold
+        max value to belong to classifier
     
-    updated dfframe of all df
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
 
     '''
 
@@ -119,55 +143,37 @@ def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
         return False
 
 
-def contour_area(df, f_index=None, parameters=None, call_num=None):
-    '''
-    Calculate the area of a contour. 
-
-    Parameters  :
-    
-    output_name :   New column name to store area df
-    
-    Inputs:
-
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    updated dfframe of all df
-
-    '''
-    try:
-        method_key = get_method_key('contour_area', call_num)
-        output_name = parameters[method_key]['output_name']
-
-        if output_name not in df.columns:
-            df[output_name] = np.nan
-        
-        df_frame = df.loc[f_index]
-        contours = df_frame[['contours']].values
-        areas = []
-
-        if np.shape(contours)[0] == 1:
-            df_empty = np.isnan(contours[0])
-            if np.all(df_empty):
-                #0 contours
-                return df
-        
-        for index, contour in enumerate(contours):
-            areas.append(cv2.contourArea(contour[0]))
-
-        df_frame[output_name] = np.array(areas)
-        df.loc[f_index] = df_frame
-        return df
-    except Exception as e:
-        raise ContourAreaError(e)
-
 def contour_boxes(df, f_index=None, parameters=None, call_num=None):
+    """
+    Contour boxes calculates the rotated minimum area bounding box
+
+    Notes
+    -----
+    This method is designed to work with contours. It calculates the minimum
+    rotated bounding rectangle that contains the contour. This is useful for 
+    calculating the orientation of shapes. It calculates the centre of mass of
+    the new rectangle 'box_cx' and 'box_cy', the angle of the long axis of the box relative
+    to the x axis 'box_angle'. It also stores length ('box_length'), width ('box_width'), area ('box_area')
+    and the coordinates of the corners ('box_pts').
+
+
+
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+    """
 
     try:
         method_key = get_method_key('contour_boxes', call_num)
@@ -243,24 +249,31 @@ def logic_AND(df, f_index=None, parameters=None, call_num=None):
     '''
     Applys a logical and operation to two columns of boolean values.
 
-    Parameters  :
 
-    column_name     :   input df column
-    column_name2    :   input df column 2
-    output_name     :   column name for classier
-        
-    Inputs:
-
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
+    column_name
+        input data column
+    column_name2
+        input data column
+    output_name
+        column name for the result
+          
     
-    updated dfframe of all df
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
 
     '''
     
@@ -285,23 +298,31 @@ def logic_NOT(df, f_index=None, parameters=None, call_num=None):
     '''
     Apply a logical not operation to a column of boolean values.
 
-    Parameters  :
 
-    column_name     :   input df column
-    output_name     :   column name for classier
+    column_name
+        input data column
+    column_name2
+        input data column
+    output_name
+        column name for the result
         
-    Inputs:
-
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    updated dfframe of all df
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
 
     '''
 
@@ -325,24 +346,32 @@ def logic_OR(df, f_index=None, parameters=None, call_num=None):
     '''
     Apply a logical or operation to two columns of boolean values.
 
-    Parameters  :
-
-    column_name     :   input df column
-    column_name2     :   input df column 2
-    output_name     :   column name for classier
-        
-    Inputs:
-
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    updated dfframe of all df
+
+    column_name
+        input data column
+    column_name2
+        input data column
+    output_name
+        column name for the result
+        
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
 
     '''
 
@@ -370,24 +399,29 @@ def magnitude(df, f_index=None, parameters=None, call_num=None):
     '''
     Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
 
-    Parameters  :
+    
     
     column_name     :   First column
     column_name     :   Second column
     output_name     :   Column name for magnitude df
     
-    Inputs:
-
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    updated dfframe of all df
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
 
     '''
     try:
@@ -409,30 +443,43 @@ def magnitude(df, f_index=None, parameters=None, call_num=None):
 
 def neighbours(df, f_index=None, parameters=None, call_num=None):
     '''
-    Neighbours uses either a kdtree or a delaunay method to locate the neighbours
+    Find the nearest neighbours of a particle
+
+
+    Notes
+    -----
+    Neighbours uses two different methods to find the nearest neighbours: a kdtree (https://en.wikipedia.org/wiki/K-d_tree) 
+    or a delaunay method (https://en.wikipedia.org/wiki/Delaunay_triangulation) to locate the neighbours
     of particles in a particular frame. It returns the indices of the particles
     found to be neighbours in a list. You can also select a cutoff distance above which
-    two particles are no longer considered to be neighbours. The kdtree essentially finds
-    those particles closest. The delaunay method is explained here: https://en.wikipedia.org/wiki/Delaunay_triangulation
+    two particles are no longer considered to be neighbours. To visualise the result
+    you can use "networks" in the annotation section.
 
-    Parameters  :
 
-    method     :   'delaunay' or 'kdtree'
-    neighbours     :   max number of neighbours to find. This is only relevant for the kdtree.
-    output_name     :   column name for classier
+    method
+        'delaunay' or 'kdtree'
+    neighbours
+        max number of neighbours to find. This is only relevant for the kdtree.
+    cutoff
+        distance in pixels beyond which particles are no longer considered neighbours
         
-    Inputs:
-
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    updated dfframe of all df
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
 
     '''
     try:
@@ -489,6 +536,33 @@ def _find_delaunay(df, parameters=None, call_num=None):
     return df
 
 def voronoi(df, f_index=None, parameters=None, call_num=None):
+    """
+    Calculate the voronoi network of particle.
+
+    Notes
+    -----
+    The voronoi network is explained here: https://en.wikipedia.org/wiki/Voronoi_diagram
+    This function also calculates the associated area of the voronoi cells.To visualise the result
+    you can use "voronoi" in the annotation section.
+
+
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+    """
+
     try:
         method_key = get_method_key('voronoi')
         
@@ -554,29 +628,36 @@ multiple frames have been processed and you are using part.
 '''
 def difference(df, f_index=None, parameters=None, call_num=None):
     '''
-    Difference in frames of a column of dfframe.
-    The differences are calculated at separations equal
-    to span along the column. Where this is not possible
-    eg at both ends of column, the value np.Nan is inserted.
-    
-    Parameters  :
-    
-    column_name     :   Column name to calculate differences on
-    output_name     :   Name to give to calculated df'x_diff',
-    span            :   Gap in frames to calculate difference on
-    
-    Inputs:
+    Difference of a particles values. 
 
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
+    Notes
+    -----
+    Returns the difference of a particle's values at span separation in frames to a new column.
     
-    updated dfframe of all df
+
+    column_name
+        Input column name
+    output_name
+        Column name for median data
+    span
+        number of frames over which to calculate rolling median
+    
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
 
     '''
     try:    
@@ -602,27 +683,38 @@ def difference(df, f_index=None, parameters=None, call_num=None):
 
 def mean(df, f_index=None, parameters=None, call_num=None):
     '''
-    Rolling Mean of a column of values. Returns the mean of a particle's values to a new
-    column.
+    Mean of a particles values. 
 
-    Parameters  :
+    Notes
+    -----
+    Returns the mean of a particle's values to a new column. Useful
+    to reduce fluctuations or tracking inaccuracies.
     
-    column_name     :   Input column name
-    output_name     :   Column name for max df
-    span            :   number of frames over which to calculate rolling mean
-    
-    Inputs:
 
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
+    column_name
+        Input column name
+    output_name
+        Column name for mean data
+    span
+        number of frames over which to calculate rolling mean
     
-    updated dataframe of all df
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
 
     '''
     
@@ -649,27 +741,39 @@ def mean(df, f_index=None, parameters=None, call_num=None):
 
 def median(df, f_index=None, parameters=None, call_num=None):
     '''
-    Median of a columns values. Returns the median of a particle's values to a new
-    column.
+    Median of a particles values. 
 
-    Parameters  :
+    Notes
+    -----
+    Returns the median of a particle's values to a new column. Useful 
+    before classification to answer to which group a particle's properties
+    usually belong.
     
-    column_name     :   Input column name
-    output_name     :   Column name for median df
-    span            :   number of frames over which to calculate rolling median
-    
-    Inputs:
 
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
+    column_name
+        Input column name
+    output_name
+        Column name for median data
+    span
+        number of frames over which to calculate rolling median
     
-    updated dfframe of all df
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
 
     '''
     
@@ -697,38 +801,42 @@ def median(df, f_index=None, parameters=None, call_num=None):
 
 def rate(df, f_index=None, parameters=None, call_num=None):
     '''
-    Rate of change of df in a column. Rate function takes an input column and calculates the
-    rate of change of the quantity. It takes into account
-    the fact that particles go missing from frames. Where this
-    is the case the rate = change in quantity between observations
-    divided by the gap between observations.
-    Nans are inserted at end and beginning of particle trajectories
-    where calc is not possible.
+    Rate of change of a particle property with frame
+    
+    Notes
+    -----
+    Rate function takes an input column and calculates the
+    rate of change of the quantity. Nans are inserted at end and 
+    beginning of particle trajectories where calc is not possible.
+    
 
-    We sort by particle and then calculate diffs. This leads to differences
-    between pairs of particles above one another in dfframe. We then backfill
-    these slots with Nans.
-
-    Parameters  :
-
-    column_name     :   Input column names
-    output_name     :   Output column name
-    fps             :   numerical value indicating the number of frames per second
-    span            :   number of frames over which to calculate rolling difference
+    column_name
+        Input column names
+    output_name
+        Output column name
+    fps
+        numerical value indicating the number of frames per second
+    span
+        number of frames over which to calculate rolling difference
     
     
-    Inputs:
-
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    updated dfframe of all df
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
 
     '''
     try:
@@ -761,29 +869,38 @@ This function allows you to load data into a column opposite each frame number
 '''
 def add_frame_data(df, f_index=None, parameters=None, call_num=None):
     '''
-    Allows you to manually add a new column of df to the dfframe. The df
-    is df which has a single value per frame. This is done by creating a .csv
-    or .xlsx file and reading it in within the gui. The file should have two columns
-    The first column should have a complete list of all the frame numbers starting at zero
-    The second column should have the df for each frame listed. It can either be a .csv 
-    or a .xlsx file.
-
-    Parameters  :
-    df_filename       :   Filename with extension for the df to be loaded.
-    new_column_name     :   Name for column to which df is to be imported.    
-
-    Inputs:
-
-    df        :   The dfframe of all collected df
-    f_index     :   Integer specifying the frame for which calculations need to be made.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
+    Add frame data allows you to manually add a new column of df to the dfframe. 
     
-    updated dfframe of all df. 
+    Notes
+    -----
+    This is done by creating a .csv or .xlsx file and reading it in within the gui. 
+    The file should have two columns: the first column should have a complete list of 
+    all the frame numbers starting at zero; the second column should have the data for 
+    each frame listed. 
+
+    
+    data_filename
+        filename with extension for the df to be loaded. Assumes file is in same directory as video
+    new_column_name
+        Name for column to which data is to be imported.    
+
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
 
     '''
     try:

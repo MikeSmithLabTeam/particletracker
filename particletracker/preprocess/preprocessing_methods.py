@@ -10,28 +10,37 @@ from ..user_methods import *
 
 def adaptive_threshold(frame, parameters=None, call_num=None):
     '''
+    Perform an adaptive threshold on a grayscale image
+
+    Notes
+    -----
     This applies OpenCVs adaptive threshold. This differs from global threshold
     in that for each pixel the cutoff threshold is defined based on a block of local
     pixels around it. This enables you to cope with gradual changes in illumination
     across the image etc.
 
-    Parameters  :
-
-    block_size      :   Size of local block of pixels to calculate threshold on
-    C               :   The mean-c value see here: http://homepages.inf.ed.ac.uk/rbf/HIPR2/adpthrsh.htm
-    ad_mode         :   Inverts behaviour
-
-    Inputs:
-
-    frame       :   This is must be a grayscale / single colour channel image
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    binary image with 255 above threshold else 0.
+
+    block_size
+        Size of local block of pixels to calculate threshold on
+    C
+        The mean-c value see here: http://homepages.inf.ed.ac.uk/rbf/HIPR2/adpthrsh.htm
+    ad_mode
+        Inverts behaviour (True or False)
+
+
+    Args
+    ----
+    frame
+        This is must be a grayscale / single colour channel image
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        binary image with 255 above threshold else 0.
 
     '''
     
@@ -53,24 +62,31 @@ def adaptive_threshold(frame, parameters=None, call_num=None):
 
 def blur(frame, parameters=None, call_num=None):
     '''
+    Performs a gaussian blur on the image
+
+    Notes
+    -----
     This applies OpenCVs gaussian blur to the image (https://en.wikipedia.org/wiki/Gaussian_blur)
     Usually useful to apply before subtracting 2 images.
 
-    Parameters:
-
-    blur_kernel :   single integer n specifying the size of kernel (n,n) 
-
-    Inputs:   
-
-    frame       :   This is must be a grayscale / single colour channel image
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    2d frame of type numpy ndarray
+
+    blur_kernel
+        single integer n specifying the size of kernel (n,n) 
+
+
+    Args
+    ----
+    frame
+        This must be a grayscale / single colour channel image
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        single colour channel image.
 
     '''
     
@@ -89,22 +105,22 @@ def colour_channel(frame, parameters=None, call_num=None):
     '''
     This selects the specified colour channel of a colour image
     
-    Parameters:
-
-    colour      :   options are 'red', 'green', 'blue', We assume frame has (blue, green, red) format
-                    which is OpenCVs default. 
-
-    Inputs:   
-
-    frame       :   This is must be a 8 bit colour image which it is assumed is in BGR format.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    2d frame of type numpy ndarray
+    colour
+        options are 'red', 'green', 'blue', We assume frame has (blue, green, red) format which is OpenCVs default. 
+
+    Args
+    ----
+    frame
+        This must be a colour / single colour channel image
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        Single colour channel image
 
     '''
 
@@ -130,27 +146,33 @@ def colour_channel(frame, parameters=None, call_num=None):
 
 def dilation(frame, parameters=None, call_num=None):
     '''
+    Dilate a binary image
+
     This performs a dilation operation on a binary image. Dilation adds
     pixels to the edge of white regions according to the kernel and is
     useful for closing small holes or gaps.
     See an explanation -  https://en.wikipedia.org/wiki/Dilation_(morphology)
     
-    Parameters:
-
-    dilation_kernel :   single integer n specifying dimension of kernel (n,n)
-    iterations      :   how many times to apply the operation
-                    
-    Inputs:   
-
-    frame       :   This is must be a binary image.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    binary image 
+
+    dilation_kernel
+        single integer n specifying dimension of kernel (n,n)
+    iterations
+        how many times to apply the operation
+
+                    
+    Args
+    ----
+    frame
+        This must be a binary image (8 bit)
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        binary image 
 
     '''
     try:
@@ -167,30 +189,32 @@ def dilation(frame, parameters=None, call_num=None):
         
 def distance(frame, parameters=None, call_num=None):
     '''
-    Implements the opencv distance transform. This
-    transform operates on a binary image. For each chosen white pixel
-    it calculates the distance to the nearest black pixel. This
+    Perform a distance transform on a binary image
+
+
+    Notes
+    -----
+    Implements the opencv distance transform. This transform operates on a binary image. 
+    For each chosen white pixel it calculates the distance to the nearest black pixel. This
     distance is the value of the chosen pixel. Thus if operating on
     a white circle the distance transform is a maximum at the middle and
     1 at the perimeter.
 
     See here for explanation : https://en.wikipedia.org/wiki/Distance_transform
 
-    Parameters:
-
-    No parameters
                     
-    Inputs:   
+    Args
+    ----
+    frame
+        This must be a binary image (8 bit)
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
 
-    frame       :   This must be a binary image.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    binary image 
+    Returns
+    -------
+        Grayscale image
 
     '''
     try:
@@ -203,6 +227,11 @@ def distance(frame, parameters=None, call_num=None):
 
 def erosion(frame, parameters=None, call_num=None):
     '''
+    Perform an erosion operation on a binary image
+
+
+    Notes
+    -----
     This performs an erosion operation on a binary image.
     This means pixels are set to zero based on their connectivity with neighbours
     Useful for separating objects and removing small pepper noise.
@@ -213,18 +242,20 @@ def erosion(frame, parameters=None, call_num=None):
 
     erosion_kernel :   single integer n specifying dimension of kernel (n,n)
     iterations      :   how many times to apply the operation
-                    
-    Inputs:   
-
-    frame       :   This is must be a binary image.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    binary image 
+    
+    Args
+    ----
+    frame
+        This must be a binary image (8 bit)
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        binary image with 255 above threshold else 0.
 
     '''
     try:
@@ -242,33 +273,38 @@ def erosion(frame, parameters=None, call_num=None):
 
 def gamma(image, parameters=None, call_num=None):
     '''
+    Apply look up table to image with power gamma
+
+    Notes
+    -----
     This generates a lookup table which maps the values 0-255 to 0-255
     however not in a linear way. The mapping follows a power law
     with exponent gamma/100.0.
  
-    Parameters:
-
-    gamma        :   single integer can be positive or negative. The true value applied
-                     is the displayed value / 100.
-                    
-    Inputs:   
-
-    frame       :   This is must be a grayscale image.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    grayscale image 
+
+    gamma
+        single float can be positive or negative. The true value applied is the displayed value / 100.
+                    
+    Args
+    ----
+    frame
+        This is must be a grayscale / single colour channel image
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        grayscale image
 
     '''
     try:
         method_key = get_method_key('gamma', call_num=call_num)
         params = parameters['preprocess'][method_key]
 
-        gamma = get_param_val(params['gamma'])/100.0
+        gamma = get_param_val(params['gamma'])
         # build a lookup table mapping the pixel values [0, 255] to
         # their adjusted gamma values
         invGamma = 1.0 / gamma
@@ -285,21 +321,20 @@ def grayscale(frame, parameters=None, call_num=None):
     '''
     This converts a colour image to a grayscale image
  
-    Parameters:
+   
 
-    No Parameters
-                    
-    Inputs:   
+    Args
+    ----
+    frame
+        This should be a colour image though won't error if given grayscale
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
 
-    frame       :   This should be a colour image though a grayscale image won't cause an error.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    grayscale image 
+    Returns
+    -------
+        grayscale image
 
     '''
     
@@ -317,24 +352,27 @@ def grayscale(frame, parameters=None, call_num=None):
     
 def invert(frame, parameters=None, call_num=None):
     '''
-    This inverts the supplied image. It will work with any kind of image. The result
+    Invert image
+
+
+    Notes
+    -----    
+    This inverts the supplied image. It will work with any kind of image (colour, grayscale, binary). The result
     for an 8bit image at each pixel is just 255 - currentvalue.
 
-    Parameters:
 
-    No Parameters
+    Args
+    ----
+    frame
+        will receive any type of image
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
 
-    Inputs:   
-
-    frame       :   A numpy style image
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
-    
-    image same format as input
+    Returns
+    -------
+        same as input image
 
     '''
     try:
@@ -345,24 +383,30 @@ def invert(frame, parameters=None, call_num=None):
 
 def medianblur(frame, parameters=None, call_num=None):
     '''
-    Performs a medianblur on the image. Setting each pixel to median
-    value in the area specified by the kernel.
-
-    Parameters:
-
-    kernel      :   an integer value n that specifies kernel shape (n,n)
-                    
-    Inputs:   
-
-    frame       :   This is must be a grayscale image.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
+    Performs a medianblur on the image. 
     
-    grayscale image 
+    Notes
+    -----
+    Setting each pixel to median value in the area specified by the kernel.
+
+    
+
+    kernel
+        An integer value n that specifies kernel shape (n,n)
+
+
+    Args
+    ----
+    frame
+        This is must be a grayscale / single colour channel image
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        grayscale image
 
     '''
     try:
@@ -377,34 +421,43 @@ def medianblur(frame, parameters=None, call_num=None):
 
 def subtract_bkg(frame, parameters=None, call_num=None):
     '''
-    This function will subtract a background image from the image. It has several 
-    options. mean will subtract the average value from the image. img will subtract a preprepared
-    img from the img.
+    Subtract a background
 
 
-    Parameters:
+    Notes
+    -----
+    This function will subtract a background from the image. It has several 
+    options: mean will subtract the average value from the image. img will subtract a preprepared
+    background img from the img. Before subtracting the background image it is blurred according to
+    the settings.
 
-    subtract_bkg_type   :   Type of background substraction to be performed. Options are
-                            are 'mean' or 'img'. 
-    subtract_bkg_filename:  filename of background image. If None it will look for a file named
-                            moviefilename_bkgimg.png. Otherwise it looks for the filename specified
-                            The filename is assumed to be in the same directory as the movie. Alternatively
-                            specify the full path to the file. 
-    subtract_bkg_blur_kernel    :   An integer n specifying the kernel size (n,n) to be used in blurring bkg image
-    subtract_bkg_invert         : Subtract bkg from image or image from background.
-    subtract_bkg_norm           : Stretch range of intensities on resultant image to fill 0-255 - True or False               
+
     
-    Inputs:   
 
-    frame       :   This is must be a grayscale image.
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
+    subtract_bkg_type
+        Type of background substraction to be performed. Options are are 'mean' or 'img'. 
+    subtract_bkg_filename
+        filename of background image. If None it will look for a file named moviefilename_bkgimg.png. Otherwise it looks for the filename specified. The filename is assumed to be in the same directory as the movie. Alternatively specify the full path to the file. 
+    subtract_bkg_blur_kernel
+        An integer n specifying the kernel size (n,n) to be used in blurring bkg image
+    subtract_bkg_invert
+        Subtract bkg from image or image from background.
+    subtract_bkg_norm
+        Stretch range of outputted intensities on resultant image to fill 0-255 - True or False               
     
-    grayscale image 
+    
+    Args
+    ----
+    frame
+        This is must be a grayscale / single colour channel image
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        grayscale image
 
     '''
     
@@ -457,25 +510,31 @@ def subtract_bkg(frame, parameters=None, call_num=None):
 
 def threshold(frame, parameters=None, call_num=None):
     '''
+    Apply a global threshold
+
     This applies OpenCVs threshold. This sets pixels to 255 or 0 depending on whether
     they are above or below the given value.
 
-    Parameters  :
     
-    threshold   :   Threshold value to determine whether pixels are black or white
-    th_mode     :   1 or 0 to specify whether above threshold is white or black.
-
-    Inputs:
-
-    frame       :   This is must be a grayscale / single colour channel image
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
     
-    binary image with 255 above threshold else 0.
+    threshold
+        Threshold value to determine whether pixels are black or white
+    th_mode
+        True or False to specify whether above threshold is white or black.
+
+    
+    Args
+    ----
+    frame
+        This is must be a grayscale / single colour channel image
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        grayscale image
 
     '''
     try:
@@ -491,30 +550,37 @@ def threshold(frame, parameters=None, call_num=None):
     except Exception as e:
         raise ThresholdError(e)
        
-def variance(frame, parameters=None, call_num=None):
+def absolute_diff(frame, parameters=None, call_num=None):
     '''
+    Calculates the absolute difference of pixels from a reference value
+
+    Notes
+    -----
     This function returns the magnitude of the difference in intensity of a pixel relative 
     to a specified value. This is often useful in brightfield microscopy if you have objects 
     slightly above and below the focal plane as one set will look darker than the background 
     and the other set will look brighted than the background.
 
-    Parameters  :
     
-    value           :   The value to take the absolute difference relative to
-    variance_norm   :   Stretch the intensity values to the full range 0-255, True or False
     
-    Inputs:
-
-    frame       :   This is must be a grayscale / single colour channel image
-    parameters  :   Dictionary like object (same as .param files or 
-                        output from general.param_file_creator.py
-    call_num    :   Usually None but if multiple calls are made modifies
-                    method name with get_method_key
-
-    Outputs:
+    value
+        The value to take the absolute difference relative to
+    variance_norm
+        Stretch the intensity values to the full range 0-255, True or False
     
-    grayscale image
+    
+    Args
+    ----
+    frame
+        This is must be a grayscale / single colour channel image
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
 
+    Returns
+    -------
+        grayscale image
     '''
     try:    
         method_key = get_method_key('variance', call_num=call_num)

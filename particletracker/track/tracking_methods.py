@@ -18,9 +18,51 @@ Tracking Methods
 
 '''
 
-def trackpy(frame,_, parameters=None, call_num=None):
+def trackpy(ppframe,frame, parameters=None):
+    """
+    Trackpy implementation
+
+    Notes
+    -----
+    This method uses the trackpy python library which can be found here: 
+    http://soft-matter.github.io/trackpy/v0.4.2/
+    If you use this method in a research publication be sure to cite according to 
+    the details given here:
+    http://soft-matter.github.io/trackpy/v0.4.2/introduction.html
+
+    using get_intensities will seriously slow down the processing so optimise
+    everything else first.
+
+
+    size_estimate
+        An estimate of the objects to be tracked feature size in pixels
+    invert
+        Set True if looking for dark objects on bright background
+    get_intensities
+        If not False results in the software extracting a circular region around each particle of radius set by intensity radius and running a method in intensity_methods. Select the method by writing its name in the get_intensities box.
+
+
+    Args
+    ----
+    ppframe
+        The preprocessed frame upon which tracking is to be performed.
+    frame
+        The unprocessed frame on which get_intensities is run.
+    parameters
+        Nested dictionary specifying the tracking parameters
+    
+    
+    Returns
+    -------
+        Dataframe containing data from a single frame
+
+
+    """
+
+
+
     try:
-        method_key = get_method_key('trackpy', call_num)
+        method_key = get_method_key('trackpy')
         df = tp.locate(frame, get_param_val(parameters[method_key]['size_estimate']), invert=get_param_val(parameters[method_key]['invert']))
 
         if get_param_val(parameters[method_key]['get_intensities']):
@@ -51,21 +93,56 @@ def trackpy(frame,_, parameters=None, call_num=None):
         
 
 
-def hough(frame, _,parameters=None, call_num=None):
+def hough(ppframe, frame,parameters=None):
     '''
-    Performs the opencv hough circles transform to locate
-    circles in an image.
+    Performs the opencv hough circles transform to locate circles in an image.
 
-    :param frame:
-    :param parameters:
-    :param call_num:
-    :return:
+    Notes
+    -----
+    This method uses the opencv hough circles algorithm to look for circles in an image.
+    It works well provided you constrain the radii searched to reasonably tight range. It
+    is particularly good for tightly bunched large particles. To estimate the appropriate
+    range of radii double left click on the image will give you a coordinate or you can use
+    the circular crop tool to start off with about the right values. Set min dist that the 
+    centre of two circles can approach (a bit less than diameter). You then need to use P1 
+    and P2 which are different gradient terms associated with the image. P1 is usually bigger
+    than P2. Annotation with circles will automatically pick up the radii from the tracking so
+    can be used to help get the settings right.
+
+
+    min_dist
+        minimum distance in pixels between two particles
+    min_rad
+        minimum radius of particles in pixels
+    max_rad
+        maximum radius of particles in pixels
+    p1
+        Control parameter 
+    p2
+        Control parameter
+    get_intensities
+        If not False results in the software extracting a circular region around each particle of radius set by tracking and running a method in intensity_methods. Select the method by writing its name in the get_intensities box.
+
+
+    Args
+    ----
+    ppframe
+        The preprocessed frame upon which tracking is to be performed.
+    frame
+        The unprocessed frame on which get_intensities is run.
+    parameters
+        Nested dictionary specifying the tracking parameters
+    
+    
+    Returns
+    -------
+        Dataframe containing data from a single frame
     '''
     try:
-        method_key = get_method_key('hough', call_num)
+        method_key = get_method_key('hough')
 
         circles = np.squeeze(cv2.HoughCircles(
-            frame,
+            ppframe,
             cv2.HOUGH_GRADIENT, 1,
             get_param_val(parameters[method_key]['min_dist']),
             param1=get_param_val(parameters[method_key]['p1']),
@@ -108,15 +185,49 @@ def hough(frame, _,parameters=None, call_num=None):
         raise HoughCirclesError(e)
 
 
-def contours(pp_frame, frame, parameters=None, call_num=None):
+def contours(pp_frame, frame, parameters=None):
     '''
-    contours stores: the centroid cx, cy, area enclosed by contour,
+    Implementation of OpenCVs contours.
+
+
+    Notes
+    -----
+    To use contours you must have preprocessed the image to produce a black and white
+    binary image with separated object. Contours stores: the centroid x, y, area enclosed by contour,
     the bounding rectangle (not rotated) which is used with contour to generate
     mask so that you can extract pixels from original image
     and perform some analysis.
+
+
+    area_min
+        Minimum contour area to store object
+    area_max
+        Maximum contour area to store object
+    aspect_min
+        Minimum contour aspect ratio to store object
+    aspect_max
+        Maximum contour aspect ratio to store object
+    get_intensities
+        If not False results in the software extracting a region around each particle. Pixels outside the contour are masked. The remaining particle image is processed using get_intensities method. Select the method by writing its name in the get_intensities box.
+
+
+    Args
+    ----
+    ppframe
+        The preprocessed frame upon which tracking is to be performed.
+    frame
+        The unprocessed frame on which get_intensities is run.
+    parameters
+        Nested dictionary specifying the tracking parameters
+    
+    
+    Returns
+    -------
+        Dataframe containing data from a single frame
+
     '''
     try:  
-        method_key = get_method_key('contours',call_num=call_num)
+        method_key = get_method_key('contours')
         params = parameters[method_key]
         get_intensities = get_param_val(params['get_intensities'])
     

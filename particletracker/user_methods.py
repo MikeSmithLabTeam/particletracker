@@ -223,6 +223,12 @@ def postprocessor_method_name(data, f_index=None, parameters=None, call_num=None
     try:
         method_key = get_method_key('postprocessor_method_name', call_num=call_num)
         params = parameters['postprocess'][method_key]
+        
+        if 'new_column_name' not in data.columns:
+            data['new_column_name'] = np.nan
+        
+        # For calc that just needs a single frame
+        df_frame = data.loc[f_index]
 
         """
         Write the body of your code
@@ -249,7 +255,7 @@ def postprocessor_method_name(data, f_index=None, parameters=None, call_num=None
 
 
         """
-        
+        df.loc[f_index] = df_frame
         return df
     except Exception as e:
         raise PPMethodNameError(e)

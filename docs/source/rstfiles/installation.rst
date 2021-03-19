@@ -4,19 +4,22 @@ Installation and Getting Started
 Installation
 ------------
 
-There are two different options for installation. You can download and install the precompiled
-executables or you can install the python code. The first method enables you to do pretty much
-everything but won't allow you to add to or modify the code to do something specific to your use
-case. One feature of this project is that we have tried to make extending it as easy as possible. 
-It might mean as little as adding a few lines of python code into a preconfigured template. In
-case you are coming to this new to python or new to programming we detail the steps in a lot of detail.
-If this is like teaching you to suck eggs skip through! 
+There are two different options for installation. 
+
+1. You can download and install the precompiled executables
+2. You can install the python code. 
+
+The first method enables you to do pretty much everything but won't allow you to add to or modify the code
+to do something specific to your use case. One feature of this project is that we have tried to make extending it as easy as possible. 
+It might mean as little as adding a few lines of python code into a preconfigured template.
 
 You can download and install the precompiled versions here:
 
 
 
-To install the python version here is a step by step recommended guide to setting things up:
+To install the python version here is a step by step recommended guide to setting things up.  In
+case you are coming to this new to python or new to programming we provide the steps in a lot of detail.
+If you are comfortable in python skip through! :
 
 - Download and install miniconda (https://docs.conda.io/en/latest/miniconda.html)
 - Open a conda terminal
@@ -26,19 +29,20 @@ On Linux and Mac open a terminal.
 
 - Create a conda environment by typing "conda create --name particle"
 - Type "conda activate particle"
-- conda install pyqt
 - conda install git
+- conda install pyqt
+- conda install pytables
 - pip install git+https://github.com/MikeSmithLabTeam/particletracker
-- conda install jupyterlab (Optional - nice way to work with the final data in a jupyter notebook)
 
-- When installing there appears to be a bug that affects the pandas HDFSTore.
-This can be resolved by: pip uninstall pytables, and then: conda install -c anaconda pytables
-
--On Windows we ran into an error that seemed to require the installation of the 
-Microsoft Visual Studio Build tools. These can be installed from here:
+On Windows we sometimes ran into an error at this point concerning the hdflib that 
+can be resolved by installing the Microsoft Visual Studio Build tools. Once you've
+installed them restart computer, open anaconda terminal, activate environment (step 2 above)
+Rerun the final command above. The build tools can be installed from here:
 
 https://visualstudio.microsoft.com/visual-cpp-build-tools/ 
 
+(Optional - nice way to work with the final data in a jupyter notebook) 
+- conda install jupyterlab 
 
 to upgrade use:
 

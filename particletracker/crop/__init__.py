@@ -65,9 +65,7 @@ class ReadCropVideo(ReadVideo):
         for method in self.parameters['crop_method']:
             if 'crop' not in method:
                 points = self.parameters[method]
-                if points is None:
-                    pass
-                else:
+                if points is not None:
                     if 'mask_ellipse' in method: 
                         mask = self.mask_ellipse(points)
                     elif 'mask_polygon' in method:

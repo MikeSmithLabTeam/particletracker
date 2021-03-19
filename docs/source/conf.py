@@ -12,8 +12,9 @@
 #
 import os
 import sys
+sys.path.insert(0, os.path.abspath('.'))
+0, os.path.abspath('..')
 sys.path.insert(0, os.path.abspath('../..'))
-
 
 # -- Project information -----------------------------------------------------
 
@@ -35,7 +36,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon'
 
 #Although the docs built the automodule didn't import the code
 #It built locally with 'make html' but not when pushed and built on ReadTheDocs
-autodoc_mock_imports = ['cv2', 'matplotlib','numpy','scipy','slicerator','ffmpeg','sh']
+autodoc_mock_imports = ['cv2', 'matplotlib','numpy','scipy','slicerator','ffmpeg','sh', 'pandas', 'importlib','trackpy']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -57,3 +58,5 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 #html_static_path = ['_static']
+
+pygments_style = 'sphinx'
