@@ -306,15 +306,14 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.status_bar.hide)
-        self.timer.start(4000)
+        self.timer.start(8000)
         self.status_bar.setStyleSheet("background-color : green")
         self.status_bar.showMessage("Coords (x,y): ("+str(x)+','+str(y) +') \t Intensities [r,g,b]:'+str(output[int(y),int(x),:]))    
         self.show()
-    
+  
 
     def reset_statusbar(status_bar):
         status_bar.hide()
-
 
     @pyqtSlot(int)
     def frame_selector_slot(self, value):

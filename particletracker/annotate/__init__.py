@@ -38,9 +38,12 @@ class TrackingAnnotator:
             self.cap.set_frame(start)
             for f in tqdm(range(start, stop, step), 'Annotating'):
                 frame = self.cap.read_frame()
-                for method in self.parameters['annotate_method']:
-                    method_name, call_num = get_method_name(method)
-                    frame = getattr(am, method_name)(frame, data, f, self.parameters, call_num=call_num)
+                try:
+                    for method in self.parameters['annotate_method']:
+                        method_name, call_num = get_method_name(method)
+                        frame = getattr(am, method_name)(frame, data, f, self.parameters, call_num=call_num)
+                except:
+                    print('No data to annotate')
                 if f_index is None:
                     self.out.add_frame(frame)
             if f_index is None:

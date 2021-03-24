@@ -307,12 +307,12 @@ def gamma(image, parameters=None, call_num=None):
         gamma = get_param_val(params['gamma'])
         # build a lookup table mapping the pixel values [0, 255] to
         # their adjusted gamma values
+        if gamma == 0:
+            gamma = 0.000001
         invGamma = 1.0 / gamma
 
-        table = np.array([((i / 255.0) ** invGamma) * 255
-                      for i in np.arange(0, 256)]).astype("uint8")
+        table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
 
-    
         return cv2.LUT(image, table)
     except Exception as e:
         raise GammaError(e)
@@ -549,6 +549,40 @@ def threshold(frame, parameters=None, call_num=None):
         return out
     except Exception as e:
         raise ThresholdError(e)
+
+def fill_holes(frame, parameters=None, call_num=None):
+    '''
+    Fills holes in a binary image.
+
+    Notes
+    -----
+    This function uses a combination of flood fills to fill in enclosed holes in 
+    objects in a binary image.
+
+    Args
+    ----
+    frame
+        This is must be a binary image
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        binary image
+
+    '''
+    try:
+        im_floodfill = frame.copy()
+        h, w = frame.shape[:2]
+        mask = np.zeros((h+2, w+2), np.uint8)
+        cv2.floodFill(im_floodfill, mask, (0,0), 255)
+        im_floodfill_inv = cv2.bitwise_not(im_floodfill)
+        out = frame | im_floodfill_inv
+        return out
+    except Exception as e:
+        raise FillHolesError(e)
        
 def absolute_diff(frame, parameters=None, call_num=None):
     '''
@@ -565,7 +599,7 @@ def absolute_diff(frame, parameters=None, call_num=None):
     
     value
         The value to take the absolute difference relative to
-    variance_norm
+    normalise
         Stretch the intensity values to the full range 0-255, True or False
     
     
@@ -583,7 +617,7 @@ def absolute_diff(frame, parameters=None, call_num=None):
         grayscale image
     '''
     try:    
-        method_key = get_method_key('variance', call_num=call_num)
+        method_key = get_method_key('absolute_diff', call_num=call_num)
         params = parameters['preprocess'][method_key]
         mean_val = int(get_param_val(params['value']))
         subtract_frame = mean_val*np.ones(np.shape(frame), dtype=np.uint8)         
@@ -594,7 +628,7 @@ def absolute_diff(frame, parameters=None, call_num=None):
         frame2 = cv2.normalize(frame2, frame2,0,255,cv2.NORM_MINMAX)
         frame = cv2.add(frame1, frame2)
 
-        if get_param_val(params['variance_norm']) == True:
+        if get_param_val(params['normalise']) == True:
             frame = cv2.normalize(frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
 
         return frame

@@ -675,6 +675,7 @@ def difference(df, f_index=None, parameters=None, call_num=None):
         
         df_frames = df.loc[start:f_index,[column,'particle']]
         df_output=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+        df_output.reset_index('particle', inplace=True)
         df.loc[f_index,[output_name]]=df_output.loc[f_index]
     
         return df
@@ -734,7 +735,9 @@ def mean(df, f_index=None, parameters=None, call_num=None):
         
         df_frames = df.loc[start:f_index,[column,'particle']]
         df_output=df_frames.groupby('particle')[column].rolling(span).mean().transform(lambda x:x).to_frame(name=output_name)
+        df_output.reset_index('particle', inplace=True)
         df.loc[f_index,[output_name]]=df_output.loc[f_index]
+        print(df.loc[f_index])
         return df
     except Exception as e:
         raise MeanError(e)
@@ -786,14 +789,15 @@ def median(df, f_index=None, parameters=None, call_num=None):
         if output_name not in df.columns:
             df[output_name] = np.nan
 
-        start=f_index-span - 1
+        start=f_index-span + 1
         if start < 0:
             start = 0
         
         df_frames = df.loc[start:f_index,[column,'particle']]
         df_output=df_frames.groupby('particle')[column].rolling(span).median().transform(lambda x:x).to_frame(name=output_name)
+        df_output.reset_index('particle', inplace=True)
         df.loc[f_index,[output_name]]=df_output.loc[f_index]
-    
+        
         return df
     except Exception as e:
         raise MedianError(e)
@@ -856,6 +860,7 @@ def rate(df, f_index=None, parameters=None, call_num=None):
         
         df_frames = df.loc[start:f_index,[column,'particle']]
         df_output=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+        df_output.reset_index('particle', inplace=True)
         df.loc[f_index,[output_name]]=df_output.loc[f_index]*float(fps)
         return df
     except Exception as e:

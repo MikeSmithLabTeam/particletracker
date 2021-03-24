@@ -63,9 +63,9 @@ def trackpy(ppframe,frame, parameters=None):
 
     try:
         method_key = get_method_key('trackpy')
-        df = tp.locate(frame, get_param_val(parameters[method_key]['size_estimate']), invert=get_param_val(parameters[method_key]['invert']))
+        df = tp.locate(ppframe, get_param_val(parameters[method_key]['size_estimate']), invert=get_param_val(parameters[method_key]['invert']))
 
-        if get_param_val(parameters[method_key]['get_intensities']):
+        if get_param_val(parameters[method_key]['get_intensities']) != 'False':
             x = df['x'].to_numpy()
             y = df['y'].to_numpy()
             intensity = []
@@ -87,6 +87,8 @@ def trackpy(ppframe,frame, parameters=None):
 
                 intensity.append(value)
             df['intensities'] = np.array(intensity)
+        if get_param_val(parameters[method_key]['show_output']):
+            print(df.head(n=50))
         return df
     except Exception as e:
         raise TrackpyError(e)
@@ -140,23 +142,22 @@ def hough(ppframe, frame,parameters=None):
     '''
     try:
         method_key = get_method_key('hough')
-
         circles = np.squeeze(cv2.HoughCircles(
-            ppframe,
-            cv2.HOUGH_GRADIENT, 1,
-            get_param_val(parameters[method_key]['min_dist']),
-            param1=get_param_val(parameters[method_key]['p1']),
-            param2=get_param_val(parameters[method_key]['p2']),
-            minRadius=get_param_val(parameters[method_key]['min_rad']),
-            maxRadius=get_param_val(parameters[method_key]['max_rad'])))
-
+                    ppframe,
+                    cv2.HOUGH_GRADIENT,
+                    1,
+                    get_param_val(parameters[method_key]['min_dist']),
+                    param1=get_param_val(parameters[method_key]['p1']),
+                    param2=get_param_val(parameters[method_key]['p2']),
+                    minRadius=get_param_val(parameters[method_key]['min_rad']),
+                    maxRadius=get_param_val(parameters[method_key]['max_rad'])))
         try:
             circles_dict = {'x': circles[:, 0], 'y': circles[:, 1], 'r': circles[:, 2]}
         except:
-            circles_dict={'x':[1],'y':[1],'r':[5]}
-
-
-        if parameters[method_key]['get_intensities']:
+            circles_dict={'x':[np.nan],'y':[np.nan],'r':[np.nan]}
+        
+        if parameters[method_key]['get_intensities'] != 'False':
+            
             intensity = []
             for i,_ in enumerate(circles_dict['x']):
                 xc = circles_dict['x'][i]
@@ -178,10 +179,14 @@ def hough(ppframe, frame,parameters=None):
 
             circles_dict['intensities']=np.array(intensity)
 
+        
         df = pd.DataFrame(circles_dict)
+        
+        if get_param_val(parameters[method_key]['show_output']):
+            print(df.head(n=50))
+
         return df
     except Exception as e:
-        return pd.DataFrame({'x':np.nan,'y':np.nan})
         raise HoughCirclesError(e)
 
 
@@ -229,7 +234,7 @@ def contours(pp_frame, frame, parameters=None):
     try:  
         method_key = get_method_key('contours')
         params = parameters[method_key]
-        get_intensities = get_param_val(params['get_intensities'])
+        get_intensities = (get_param_val(params['get_intensities']) != 'False')
     
         sz = np.shape(frame)
         if np.shape(sz)[0] == 3:
@@ -269,6 +274,8 @@ def contours(pp_frame, frame, parameters=None):
             info_headings = ['x', 'y', 'area', 'contours']
         df = pd.DataFrame(data=info, columns=info_headings)
 
+        if get_param_val(parameters[method_key]['show_output']):
+            print(df.head(n=50))
         return df
     except Exception as e:
         raise ContoursError(e)

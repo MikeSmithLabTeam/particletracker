@@ -11,12 +11,12 @@ def create_bkg_img(parameters=None, filename=None):
     Notes
     -----
 
-    If you want to use the variance or subtract_bkg methods with
-    the  parameters['subtract bkg type'] == 'img' option, you need to
+    If you want to use subtract_bkg methods with
+    the  parameters['subtract bkg type'] == 'image' option, you need to
     create a bkg image first. You can create one separately but this
     function can be used if you have lots of movement of a small number
     of objects. It simply averages all the frames together. The file
-    is saved as filename_bkgimg.jpg
+    is saved as filename_bkgimg.png
 
     Examples
     --------

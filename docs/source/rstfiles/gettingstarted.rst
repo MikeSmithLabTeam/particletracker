@@ -1,3 +1,5 @@
+.. _Start:
+
 How do you start?
 =================
 

@@ -47,6 +47,7 @@ The track_gui is divided into a few key areas:
 - The Settings Panel
 
 .. figure:: /resources/gui.png
+   
 
 Toolbar / Menus
 ---------------

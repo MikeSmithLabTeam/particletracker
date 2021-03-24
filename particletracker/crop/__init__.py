@@ -19,13 +19,16 @@ class ReadCropVideo(ReadVideo):
         dimensions. This may not sort the gui but it will stop
         a crash.
         '''
-        
+
         if self.parameters['crop_box'] is not None:
             crop_height = self.parameters['crop_box'][1][1] - self.parameters['crop_box'][1][0]
             crop_width = self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]
-            if (self.height != crop_height) or (self.width != crop_width):
+            if (self.height < crop_height) or (self.width < crop_width):
                 self.reset()
-        self.set_mask()   
+            self.set_mask()
+        else:
+            self.reset()
+           
 
     def reset(self):
         #To set crop back to max image size
@@ -59,13 +62,15 @@ class ReadCropVideo(ReadVideo):
         return img
 
     def set_mask(self):
-        img = self._create_ones_mask()
+        img = self._create_zeros_mask()
         self.mask = img.copy()
-
+        
+        no_mask = True
         for method in self.parameters['crop_method']:
             if 'crop' not in method:
                 points = self.parameters[method]
                 if points is not None:
+                    no_mask=False
                     if 'mask_ellipse' in method: 
                         mask = self.mask_ellipse(points)
                     elif 'mask_polygon' in method:
@@ -75,14 +80,10 @@ class ReadCropVideo(ReadVideo):
                     elif 'mask_circle' in method:
                         mask = self.mask_circle(points)
                     
-                    if 'invert' in method:
-                        #self.mask = cv2.add(self.mask, mask)
-                        #img = cv2.subtract(img, 255-mask)
-                        self.mask = cv2.subtract(self.mask, mask)
-                    else:
-                        #img = cv2.subtract(img, mask)
-                        self.mask = cv2.subtract(self.mask, 255-mask)
-
+                    #img = cv2.subtract(img, mask)
+                    self.mask = cv2.add(self.mask, mask)
+        if no_mask:
+            self.mask = self._create_ones_mask()
                     
     def mask_ellipse(self, pts):
         img = self._create_zeros_mask()
@@ -127,7 +128,8 @@ class ReadCropVideo(ReadVideo):
         return mask
 
     def apply_mask(self,frame):
-        try:
+        try:        
+            #mask = crop(self.mask, self.parameters)
             return cv2.bitwise_and(frame, self.mask)        
         except Exception as e:
             error = CropMaskError(e)

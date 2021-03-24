@@ -67,6 +67,12 @@ class SubtractBkgError(PreprocessorError):
         self.error_msg = 'subtract_bkg error'
         self.e=e
 
+class FillHolesError(PreprocessorError):
+    def __init__(self,e):
+        super().__init__(e)
+        self.error_msg = 'fill holes error'
+        self.e = e
+
 class ThresholdError(PreprocessorError):
     def __init__(self,e):
         super().__init__(e)

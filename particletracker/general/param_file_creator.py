@@ -9,24 +9,16 @@ def create_param_file(filename):
                   'frame_range':(0,None,1)
                   }
 
-    crop = {'crop_method': ('crop_box','mask_ellipse'),# 'mask_polygon',),
-            'crop_box':((0, 0), (1280, 720)),#{'crop_coords': (76, 119, 944, 900),},
+    crop = {'crop_method': ('crop_box',),
+            'crop_box':None,
             'mask_ellipse': None,
-            'mask_ellipse_invert':None,
             'mask_circle': None,
-            'mask_circle_invert':None,
             'mask_polygon': None,
-            'mask_polygon_invert':None,
             'mask_rectangle': None,
-            'mask_rectangle_invert': None
             }
 
     preprocess = {
         'preprocess_method': ('grayscale','medianblur',),
-        'check_method_name':{'block_size': [29,1,300,2],
-                              'C': [-23, -30, 30, 1],
-                              'ad_mode': [True, ('True', 'False')]
-                              },
         'grayscale':{},#'load_bkg_img':False,
         'threshold':{'threshold':[1,0,255,1],
                      'th_mode':[True,('True', 'False')]},
@@ -38,16 +30,17 @@ def create_param_file(filename):
         'distance':{},
         'blur':{'kernel':[1,1,15,2]},
         'medianblur':{'kernel':[3,1,15,2]},
-        'gamma':{'gamma':[0.00,0.00,10.00,0.01]},
+        'gamma':{'gamma':[1.00,0.01,10.00,0.01]},
         'subtract_bkg':{'subtract_bkg_type':['mean',('mean','image')],
                     'subtract_bkg_filename':None,
                     'subtract_bkg_blur_kernel': [3,1,15,2],
                     'subtract_bkg_invert':[True,('True','False')],
                     'subtract_bkg_norm':[True,('True','False')]
                     },
-        'absolute_diff':{'variance_norm':[True,('True','False')],
+        'absolute_diff':{'normalise':[True,('True','False')],
                     'value':[125,1,255,1]
                     },
+        'fill_holes':{},
         'invert':{},
         'erosion':{'erosion_kernel':[1,1,11,2],
                     'iterations':[1,1,11,1]
@@ -60,23 +53,26 @@ def create_param_file(filename):
     track = {
         'track_method':('contours',),
         'trackpy':{'size_estimate':[7,1, 101,2],
-                   'invert':[0,0,1,1],
+                   'invert':[False, ('True','False')],
                    'get_intensities':'False',
-                   'intensity_radius':[2,1,200,1]
+                   'intensity_radius':[2,1,200,1],
+                   'show_output':[False, ('True','False')]
                    },
         'hough':{'min_dist':[105,1,501,2],
                   'p1':[75, 1, 201,2],
                   'p2':[39, 1, 201,2],
                   'min_rad':[10, 1, 301,2],
                   'max_rad':[50, 1, 301,2],
-                  'get_intensities':'False'
+                  'get_intensities':'False',
+                  'show_output':[False, ('True','False')]
                  },
         'contours':{'noise_cutoff':[2,1,50,1],
                     'area_min':[20, 1, 2000, 1],
                     'area_max':[2000, 1, 20000, 1],
                     'aspect_min':[1.0,1.0,10.0,0.1],
                     'aspect_max':[10.0,1.0,10.0,0.1],
-                    'get_intensities':'False'
+                    'get_intensities':'False',
+                    'show_output':[False, ('True','False')]
                     },
         }
 
@@ -174,7 +170,11 @@ def create_param_file(filename):
                 'classifier': [True, ('True','False')],
                 'thickness': 2
                 },
-        'circles':{'radius':[6,1,1000,1],#This is overridden in Hough Circles
+        'circles':{'xdata_column':'x',
+                    'ydata_column':'y',
+                    'rad_from_data':[False,('True','False')],
+                    'rdata_column':'r',
+                    'user_rad':[6,1,1000,1],
                     'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#for dynamic
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic

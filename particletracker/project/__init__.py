@@ -20,12 +20,12 @@ class PTWorkflow:
         self.data_filename = self.filename + '.hdf5'
 
         self.param_filename = param_filename
+        self.parameters = read_paramdict_file(self.param_filename)
         self.select_tabs()
         self._setup()
 
 
     def select_tabs(self):
-        self.parameters = read_paramdict_file(self.param_filename)
         self.experiment_select = self.parameters['selected']['experiment']
         self.crop_select = self.parameters['selected']['crop']
         self.preprocess_select = self.parameters['selected']['preprocess']

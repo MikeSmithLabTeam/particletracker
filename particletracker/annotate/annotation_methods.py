@@ -222,6 +222,7 @@ def _get_class_subset(data, f, parameters, method=None):
     Internal function to get subset of particles
     """    
     try:
+        
         classifier_column= parameters[method]['classifier_column']
         if classifier_column is None:
             subset_df = data.df.loc[f]
@@ -368,16 +369,24 @@ def circles(frame, data, f, parameters=None, call_num=None):
     
 
     """
+    
     try:
         method_key = get_method_key('circles', call_num=call_num)
-        if 'r' not in list(data.df.columns):
-            data.add_particle_property('r', get_param_val(parameters[method_key]['radius']))
+        x_col_name = parameters[method_key]['xdata_column']
+        y_col_name = parameters[method_key]['ydata_column']
+        r_col_name = parameters[method_key]['rdata_column']
+        
+        if get_param_val(parameters[method_key]['rad_from_data']):
+            subset_df = _get_class_subset(data, f, parameters, method=method_key)
+            circles = subset_df[[x_col_name, y_col_name, r_col_name]].values
+            
+        else:
+            data.add_particle_property('user_rad', get_param_val(parameters[method_key]['user_rad']))
+            subset_df = _get_class_subset(data, f, parameters, method=method_key)
+            circles = subset_df[[x_col_name, y_col_name, 'user_rad']].values
+    
         thickness = get_param_val(parameters[method_key]['thickness'])
 
-        
-        subset_df = _get_class_subset(data, f, parameters, method=method_key)
-        circles = subset_df[['x', 'y', 'r']].values
-        
         #No objects found
         df_empty = np.isnan(circles[0])
         if np.all(df_empty):

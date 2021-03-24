@@ -15,7 +15,7 @@ Lets say we have a new postprocessing method which we want to implement.
 In the top level of the particletracker module is the user_methods.py. This contains template functions 
 for the different sections. There are a lot of comments explaining details contained in these templates,
 however we have stripped out all the comments here to save space. The Docstrings in these examples explain 
-what inputs and outputs your function needs to work. You then write whatever code is required.
+what inputs and outputs your function needs to work. You then write whatever code is required. 
 
 .. code-block:: python
     

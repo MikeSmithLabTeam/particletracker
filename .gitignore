@@ -10,6 +10,11 @@ particletracker/testdata/
 
 #Datafiles
 *.hdf5
+*.xlsx
+*.param
+
+#VIdeos
+testdata/*.mp4
 
 # Distribution / packaging
 .Python
@@ -137,4 +142,5 @@ dmypy.json
 particle.code-workspace
 .vscode/settings.json
 .gitignore
-testdata/contours_annotate.mp4
+
+

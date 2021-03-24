@@ -38,7 +38,7 @@ each key is another dictionary which specifies the settings for that stage.
 
 .. code-block::python
 preprocess = {
-    'preprocess_method': ('grayscale','medianblur',),#'variance'
+    'preprocess_method': ('grayscale','medianblur',),
     'grayscale':{},#'load_bkg_img':False,
     'threshold':{'threshold':[1,0,255,1],
                  'th_mode':[1,0,1,1]},

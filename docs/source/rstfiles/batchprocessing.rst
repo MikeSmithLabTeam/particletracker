@@ -1,3 +1,5 @@
+.. _Batch:
+
 Batch Processing files
 ======================
 
