@@ -50,4 +50,3 @@ class ComboBoxAndButton(QWidget):
                 draggable_list.takeItem(0)
 
             draggable_list.addItem(method)
-            draggable_list.send_signal()

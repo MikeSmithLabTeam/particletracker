@@ -61,4 +61,3 @@ class QModCustomTextBox(QCustomTextBox):
                 self.tool.setParent(None)
                 self.tool.deleteLater()
             self.hasbeenchecked = False
-

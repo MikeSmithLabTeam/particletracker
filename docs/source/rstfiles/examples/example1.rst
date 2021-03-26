@@ -12,7 +12,7 @@ it may be worth doing this even if you think you are unlikely to want to track e
     :align: center
 
 
-If you are unsure how to start the software read the description in getting started 
+If you are unsure how to start the software read the description in :ref:`How do you start?<Start>`  
 Load up the video eyes.mp4 from the testdata folder and try the following steps.
 
 1. Crop and mask the image  - we are not interested in the area outside the person's eyes.

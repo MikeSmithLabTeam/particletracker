@@ -53,11 +53,12 @@ def angle(df, f_index=None, parameters=None, call_num=None):
 
     '''
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('angle', call_num)
-        columnx = parameters[method_key]['x_column']
-        columny = parameters[method_key]['y_column']
-        output_name = parameters[method_key]['output_name']
-        units=get_param_val(parameters[method_key]['units'])
+        columnx = params[method_key]['x_column']
+        columny = params[method_key]['y_column']
+        output_name = params[method_key]['output_name']
+        units=get_param_val(params[method_key]['units'])
 
         if output_name not in df.columns:
             df[output_name] = np.nan
@@ -119,11 +120,12 @@ def classify(df, f_index=None, parameters=None, call_num=None):
     '''
 
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('classify', call_num)
-        column = parameters[method_key]['column_name']
-        output_name=parameters[method_key]['output_name']
-        lower_threshold_value = get_param_val(parameters[method_key]['lower_threshold'])
-        upper_threshold_value = get_param_val(parameters[method_key]['upper_threshold'])
+        column = params[method_key]['column_name']
+        output_name=params[method_key]['output_name']
+        lower_threshold_value = get_param_val(params[method_key]['lower_threshold'])
+        upper_threshold_value = get_param_val(params[method_key]['upper_threshold'])
 
         if output_name not in df.columns:
             df[output_name] = np.nan
@@ -176,6 +178,7 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
     """
 
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('contour_boxes', call_num)
         if 'box_cx' not in df.columns:
             df['box_cx'] = np.nan
@@ -278,10 +281,11 @@ def logic_AND(df, f_index=None, parameters=None, call_num=None):
     '''
     
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('logic_AND', call_num)
-        column1 = parameters[method_key]['column_name']
-        column2 = parameters[method_key]['column_name2']
-        output_name = parameters[method_key]['output_name']
+        column1 = params[method_key]['column_name']
+        column2 = params[method_key]['column_name2']
+        output_name = params[method_key]['output_name']
         if output_name not in df.columns:
             df[output_name] = np.nan
         df_frame = df.loc[f_index]
@@ -328,9 +332,10 @@ def logic_NOT(df, f_index=None, parameters=None, call_num=None):
 
        
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('logic_NOT', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
         if output_name not in df.columns:
             df[output_name] = np.nan
         df_frame = df.loc[f_index]
@@ -345,8 +350,6 @@ def logic_NOT(df, f_index=None, parameters=None, call_num=None):
 def logic_OR(df, f_index=None, parameters=None, call_num=None):
     '''
     Apply a logical or operation to two columns of boolean values.
-
-    
 
     column_name
         input data column
@@ -377,10 +380,11 @@ def logic_OR(df, f_index=None, parameters=None, call_num=None):
 
     
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('logic_OR', call_num)
-        column1 = parameters[method_key]['column_name']
-        column2 = parameters[method_key]['column_name2']
-        output_name = parameters[method_key]['output_name']
+        column1 = params[method_key]['column_name']
+        column2 = params[method_key]['column_name2']
+        output_name = params[method_key]['output_name']
 
         if output_name not in df.columns:
             df[output_name] = np.nan
@@ -425,10 +429,11 @@ def magnitude(df, f_index=None, parameters=None, call_num=None):
 
     '''
     try:
+        params = parameters['postprocess']
         method_key=get_method_key('magnitude', call_num)
-        column = parameters[method_key]['column_name']
-        column2 = parameters[method_key]['column_name2']
-        output_name = parameters[method_key]['output_name']
+        column = params[method_key]['column_name']
+        column2 = params[method_key]['column_name2']
+        output_name = params[method_key]['output_name']
         
         if output_name not in df.columns:
             df[output_name] = np.nan
@@ -484,17 +489,18 @@ def neighbours(df, f_index=None, parameters=None, call_num=None):
     '''
     try:
         #https: // docs.scipy.org / doc / scipy / reference / generated / scipy.spatial.Delaunay.html
+        params = parameters['postprocess']
         method_key = get_method_key('neighbours', call_num)
-        method = get_param_val(parameters[method_key]['method'])
+        method = get_param_val(params[method_key]['method'])
         
         if 'neighbours' not in df.columns:
             df['neighbours'] = np.nan
         df_frame = df.loc[f_index]
 
         if method == 'delaunay':
-            df_frame =_find_delaunay(df_frame, parameters=parameters)
+            df_frame =_find_delaunay(df_frame, parameters=params)
         elif method == 'kdtree':
-             df_frame =_find_kdtree(df_frame, parameters=parameters)     
+             df_frame =_find_kdtree(df_frame, parameters=params)     
         df.loc[f_index] = df_frame
     
         return df
@@ -564,6 +570,7 @@ def voronoi(df, f_index=None, parameters=None, call_num=None):
     """
 
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('voronoi')
         
         if 'voronoi' not in df.columns:
@@ -661,10 +668,11 @@ def difference(df, f_index=None, parameters=None, call_num=None):
 
     '''
     try:    
+        params = parameters['postprocess']
         method_key = get_method_key('difference', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        span = get_param_val(parameters[method_key]['span'])
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
     
         if output_name not in df.columns:
             df[output_name] = np.nan
@@ -721,10 +729,11 @@ def mean(df, f_index=None, parameters=None, call_num=None):
     
 
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('mean', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        span = get_param_val(parameters[method_key]['span'])
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
 
         if output_name not in df.columns:
             df[output_name] = np.nan
@@ -737,7 +746,6 @@ def mean(df, f_index=None, parameters=None, call_num=None):
         df_output=df_frames.groupby('particle')[column].rolling(span).mean().transform(lambda x:x).to_frame(name=output_name)
         df_output.reset_index('particle', inplace=True)
         df.loc[f_index,[output_name]]=df_output.loc[f_index]
-        print(df.loc[f_index])
         return df
     except Exception as e:
         raise MeanError(e)
@@ -781,10 +789,11 @@ def median(df, f_index=None, parameters=None, call_num=None):
     '''
     
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('median', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        span = get_param_val(parameters[method_key]['span'])
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
        
         if output_name not in df.columns:
             df[output_name] = np.nan
@@ -844,11 +853,12 @@ def rate(df, f_index=None, parameters=None, call_num=None):
 
     '''
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('rate', call_num)
-        column = parameters[method_key]['column_name']
-        output_name = parameters[method_key]['output_name']
-        span = get_param_val(parameters[method_key]['span'])
-        fps= parameters[method_key]['fps']
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
+        fps= params[method_key]['fps']
 
         if output_name not in df.columns:
             df[output_name] = np.nan
@@ -866,6 +876,94 @@ def rate(df, f_index=None, parameters=None, call_num=None):
     except Exception as e:
         raise RateError(e)
 
+def remove_masked(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Remove masked objects
+    
+    Notes
+    -----
+    The Hough circles tracking method can find circles with centres 
+    outside the masked area. This method enables you to remove those 
+    points from the data.
+    
+
+    column_name
+        Input column names
+    output_name
+        Output column name
+    fps
+        numerical value indicating the number of frames per second
+    span
+        number of frames over which to calculate rolling difference
+    
+    
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe
+
+
+    '''
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('remove_masked', call_num)
+        
+        mask_method_list = list(parameters['crop']['crop_method'])
+        if 'crop_box' in mask_method_list: mask_method_list.remove('crop_box')
+
+        contour_list = []
+        contour_list.append(_contour_from_mask(parameters['crop'][mask_method_list[0]],mask_method_list[0]))
+
+        df_frame = df.loc[f_index]
+        points = df_frame[['x','y']].apply(tuple, axis=1).values
+        mask = np.array([_point_inside_mask(point, contour_list) for point in points])
+        for column in df_frame.columns:
+            df_frame[column] = df_frame[column].where(mask)
+        df.loc[f_index] = df_frame
+        df.dropna(how='all',inplace=True)
+        return df
+    except Exception as e:
+        raise RemoveMaskedError(e)
+
+def _contour_from_mask(mask_pts, mask_type):
+    if mask_type == 'mask_rectangle':
+        x1 = mask_pts[0][0]
+        x2 = mask_pts[1][0]
+        y1 = mask_pts[0][1]
+        y2 = mask_pts[1][1]
+
+        contour = [np.array([[x1,y1],[x1,y2],[x2,y2],[x2, y1]])]
+    elif mask_type == 'mask_ellipse':
+        pass
+    elif mask_type == 'mask_circle':
+        pass
+    elif mask_type == 'mask_polygon':
+        pass
+    else:
+        print('Error unrecognised mask type')
+        raise Exception
+    return contour
+
+def _point_inside_mask(point, mask_contour_list):
+    inside = False
+    for contour in mask_contour_list:
+
+        result = cv2.pointPolygonTest(contour[0], point, False)
+        if result != -1:
+            inside = True
+    return inside
 
 '''
 ------------------------------------------------------------------------------------------------
@@ -909,17 +1007,18 @@ def add_frame_data(df, f_index=None, parameters=None, call_num=None):
 
     '''
     try:
+        params = parameters['postprocess']
         method_key = get_method_key('add_frame_data', call_num)
-        datapath = parameters[method_key]['data_path']
+        datapath = params[method_key]['data_path']
 
-        if '.csv' in parameters[method_key]['data_filename']:
-            filename = os.path.join(datapath,parameters[method_key]['data_filename'])
+        if '.csv' in params[method_key]['data_filename']:
+            filename = os.path.join(datapath,params[method_key]['data_filename'])
             new_df = pd.read_csv(filename, header=None)
-        elif '.xlsx' in parameters[method_key]['data_filename']:
-            new_df = pd.read_excel(parameters[method_key]['data_filename'],squeeze=True)
+        elif '.xlsx' in params[method_key]['data_filename']:
+            new_df = pd.read_excel(params[method_key]['data_filename'],squeeze=True)
         else:
             print('Unknown file type')
-        df[parameters[method_key]['new_column_name']] = new_df
+        df[params[method_key]['new_column_name']] = new_df
     
         return df
     except  Exception as e:

@@ -1,4 +1,5 @@
 .. _Example3:
+
 Example 3 - Swelling Hydrogels
 ==============================
 
@@ -32,6 +33,10 @@ identified.
     sliders and watch the changes. Try setting C to 1 and block_size to 205. This gives a really nice 
     separation. Some objects are still slightly connected but we won't worry about that. 
 
+.. figure:: /resources/hydrogel2.png
+    :width: 400
+    :align: center
+
 3. Track
     In the track tab if not already selected pick contours from the drop down list and add method. Toggle the image back to 
     "Captured Image". 
@@ -44,7 +49,44 @@ identified.
 4. Refine the tracking
     Some objects which are not hydrogel particles have been highlighted. A lot of these are long and thin or
     have a small area compared to the hydrogel particles. In the tracking tab we can select the 
-    bounds on the aspect ratio and area of the particles. 
+    bounds on the aspect ratio and area of the particles to eliminate these. We choose "area_min" = 203, "area_max" = 2000, "aspect_min"=1, "aspect_max"=2.00.
+    This removes some of the spurious particles. 
+    
+5. Colour code the data for visualization
+    Nearly all of the annotation features have two kinds of colour mapping: "static" and "dynamic". The "dynamic" colour maps enable
+    you to locally colour code the annotated feature according to some property of the measured particle. This could be the velocity
+    of the particles or any column which has numerical data for each particle. Here in a somewhat silly example we will use 
+    the x coordinate of each particle so that the behaviour is really obvious. Select dynamic next to cmap_type. Then type x in the cmap column.
+    This is just the name of the column used to define the colour of each particle. We can then define the range of the colours using
+    the cmap_min (0) and cmap_max (1900.00). Another perhaps more useful property for contours is "area". 
+    This is calculated automatically during tracking of contours. Type "area" into the 
+    cmap_column.  Change the ranges of the colour map. To change the range since 1500 is beyond the default range we simply click the cog next
+    to the slider and specify the new range. 
+
+
+.. figure:: /resources/hydrogel4.png
+    :width: 400
+    :align: center
+
+
+5. Calculate the voronoi network
+    Sometimes it can be useful to compare the size of a particle to the area around it that it can move in.
+    One way to do this is using a voronoi network. Right click on contours to remove this annotation and then
+    add voronoi under the postprocess tab and also add voronoi under the annotate tab. This will calculate and display
+    the voronoi network. In the process it will also generate a column called "voronoi_area" which contains the area
+    associated with each particle. You could use this for example to calculate the local density of particles. 
+    We shall demonstrate this when we consider working with the outputted data. With some methods the user specifies
+    the output column. However, there are a number of methods where the new column name is chosen automatically.
+    You can find out the details for each method in the notes section in the reference for each function on the 
+    readthedocs page.
+
+.. figure:: /resources/hydrogel3.png
+    :width: 400
+    :align: center
+
+
+6. Process the entire video.
+    Click "Process" to gather the data.
 
 
 

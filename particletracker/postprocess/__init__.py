@@ -39,7 +39,7 @@ class PostProcessor:
             for f in tqdm(range(start, stop, step), 'Postprocessing'):
                 for method in self.parameters['postprocess']['postprocess_method']:
                     method_name, call_num = get_method_name(method)
-                    data.df = getattr(pm, method_name)(data.df, f_index=f,parameters=self.parameters['postprocess'], call_num=call_num)
+                    data.df = getattr(pm, method_name)(data.df, f_index=f,parameters=self.parameters, call_num=call_num)
 
             data.save(filename=output_filename)
 

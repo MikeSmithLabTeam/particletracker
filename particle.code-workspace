@@ -4,5 +4,11 @@
 			"path": "."
 		}
 	],
-	"settings": {"python.pythonPath": "C:\\Users\\ppzmis\\Miniconda3\\envs\\test\\python.exe",}
-}
+	"settings": {"python.pythonPath": "C:\\Users\\ppzmis\\Miniconda3\\envs\\particle\\python.exe",
+				"python.terminal.activateEnvironment": true,
+				"python.linting.pylintEnabled":true,
+				"python.condaPath": "C:\\Users\\ppzmis\\Miniconda3\\Scripts\\conda.exe",
+				"terminal.integrated.shell.windows": "C:\\Windows\\System32\\cmd.exe",
+				"terminal.integrated.shellArgs.windows": ["/K", "C:\\Users\\ppzmis\\Miniconda3\\Scripts\\activate particle"],
+				"python.terminal.executeInFileDir":true,	
+			}

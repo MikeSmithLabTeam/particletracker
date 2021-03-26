@@ -250,11 +250,11 @@ class MainWindow(QMainWindow):
                                             spinbox=True,
                                             )
         self.frame_selector.meta = ['experiment','frame']
-        self.frame_selector.slider.meta = ['experiment','frame_range']
+        #self.frame_selector.meta = ['experiment','frame_range']
         self.frame_selector.valueChanged.connect(lambda x=self.frame_selector.value():self.param_change(x))
-        self.frame_selector.slider.rangeChanged.connect(lambda x='dummy':self.param_change(x))
+        self.frame_selector.rangeChanged.connect(lambda x: self.param_change(x))
         self.frame_selector.widget = 'slider'
-        self.frame_selector.slider.widget = 'slider'
+        #self.frame_selector.slider.widget = 'slider'
         self.reset_frame_range = QPushButton('Reset frame range')
         self.reset_frame_range.clicked.connect(self.reset_frame_range_click)
         self.reset_frame_range.meta = 'ResetFrameRange'
@@ -323,22 +323,31 @@ class MainWindow(QMainWindow):
     def param_change(self, value):
         sender = self.sender()
         paramdict_location=sender.meta
-        if sender.meta == 'ResetMask':
-            self.tracker.cap.reset()
-            self.update_param_widgets('crop')
-            self.viewer.clearImage()
-        elif sender.meta == 'ResetFrameRange':
+        
+        if sender.meta == 'ResetFrameRange':
             self.update_dictionary_params(['experiment','frame_range'],(0,self.tracker.cap.num_frames-1,1), 'button')
             self.tracker.cap.set_frame_range((0,self.tracker.cap.num_frames,1))
-        elif 'frame_range' in paramdict_location[1]:
+        elif ('frame' in paramdict_location[1]) and (type(value) == tuple):
             frame_range = (self.frame_selector.slider._min,self.frame_selector.slider._max+1,self.frame_selector.slider._step)
             self.update_dictionary_params(['experiment','frame_range'],frame_range, 'slider')
             self.tracker.cap.set_frame_range(frame_range)
+        elif sender.meta == 'ResetMask':
+            self.tracker.cap.reset()
+            self.update_param_widgets('crop')
+            self.viewer.clearImage()
         else:
             parsed_value = parse_values(sender, value)
             self.update_dictionary_params(paramdict_location, parsed_value, sender.widget)
+            if ('crop' in paramdict_location[1]):
+                self.tracker.cap.reset_mask()
+                self.update_dictionary_params(['crop','mask_rectangle'], None, 'textbox')
+                self.update_dictionary_params(['crop','mask_circle'], None, 'textbox')
+                self.update_dictionary_params(['crop','mask_ellipse'], None, 'textbox')
+                self.update_dictionary_params(['crop','mask_polygon'], None, 'textbox')
+                self.update_param_widgets('crop')
             if ('crop' in paramdict_location[1]) or ('mask' in paramdict_location[1]):
                 self.tracker.cap.set_mask()          
+        
         self.update_viewer()
 
     @pyqtSlot(tuple)
@@ -409,7 +418,7 @@ class MainWindow(QMainWindow):
 
     def reset_frame_range_click(self):
         self.tracker.cap.set_frame_range((0,None,1))
-        self.reset_viewer()        
+        self.reset_viewer()    
 
     def select_img_view(self):
         if self.live_update_button.isChecked():

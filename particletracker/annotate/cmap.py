@@ -20,7 +20,6 @@ def colour_array(subset_df, f, parameters, method=None):
             cmap_name = 'jet'
             
             norm = colors.Normalize(vmin=cmap_min, vmax=cmap_max, clip=True)
-            
             colour_obj = plt.get_cmap(cmap_name, np.size(colour_data))
             colour_vals = 255 * colour_obj(norm(colour_data))
             colours = []

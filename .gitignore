@@ -13,8 +13,9 @@ particletracker/testdata/
 *.xlsx
 *.param
 
-#VIdeos
-testdata/*.mp4
+#Videos
+*.mp4
+*.avi
 
 # Distribution / packaging
 .Python

@@ -102,3 +102,7 @@ class VoronoiError(PostprocessorError):
         self.error_msg = 'voronoi error'
         self.e = e
 
+class RemoveMaskedError(PostprocessorError):
+    def __init__(self, e):
+        super().__init__(e)
+        self.error_msg = "remove masked objects error"

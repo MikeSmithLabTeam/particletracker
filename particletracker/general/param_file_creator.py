@@ -95,7 +95,6 @@ def create_param_file(filename):
                     'lower_threshold':[0.01, 0.01, 100.00, 0.01],
                     'upper_threshold':[100.00, 1.00, 2000.00, 0.01]
                     },
-        'contour_area': {'output_name':'contour_area'},
         'contour_boxes':{},
         'logic_AND':{'column_name':'classifier1',
                      'column_name2':'classifier2',
@@ -135,6 +134,7 @@ def create_param_file(filename):
                 'fps':50.0,
                 'span':[5,1,20,1]
                   },
+        'remove_masked':{},
         'add_frame_data':{
             'new_column_name':'data',
             'data_filename':None

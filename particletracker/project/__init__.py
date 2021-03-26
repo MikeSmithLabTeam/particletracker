@@ -85,6 +85,8 @@ class PTWorkflow:
 
         :return:
         """
+        print('process')
+        print(self.parameters['experiment']['frame_range'])
         try:
             if not use_part:
                 if self.track_select:
