@@ -41,12 +41,18 @@ class ComboBoxAndButton(QWidget):
         draggable_list = self.parent.list_draggable_lists[tab_index]
         count = 1
 
+        print('combobox add method')
+        print(method)
         if ok_to_duplicate_method_check(method):
+            print(dynamic)
             if dynamic:
+                print(draggable_list.method_list)
                 while method in draggable_list.method_list:
                     method = method.split('*')[0] + '*' + str(count)
                     count = count + 1
+                print(method)
             else:
                 draggable_list.takeItem(0)
 
-            draggable_list.addItem(method)
+            draggable_list.add_item(method, update=True)
+            print(draggable_list.method_list)

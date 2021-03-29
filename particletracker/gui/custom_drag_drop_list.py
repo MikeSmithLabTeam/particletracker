@@ -37,10 +37,12 @@ class MyListWidget(QListWidget):
             self.add_item(item)  
         self.get_new_method_list()     
 
-    def add_item(self, key):
+    def add_item(self, key, update=False):
         if not self.dynamic:
             self.clear()
-        self.addItem(key)        
+        self.addItem(key)
+        if update:
+            self.get_new_method_list()        
         
     def mousePressEvent(self, event):
         pos = self.mapFromGlobal(QCursor.pos())
