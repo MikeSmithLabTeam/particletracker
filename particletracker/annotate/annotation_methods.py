@@ -125,8 +125,13 @@ def var_label(frame, data, f, parameters=None, call_num=None):
     try:
         method_key = get_method_key('var_label', call_num=call_num)
         var_column=parameters[method_key]['var_column']
-        text = str(data.get_info(f, var_column)[0])
+        if var_column == 'index':
+            text = str(f)
+        else:
+            text = str(round(data.get_info(f, var_column)[0],2))
         position = parameters[method_key]['position']
+
+        
 
         annotated_frame=cv2.putText(frame, text, position, cv2.FONT_HERSHEY_COMPLEX_SMALL,
                                     int(parameters[method_key]['font_size']),

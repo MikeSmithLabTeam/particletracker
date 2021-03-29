@@ -65,7 +65,7 @@ def trackpy(ppframe,frame, parameters=None):
         method_key = get_method_key('trackpy')
         df = tp.locate(ppframe, get_param_val(parameters[method_key]['size_estimate']), invert=get_param_val(parameters[method_key]['invert']))
 
-        if get_param_val(parameters[method_key]['get_intensities']) != 'False':
+        if parameters[method_key]['get_intensities'] != False:
             x = df['x'].to_numpy()
             y = df['y'].to_numpy()
             intensity = []
@@ -234,7 +234,7 @@ def contours(pp_frame, frame, parameters=None):
     try:  
         method_key = get_method_key('contours')
         params = parameters[method_key]
-        get_intensities = (get_param_val(params['get_intensities']) != 'False')
+        get_intensities = (get_param_val(params['get_intensities']) != False)
     
         sz = np.shape(frame)
         if np.shape(sz)[0] == 3:

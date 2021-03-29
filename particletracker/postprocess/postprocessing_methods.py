@@ -1015,7 +1015,8 @@ def add_frame_data(df, f_index=None, parameters=None, call_num=None):
             filename = os.path.join(datapath,params[method_key]['data_filename'])
             new_df = pd.read_csv(filename, header=None)
         elif '.xlsx' in params[method_key]['data_filename']:
-            new_df = pd.read_excel(params[method_key]['data_filename'],squeeze=True)
+            filename = os.path.join(datapath,params[method_key]['data_filename'])
+            new_df = pd.read_excel(filename,header=None, squeeze=True)
         else:
             print('Unknown file type')
         df[params[method_key]['new_column_name']] = new_df

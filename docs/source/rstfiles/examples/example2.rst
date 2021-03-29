@@ -101,3 +101,22 @@ file together. This leaves a permanent record of the exact way in which the data
 This is useful if you ever need to check this but it also enables you to use this .param file
 in future to process other data with the same settings. This can be done either by loading this 
 settings file in the gui or supplying it as a keyword argument in the python track_gui.
+
+framedata
+---------
+
+Sometimes it might be useful to add information about each frame. For example the
+temperature of the sample might be changing. Whilst this is relatively simple to do using python 
+we have also added the ability to upload a simple excel or csv file to a column. This file should have 
+a single column with one row of data per frame in the video. 
+
+Select "add_frame_data" in the postprocessing tab. Specify a column name for the new data. We use "temp". Then 
+specify the filename with extension containing the data. The software assumes the file
+is in the same folder as the video and sets this filepath. If you want it to look somewhere
+else you can specify this in the data_path field. In the testdata we have created a file "framedata.xlslx"
+type this in to the data_filename.
+
+To display the temperature we need a "text label" to place static text on the image and a "var label" to represent
+data that is specific to a single frame. Both of these can be added in the annotation section.
+We add the following settings to text label: text: T=, position: (10,40), font_size: 2, font_thickness: 2, font_colour: (0,0,255). We then
+add the following settings to var_label: var_column : temp, position: (80,40), font_size: 2, font_thickness: 2, font_colour: (0,0,255). 
