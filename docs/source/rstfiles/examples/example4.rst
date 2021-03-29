@@ -27,6 +27,10 @@ that are isolated and those that are (potentially) stuck together. One way to do
 be to analyse the area of a contours bounding box. Small areas are individual bacteria. Larger
 areas are bacteria potentially stuck together.
 
+.. figure:: /resources/bacteria.png
+    :width: 400
+    :align: center
+
 Using classifiers
 -----------------
 1. In the postprocessing tab add a "classify" method. It is important that this sits below "contour_boxes" in the list as we will use the outputs of this for the classification.

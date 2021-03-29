@@ -156,7 +156,7 @@ def hough(ppframe, frame,parameters=None):
         except:
             circles_dict={'x':[np.nan],'y':[np.nan],'r':[np.nan]}
         
-        if parameters[method_key]['get_intensities'] != 'False':
+        if (parameters[method_key]['get_intensities'] != False):
             
             intensity = []
             for i,_ in enumerate(circles_dict['x']):

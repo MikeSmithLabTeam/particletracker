@@ -69,8 +69,6 @@ class ParticleTracker:
 
         with dataframes.DataStore(data_filename) as data:
             if f_index is None:
-                print('track')
-                print(self.cap.frame_range[1])
                 start = self.cap.frame_range[0]
                 stop = self.cap.frame_range[1]
                 step = self.cap.frame_range[2]

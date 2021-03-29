@@ -302,8 +302,6 @@ def boxes(frame, data, f, parameters=None, call_num=None):
         sz = np.shape(frame)
 
         for index, box in enumerate(box_pts):
-            #if _contour_inside_img(sz, box):
-            print(box)
             frame = _draw_contours(frame, box, col=colours[index],
                                    thickness=int(get_param_val(parameters[method_key]['thickness'])))
     
