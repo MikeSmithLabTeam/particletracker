@@ -56,15 +56,15 @@ Linking particles is a critical step if you are interested in the motion of part
 you to assign the same particle in different frames an id so that you can calculate things such 
 as particle displacements as a function of time. Linking contains a few different parameters:
 
--   max_frame_displacement
+-   max_frame_displacement  :
     how far a particle can move between individual frames. Make this number too big and the software
     won't be able to choose which particle is connected to which. Make it too small and many of the 
     particle trajectories will be artificially terminated when a particle makes a genuine large displacement.
--   memory
-    How many frames a particle can be undetected and still be considered the same particle. It is usually wise
+-   memory  :
+    how many frames a particle can be undetected and still be considered the same particle. It is usually wise
     to keep this number small.
--   min_frame_life
-    This filters any really short trajectories from the data. Spurious particles might get tracked for a couple of
+-   min_frame_life  :   
+    this filters any really short trajectories from the data. Spurious particles might get tracked for a couple of
     frames so by setting this value to 3 you'd remove those. However, as this number gets larger you will
     also start to lose genuine particles that moved in and out of the focus fairly quickly.
 
