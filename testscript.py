@@ -7,5 +7,5 @@ settings_filename='C:\\Users\\ppzmis\\OneDrive - The University of Nottingham\\D
 
 #create_param_file(settings_filename)
 
-track_gui(movie_filename=movie_filename,settings_filename=settings_filename)
+#track_gui(movie_filename=movie_filename,settings_filename=settings_filename)
 

@@ -1,15 +1,6 @@
 # ParticleTracker
 
-GUI Particle Tracking software
-
-documentation
-https://particle-tracker.readthedocs.io/en/latest/
-
-github installation
-To install run the following line in your environment
-
-# labvision
-Repository for managing images, videos and cameras. 
+ParticleTracker is a gui based particle tracking software that brings together a range of tools to make particle tracking simple. Full details on installation and use can be found in the documentation:
 
 ## Documentation 
     https://particle-tracker.readthedocs.io/en/latest/
