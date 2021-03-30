@@ -63,18 +63,19 @@ all the parameters needed.
                          },
                 'postprocessor_method_name':{'param1' : [startval, minval, maxval, step],
                                              'param2' : [value, ('value', 'value2')],
-                                             'param3' : (0,255,0)
+                                             'param3' : (0,255,0),
+                                             'param4' : 'simple text'
                                             }
                     }
 
 
-The parameters are automatically assessed to decide what gui element to create. Here param 1
-will result in a slider with initial value startval and min, max and increment ("step") values as shown.
-If step is an integer eg 1 the slider will return integers. If step is a decimal eg 0.01 then the slider
+The parameters are automatically assessed to decide what gui element to create. 
+
+- Param 1 will result in a slider with initial value startval and min, max and increment ("step") values as shown. If step is an integer eg 1 the slider will return integers. If step is a decimal eg 0.01 then the slider
 As a result if your value happens to be something like 1.0 you should write 1.0 and not 1.
-param 2 results in a dropdown options box with the values value, value2, value3 to choose between. Within
+- Param 2 results in a dropdown options box with the values value, value2, value3 to choose between. Within
 the brackets all these should be strings. However value at the first position should be of the correct datatype.
-Param3 produces a text box which can take any value.
+- Param3 and 4 produce a text box which can take any value. The software recognises 'None', 'True' and 'False' as None, True and False.
 
 To regenerate the settings file you can now call create_param_file(filename.param) to create a new file 
 which can be read into the gui. 

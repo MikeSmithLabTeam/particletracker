@@ -47,7 +47,7 @@ dimmer to 0. If you again toggle the image you'll see white particles on a compl
 Next we selected trackpy in the Track tab and adjusted the size estimate for the features to approximately the 
 correct size. We also selected the circles so that we can immediately see how different parameters affect the tracking.
 A usual workflow involves assessing iteratively how different factors in the preprocessing and tracking influence
-the fidelity of the final tracking. For applications like this where we will use linking it is not a problem ifon detects
+the fidelity of the final tracking. For applications like this where we will use linking it is not a problem if one detects
 the odd extra spurious particle. The reason for this is that when we come to link
 the positions in different frames together those spurious particles will not consistently show up whereas real particles
 should. Consequently, we can filter these spurious particles out.
@@ -71,7 +71,7 @@ as particle displacements as a function of time. Linking contains a few differen
 With all these parameters one has to try and find a good balance. A good way to go about this
 is to process small sections of the video and then observe the output to assess whether the results are
 sensible. Once you are happy you can process the full video. To shorten the video we can click on the settings cog next to the frame selection tool below the viewer.
-Enter min = 0, max = 50, step = 1. To enable us to see whether the trajectories are continuous we add both particle labels (this simply displays the particle id near each particle)
+Enter min = 0, max = 30, step = 1. To enable us to see whether the trajectories are continuous we add both particle labels (this simply displays the particle id near each particle)
 and the particle trajectories (which plots the historical positions of each particle). Click "Process".
 
 Processing produces a number of files of format <moviename>_ending.extension . Navigate to the folder containing the testdata and you should find:

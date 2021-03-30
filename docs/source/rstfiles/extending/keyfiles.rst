@@ -13,41 +13,42 @@ The testdata contains a default.param which you can modify in the software
 and save. Alternatively if you are using python you can create one.
 A new default param file can be created:
 
-.. code-block::python
+.. code-block:: python
+
     from particletracker.general import param_file_creator
     filename = 'path/to/file.param'
     param_file_creator(filename)
-code
+
 
 The top level is a dictionary which has keys:
 
-.. code-block::python
-PARAMETERS = {
-    'experiment': experiment,
-    'crop': crop,
-    'preprocess':preprocess,
-    'track':track,
-    'link':link,
-    'postprocess':postprocess,
-    'annotate':annotate
-    }
-code
+.. code-block:: python
+
+    PARAMETERS = {  'experiment': experiment,
+                    'crop': crop,
+                    'preprocess':preprocess,
+                    'track':track,
+                    'link':link,
+                    'postprocess':postprocess,
+                    'annotate':annotate
+                }
+
 
 One key for each key step in the tracking process. The value for
 each key is another dictionary which specifies the settings for that stage.
 
-.. code-block::python
-preprocess = {
-    'preprocess_method': ('grayscale','medianblur',),
-    'grayscale':{},#'load_bkg_img':False,
-    'threshold':{'threshold':[1,0,255,1],
-                 'th_mode':[1,0,1,1]},
-    'adaptive_threshold':{'block_size': [29,1,300,2],
-                          'C': [-23, -30, 30, 1],
-                          'ad_mode': [0, 0, 1, 1]
-                          },
-    }
-code
+.. code-block:: python
+    
+    preprocess = {'preprocess_method': ('grayscale','medianblur',),
+                'grayscale':{},
+                'threshold':{'threshold':[1,0,255,1],
+                'th_mode':[1,0,1,1]},
+                'adaptive_threshold':{'block_size': [29,1,300,2],
+                                      'C': [-23, -30, 30, 1],
+                                      'ad_mode': [0, 0, 1, 1]
+                                    },
+                }
+
 
 Above is a slimmed down version of the preprocess dictionary but all
 dictionaries are structured in the same way. The top line is always
@@ -60,8 +61,9 @@ so you can add them in.
 For each method there is yet another dictionary. These contain
 the individual parameters for each method. These can be of several types.
 
-- [startval, min, max, step] - These types will result in a spinbox slider in the gui.
-- There are strings and True, False, None which will result in edit textboxes.
+- There are sliders with initial value startval and min, max and increment ("step") values as shown. If step is an integer eg 1 the slider will return integers. If step is a decimal eg 0.01 then the slider As a result if your value happens to be something like 1.0 you should write 1.0 and not 1.
+- Dropdown options box with the values value, value2, value3 to choose between. Within the brackets all these should be strings. However value at the first position should be of the correct datatype.
+- Text box which can take any value. The software recognises 'None', 'True' and 'False' as None, True and False.
 
 These files can be saved and loaded directly within the gui to save sets of
 parameters appropriate for a particular experiment. Once a suitable .param file

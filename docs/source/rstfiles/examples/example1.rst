@@ -35,7 +35,8 @@ Load up the video eyes.mp4 from the testdata folder and try the following steps.
 2. Add a blur to the preprocessed image. 
     Select the preprocess tab. We currently have grayscale and medianblur selected. We don't
     need the medianblur so rightclick on this to remove it. Then from the drop down menu select 
-    blur and "Add method". Drag to active. It is often helpful to blur images prior to tracking
+    blur and "Add method". Drag to active. Then in the parameter selector section (bottom right) move the slider of the
+    "kernel" to 3. It is often helpful to blur images prior to tracking
     as it helps reduce noise or gradients in the image. 
 
 3. Select the hough tracking method
@@ -50,7 +51,7 @@ Load up the video eyes.mp4 from the testdata folder and try the following steps.
 4. Display the circles found.
     Whilst adjusting the tracking parameters it is helpful to see what you are finding. Select the annotation
     tab and check the box on this tab to make it active. Initially nothing happens! Go back to the 
-    track tab. To estimate roughly the size of the eyes. Move your mouse to the left hand edge of one eye and double left click.
+    track tab. To estimate roughly the size of the eyes. Move your mouse to the left hand edge of the iris of one eye and double left click.
     A green bar pops up indicating the coordinate that you clicked. Note this down and move to the right hand edge of an eye
     and double click again (The numbers are also printed to the terminal. We can use these numbers to guestimate the approximate
     radius. We don't need to be too precise but if we leave this range large it will seriously slow down the finding of circles.
@@ -59,7 +60,8 @@ Load up the video eyes.mp4 from the testdata folder and try the following steps.
     Now we set min_rad to 31 and max_rad to 35. We can do this by dragging and dropping the sliders or typing in the spinbox and hitting
     enter on the keyboard. We could also set min_dist to be at least 200. 
     Now reduce the values of p1 and p2 considerably. We found p1 at 57 and p2 at 7 worked well. 
-    Try playing with other values however as it will give you a feel for how it can take a bit of fiddling! Whilst performing
+    Try playing with other values however as it will give you a feel for how it can take a bit of fiddling! Check the tracking
+    on different frames by moving the frame_selector slider. Whilst performing
     this optimisation it is helpful to see the size of circles being found by the algorithm. In the annotation
     tab under rad_from_data select True. This now displays the radius measured with Hough circles. 
 
@@ -93,7 +95,8 @@ Load up the video eyes.mp4 from the testdata folder and try the following steps.
 7. Perform some smoothing using a running average
     A good way to implement smoothing is to use the rolling mean or median in postprocessing to smooth the x and y coordinates. Click on the postprocessing
     tab and select mean twice from the drop down. Set the column_name to "x" and "y" for each method respectively. Set the 
-    output_column to "x_mean" and "y_mean". Now in the annotation section set the "xdata_column" and "ydata_column" to "x_mean" and "y_mean". 
+    output_column to "x_mean" and "y_mean". The number of frames used to calculate the average ("span") is currently 5. To make the selection
+    active we must check the checkbox on the postprocess tab. Now in the annotation section set the "xdata_column" and "ydata_column" to "x_mean" and "y_mean". 
     A rolling mean (like many postprocessing methods) relies on the information from other frames. We can only do this therefore if we have either already run 
     "Process" or alternatively we could have used "Process Part" which does not run the postprocess or annotate sections.
     To indicate that we want to interact with this processed data we now select the "Use part processed" toggle button on the toolbar.
@@ -111,7 +114,7 @@ Load up the video eyes.mp4 from the testdata folder and try the following steps.
     may prefer just to extract the data in a simple excel file. For simple projects where the amount of data is small 
     this is fine. We do however emphasise that as the number of particles and frames increases this will become
     almost unworkable. To extract a copy of the data using excel you must toggle on the excel icon on the toolbar. When you now 
-    clicl "Process" or "Process part" a file named <moviename>.xlsx will also be generated in the same folder as the 
+    click "Process" or "Process part" a file named <moviename>.xlsx will also be generated in the same folder as the 
     movie.
 
 .. figure:: /resources/eyes4.png
