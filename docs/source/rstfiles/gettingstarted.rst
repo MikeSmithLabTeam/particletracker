@@ -18,7 +18,7 @@ To start the tracking gui you need to  run the following very simple script with
 
 .. code-block:: python
    
-   from ParticleTracker import track_gui
+   from particletracker import track_gui
    track_gui()
    
 This will ask you to select a video file to perform tracking on.
@@ -27,7 +27,7 @@ the code above to include a video filename and a settings filename. You need to 
 
 .. code-block:: python
 
-   from ParticleTracker import track_gui
+   from particletracker import track_gui
    track_gui(movie_filename="FullPathToMovie.mp4", settings_filename="FullPathToSettings.param")
 
 
@@ -40,7 +40,7 @@ to use many of the different features. This will take you from some very simple 
 to building some more complicated projects. For most people's needs this will be sufficient. 
 To follow these through you will need to download the testdata folder. For the precompiled executable
 this is included in the downloaded folder. For the python version this is available as a zip folder
-on the toplevel of the github page ( ). Inside this folder you
+on the toplevel of the github page (https://github.com/MikeSmithLabTeam/particletracker ). Inside this folder you
 will find several example movies and some .param files. Each example has its own page in these docs
 which will walk you through from start to finish. 
 
