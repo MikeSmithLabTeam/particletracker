@@ -3,20 +3,16 @@ title: 'ParticleTracker: A simple and efficient gui based particle tracking soft
 tags:
   - Python
   - particle tracking
-  
 authors:
   - name: Michael I. Smith^[Corresponding Author: email: mike.i.smith@nottingham.ac.uk]
     orcid: 0000-0003-0872-7098
     affiliation: 1 # (Multiple affiliations must be quoted)
   - name: James Downs
     affiliation: 1
-  
 affiliations:
  - name: School of Physics, University of Nottingham, UK, NG7 2RD
    index: 1
- 
 date: 31/03/2021
-
 ---
 
 # Summary
