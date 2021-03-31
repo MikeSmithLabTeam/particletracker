@@ -14,7 +14,6 @@ affiliations:
    index: 1
 date: 31st March 2021
 bibliography: paper.bib
-
 ---
 
 # Summary
@@ -22,7 +21,7 @@ bibliography: paper.bib
 Tracking the motion of objects in a video is an important part of the
 analysis in a diverse range of subject disciplines. It enables one to automate
 the extraction of quantitative information about size, shape, motion etc. A number
-of libraries exist [@Trackpy-@opencv_library] to help with this process but the code can be an entry barrier.
+of libraries exist [@Trackpy,@opencv_library] to help with this process but the code can be an entry barrier.
 Even for researchers with the necessary skills it requires a significant investment
 for each new project. Open source tools that can simplify and expedite this process whilst
 still being flexible enough to
