@@ -43,6 +43,11 @@ and focus on the underlying science in their respective projects. Whilst the pro
 are varied, the underlying tools needed are generally the same, with some small variation
 that is specific to each project. The combined needs of efficiently setting up a new tracking project, a common interface for different underlying algorithms, but with the ability to easily extend some small part of it has therefore guided our design philosophy. However, as the software has developed it has become clear that the development speed, uniform interface to different underlying methods, and versatility of the project would also be useful for larger scale research projects. Especially since it can be used by those with or without significant coding experience.
 
+# Citations
+
+- `@Trackpy`
+- `@opencv_library`
+
 # Acknowledgements
 
 We acknowledge contributions from Nathan Smith during the genesis of this project.
