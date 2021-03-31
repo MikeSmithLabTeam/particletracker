@@ -6,13 +6,15 @@ tags:
 authors:
   - name: Michael I. Smith^[Corresponding Author: email: mike.i.smith@nottingham.ac.uk]
     orcid: 0000-0003-0872-7098
-    affiliation: 1 # (Multiple affiliations must be quoted)
+    affiliation: 1
   - name: James Downs
     affiliation: 1
 affiliations:
  - name: School of Physics, University of Nottingham, UK, NG7 2RD
    index: 1
-date: 31/03/2021
+date: 31st March 2021
+bibliography: paper.bib
+
 ---
 
 # Summary
@@ -20,7 +22,7 @@ date: 31/03/2021
 Tracking the motion of objects in a video is an important part of the
 analysis in a diverse range of subject disciplines. It enables one to automate
 the extraction of quantitative information about size, shape, motion etc. A number
-of libraries exist to help with this process but the code can be an entry barrier.
+of libraries exist [@Trackpy-@opencv_library] to help with this process but the code can be an entry barrier.
 Even for researchers with the necessary skills it requires a significant investment
 for each new project. Open source tools that can simplify and expedite this process whilst
 still being flexible enough to
@@ -45,3 +47,5 @@ that is specific to each project. The combined needs of efficiently setting up a
 # Acknowledgements
 
 We acknowledge contributions from Nathan Smith during the genesis of this project.
+
+# References
