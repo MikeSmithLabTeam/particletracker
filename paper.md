@@ -2,25 +2,16 @@
 title: "Gala: A Python package for galactic dynamics"
 tags:
   - Python
-  - astronomy
-  - dynamics
-  - galactic dynamics
-  - milky way
+  - particle tracking
 authors:
   - name: Adrian M. Price-Whelan^[Custom footnotes for e.g. denoting who the corresponding author is can be included like this.]
     orcid: 0000-0003-0872-7098
     affiliation: "1, 2" # (Multiple affiliations must be quoted)
   - name: Author Without ORCID
-    affiliation: 2
-  - name: Author with no affiliation
-    affiliation: 3
+    affiliation: 1
 affiliations:
-  - name: Lyman Spitzer, Jr. Fellow, Princeton University
+  - name: School of Physics, University of Nottingham, UK, NG7 2RD
     index: 1
-  - name: Institution Name
-    index: 2
-  - name: Independent Researcher
-    index: 3
 date: 13 August 2017
 bibliography: paper.bib
 
