@@ -18,37 +18,31 @@ bibliography: paper.bib
 
 # Summary
 
-The forces on stars, galaxies, and dark matter under external gravitational
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration).
+Tracking the motion of objects in a video is an important part of the
+analysis in a diverse range of subject disciplines. It enables one to automate
+the extraction of quantitative information about size, shape, motion etc. A number
+of libraries exist to help with this process but the code can be an entry barrier.
+Even for researchers with the necessary skills it requires a significant investment
+for each new project. Open source tools that can simplify and expedite this process, whilst
+remaining flexible and easy to extend by the end user help to make particle tracking
+accessible to a broader range of researchers.
 
 # Statement of need
 
-`Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for `Gala` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. `Gala` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the `Astropy` package [@astropy] (`astropy.units` and
-`astropy.coordinates`).
+`ParticleTracker` is a completely gui based particle tracking software
+that implements and integrates a range of commonly needed tools to help users efficiently
+develop a wide range of different types of particle tracking projects.
+Though the underlying code is written in python it can be used as stand alone executables,
+enabling those with little or no coding ability to make use of these tools. It therefore
+provides an open source solution for new users to use particle tracking as a part of their research. At the same time the python code base is designed to make extending the project extremely simple. Extension
+of each part of the code can be accomplished as simply as adding the project specific
+code to a preconfigured template and adding a single dictionary to a parameter file.
 
-`Gala` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in `Gala` will enable exciting
-scientific explorations of forthcoming data releases from the _Gaia_ mission
-[@gaia] by students and experts alike.
+`ParticleTracker` was initially designed with the needs of masters students in mind who,
+in semester long projects, want to quickly move beyond writing code to track particles
+and focus on the underlying science in their respective projects. Whilst the projects
+are varied, the underlying tools needed are generally the same, with some small variation
+that is specific to each project. The combined needs of efficiently setting up a new tracking project, a common interface for different underlying algorithms, but with the ability to easily extend some small part of it has therefore guided our design philosophy. However, as the software has developed it has become clear that the development speed, uniform interface to different underlying methods, and versatility of the project would also be useful for larger scale research projects. Especially since it can be used by those with or without significant coding experience.
 
 # Acknowledgements
 
