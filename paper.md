@@ -21,10 +21,8 @@ bibliography: paper.bib
 Tracking the motion of objects in a video is an important part of the
 analysis in a diverse range of subject disciplines. It enables one to automate
 the extraction of quantitative information about size, shape, motion etc. A number
-of libraries exist to help with this process but the code can be an entry barrier.
-Even for researchers with the necessary skills it requires a significant investment
-for each new project. Open source tools that can simplify and expedite this process, whilst
-remaining flexible and easy to extend by the end user help to make particle tracking
+of libraries exist [@trackpy;@opencv_library] to help with this process but the coding experience required can be an entry barrier.
+Even for researchers with the necessary skills developing the code and optimising the parameters requires a significant investment for each new project. Open source tools that can simplify and expedite this process, whilst remaining flexible and easy to extend by the end user, help to make particle tracking
 accessible to a broader range of researchers.
 
 # Statement of need
@@ -46,7 +44,6 @@ that is specific to each project. The combined needs of efficiently setting up a
 
 # Acknowledgements
 
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
+We acknowledge contributions from Nathan Smith in the early stages of this project.
 
 # References
