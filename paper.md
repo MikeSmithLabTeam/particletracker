@@ -4,7 +4,7 @@ tags:
   - Python
   - particle tracking
 authors:
-  - name: Michael I. Smith^[corresponding author - mike.i.smith@nottingham.ac.uk]
+  - name: Mike I. Smith^[corresponding author email - mike.i.smith@nottingham.ac.uk]
     orcid: 0000-0003-0872-7098
     affiliation: 1
   - name: James Downs
