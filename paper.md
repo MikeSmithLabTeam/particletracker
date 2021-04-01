@@ -1,55 +1,115 @@
 ---
-title: 'ParticleTracker: A simple and efficient gui based particle tracking software'
+title: "Gala: A Python package for galactic dynamics"
 tags:
   - Python
-  - particle tracking
+  - astronomy
+  - dynamics
+  - galactic dynamics
+  - milky way
 authors:
-  - name: Michael I. Smith^[Corresponding Author: email: 'mike.i.smith@nottingham.ac.uk']
+  - name: Adrian M. Price-Whelan^[Custom footnotes for e.g. denoting who the corresponding author is can be included like this.]
     orcid: 0000-0003-0872-7098
-    affiliation: 1
-  - name: James Downs
-    affiliation: 1
+    affiliation: "1, 2" # (Multiple affiliations must be quoted)
+  - name: Author Without ORCID
+    affiliation: 2
+  - name: Author with no affiliation
+    affiliation: 3
 affiliations:
- - name: School of Physics, University of Nottingham, UK, NG7 2RD
-   index: 1
-date: 31st March 2021
+  - name: Lyman Spitzer, Jr. Fellow, Princeton University
+    index: 1
+  - name: Institution Name
+    index: 2
+  - name: Independent Researcher
+    index: 3
+date: 13 August 2017
 bibliography: paper.bib
+
+# Optional fields if submitting to a AAS journal too, see this blog post:
+# https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
+aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
+aas-journal: Astrophysical Journal <- The name of the AAS journal.
 ---
 
 # Summary
 
-Tracking the motion of objects in a video is an important part of the
-analysis in a diverse range of subject disciplines. It enables one to automate
-the extraction of quantitative information about size, shape, motion etc. A number
-of libraries exist [@Trackpy,@opencv_library] to help with this process but the code can be an entry barrier.
-Even for researchers with the necessary skills it requires a significant investment
-for each new project. Open source tools that can simplify and expedite this process whilst
-still being flexible enough to
+The forces on stars, galaxies, and dark matter under external gravitational
+fields lead to the dynamical evolution of structures in the universe. The orbits
+of these bodies are therefore key to understanding the formation, history, and
+future state of galaxies. The field of "galactic dynamics," which aims to model
+the gravitating components of galaxies to study their structure and evolution,
+is now well-established, commonly taught, and frequently used in astronomy.
+Aside from toy problems and demonstrations, the majority of problems require
+efficient numerical tools, many of which require the same base code (e.g., for
+performing numerical orbit integration).
 
 # Statement of need
 
-`ParticleTracker` is a completely gui based particle tracking software
-that implements and integrates a range of commonly needed tools to help users efficiently
-develop a wide range of different types of particle tracking projects.
-Though the underlying code is written in python it can be used as stand alone executables,
-enabling those with little or no coding ability to make use of these tools. It therefore
-provides an oppen source solution for new users to use particle tracking as a part of their research. At the same time the python code base is designed to make extending the project extremely simple. Extension
-of each part of the code can be accomplished as simply as adding the project specific
-code to a preconfigured template and adding a single dictionary to a parameter file.
+`Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
+enables wrapping low-level languages (e.g., C) for speed without losing
+flexibility or ease-of-use in the user-interface. The API for `Gala` was
+designed to provide a class-based and user-friendly interface to fast (C or
+Cython-optimized) implementations of common operations such as gravitational
+potential and force evaluation, orbit integration, dynamical transformations,
+and chaos indicators for nonlinear dynamics. `Gala` also relies heavily on and
+interfaces well with the implementations of physical units and astronomical
+coordinate systems in the `Astropy` package [@astropy] (`astropy.units` and
+`astropy.coordinates`).
 
-`ParticleTracker` was initially designed with the needs of masters students in mind who,
-in semester long projects, want to quickly move beyond writing code to track particles
-and focus on the underlying science in their respective projects. Whilst the projects
-are varied, the underlying tools needed are generally the same, with some small variation
-that is specific to each project. The combined needs of efficiently setting up a new tracking project, a common interface for different underlying algorithms, but with the ability to easily extend some small part of it has therefore guided our design philosophy. However, as the software has developed it has become clear that the development speed, uniform interface to different underlying methods, and versatility of the project would also be useful for larger scale research projects. Especially since it can be used by those with or without significant coding experience.
+`Gala` was designed to be used by both astronomical researchers and by
+students in courses on gravitational dynamics or astronomy. It has already been
+used in a number of scientific publications [@Pearson:2017] and has also been
+used in graduate courses on Galactic dynamics to, e.g., provide interactive
+visualizations of textbook material [@Binney:2008]. The combination of speed,
+design, and support for Astropy functionality in `Gala` will enable exciting
+scientific explorations of forthcoming data releases from the _Gaia_ mission
+[@gaia] by students and experts alike.
+
+# Mathematics
+
+Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
+
+Double dollars make self-standing equations:
+
+$$
+\Theta(x) = \left\{\begin{array}{l}
+0\textrm{ if } x < 0\cr
+1\textrm{ else}
+\end{array}\right.
+$$
+
+You can also use plain \LaTeX for equations
+\begin{equation}\label{eq:fourier}
+\hat f(\omega) = \int\_{-\infty}^{\infty} f(x) e^{i\omega x} dx
+\end{equation}
+and refer to \autoref{eq:fourier} from text.
 
 # Citations
 
-- `@Trackpy`
-- `@opencv_library`
+Citations to entries in paper.bib should be in
+[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
+format.
+
+If you want to cite a software repository URL (e.g. something on GitHub without a preferred
+citation) then you can do it with the example BibTeX entry below for @fidgit.
+
+For a quick reference, the following citation commands can be used:
+
+- `@author:2001` -> "Author et al. (2001)"
+- `[@author:2001]` -> "(Author et al., 2001)"
+- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
+
+# Figures
+
+Figures can be included like this:
+![Caption for example figure.\label{fig:example}](figure.png)
+and referenced from text using \autoref{fig:example}.
+
+Figure sizes can be customized by adding an optional second parameter:
+![Caption for example figure.](figure.png){ width=20% }
 
 # Acknowledgements
 
-We acknowledge contributions from Nathan Smith during the genesis of this project.
+We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
+Oh, and support from Kathryn Johnston during the genesis of this project.
 
 # References
