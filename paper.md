@@ -4,15 +4,15 @@ tags:
   - Python
   - particle tracking
 authors:
-  - name: Adrian M. Price-Whelan^[Custom footnotes for e.g. denoting who the corresponding author is can be included like this.]
-    orcid: 0000-0003-0872-7098
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
-  - name: Author Without ORCID
+  - name: Mike I. Smith^[corresponding author email - mike.i.smith@nottingham.ac.uk]
+    orcid: 0000-0002-8210-1264
+    affiliation: "1" # (Multiple affiliations must be quoted)
+  - name: James Downs
     affiliation: 1
 affiliations:
   - name: School of Physics, University of Nottingham, UK, NG7 2RD
     index: 1
-date: 13 August 2017
+date: 1 April 2021
 bibliography: paper.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
