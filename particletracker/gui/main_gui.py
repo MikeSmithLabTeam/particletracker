@@ -82,8 +82,14 @@ class MainWindow(QMainWindow):
       
 
     def setup_menus_toolbar(self):
-        dir = os.path.abspath(__file__)
-        resources_dir = os.path.join(dir[:-11],'icons','icons')
+        try:
+            #try is for python gui, except is for pyinstaller
+            dir,_ =os.path.split(os.path.abspath(__file__))
+            print(dir)
+            resources_dir = os.path.join(dir,'icons','icons')
+        except:
+            dir , _= os.path.split(sys.argv[0])#os.path.abspath(__file__)
+            resources_dir = os.path.join(dir,'gui','icons','icons')
         self.toolbar = QToolBar('Toolbar')
         self.toolbar.setIconSize(QSize(16,16))
         self.addToolBar(self.toolbar)
