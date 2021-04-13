@@ -85,7 +85,6 @@ class MainWindow(QMainWindow):
         try:
             #try is for python gui, except is for pyinstaller
             dir,_ =os.path.split(os.path.abspath(__file__))
-            print(dir)
             resources_dir = os.path.join(dir,'icons','icons')
         except:
             dir , _= os.path.split(sys.argv[0])#os.path.abspath(__file__)
