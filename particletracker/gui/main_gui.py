@@ -18,15 +18,12 @@ from .custom_tab_widget import CheckableTabWidget
 from ..project import PTWorkflow
 from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
+from ..general.param_file_creator import create_param_file
 from ..general.imageformat import bgr_to_rgb
 from .. import project
 
-#DEFAULT_SETTINGS  = 'particletracker/project/default.param
 
 class MainWindow(QMainWindow):
-    DEFAULT_SETTINGS_PATH = project.__file__[:-11]
-    DEFAULT_SETTINGS = DEFAULT_SETTINGS_PATH + 'default.param'
-    CURRENT_SETTINGS = DEFAULT_SETTINGS_PATH + 'current.param'
     
     def __init__(self, *args, movie_filename=None, settings_filename=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
@@ -49,15 +46,7 @@ class MainWindow(QMainWindow):
                 settings_filename = None
         
         if settings_filename is None:
-            self.load_default_settings()
-            self.settings_filename = MainWindow.CURRENT_SETTINGS
-    
-
-            
-            #self.settings_filename = None
-               
-        #if self.settings_filename is None:
-        #    self.open_settings_button_click()
+            self.load_default_settings()    
 
         self.reboot()
 
@@ -173,15 +162,12 @@ class MainWindow(QMainWindow):
         self.process_menu = menu.addMenu("Process options")
         self.help_menu = menu.addMenu("Help")
 
-        select_default_settings = QAction('Select default settings', self)
-        select_default_settings.triggered.connect(self.set_default_settings)
         load_defaults = QAction('Load default settings', self)
         load_defaults.triggered.connect(self.load_default_settings)
 
         self.file_menu.addAction(open_movie_button)
         self.file_menu.addAction(open_settings_button)
         self.file_menu.addAction(save_settings_button)
-        self.file_menu.addAction(select_default_settings)
         self.file_menu.addAction(load_defaults)
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.live_update_button)
@@ -243,18 +229,16 @@ class MainWindow(QMainWindow):
         else:
             max_val=self.tracker.parameters['experiment']['frame_range'][1] - 1
         self.frame_selector = QCustomSlider(title='Frame',
-                                            min_=self.tracker.parameters['experiment']['frame_range'][0],#self.tracker.cap.frame_range[0],
-                                            max_=max_val,#self.tracker.cap.frame_range[1]-1,
-                                            step_=self.tracker.parameters['experiment']['frame_range'][2],#1,
+                                            min_=self.tracker.parameters['experiment']['frame_range'][0],
+                                            max_=max_val,
+                                            step_=self.tracker.parameters['experiment']['frame_range'][2],
                                             value_=self.tracker.cap.frame_range[0],
                                             spinbox=True,
                                             )
         self.frame_selector.meta = ['experiment','frame']
-        #self.frame_selector.meta = ['experiment','frame_range']
         self.frame_selector.valueChanged.connect(lambda x=self.frame_selector.value():self.param_change(x))
         self.frame_selector.rangeChanged.connect(lambda x: self.param_change(x))
         self.frame_selector.widget = 'slider'
-        #self.frame_selector.slider.widget = 'slider'
         self.reset_frame_range = QPushButton('Reset frame range')
         self.reset_frame_range.clicked.connect(self.reset_frame_range_click)
         self.reset_frame_range.meta = 'ResetFrameRange'
@@ -288,7 +272,6 @@ class MainWindow(QMainWindow):
     ----------------------------------------------------------------
     """
     def open_tracker(self):
-        #PTProject
         self.tracker = PTWorkflow(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
@@ -463,17 +446,10 @@ class MainWindow(QMainWindow):
         else:
             return False
 
-    def set_default_settings(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File", '',
-                                                               "settings (*.param)", options=options)
-        if ok:
-            shutil.copy(settings_filename, MainWindow.DEFAULT_SETTINGS)
-    
     def load_default_settings(self):
-        shutil.copy(MainWindow.DEFAULT_SETTINGS, MainWindow.CURRENT_SETTINGS)
-        self.settings_filename = MainWindow.CURRENT_SETTINGS
+        pathname, _ = os.path.split(self.movie_filename)
+        self.settings_filename = os.path.join(pathname, 'default.param')
+        create_param_file(self.settings_filename)
         self.reboot()
 
     def open_movie_click(self):
@@ -484,7 +460,7 @@ class MainWindow(QMainWindow):
     def open_settings_button_click(self):
         ok=self.open_settings_dialog()
         if ok:
-            self.reboot()#Reboots the entire GUI
+            self.reboot()
         
     def save_settings_button_click(self):
         options = QFileDialog.Options()
@@ -525,7 +501,6 @@ class MainWindow(QMainWindow):
         is set by checking toggle status of this button.
         '''
         if isfile(self.movie_filename[:-4] + '.hdf5'):
-            #Greys out / un greys the tabs which are not being used
             for i in range(5):
                 if self.use_part_button.isChecked():
                     self.toplevel_settings.disable_tabs(i,enable=False)

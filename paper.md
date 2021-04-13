@@ -21,7 +21,7 @@ bibliography: paper.bib
 Tracking the motion of objects in a video is an important part of the
 analysis in a diverse range of subject disciplines. It enables one to automate
 the extraction of quantitative information about size, shape, motion etc. A number
-of libraries exist [@Trackpy,@opencv_library] to help with this process but the code can be an entry barrier.
+of libraries exist [@Trackpy;@opencv_library] to help with this process but the code can be an entry barrier.
 Even for researchers with the necessary skills it requires a significant investment
 for each new project. Open source tools that can simplify and expedite this process whilst
 still being flexible enough to
@@ -42,11 +42,6 @@ in semester long projects, want to quickly move beyond writing code to track par
 and focus on the underlying science in their respective projects. Whilst the projects
 are varied, the underlying tools needed are generally the same, with some small variation
 that is specific to each project. The combined needs of efficiently setting up a new tracking project, a common interface for different underlying algorithms, but with the ability to easily extend some small part of it has therefore guided our design philosophy. However, as the software has developed it has become clear that the development speed, uniform interface to different underlying methods, and versatility of the project would also be useful for larger scale research projects. Especially since it can be used by those with or without significant coding experience.
-
-# Citations
-
-- `@Trackpy`
-- `@opencv_library`
 
 # Acknowledgements
 

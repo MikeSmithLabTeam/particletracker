@@ -37,6 +37,12 @@ Reference
    rstfiles/reference/postprocess_ref.rst
    rstfiles/reference/annotate_ref.rst
 
+Reporting Issues
+----------------
+
+We aim to test this software against the testdata described in the tutorials however bugs do slip through. 
+If you become aware of an issue please report it https://github.com/MikeSmithLabTeam/particletracker/issues 
+
 
 
 Indices and tables
