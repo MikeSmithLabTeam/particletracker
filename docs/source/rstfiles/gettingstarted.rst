@@ -3,14 +3,19 @@
 How do you start?
 =================
 
-If you installed the bundled software start the gui by double clicking the executable in the particletracker folder
-after that you can skip to "Building a tracking project" below.
+Precompiled versions
+--------------------
+
+If you installed the bundled software then in all cases open the extracted folder produced in the installation steps. On Windows the software can be started by double clicking on "particletracker.exe". However, since there are a lot of files in the directory we suggest creating a shortcut somewhere sensible to make things easier. On Linux open a terminal inside the folder. You can then type "./particletracker" to start the software. A dialogue allows you to select a video to perform tracking on. After this you can skip to "Building a tracking project" below.
+
+Python Version
+--------------
 
 If you installed the python version, then every time you want to run the software you should
-open anaconda command prompt with your conda environment activated:
+open the anaconda command prompt with your conda environment activated:
 
 On Windows type Anaconda at the windows search and then select "Anaconda Prompt"
-On Linux and Mac open a terminal. Then type "conda activate particle". Finally, navigate
+On Linux and Mac open a terminal. Then type "conda activate particle" (assuming you followed our installation steps). Finally, navigate
 to the folder where you will store your python scripts: "cd path\to\folder"
 
 After this, the place to start is with the track_gui() function which is contained in the ParticleTracker. 
@@ -38,10 +43,7 @@ The first thing to do is to read the overview to give you some orientation and t
 through the different example cases where we explain how 
 to use many of the different features. This will take you from some very simple use cases
 to building some more complicated projects. For most people's needs this will be sufficient. 
-To follow these through you will need to download the testdata folder. For the precompiled executable
-this is included in the downloaded folder. For the python version this is available as a zip folder
-on the toplevel of the github page (https://github.com/MikeSmithLabTeam/particletracker ). Inside this folder you
-will find several example movies and some .param files. Each example has its own page in these docs
+To follow these through you will need to download the testdata folder. This is available from the toplevel of the github page (https://github.com/MikeSmithLabTeam/particletracker ) or you may have downloaded it when you downloaded the software from https://www.nottingham.ac.uk/~ppzmis/software.html. Inside this folder you will find several example videos and some .param settings files. Each example has its own page in these docs
 which will walk you through from start to finish. 
 
 - :ref:`Overview<Overview>`
