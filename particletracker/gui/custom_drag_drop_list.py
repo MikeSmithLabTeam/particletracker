@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtGui import QListWidget
+from PyQt5.QtGui import QListWidget, pyqtSignal
 
 
 class MyListWidget(QListWidget):   
