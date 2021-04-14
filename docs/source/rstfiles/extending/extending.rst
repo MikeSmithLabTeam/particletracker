@@ -62,7 +62,7 @@ all the parameters needed.
                           'method':'default'
                          },
                 'postprocessor_method_name':{'param1' : [startval, minval, maxval, step],
-                                             'param2' : [value, ('value', 'value2')],
+                                             'param2' : [value, ('value', 'value2','value3)],
                                              'param3' : (0,255,0),
                                              'param4' : 'simple text'
                                             }
@@ -72,8 +72,7 @@ all the parameters needed.
 The parameters are automatically assessed to decide what gui element to create. 
 
 - Param 1 will result in a slider with initial value startval and min, max and increment ("step") values as shown. If step is an integer eg 1 the slider will return integers. If step is a decimal eg 0.01 then the slider will return decimals. As a result if your value happens to be something like 1.0 you should write 1.0 and not 1.
-- Param 2 results in a dropdown options box with the values value, value2, value3 to choose between. Within
-the brackets all these should be strings. However value at the first position should be of the correct datatype.
+- Param 2 results in a dropdown options box with the values value, value2, value3 to choose between. Within the brackets all these should be strings. However, the current value at the first position should be of the correct datatype.
 - Param3 and 4 produce a text box which can take any value. The software recognises 'None', 'True' and 'False' as None, True and False.
 
 To regenerate the settings file you can now call create_param_file(filename.param) to create a new file 
@@ -93,6 +92,10 @@ To access the variables in your new dictionary entry inside the new method you n
    param1 = get_param_val(params['param1'])
    param2 = get_param_val(params['param2'])
    
+Important note about reinstallation / upgrading particletracker
+---------------------------------------------------------------
+
+It is worth backing up your user_methods.py and param_file_creator.py files. If you upgrade and reinstall these can be easily lost so keep separate copies and then copy them back into the correct locations. If you are using the miniconda environments suggested it can be a pain to find the correct locations. A useful tip for quickly finding the directory is to activate your conda environment and then type python at the command prompt. Then type "import particletracker" followed by "particletracker.__file__". This will print the root directory of your particletracker installation. user_methods.py is in this root folder and param_file_creator is contained in the "general" folder.
 
 
 
