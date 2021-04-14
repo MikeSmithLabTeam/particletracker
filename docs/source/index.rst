@@ -12,8 +12,7 @@ Standard use
    rstfiles/installation
    rstfiles/gettingstarted
    rstfiles/overview
-   rstfiles/examples/examples
-   rstfiles/working_with_data
+   rstfiles/examples/example
    rstfiles/batchprocessing
 
 
