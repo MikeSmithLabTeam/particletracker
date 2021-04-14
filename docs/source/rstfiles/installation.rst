@@ -6,7 +6,7 @@ Installation
 
 There are two different options for installation. 
 
-1. You can download and install the precompiled executables
+1. You can download the precompiled executables
 2. You can install the python code. 
 
 The first method enables you to do pretty much everything but won't allow you to add to or modify the code
@@ -15,17 +15,13 @@ to do something specific to your use case. You can download and install the prec
 https://www.nottingham.ac.uk/~ppzmis/software.html
 
 This might be a good way to test if the software fits your needs
-before investing too much time, especially if you don't know any python. Due to the way its packaged the files are huge but if your computer complains you probably shouldn't
-be trying to use this software on that computer anyway!
+before investing too much time, especially if you don't know any python. Due to the way its packaged the files are huge but if your computer complains you probably shouldn't be trying to use this software on that computer anyway! If you want to remove it you can just delete the entire folder.
+
+Using the precompiled executables
+---------------------------------
 
 To use, download the windows or linux zip and extract to a directory. You should also download and extract testdata.zip which contains 
-some example movies and parameter files which can be used to work through the tutorials. The software is packaged as a folder
-so it doesn't install anything on your computer. On Windows the software can be started by double clicking on "particletracker.exe". However,
-since there are a lot of files in the directory we suggest creating a shortcut somewhere sensible to make things easier. On Linux open a terminal inside the
-folder. You can then type "./particletracker" to start the software. 
-
-Whilst we have tested the software on a few different versions and computers of each operating system
-this method is a little bit brittle. If you encounter problems please report them via the bug tracker on this github page. However, the python version of the software has been more carefully tested and so we would suggest that this is the default or fall back method. Even if you know no python you should have no problems setting this up with the instructions below. The python version whilst requiring more installation steps can be run with 2 lines of code. One feature of this project, which is only available,
+some example movies and parameter files which can be used to work through the tutorials. The software in this format has been tested on Windows 10 and Ubuntu 18.04 / 20.04 LTS. If you encounter problems please report them via the issues tracker on this github page. However, the python version of the software has been more carefully tested and so we would suggest that this is the default or fall back method. Even if you know no python you should have no problems setting this up with the instructions below and should run on any system. The python version whilst requiring more installation steps can be run with 2 lines of code. One feature of this project, which is only available,
 via a python installation, is that we have tried to make extending it as easy as possible. 
 It might mean as little as adding a few lines of python code into a preconfigured template.
 
@@ -60,7 +56,6 @@ to upgrade use:
 
 - pip install --upgrade git+https://github.com/MikeSmithLabTeam/particletracker
 
-
 Once installed you will need some way to write simple code and execute it. The bare bones 
 approach is to use a notepad and write the few lines of code as detailed in "Getting started". Save 
 the file as eg. testscript.py and then from the conda command prompt navigate to the correct folder 
@@ -73,5 +68,9 @@ just created. Good IDEs include among others:
 
 Instructions abound on Google.
 
+Verifying the installation
+--------------------------
+
+To verify that the installation is working correctly you should read the getting started section which explains how to launch the software for both the precompiled and python versions. Once you have done this there are 5 example videos which also act as tutorials which should enable you to verify and test the core functionality of the software.
 
 
