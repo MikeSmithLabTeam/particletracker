@@ -2,16 +2,15 @@ Understanding key files
 =======================
 
 Within the software we make use of several important files
+
 - .param files
 - .hdf5 files
 
 .param files
 ------------
 .param files are a nested set of python dictionaries. They effectively
-describe all the settings for a particle tracking project. 
-The testdata contains a default.param which you can modify in the software
-and save. Alternatively if you are using python you can create one.
-A new default param file can be created:
+describe all the settings for a particle tracking project. When run with no arguments
+the software creates a default.param on start up. Alternatively if you are using python you can create one:
 
 .. code-block:: python
 
