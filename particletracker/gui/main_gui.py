@@ -72,6 +72,7 @@ class MainWindow(QMainWindow):
         self.main_panel.setLayout(self.main_layout)
         self.setCentralWidget(self.main_panel)
         self.showMaximized()
+        self.showFullScreen()
 
     def init_ui(self, view_layout, settings_layout, reboot=True):
         if not hasattr(self, 'file_menu'):
@@ -82,13 +83,12 @@ class MainWindow(QMainWindow):
       
 
     def setup_menus_toolbar(self):
-        try:
-            #try is for python gui, except is for pyinstaller
-            dir,_ =os.path.split(os.path.abspath(__file__))
-            resources_dir = os.path.join(dir,'icons','icons')
-        except:
-            dir , _= os.path.split(sys.argv[0])#os.path.abspath(__file__)
-            resources_dir = os.path.join(dir,'gui','icons','icons')
+        #is for python gui, except is for pyinstaller
+        dir,_ =os.path.split(os.path.abspath(__file__))
+        resources_dir = os.path.join(dir,'icons','icons')
+        #Use these lines when using pyinstaller.
+        #dir , _= os.path.split(sys.argv[0])#os.path.abspath(__file__)
+        #resources_dir = os.path.join(dir,'gui','icons','icons')
         self.toolbar = QToolBar('Toolbar')
         self.toolbar.setIconSize(QSize(16,16))
         self.addToolBar(self.toolbar)
