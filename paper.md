@@ -1,5 +1,5 @@
 ---
-title: "Gala: A Python package for galactic dynamics"
+title: "ParticleTracker: a gui based particle tracking software"
 tags:
   - Python
   - particle tracking
@@ -12,7 +12,7 @@ authors:
 affiliations:
   - name: School of Physics, University of Nottingham, UK, NG7 2RD
     index: 1
-date: 1 April 2021
+date: 14 April 2021
 bibliography: paper.bib
 ---
 
