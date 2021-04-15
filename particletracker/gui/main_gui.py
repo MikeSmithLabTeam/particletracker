@@ -71,8 +71,9 @@ class MainWindow(QMainWindow):
         self.main_layout.addLayout(self.settings_layout,2)
         self.main_panel.setLayout(self.main_layout)
         self.setCentralWidget(self.main_panel)
-        self.showMaximized()
         self.showFullScreen()
+        self.showMaximized()
+        
 
     def init_ui(self, view_layout, settings_layout, reboot=True):
         if not hasattr(self, 'file_menu'):
@@ -174,12 +175,12 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(open_settings_button)
         self.file_menu.addAction(save_settings_button)
         self.file_menu.addAction(load_defaults)
-        self.file_menu.addSeparator()
-        self.file_menu.addAction(self.live_update_button)
-        self.file_menu.addSeparator()
-        self.file_menu.addAction(process_part_button)
-        self.file_menu.addAction(self.use_part_button)
-        self.file_menu.addAction(process_button)
+        #self.file_menu.addSeparator()
+        #self.file_menu.addAction(self.live_update_button)
+        #self.file_menu.addSeparator()
+        #self.file_menu.addAction(process_part_button)
+        #self.file_menu.addAction(self.use_part_button)
+        #self.file_menu.addAction(process_button)
         self.file_menu.addSeparator()
         self.file_menu.addAction(close_button)
 
