@@ -1,9 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QListWidget, QListView, QAbstractViewItem, QFont, QCursor, Qt, 
-from PyQt5.QtWidgets import QWidget
+
 
 
 
