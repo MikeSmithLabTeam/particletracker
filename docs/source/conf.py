@@ -16,10 +16,6 @@ sys.path.insert(0, os.path.abspath('.'))
 0, os.path.abspath('..')
 sys.path.insert(0, os.path.abspath('../..'))
 
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QListWidget, QListView, QAbstractViewItem, QFont, QCursor, Qt 
-from PyQt5.QtWidgets import QWidget
-
 # -- Project information -----------------------------------------------------
 
 project = 'ParticleTracker'
