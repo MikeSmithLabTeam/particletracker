@@ -35,7 +35,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon'
 ]
 
 
-from PyQt5.QtGui import QListWidget
+from PyQt5.QtWidget import QListWidget
 
 #Although the docs built the automodule didn't import the code
 #It built locally with 'make html' but not when pushed and built on ReadTheDocs
