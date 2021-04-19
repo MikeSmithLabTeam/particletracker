@@ -6,7 +6,7 @@ Welcome to ParticleTracker's documentation!
 Standard use
 ------------
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    rstfiles/introduction
    rstfiles/installation
