@@ -53,7 +53,7 @@ which will walk you through from start to finish.
 - :ref:`Example4 - Bacteria <Example4>`
 - :ref:`Example5 - Birefringent Discs <Example5>`
 
-
+  
 Working with the output data
 ----------------------------
 
