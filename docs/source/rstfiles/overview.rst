@@ -15,7 +15,7 @@ To build a tracking project there are several steps
 2. Preprocess the images for tracking. Different methods require
    different things. Some need binary black and white images, others need grayscale.
    You can also perform a lot of operations to improve how easy it is to track the 
-   objects your interested in.
+   objects you're interested in.
 3. Track - which means to locate the position of objects within a frame. 
    There are 3 main methods that are currently implemented in this software:
 
@@ -92,7 +92,7 @@ When everything is completely setup you can process the entire movie by clicking
 all the stages that are selected. It will produce a <moviename>.hdf5 file and if selected an annotated version
 of the movie called <moviename>_annotated.mp4. It will also produce a <moviename>_expt.param which is a copy 
 of the settings file used to process the data. This gives you a permanent record of the settings used to 
-process a particularl movie and can also be used to process other videos with the same settings.
+process a particular movie and can also be used to process other videos with the same settings.
 
 - Close the software.
 
