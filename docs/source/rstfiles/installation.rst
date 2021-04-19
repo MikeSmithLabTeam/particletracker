@@ -35,7 +35,7 @@ If you are comfortable in python skip through!
 On Windows type Anaconda at the windows search and then select "Anaconda Prompt"
 On Linux and Mac open a terminal. 
 
-- Create a conda environment by typing "conda create --name particle"
+- Create a conda environment by typing "conda create -n particle"
 - Type "conda activate particle"
 - conda install git
 - conda install pyqt
