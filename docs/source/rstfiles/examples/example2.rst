@@ -120,3 +120,5 @@ To display the temperature we need a "text label" to place static text on the im
 data that is specific to a single frame. Both of these can be added in the annotation section.
 We add the following settings to text label: text: T=, position: (10,40), font_size: 2, font_thickness: 2, font_colour: (0,0,255). We then
 add the following settings to var_label: var_column : temp, position: (80,40), font_size: 2, font_thickness: 2, font_colour: (0,0,255). 
+
+:ref:`Example 3 <Example3>` 
