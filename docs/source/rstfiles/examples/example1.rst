@@ -130,4 +130,5 @@ Load up the video eyes.mp4 from the testdata folder and try the following steps.
     you can supply the path and filename of the settings filename as keyword arguments to the track_gui. These files can
     also be used with the track_batchprocess() method to process a whole folder of videos using the same settings. See :ref:`Batch Processing<Batch>`
     
+    :ref:`Example 2 <Example2>` 
 
