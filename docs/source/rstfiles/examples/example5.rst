@@ -29,7 +29,7 @@ In the "track" tab the get_intensities box is by default False. However, we can 
 function, defined in get_intensities, in this box. This function is sent a cropped and masked image of each individual particle that is
 tracked. See an example in the figure below:
 
-.. figure:: /resources/hydrogel3.png
+.. figure:: /resources/discs3.png
     :width: 100
     :align: center
 
