@@ -12,7 +12,7 @@ Standard use
    rstfiles/installation
    rstfiles/gettingstarted
    rstfiles/overview
-   rstfiles/examples/examples
+   rstfiles/examples
    rstfiles/batchprocessing
 
 
