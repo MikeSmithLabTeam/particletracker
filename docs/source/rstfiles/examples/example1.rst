@@ -20,11 +20,11 @@ Load up the video eyes.mp4 from the testdata folder and try the following steps.
     the checbox next to crop. We then click hold and drag to create a rectangle around the eyes.
     We then uncheck the same checkbox and the image updates to the selected region. We can improve
     things a bit more by masking the image to leave only the eyes. To do this from the drop
-    down list on the righ select mask_rectangle and push the button "Add method" twice. Drag
+    down list on the right select mask_rectangle and push the button "Add method" twice. Drag
     and drop the mask_rectangle and mask_rectangle*1 above the ----inactive---- place holder.
     For each tool select its checkbox and drag the the mask around each eye before unchecking each box.
-    You can adjust each mask by simply rechecking the checkbox and moving the handles. check
-    the final image by pushing the button below the image labelled captured image. this
+    You can adjust each mask by simply rechecking the checkbox and moving the handles. Check
+    the final image by pushing the button below the image labelled captured image. This
     shows you the preprocessed image upon which tracking is performed. Once happy push the button
     again.
 
@@ -53,7 +53,7 @@ Load up the video eyes.mp4 from the testdata folder and try the following steps.
     tab and check the box on this tab to make it active. Initially nothing happens! Go back to the 
     track tab. To estimate roughly the size of the eyes. Move your mouse to the left hand edge of the iris of one eye and double left click.
     A green bar pops up indicating the coordinate that you clicked. Note this down and move to the right hand edge of an eye
-    and double click again (The numbers are also printed to the terminal. We can use these numbers to guestimate the approximate
+    and double click again (The numbers are also printed to the terminal). We can use these numbers to guestimate the approximate
     radius. We don't need to be too precise but if we leave this range large it will seriously slow down the finding of circles.
     We estimate about 35 pixels. The scale for the min_rad and max_rad are not very helpful. Select the cog next to each one and in the 
     pop up boxes type 1, 50, 2 respectively. This adjusts everything to a more usable range. 
