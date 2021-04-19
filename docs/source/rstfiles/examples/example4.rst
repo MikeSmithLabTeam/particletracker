@@ -47,4 +47,6 @@ found in the postprocessing tab. This enables you to select a variety of differe
 to filter out just the ones you want. We will show later using the Jupyter notebook that having generated these columns
 it is then relatively simple to perform calculations on a subset of the data.
 
-Finish this example by clicking the "Process" button to generate the data which we will refer to later.
+Finish this example by clicking the "Process" button
+
+:ref:`Example 5<Example 5>` 
