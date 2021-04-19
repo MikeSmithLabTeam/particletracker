@@ -51,7 +51,7 @@ which will walk you through from start to finish.
 - :ref:`Example2 - Diffusing Colloids <Example2>`
 - :ref:`Example3 - Swelling Hydrogels <Example3>`
 - :ref:`Example4 - Bacteria <Example4>`
-- :ref:`Example5 - Birefringent Discs <Example 5>`
+- :ref:`Example5 - Birefringent Discs <Example5>`
 
 
 Working with the output data
