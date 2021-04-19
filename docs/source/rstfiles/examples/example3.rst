@@ -75,8 +75,7 @@ identified.
     add voronoi under the postprocess tab and also add voronoi under the annotate tab. This will calculate and display
     the voronoi network. In the process it will also generate a column called "voronoi_area" which contains the area
     associated with each particle. You could use this for example to calculate the local density of particles. 
-    We shall demonstrate this when we consider working with the outputted data. With some methods the user specifies
-    the output column. However, there are a number of methods where the new column name is chosen automatically.
+    With some methods the user specifies the output column. However, there are a number of methods where the new column name is chosen automatically.
     You can find out the details for each method in the notes section in the reference for each function on the 
     readthedocs page.
 
@@ -89,7 +88,7 @@ identified.
     Click "Process" to gather the data.
 
 
-
+:ref:`Example 4<Example4>` 
 
 
 
