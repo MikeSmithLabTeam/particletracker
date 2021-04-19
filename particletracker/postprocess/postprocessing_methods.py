@@ -977,9 +977,8 @@ def add_frame_data(df, f_index=None, parameters=None, call_num=None):
     Notes
     -----
     This is done by creating a .csv or .xlsx file and reading it in within the gui. 
-    The file should have two columns: the first column should have a complete list of 
-    all the frame numbers starting at zero; the second column should have the data for 
-    each frame listed. 
+    The file should have one column with the data for 
+    each frame listed on the correct line. 
 
     
     data_filename
@@ -1013,7 +1012,7 @@ def add_frame_data(df, f_index=None, parameters=None, call_num=None):
 
         if '.csv' in params[method_key]['data_filename']:
             filename = os.path.join(datapath,params[method_key]['data_filename'])
-            new_df = pd.read_csv(filename, header=None)
+            new_df = pd.read_csv(filename, header=None, squeeze=True)
         elif '.xlsx' in params[method_key]['data_filename']:
             filename = os.path.join(datapath,params[method_key]['data_filename'])
             new_df = pd.read_excel(filename,header=None, squeeze=True)
