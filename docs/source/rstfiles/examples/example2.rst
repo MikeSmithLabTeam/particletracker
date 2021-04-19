@@ -9,7 +9,7 @@ there are other feature finding (tracking) algorithms in this software the track
 used in linking these features for all the different algorithms. You should therefore cite this project
 in any publications regardless of whether you used the trackpy "track" algorithm.
 
-This example tracks the motion of some 500nm colloids in water, viewed using a brightfield microscopy.
+This example tracks the motion of some 500nm colloids in water, viewed using a brightfield microscope.
 We have set up a few of the steps in this example for you in the colloids.param file. This file
 contains all the settings used. Rather than explain the mechanics of setting up the steps as we did in 
 the first example, we will just describe what each method is doing.
