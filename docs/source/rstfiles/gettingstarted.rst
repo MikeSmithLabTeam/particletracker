@@ -52,6 +52,7 @@ which will walk you through from start to finish.
 - :ref:`Example3 - Swelling Hydrogels <Example3>`
 - :ref:`Example4 - Bacteria <Example4>`
 - :ref:`Example5 - Birefringent Discs <Example5>`
+- :ref:`Example6 - Working with the final data in a Jupyter Notebook <Example6>`
 
 Working with the output data
 ----------------------------
