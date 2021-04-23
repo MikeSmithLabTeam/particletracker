@@ -75,7 +75,7 @@ class AnnotatorError(BaseError):
         super().__init__(e)
         self.error_process = 'Annotating Error - '
 
-class ExcelError(BaseError):
+class CsvError(BaseError):
     def __init__(self, e):
         super().__init__(e)
-        self.error_process = 'Error writing to excel'
+        self.error_process = 'Error writing to csv'

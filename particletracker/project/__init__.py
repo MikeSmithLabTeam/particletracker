@@ -70,7 +70,7 @@ class PTWorkflow:
                                                        parameters=self.parameters[
                                                            'annotate'], frame=self.cap.read_frame(self.parameters['experiment']['frame_range'][0]))
 
-    def process(self, use_part=False, excel=False):
+    def process(self, use_part=False, csv=False):
         """Process an entire video
 
         Process is called on the main instance using the command
@@ -81,12 +81,11 @@ class PTWorkflow:
 
         if use_part == True the processing perorms the postprocessing and annotation steps only. 
 
-        if excel == True this will export the data as an excel file with the name videoname.xlsx
+        if csv == True this will export the data as an csv file with the name videoname.xlsx
 
         :return:
         """
-        print('process')
-        print(self.parameters['experiment']['frame_range'])
+        
         try:
             if not use_part:
                 if self.track_select:
@@ -98,12 +97,12 @@ class PTWorkflow:
             if self.annotate_select:
                 self.an.annotate(use_part=use_part)
         
-            if excel:
+            if csv:
                 try:
                     df = pd.read_hdf(self.data_filename)
-                    df.to_excel(self.data_filename[:-5] + '.xlsx')
+                    df.to_csv(self.data_filename[:-5] + '.csv')
                 except Exception as e:
-                    ExcelError(e)
+                    CsvError(e)
         except BaseError as e:
             if self.error_reporting is not None:
                 flash_error_msg(e, self.error_reporting)

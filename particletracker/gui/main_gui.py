@@ -28,15 +28,14 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, movie_filename=None, settings_filename=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
         
+        self.movie_filename=None
         if movie_filename is not None:
             if isfile(movie_filename):
                 self.movie_filename = str(Path(movie_filename))
             else:
-                self.movie_filename = None
-        else:
-            self.movie_filename = None
+                movie_filename = None
             
-        if self.movie_filename is None:
+        if movie_filename is None:
             ok, self.movie_filename = self.open_movie_dialog()
 
         if settings_filename is not None:
@@ -49,6 +48,7 @@ class MainWindow(QMainWindow):
             self.load_default_settings()    
 
         self.reboot()
+
 
     def reboot(self, open_settings=True):
         if hasattr(self, 'main_panel'):
@@ -129,11 +129,11 @@ class MainWindow(QMainWindow):
 
         self.toolbar.addSeparator()
 
-        self.excel=False
-        self.export_to_excel = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to Excel', self)
-        self.export_to_excel.triggered.connect(self.export_to_excel_click)
-        self.export_to_excel.setCheckable(True)
-        self.toolbar.addAction(self.export_to_excel)
+        self.csv=False
+        self.export_to_csv = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to csv', self)
+        self.export_to_csv.triggered.connect(self.export_to_csv_click)
+        self.export_to_csv.setCheckable(True)
+        self.toolbar.addAction(self.export_to_csv)
 
         process_part_button = QAction(QIcon(os.path.join(resources_dir,"clapperboard--minus.png")), "Process part", self)
         process_part_button.triggered.connect(self.process_part_button_click)
@@ -185,7 +185,7 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(close_button)
 
         self.process_menu.addAction(self.autosave_on_process)
-        self.process_menu.addAction(self.export_to_excel)
+        self.process_menu.addAction(self.export_to_csv)
         self.process_menu.addAction(process_part_button)
         self.process_menu.addAction(self.use_part_button)
         self.process_menu.addAction(process_button)
@@ -437,11 +437,10 @@ class MainWindow(QMainWindow):
 
     def open_settings_dialog(self):
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        self.recovery_settings_filename = self.settings_filename
+        #options |= QFileDialog.DontUseNativeDialog
         if self.settings_filename is None:
             settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File", '',
-                                                               "settings (*.param)", options=options)
+                                                   "settings (*.param)", options=options)
         else:
             settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File",
                                                                self.settings_filename.split('.')[0],
@@ -454,7 +453,7 @@ class MainWindow(QMainWindow):
 
     def load_default_settings(self):
         pathname, _ = os.path.split(self.movie_filename)
-        self.settings_filename = os.path.join(pathname, 'default.param')
+        self.settings_filename = os.path.normpath(os.path.join(pathname, 'default.param'))
         create_param_file(self.settings_filename)
         self.reboot()
 
@@ -470,7 +469,7 @@ class MainWindow(QMainWindow):
         
     def save_settings_button_click(self):
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
+        #options |= QFileDialog.DontUseNativeDialog
         file_settings_name, _ = QFileDialog.getSaveFileName(self, "Save Settings File", self.settings_filename.split('.')[0],
                                                         "settings (*.param)", options=options)
 
@@ -481,8 +480,8 @@ class MainWindow(QMainWindow):
         if self.live_update_button.isChecked():
             self.update_viewer()
 
-    def export_to_excel_click(self):
-        self.excel = self.export_to_excel.isChecked
+    def export_to_csv_click(self):
+        self.csv = self.export_to_csv.isChecked
 
     def process_part_button_click(self):
         '''
@@ -526,9 +525,9 @@ class MainWindow(QMainWindow):
             write_paramdict_file(self.tracker.parameters, self.settings_filename)
 
         if self.use_part_button.isChecked():
-            self.tracker.process(use_part=True, excel=self.excel)
+            self.tracker.process(use_part=True, csv=self.csv)
         else:
-            self.tracker.process(excel=self.excel)
+            self.tracker.process(csv=self.csv)
 
         write_paramdict_file(self.tracker.parameters, self.movie_filename[:-4] + '_expt.param')
         QMessageBox.about(self, "", "Processing Finished")

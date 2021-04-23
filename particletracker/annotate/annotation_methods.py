@@ -128,17 +128,17 @@ def var_label(frame, data, f, parameters=None, call_num=None):
         if var_column == 'index':
             text = str(f)
         else:
-            text = str(round(data.get_info(f, var_column)[0],2))
-        position = parameters[method_key]['position']
-
-        
+            print('test')
+            info = np.unique(data.df.loc[f, var_column])[0]
+            text = str(info)
+        position = parameters[method_key]['position']        
 
         annotated_frame=cv2.putText(frame, text, position, cv2.FONT_HERSHEY_COMPLEX_SMALL,
                                     int(parameters[method_key]['font_size']),
                                     parameters[method_key]['font_colour'],
                                     int(parameters[method_key]['font_thickness']),
                                     cv2.LINE_AA)
-
+    
         return annotated_frame
     except Exception as e:
         raise VarLabelError(e)

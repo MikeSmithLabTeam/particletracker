@@ -976,7 +976,7 @@ def add_frame_data(df, f_index=None, parameters=None, call_num=None):
     
     Notes
     -----
-    This is done by creating a .csv or .xlsx file and reading it in within the gui. 
+    This is done by creating a .csv file and reading it in within the gui. 
     The file should have one column with the data for 
     each frame listed on the correct line. 
 
@@ -1009,15 +1009,10 @@ def add_frame_data(df, f_index=None, parameters=None, call_num=None):
         params = parameters['postprocess']
         method_key = get_method_key('add_frame_data', call_num)
         datapath = params[method_key]['data_path']
-
-        if '.csv' in params[method_key]['data_filename']:
-            filename = os.path.join(datapath,params[method_key]['data_filename'])
-            new_df = pd.read_csv(filename, header=None, squeeze=True)
-        elif '.xlsx' in params[method_key]['data_filename']:
-            filename = os.path.join(datapath,params[method_key]['data_filename'])
-            new_df = pd.read_excel(filename,header=None, squeeze=True)
-        else:
-            print('Unknown file type')
+        filename = os.path.join(datapath,params[method_key]['data_filename'])
+        if '.csv' not in filename:
+            filename = filename + '.csv'
+        new_df = pd.read_csv(filename, header=None, squeeze=True)
         df[params[method_key]['new_column_name']] = new_df
     
         return df

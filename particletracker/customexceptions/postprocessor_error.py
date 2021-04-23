@@ -87,7 +87,7 @@ class LogicOrError(PostprocessorError):
 class AddFrameDataError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
-        self.error_msg = 'add_frame_data error'
+        self.error_msg = 'add_frame_data error - file type should be Csv with single column of data of same length as number of frames'
         self.e = e
 
 class NeighboursError(PostprocessorError):
