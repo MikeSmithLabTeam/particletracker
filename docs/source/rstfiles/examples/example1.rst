@@ -3,7 +3,9 @@
 Example 1 - Eye tracking
 ========================
 
-In this first example we are going to do some eye tracking using the hough tracking method. We will describe 
+In this first example we are going to do some eye tracking using the hough tracking method. This is probably
+not the most common particle tracking case but it makes a good introduction to the software since the number
+of particles is small and it is easy to see what is happening. We will describe 
 this simple example in quite a lot of detail. Later examples will build on each other so 
 it may be worth doing this even if you think you are unlikely to want to track eyes or even use the Hough Circles algorithm. 
 
@@ -16,8 +18,8 @@ If you are unsure how to start the software read the description in :ref:`How do
 Load up the video eyes.mp4 from the testdata folder and try the following steps.
 
 1. Crop and mask the image  - we are not interested in the area outside the person's eyes.
-    To do this we select the crop tab. At the bottom right hand side to the page we check
-    the checbox next to crop. We then click hold and drag to create a rectangle around the eyes.
+    To do this we select the crop tab. At the bottom right hand side of the page we check
+    the checkbox next to crop. We then click, hold and drag to create a rectangle around the eyes.
     We then uncheck the same checkbox and the image updates to the selected region. We can improve
     things a bit more by masking the image to leave only the eyes. To do this from the drop
     down list on the right select mask_rectangle and push the button "Add method" twice. Drag
@@ -108,13 +110,13 @@ Load up the video eyes.mp4 from the testdata folder and try the following steps.
 
 8. Accessing the data
     Once we are satisfied that the data is tracked properly we will probably want to calculate something
-    meaningful with it. During the processing of a video the data is automatically stored in a <moviename>.hdf5 file.
+    meaningful with it! During the processing of a video the data is automatically stored in a <moviename>.hdf5 file.
     The standard approach would be to use python to interact with this data. In later examples we will explore
     the example Jupyter notebook that illustrates very simply how to extract and manipulate the data. However, some users 
-    may prefer just to extract the data in a simple excel file. For simple projects where the amount of data is small 
+    may prefer just to extract the data in a simple csv file. For simple projects where the amount of data is small 
     this is fine. We do however emphasise that as the number of particles and frames increases this will become
-    almost unworkable. To extract a copy of the data using excel you must toggle on the excel icon on the toolbar. When you now 
-    click "Process" or "Process part" a file named <moviename>.xlsx will also be generated in the same folder as the 
+    more difficult. To extract a copy of the data using csv you must toggle on the spreadsheet icon on the toolbar. When you now 
+    click "Process" or "Process part" a file named <moviename>.csv will also be generated in the same folder as the 
     movie.
 
 .. figure:: /resources/eyes4.png

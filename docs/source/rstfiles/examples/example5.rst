@@ -43,5 +43,5 @@ the radius of a circle in pixels about this centroid to send to the get_intensit
 Whilst the implementation is currently rather limited this can easily be extended by using the 
 template defined in user_methods to analyse the details of each tracked object. 
 
-:ref:`Example 6 <Example 6>` 
+:ref:`Example 6 <Example6>` 
 
