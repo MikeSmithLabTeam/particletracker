@@ -66,6 +66,7 @@ https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
 (Optional - nice way to work with the final data in a jupyter notebook) 
 - conda install jupyterlab 
+- conda install openpyxl
 
 to upgrade use:
 
