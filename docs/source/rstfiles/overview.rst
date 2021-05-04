@@ -59,7 +59,6 @@ The icons and file menu enable you to:
 - Load a settings .param file
 - Save the current settings to a .param file 
 - Choose a file to act as the default settings
-- Reload the default settings into the current project
 - Toggle the live updates. 
 
 If you are working with big images or the tracking method is slow for
