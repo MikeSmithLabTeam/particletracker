@@ -76,7 +76,7 @@ The parameters are automatically assessed to decide what gui element to create.
 - Param3 and 4 produce a text box which can take any value. The software recognises 'None', 'True' and 'False' as None, True and False.
 
 To regenerate the settings file you can now call create_param_file(filename.param) to create a new file 
-which can be read into the gui. 
+which can be read into the gui. This function is also used to create default settings when no settings filename is supplied.
 
 .. code-block:: python
 
@@ -95,7 +95,7 @@ To access the variables in your new dictionary entry inside the new method you n
 Important note about reinstallation / upgrading particletracker
 ---------------------------------------------------------------
 
-It is worth backing up your user_methods.py and param_file_creator.py files. If you upgrade and reinstall these can be easily lost so keep separate copies and then copy them back into the correct locations. If you are using the miniconda environments suggested it can be a pain to find the correct locations. A useful tip for quickly finding the directory is to activate your conda environment and then type python at the command prompt. Then type "import particletracker" followed by "particletracker.__file__". This will print the root directory of your particletracker installation. user_methods.py is in this root folder and param_file_creator is contained in the "general" folder.
+It is worth backing up your user_methods.py and param_file_creator.py files. If you upgrade and reinstall these can be easily lost so keep separate copies and then copy them back into the correct locations. If you are using the miniconda environments suggested it can be a pain to find the correct locations. A useful tip for quickly finding the directory is to activate your conda environment and then type python at the command prompt. Then type "import particletracker" followed by "particletracker.__file__". This will print the root directory of your particletracker installation. user_methods.py is in this root folder and param_file_creator is contained in the "general" subfolder.
 
 
 
