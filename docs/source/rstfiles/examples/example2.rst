@@ -36,7 +36,7 @@ can affect tracking. The absolute_diff is a very useful method particularly for 
 It simply returns the absolute difference between a pixels intensity and a reference value set by the user.
 In microscopy (as here) objects below the image plane often appear dark whilst those above it often appear 
 bright. Using the absolute diff enables one to see all the objects as bright features (below left). To see the output
-move the threshold method below inactive temporarily and toggle the "Capture Image" button below the viewer.
+move the threshold method below inactive temporarily and toggle the "Capture Image" button below the viewer. Now move the threshold method back.
 Having done that we take a global threshold setting all pixels brighter than a threshold value to 255 and those
 dimmer to 0. If you again toggle the image you'll see white particles on a completely black background (below right).
 
@@ -45,7 +45,7 @@ dimmer to 0. If you again toggle the image you'll see white particles on a compl
     :align: center
 
 Next we selected trackpy in the Track tab and adjusted the size estimate for the features to approximately the 
-correct size. We also selected the circles so that we can immediately see how different parameters affect the tracking.
+correct size. We also selected the circles in the annotation section so that we can immediately see how different parameters affect the tracking.
 A usual workflow involves assessing iteratively how different factors in the preprocessing and tracking influence
 the fidelity of the final tracking. For applications like this where we will use linking it is not a problem if one detects
 the odd extra spurious particle. The reason for this is that when we come to link
