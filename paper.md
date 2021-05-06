@@ -7,7 +7,7 @@ authors:
   - name: Mike I. Smith^[Corresponding author mike.i.smith\@nottingham.ac.uk]
     orcid: 0000-0002-8210-1264
     affiliation: "1" # (Multiple affiliations must be quoted)
-  - name: James Downs
+  - name: James G. Downs
     affiliation: 1
 affiliations:
   - name: School of Physics, University of Nottingham, UK, NG7 2RD
