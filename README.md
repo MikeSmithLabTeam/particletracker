@@ -15,6 +15,9 @@ ParticleTracker is a gui based particle tracking software that brings together a
 Add the following argument to setup.py setuptools.setup()
 
     dependency_links=['https://github.com/MikeSmithLabTeam/particletracker/tarball/repo/master#egg=package-1.0'],
+    
+## Contributions
+    Details about contributing to the ParticleTracker project can be found here: https://github.com/MikeSmithLabTeam/particletracker/blob/master/CONTRIBUTING.md
 
 ## Licensing
-This project is licensed under the terms of the MIT licence.
+This project is licensed under the terms of the MIT licence (https://github.com/MikeSmithLabTeam/particletracker/blob/master/license.txt).
