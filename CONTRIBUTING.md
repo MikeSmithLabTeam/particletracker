@@ -10,9 +10,11 @@
 
 #### **intend to add a new feature or change an existing one?**
 
-* If you'd like to extend / modify the functionality of ParticleTracker yourself please create a pull request. It is probably worth discussing this with us first since if the code is too specialist it might not be appropriate to include it. We may also be able to suggest a good way of going about implementing the feature. 
+* If you'd like to extend / modify the functionality of ParticleTracker yourself please create a pull request. It is probably worth discussing this with us first since if the code is too specialist it might not be appropriate to include it. We may also be able to suggest a good way of going about implementing the feature. If you would like to join the project please also get in touch.
 
 #### **Do you have questions about the source code?**
 
 * We are happy to answer questions about the source code. Email: mikesmithlab@gmail.com or create an issue.
+
+
 
