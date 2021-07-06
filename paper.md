@@ -31,12 +31,12 @@ Though the underlying code is written in python it can be used as stand alone ex
 of each part of the code can be accomplished as simply as adding the project specific
 code to a preconfigured template and adding a single python dictionary to a parameter file.
 
-![Example projects created using ParticleTracker](https://github.com/MikeSmithLabTeam/particletracker/blob/master/graphicalabstractfig.png)
+![Example projects created using ParticleTracker.\label{fig:fig1}](graphicalabstractfig.png)
 
 `ParticleTracker` was initially designed with the needs of masters students in mind who,
 in semester long projects, want to quickly move beyond writing code to track different types of objects (bubbles, bacteria, colloids, granular particles etc)
 and focus on the underlying science in their respective projects. Whilst the projects
-are varied, some of the underlying tools needed are often the same, with some small element that is specific to each project. The combined needs of efficiently setting up a new tracking project, an intuitive common interface for different underlying algorithms, but with the ability to easily extend some small part of it has therefore guided our design philosophy. Figure 1 illustrates a few example tracking projects (a) diffusing colloids (b) jamming in birerefringent discs (c) classifying dividing bacteria, (d) swelling hydrogels, which with a little practise can be setup in a few minutes. However, as the software has developed it has become clear that the development speed, uniform interface to different underlying methods, and versatility of the project would also be useful for larger scale research projects. Especially since it can be used by those with or without significant coding experience.
+are varied, some of the underlying tools needed are often the same, with some small element that is specific to each project. The combined needs of efficiently setting up a new tracking project, an intuitive common interface for different underlying algorithms, but with the ability to easily extend some small part of it has therefore guided our design philosophy. Figure \autoref{fig:fig1} illustrates a few example tracking projects (a) diffusing colloids (b) jamming in birerefringent discs (c) classifying dividing bacteria, (d) swelling hydrogels, which with a little practise can be setup in a few minutes. However, as the software has developed it has become clear that the development speed, uniform interface to different underlying methods, and versatility of the project would also be useful for larger scale research projects. Especially since it can be used by those with or without significant coding experience.
 
 # Acknowledgements
 
