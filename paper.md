@@ -31,7 +31,7 @@ Though the underlying code is written in python it can be used as stand alone ex
 of each part of the code can be accomplished as simply as adding the project specific
 code to a preconfigured template and adding a single python dictionary to a parameter file.
 
-![Example projects created using ParticleTracker.\label{fig:fig1}](graphicalabstractfig.png)
+![Example projects created using ParticleTracker (a) diffusing colloids (b) stress transmission in jammed birefringent discs (c) identifying dividing bacteria (d) swelling in hydrogel particles .\label{fig:fig1}](graphicalabstractfig.png)
 
 `ParticleTracker` was initially designed with the needs of masters students in mind who,
 in semester long projects, want to quickly move beyond writing code to track different types of objects (bubbles, bacteria, colloids, granular particles etc)
