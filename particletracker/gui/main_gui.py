@@ -100,12 +100,12 @@ class MainWindow(QMainWindow):
         ---------------------------------------------------------------------------------------------------
         '''
         open_movie_button = QAction(QIcon(os.path.join(resources_dir,"folder-open-film.png")), "Open File", self)
-        open_movie_button.setStatusTip("Open Movie or Img Sequence")
+        open_movie_button.setStatusTip("Open Movie")
         open_movie_button.triggered.connect(self.open_movie_click)
         self.toolbar.addAction(open_movie_button)
 
         open_settings_button = QAction(QIcon(os.path.join(resources_dir,"script-import.png")), "Open Settings File", self)
-        open_settings_button.setStatusTip("Open Movie or Img Sequence")
+        open_settings_button.setStatusTip("Open Movie")
         open_settings_button.triggered.connect(self.open_settings_button_click)
         self.toolbar.addAction(open_settings_button)
 
@@ -423,10 +423,10 @@ class MainWindow(QMainWindow):
         options |= QFileDialog.DontUseNativeDialog
 
         if self.movie_filename is None:
-            movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie or Img Sequence", QDir.homePath(),
+            movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie", QDir.homePath(),
                                                             "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v)", options=options)
         else:
-            movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie or Img Sequence",
+            movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie",
                                                             self.movie_filename.split('.')[0],
                                                             "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v)", options=options)
         if ok:
