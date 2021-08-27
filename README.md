@@ -7,6 +7,9 @@ ParticleTracker is a gui based particle tracking software that brings together a
 ## Documentation 
 [https://particle-tracker.readthedocs.io/en/master/](https://particle-tracker.readthedocs.io/en/master/)
 
+## Video Tutorials
+[Youtube Playlist of Tutorials](https://www.youtube.com/playlist?list=PL56zLBbX0yZZw18yyMM9tD0fLrobmdbJG)
+
 ## Installation from github
     pip install git+https://github.com/MikeSmithLabTeam/particletracker
     
