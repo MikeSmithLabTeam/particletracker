@@ -7,7 +7,7 @@ Read below or watch the video:
 
 .. raw:: html
 
-   <iframe width="560" height="315" src="https://www.youtube.com/embed/iyeOTgB47yk&list=PL56zLBbX0yZZw18yyMM9tD0fLrobmdbJG&index=5&ab_channel=MikeSmith" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/iyeOTgB47yk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
 
 For this example which uses contour tracking, load the video bacteria.mp4 and also load the settingsfile bacteria.param.
 The settings file has a number of the steps preconfigured which hopefully by now you should
