@@ -40,7 +40,9 @@ all future tracking. Then if necessary you can automatically process batches of 
 
 Basic orientation for using the track_gui
 -----------------------------------------
-Read below or watch the video:
+
+Read below or watch the video
+
 
 .. raw:: html
 
