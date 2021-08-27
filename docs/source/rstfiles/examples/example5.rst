@@ -5,7 +5,7 @@ Example 5 - Birefringent Discs
 
 The final example uses a movie of birefringent rubber discs that are being compressed by a moveable barrier.
 Load the movie "discs.mp4" from the testdata folder and the settings file "discs.param". This example
-uses the hough tracking algorithm we looked at in example1. The parameters have been settings
+uses the hough tracking algorithm we looked at in example1. The parameters have been set
 to provide a reasonably good tracking of the discs. 
 
 .. figure:: /resources/discs1.png
@@ -15,7 +15,7 @@ to provide a reasonably good tracking of the discs.
 
 A number of things are worth noting in this example:
 
-1. One of the counter-intuitive things about the hough circles algorithm is that it can find circles which have centres outside the masked region. Click on the postprocess tab and move the remove_masked method below "----inactive----". You will see a number of extra circles appear at the edges, despite the fact that these are outside the masked region. Put the "remove_masked" method back (this method needs to go above the neighbours method so that the  network is calculated on the correct particles. 
+1. One of the odd things about the hough circles algorithm is that it can find circles which have centres outside the masked region. Click on the postprocess tab and move the remove_masked method below "----inactive----". You will see a number of extra circles appear at the edges, despite the fact that these are outside the masked region. Put the "remove_masked" method back (this method needs to go above the neighbours method so that the  network is calculated on the correct particles. 
 
 2. You will see that in some frames a spurious particle appears in the upper left. It does not exist in every frame. We can therefore use the linking strategy to remove this. Setting the memory value to 0 ensures that if a particle appears and disappears it will not be counted as the same object. We can then set the "min_frame_life" to be relatively long. Consequently, these transient tracks are filtered and the particle is removed. 
 
