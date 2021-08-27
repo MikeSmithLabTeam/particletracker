@@ -40,6 +40,13 @@ all future tracking. Then if necessary you can automatically process batches of 
 
 Basic orientation for using the track_gui
 -----------------------------------------
+Read below or watch the video:
+
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+        <iframe src="https://www.youtube.com/watch?v=ajEp18opM-Y&list=PL56zLBbX0yZZw18yyMM9tD0fLrobmdbJG&index=1&ab_channel=MikeSmith" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
 
 The track_gui is divided into a few key areas:
 
