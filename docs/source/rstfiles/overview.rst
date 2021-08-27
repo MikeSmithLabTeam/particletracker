@@ -42,7 +42,8 @@ Basic orientation for using the track_gui
 -----------------------------------------
 Read below or watch the video:
 
-.. youtube:: ajEp18opM-Y  
+.. raw:: html
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/ajEp18opM-Y" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
     
 
 The track_gui is divided into a few key areas:
