@@ -43,7 +43,7 @@ Basic orientation for using the track_gui
 
 Read below or watch the video
 
-`Overview video <https://www.youtube.com/watch?v=ajEp18opM-Y&ab_channel=MikeSmith>`_
+`Overview <https://www.youtube.com/watch?v=ajEp18opM-Y&ab_channel=MikeSmith>`_
 
 .. raw:: html
 
