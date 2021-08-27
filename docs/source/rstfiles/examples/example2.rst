@@ -13,7 +13,7 @@ Read below or watch the video:
 
 .. raw:: html
 
-   <iframe width="560" height="315" src="https://www.youtube.com/embed/rrase85-vmc&list=PL56zLBbX0yZZw18yyMM9tD0fLrobmdbJG&index=3&ab_channel=MikeSmith" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/rrase85-vmc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
 
 This example tracks the motion of some 500nm colloids in water, viewed using a brightfield microscope.
 We have set up a few of the steps in this example for you in the colloids.param file. This file
