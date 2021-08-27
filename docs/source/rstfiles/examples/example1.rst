@@ -9,13 +9,20 @@ of particles is small and it is easy to see what is happening. We will describe
 this simple example in quite a lot of detail. Later examples will build on each other so 
 it may be worth doing this even if you think you are unlikely to want to track eyes or even use the Hough Circles algorithm. 
 
-.. figure:: /resources/eyes1.png
-    :width: 400
-    :align: center
+Read below or watch the video
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/ajEp18opM-Y&list=PL56zLBbX0yZZw18yyMM9tD0fLrobmdbJG&ab_channel=MikeSmith" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
+    
 
 
 If you are unsure how to start the software read the description in :ref:`How do you start?<Start>`  
 Load up the video eyes.mp4 from the testdata folder and try the following steps.
+
+.. figure:: /resources/eyes1.png
+    :width: 400
+    :align: center
 
 1. Crop and mask the image  - we are not interested in the area outside the person's eyes.
     To do this we select the crop tab. At the bottom right hand side of the page we check
