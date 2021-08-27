@@ -42,7 +42,7 @@ Basic orientation for using the track_gui
 -----------------------------------------
 Read below or watch the video:
 
-.. youtube:: dQw4w9WgXcQ  
+.. youtube:: ajEp18opM-Y  
     
 
 The track_gui is divided into a few key areas:
