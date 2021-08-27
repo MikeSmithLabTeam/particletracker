@@ -7,7 +7,7 @@ Read below or watch the video:
 
 .. raw:: html
 
-   <iframe width="560" height="315" src="https://www.youtube.com/embed/849xglS3iIY&list=PL56zLBbX0yZZw18yyMM9tD0fLrobmdbJG&index=6&ab_channel=MikeSmith" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/849xglS3iIY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
 
 The final example uses a movie of birefringent rubber discs that are being compressed by a moveable barrier.
 Load the movie "discs.mp4" from the testdata folder and the settings file "discs.param". This example
