@@ -20,7 +20,7 @@ To build a tracking project there are several steps
    There are 3 main methods that are currently implemented in this software:
 
    1. Opencv Hough Circles
-   2. TrackPy an existing particle tracking library (`Trackpy <http://soft-matter.github.io/trackpy/v0.4.2>`_)
+   2. TrackPy an existing particle tracking library (`Trackpy <http://soft-matter.github.io/trackpy/stable>`_)
    3. Opencv Contour finding 
        
 
