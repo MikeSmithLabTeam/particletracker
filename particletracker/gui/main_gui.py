@@ -51,6 +51,7 @@ class MainWindow(QMainWindow):
 
 
     def reboot(self, open_settings=True):
+        
         if hasattr(self, 'main_panel'):
             self.main_panel.deleteLater()
             self.main_panel.setParent(None)
@@ -78,13 +79,17 @@ class MainWindow(QMainWindow):
     def init_ui(self, view_layout, settings_layout, reboot=True):
         if not hasattr(self, 'file_menu'):
             self.setup_menus_toolbar()
-        
+        else:
+            #This solves a bug which occurs when you have use_part_button checked
+            #and open a new video which has no .hdf5 file.
+            self.use_part_button.setChecked(False)
+
         self.setup_viewer(view_layout)# Contains image window, frame slider and spinbox.
         self.setup_settings_panel(settings_layout)# Contains all widgets on rhs.
       
 
     def setup_menus_toolbar(self):
-        #is for python gui, except is for pyinstaller
+        #is for python gui, 
         dir,_ =os.path.split(os.path.abspath(__file__))
         resources_dir = os.path.join(dir,'icons','icons')
         #Use these lines when using pyinstaller.
@@ -141,7 +146,6 @@ class MainWindow(QMainWindow):
 
         self.use_part_button = QAction(QIcon(os.path.join(resources_dir,"fire--exclamation.png")), "Use part processed", self)
         self.use_part_button.setCheckable(True)
-        self.use_part_button.setChecked(False)
         self.use_part_button.triggered.connect(self.use_part_button_click)
         self.toolbar.addAction(self.use_part_button)
 
@@ -175,12 +179,6 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(open_settings_button)
         self.file_menu.addAction(save_settings_button)
         self.file_menu.addAction(load_defaults)
-        #self.file_menu.addSeparator()
-        #self.file_menu.addAction(self.live_update_button)
-        #self.file_menu.addSeparator()
-        #self.file_menu.addAction(process_part_button)
-        #self.file_menu.addAction(self.use_part_button)
-        #self.file_menu.addAction(process_button)
         self.file_menu.addSeparator()
         self.file_menu.addAction(close_button)
 
@@ -429,6 +427,7 @@ class MainWindow(QMainWindow):
             movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie",
                                                             self.movie_filename.split('.')[0],
                                                             "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v)", options=options)
+ 
         if ok:
             self.movie_filename = movie_filename
             return True, movie_filename
@@ -506,7 +505,7 @@ class MainWindow(QMainWindow):
         is set by checking toggle status of this button.
         '''
         if isfile(self.movie_filename[:-4] + '.hdf5'):
-            for i in range(5):
+            for i in range(5):#index cycles through different tabs from experiment to link
                 if self.use_part_button.isChecked():
                     self.toplevel_settings.disable_tabs(i,enable=False)
                     self.toggle_img.setChecked(False)
