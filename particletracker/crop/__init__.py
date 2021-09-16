@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 
 from labvision.video import ReadVideo
-from labvision.images import display
 from ..customexceptions import CropMaskError, flash_error_msg
 
 class ReadCropVideo(ReadVideo):
