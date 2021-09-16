@@ -19,7 +19,7 @@ bibliography: paper.bib
 # Summary
 
 Tracking the motion of objects in a video is an important part of the
-analysis in a diverse range of subject disciplines [@Cells;@Nanoparticles;@Foams]. It enables one to automate the extraction of quantitative information about size, shape, motion etc. A number of programming libraries exist [@Trackpy;@opencv_library;@TrackMate] to help with this process but the code can be an entry barrier.
+analysis in a diverse range of subject disciplines [@Cells;@Nanoparticles;@Foams]. It enables one to automate the extraction of quantitative information about size, shape, motion etc. A number of tracking softwares exist [@Trackpy;@opencv_library;@TrackMate] to help with this process but the code can be an entry barrier.
 Even for researchers with the necessary skills, developing the code and optimising the parameters requires a significant investment for each new project. Open source tools that can simplify and expedite this process, whilst remaining flexible and easy to extend by the end user, would help to make particle tracking
 accessible to a broader range of researchers.
 
