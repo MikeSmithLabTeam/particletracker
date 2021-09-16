@@ -40,6 +40,8 @@ It might mean as little as adding a few lines of python code into a preconfigure
 Using the python version
 ------------------------
 
+The python version should work on all operating systems (Windows, Linux, Mac). It has only been thoroughly tested on Windows 10 and Ubuntu Linux.
+
 To install the python version here is a step by step recommended guide to setting things up.  In
 case you are coming to this new to python or new to programming we provide the steps in a lot of detail.
 If you are comfortable in python skip through! 
