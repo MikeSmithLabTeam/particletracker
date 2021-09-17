@@ -52,10 +52,15 @@ def create_param_file(filename):
 
     track = {
         'track_method':('contours',),
-        'trackpy':{'size_estimate':[7,1, 101,2],
+        'trackpy':{'diameter':[7,1, 101,2],
+                   'use_percentile': [False, ('True', 'False')],
+                   'percentile': [64, 0, 100, 1],
+                   'use_minmass': [False, ('True', 'False')],
+                   'minmass': [100.0, 0.0, 1000.0, 0.1],
                    'invert':[False, ('True','False')],
                    'get_intensities':False,
                    'intensity_radius':[2,1,200,1],
+                   'max_iterations': [10, 1, 50, 1],
                    'show_output':[False, ('True','False')]
                    },
         'hough':{'min_dist':[105,1,501,2],
