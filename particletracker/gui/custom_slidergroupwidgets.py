@@ -151,5 +151,8 @@ class CropMask(QWidget):
         #remove all existing widgets in self.layout
         for i in reversed(range(self.layout.count())): 
             self.layout.itemAt(i).widget().setParent(None)
+        print('check')
+        self.img_viewer.clearImage()
+        
         
             

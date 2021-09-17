@@ -81,8 +81,7 @@ class CheckableTabWidget(QTabWidget):
 
     def add_bottom_widgets(self, title):
         if 'crop' not in title:
-            self.param_adjustors = CollectionParamAdjustors(title, self.param_dict[title], self.param_change)
-                                                 
+            self.param_adjustors = CollectionParamAdjustors(title, self.param_dict[title], self.param_change)                                       
         else:
             self.param_adjustors = CropMask(title, self.param_dict[title],
                                             self.param_change, self.img_viewer, parent=self.parent)
