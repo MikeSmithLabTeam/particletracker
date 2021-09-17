@@ -34,7 +34,7 @@ def trackpy(ppframe,frame, parameters=None):
     everything else first.
 
 
-    size_estimate
+    diameter
         An estimate of the objects to be tracked feature size in pixels
     invert
         Set True if looking for dark objects on bright background
@@ -63,8 +63,17 @@ def trackpy(ppframe,frame, parameters=None):
 
     try:
         method_key = get_method_key('trackpy')
-        df = tp.locate(ppframe, get_param_val(parameters[method_key]['size_estimate']), invert=get_param_val(parameters[method_key]['invert']))
-
+        use_percentile = get_param_val(parameters[method_key]['use_percentile'])
+        use_minmass = get_param_val(parameters[method_key]['use_minmass'])
+        df = tp.locate(ppframe,
+                       get_param_val(parameters[method_key]['diameter']),
+                       minmass=get_param_val(parameters[method_key][
+                                                 'minmass']) if use_minmass else None,
+                       percentile=get_param_val(
+                           parameters[method_key]['diameter']) if use_percentile else 64,  # default for percentile is 64 not None
+                       invert=get_param_val(parameters[method_key]['invert']),
+                       max_iterations=get_param_val(parameters[method_key]['max_iterations'])
+                       )
         if parameters[method_key]['get_intensities'] != False:
             x = df['x'].to_numpy()
             y = df['y'].to_numpy()
@@ -92,7 +101,6 @@ def trackpy(ppframe,frame, parameters=None):
         return df
     except Exception as e:
         raise TrackpyError(e)
-        
 
 
 def hough(ppframe, frame,parameters=None):
