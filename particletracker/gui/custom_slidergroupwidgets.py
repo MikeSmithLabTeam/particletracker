@@ -148,4 +148,8 @@ class CropMask(QWidget):
         for i in reversed(range(num_widgets)):
             item = self.layout_outer.itemAt(i)
             item.widget().setParent(None)
+        #remove all existing widgets in self.layout
+        for i in reversed(range(self.layout.count())): 
+            self.layout.itemAt(i).widget().setParent(None)
+        
             
