@@ -9,7 +9,13 @@ class ReadCropVideo(ReadVideo):
     def __init__(self, parameters=None, filename=None, frame_range=(0,None,1), error_reporting=None):
         if error_reporting is not None:
             self.error = error_reporting
-        ReadVideo.__init__(self, filename=filename, frame_range=parameters['experiment']['frame_range'])
+        try:
+            ReadVideo.__init__(self, filename=filename, frame_range=parameters['experiment']['frame_range'])
+        except:
+            #Avoid crash if new video has num_frames < max_frames in settings file.
+            parameters['experiment']['frame_range'] = (0, None, 1)
+            ReadVideo.__init__(self, filename=filename, frame_range=parameters['experiment']['frame_range'])
+
         self.parameters = parameters['crop']
         '''
         If loading a new video with different dimensions,

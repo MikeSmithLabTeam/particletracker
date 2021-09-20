@@ -316,8 +316,11 @@ class MainWindow(QMainWindow):
             self.tracker.cap.set_frame_range((0,self.tracker.cap.num_frames,1))
         elif ('frame' in paramdict_location[1]) and (type(value) == tuple):
             frame_range = (self.frame_selector.slider._min,self.frame_selector.slider._max+1,self.frame_selector.slider._step)
-            self.update_dictionary_params(['experiment','frame_range'],frame_range, 'slider')
-            self.tracker.cap.set_frame_range(frame_range)
+            if (frame_range[1] <= self.tracker.cap.num_frames) | (frame_range[1] is None):
+                self.update_dictionary_params(['experiment','frame_range'],frame_range, 'slider')
+                self.tracker.cap.set_frame_range(frame_range)
+            else:
+                self.reset_frame_range_click()
         elif sender.meta == 'ResetMask':
             self.tracker.cap.reset()
             self.update_param_widgets('crop')
