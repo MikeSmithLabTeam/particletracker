@@ -1,3 +1,5 @@
+#https://codeloop.org/pyqt5-qprogressbar-with-qthread-practical-example/
+
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QDialog, QProgressBar, QPushButton, QVBoxLayout
 import sys
@@ -7,13 +9,13 @@ import time
  
 class MyThread(QThread):
     # Create a counter thread
-    change_value = pyqtSignal(int)
+    change_value = pyqtSignal(int, int, int, int)
     def run(self):
         cnt = 0
         while cnt < 100:
             cnt+=1
             time.sleep(0.3)
-            self.change_value.emit(cnt)
+            self.change_value.emit(cnt, 0, 100, 1)
 
 
 class ProgressDialog(QDialog):
@@ -37,10 +39,15 @@ class ProgressDialog(QDialog):
         #self.progressbar.setStyleSheet("QProgressBar::chunk {background: qlineargradient(x1: 0, y1: 0.5, x2: 1, y2: 0.5, stop: 0 red, stop: 1 white); }")
         #self.progressbar.setTextVisible(False)
         vbox.addWidget(self.progressbar)
-        #self.button.setStyleSheet('background-color:grey')
         self.setLayout(vbox)
+
+        #New stuff
         self.progressbar.setValue(0)
         self.show()
+        self.thread = MyThread()
+        self.thread.change_value.connect(self.setProgressVal)
+        self.thread.run()
+
 
     @pyqtSlot(int, int, int, int)    
     def setProgressVal(self, f, start, stop, step):

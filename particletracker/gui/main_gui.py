@@ -525,8 +525,8 @@ class MainWindow(QMainWindow):
 
     def process_button_click(self):
         #Trying to link progressbar value to percentage of frames tracked
-        self.progress_bar = ProgressDialog()
-        self.tracker.pt.track_progress.connect(self.progress_bar.setProgressVal) 
+        #self.progress_bar = ProgressDialog()
+        self.tracker.pt.track_progress.connect(test_progress)#self.progress_bar.setProgressVal) 
       
 
         self.tracker.reset_annotator()
@@ -545,3 +545,6 @@ class MainWindow(QMainWindow):
         sys.exit()
 
 
+@pyqtSlot(int, int, int, int)
+def test_progress(f, start, stop, step):
+    print(f)
