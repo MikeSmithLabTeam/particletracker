@@ -635,11 +635,11 @@ multiple frames have been processed and you are using part.
 '''
 def difference(df, f_index=None, parameters=None, call_num=None):
     '''
-    Difference of a particles values. 
+    Difference of a particles values on user selected column. 
 
     Notes
     -----
-    Returns the difference of a particle's values at span separation in frames to a new column.
+    Returns the difference of a particle's values on a particular column at span separation in frames to a new column.
     
 
     column_name
@@ -682,9 +682,9 @@ def difference(df, f_index=None, parameters=None, call_num=None):
             start = 0
         
         df_frames = df.loc[start:f_index,[column,'particle']]
-        df_output=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
-        df_output.reset_index('particle', inplace=True)
-        df.loc[f_index,[output_name]]=df_output.loc[f_index]
+        df_diff=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+        #df_output.reset_index('particle', inplace=True)
+        df.loc[f_index,[output_name]]=df_diff.loc[f_index]
     
         return df
     except Exception as e:
@@ -692,11 +692,11 @@ def difference(df, f_index=None, parameters=None, call_num=None):
 
 def mean(df, f_index=None, parameters=None, call_num=None):
     '''
-    Mean of a particles values. 
+    Rolling mean of a particles values. 
 
     Notes
     -----
-    Returns the mean of a particle's values to a new column. Useful
+    Returns the rolling mean of a particle's values to a new column. Useful
     to reduce fluctuations or tracking inaccuracies.
     
 

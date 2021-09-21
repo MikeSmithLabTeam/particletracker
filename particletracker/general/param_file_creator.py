@@ -117,11 +117,6 @@ def create_param_file(filename):
                       'cutoff':[50,1,200,1],
                     },
         'voronoi':{},
-        'smooth':{'column_name':'y',
-                  'output_name':'y_smooth',
-                  'span':[5,1,50,1],
-                  'method':'default'
-                  },
         'difference':{'column_name':'x',
                       'output_name':'x_diff',
                       'span':[10,1,50,1]
