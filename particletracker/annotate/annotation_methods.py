@@ -25,7 +25,9 @@ def text_label(frame, data, f, parameters=None, call_num=None):
     -----
     This function is for adding titles or info that doesn't change
 
-    
+
+    Parameters
+    ----------
     text
         Text to be displayed
     position
@@ -76,7 +78,10 @@ def text_label(frame, data, f, parameters=None, call_num=None):
 
 def var_label(frame, data, f, parameters=None, call_num=None):
     """
-    Var labels puts text on an image at specific location for each frame.
+    Var labels puts text on an image at specific location for each frame. The value
+    displayed in that frame is mapped to a column in the dataframe. The values next 
+    to each frame should all be the same for that column. Use for example to 
+    specify the temperature. 
 
     Notes
     -----
@@ -86,8 +91,8 @@ def var_label(frame, data, f, parameters=None, call_num=None):
     specified in the 'var_column' section of the dictionary.
     
 
-    Args
-    ----
+    Parameters
+    ----------
 
     var_column
         Column name containing the info to be displayed on each frame
@@ -145,11 +150,13 @@ def var_label(frame, data, f, parameters=None, call_num=None):
 
 def particle_labels(frame, data, f, parameters=None, call_num=None):
     """
-    Annotates image with particle ids. For this to be meaningful
+    Annotates image with particle info from one column. The most common use
+    is to indicate the particle index but any column of data could be used.
     
     Notes
     -----    
-    You must have already run 'processed part' with linking selected.
+    For particle ids to be meaningful, you must have already run 
+    'processed part' with linking selected.
     This is particularly useful if you want to extract information about
     specific particles. Annotate their ids to identify the reference
     id of the one you are interested in and then you can pull the subset
@@ -157,7 +164,8 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
     level data can however be displayed.
 
 
-
+    Parameters
+    ----------
     values_column
         Name of column containing particle info to be displayed.
     position
@@ -242,7 +250,7 @@ def _get_class_subset(data, f, parameters, method=None):
 
 def boxes(frame, data, f, parameters=None, call_num=None):
     """
-    Boxes places a rectangle on the image that encloses the contours of specified particles.
+    Boxes places a rotated rectangle on the image that encloses the contours of specified particles.
 
 
     Notes
@@ -251,6 +259,8 @@ def boxes(frame, data, f, parameters=None, call_num=None):
     in postprocessing. 
 
 
+    Parameters
+    ----------
     cmap_type
         Options are 'static' or 'dynamic'
     cmap_column
@@ -325,16 +335,20 @@ def _contour_inside_img(sz, contour):
 
 def circles(frame, data, f, parameters=None, call_num=None):
     """
-    Circles places a ring on every specified particle.
-
-
-    Notes
-    -----
-    You must have already run processed part with linking selected.
-
-
+    Circles places a ring on every specified particle
+    
+    
+    Parameters
+    ----------
+    xdata_column
+        Name of column to use for x coordinates
+    ydata_column
+        Name of column to use for y coordinates
+    rad_from_data
+        Specify radius manually: False or use measured rad: True. Only works
+        for Hough transform.
     radius
-        If tracking method specifies radius this is set automatically Otherwise this can be adjusted arbitrarily.
+        If rad_from_data = False this specifies the radius of circle
     cmap_type
         Options are static or dynamic
     cmap_column
@@ -421,6 +435,8 @@ def contours(frame, data, f, parameters=None, call_num=None):
     Requires the contours tracking method.
 
 
+    Parameters
+    ----------
     cmap_type
         Options are static or dynamic
     cmap_column
@@ -500,6 +516,8 @@ def networks(frame, data, f, parameters=None, call_num=None):
     See "neighbours" in postprocessing.
 
 
+    Parameters
+    ----------
     cmap_type
         Options are static or dynamic
     cmap_column
@@ -569,6 +587,8 @@ def voronoi(frame, data, f, parameters=None, call_num=None):
     See "voronoi" in postprocessing.
 
 
+    Parameters
+    ----------
     cmap_type
         Options are static or dynamic
     cmap_column
@@ -657,7 +677,9 @@ def vectors(frame, data, f, parameters=None, call_num=None):
     Vectors draws an arrow starting at each particle with a length and direction
     specified by 2 components. The magnitude of the vector can be scaled to be appropriate.
 
-   
+
+    Parameters
+    ----------
     dx_column
         Column name of x component of vector, defaults to 'x'
     dy_column
@@ -735,10 +757,16 @@ These methods require more than one frames data to be analysed so you'll need to
 """
 def trajectories(frame, data, f, parameters=None, call_num=None):
     """
-    Trajectories draws the historical track of each particle onto an image
+    Trajectories draws the historical track of each particle onto an image. 
 
-    Parameters  :
+    Notes
+    -----
+    Requires data from other frames hence you must have previously processed
+    the video and then toggled use_part_processed button.
 
+
+    Parameters
+    ----------
     x_column
         column name of x coordinates of particle,
     y_column

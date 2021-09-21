@@ -9,7 +9,7 @@ class TextLabelError(AnnotatorError):
 class VarLabelError(AnnotatorError):
     def __init__(self,e):
         super().__init__(e)
-        self.error_msg = 'var_label error'
+        self.error_msg = 'var_label error - Check var_column indicates column with data. Add data with postprocessing_method add_frame_data'
         self.e=e
 
 class ParticleLabelsError(AnnotatorError):
@@ -39,7 +39,7 @@ class CirclesError(AnnotatorError):
 class BoxesError(AnnotatorError):
     def __init__(self,e):
         super().__init__(e)
-        self.error_msg = 'boxes error'
+        self.error_msg = 'boxes error - requires boxes to be run in postprocessing'
         self.e=e
 
 class ContourInsideImageError(AnnotatorError):
@@ -51,20 +51,20 @@ class ContourInsideImageError(AnnotatorError):
 class ContoursError(AnnotatorError):
     def __init__(self,e):
         super().__init__(e)
-        self.error_msg = 'contours error'
+        self.error_msg = 'contours error - only works if using contours tracking method'
         self.e=e
 
 class VoronoiError(AnnotatorError):
     def __init__(self,e):
         super().__init__(e)
         
-        self.error_msg = 'voronoi error'
+        self.error_msg = 'voronoi error - requires voronoi to be run in postprocessing'
         self.e=e
 
 class NetworksError(AnnotatorError):
     def __init__(self,e):
         super().__init__(e)
-        self.error_msg = 'networks error'
+        self.error_msg = 'networks error - requires neighbours to be run in postprocessing'
         self.e=e
 
 class VectorsError(AnnotatorError):
@@ -82,5 +82,5 @@ class VectorsError(AnnotatorError):
 class TrajectoriesError(AnnotatorError):
     def __init__(self,e):
         super().__init__(e)
-        self.error_msg = 'tracjectories error'
+        self.error_msg = 'tracjectories error - requires processed video and use_part_processed selected to work'
         self.e=e        

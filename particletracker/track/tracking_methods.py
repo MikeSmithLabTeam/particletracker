@@ -25,22 +25,51 @@ def trackpy(ppframe,frame, parameters=None):
     Notes
     -----
     This method uses the trackpy python library which can be found here: 
-    http://soft-matter.github.io/trackpy/v0.4.2/
+    http://soft-matter.github.io/trackpy/v0.5.0
     If you use this method in a research publication be sure to cite according to 
     the details given here:
-    http://soft-matter.github.io/trackpy/v0.4.2/introduction.html
+    http://soft-matter.github.io/trackpy/v0.5.0/generated/trackpy.locate.html
 
     using get_intensities will seriously slow down the processing so optimise
     everything else first.
 
-
+    Parameters
+    ----------
     diameter
         An estimate of the objects to be tracked feature size in pixels
+    use_percentile
+
+    use_minmass
+        False or True to use minmass filter.
+    'minmass'
+        The minimum integrated brightness.
     invert
         Set True if looking for dark objects on bright background
     get_intensities
         If not False results in the software extracting a circular region around each particle of radius set by intensity radius and running a method in intensity_methods. Select the method by writing its name in the get_intensities box.
+    'intensity_radius'
+        The radius of the extracted intensity around each particle centre, see get_intensities.
+    show_output'
+        print tracked data to terminal window.
 
+
+    New Columns
+    -----------
+    x
+        x location of particle
+    y
+        y location of particle
+    mass
+        total integrated brightness of the blob        
+    size
+        radius of gyration of its Gaussian-like profile
+    ecc
+        eccentricity 
+    signal
+        ?!
+    raw_mass
+        total integrated brightness in raw_image
+        
 
     Args
     ----

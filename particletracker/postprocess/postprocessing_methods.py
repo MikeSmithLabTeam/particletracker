@@ -26,7 +26,10 @@ def angle(df, f_index=None, parameters=None, call_num=None):
     it uses tan2 so that -dx and +dy give a different result to +dx and -dy
     Angles are output in radians or degrees given by parameters['angle']['units']
     
-       
+    
+    Parameters
+    ----------
+
     x_column
         x component for calculating angle
     y_column
@@ -90,7 +93,8 @@ def classify(df, f_index=None, parameters=None, call_num=None):
     subsets of particles for later operations.
 
     
-
+    Parameters
+    ----------
     column_name
         input data column
     output_name
@@ -154,12 +158,18 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
     -----
     This method is designed to work with contours. It calculates the minimum
     rotated bounding rectangle that contains the contour. This is useful for 
-    calculating the orientation of shapes. It calculates the centre of mass of
-    the new rectangle 'box_cx' and 'box_cy', the angle of the long axis of the box relative
-    to the x axis 'box_angle'. It also stores length ('box_length'), width ('box_width'), area ('box_area')
-    and the coordinates of the corners ('box_pts').
+    calculating the orientation of shapes.
 
+    New Columns
+    -----------
+    'box_cx'    -   Centre of mass x coord of calculated box
+    'box_cy'    -   Centre of mass y coord of calculated box
+    'box_angle' -   the angle of the long axis of the box relative to the x axis 
+    'box_length'-   Long dimension of box
+    'box_width' -   Short dimension of box
+    'box_area'  -   Area of box
 
+    All values in units of pixels.
 
     Args
     ----
@@ -303,7 +313,8 @@ def logic_NOT(df, f_index=None, parameters=None, call_num=None):
     '''
     Apply a logical not operation to a column of boolean values.
 
-
+    Parameters
+    ----------
     column_name
         input data column
     column_name2
@@ -352,6 +363,8 @@ def logic_OR(df, f_index=None, parameters=None, call_num=None):
     '''
     Apply a logical or operation to two columns of boolean values.
 
+    Parameters
+    ----------
     column_name
         input data column
     column_name2
@@ -403,9 +416,9 @@ def logic_OR(df, f_index=None, parameters=None, call_num=None):
 def magnitude(df, f_index=None, parameters=None, call_num=None):
     '''
     Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
-
     
-    
+    Parameters
+    ----------
     column_name     :   First column
     column_name     :   Second column
     output_name     :   Column name for magnitude df
@@ -451,7 +464,6 @@ def neighbours(df, f_index=None, parameters=None, call_num=None):
     '''
     Find the nearest neighbours of a particle
 
-
     Notes
     -----
     Neighbours uses two different methods to find the nearest neighbours: a kdtree (https://en.wikipedia.org/wiki/K-d_tree) 
@@ -462,13 +474,20 @@ def neighbours(df, f_index=None, parameters=None, call_num=None):
     you can use "networks" in the annotation section.
 
 
+    Parameters
+    ----------
     method
         'delaunay' or 'kdtree'
     neighbours
         max number of neighbours to find. This is only relevant for the kdtree.
     cutoff
         distance in pixels beyond which particles are no longer considered neighbours
-        
+
+    New Columns
+    -----------
+
+    'neighbours'    -   A list of particle indices which are neighbours
+
     
     Args
     ----
@@ -551,6 +570,11 @@ def voronoi(df, f_index=None, parameters=None, call_num=None):
     The voronoi network is explained here: https://en.wikipedia.org/wiki/Voronoi_diagram
     This function also calculates the associated area of the voronoi cells.To visualise the result
     you can use "voronoi" in the annotation section.
+
+    New Columns
+    -----------
+    'voronoi'       -   The voronoi coordinates that surround a particle
+    'voronoi_area'  -   The area of the voronoi cell associated with a particle
 
 
     Args
@@ -638,7 +662,8 @@ def remove_masked(df, f_index=None, parameters=None, call_num=None):
     outside the masked area. This method enables you to remove those 
     points from the data.
     
-
+    Parameters
+    ----------
     column_name
         Input column names
     output_name
@@ -733,7 +758,8 @@ def difference(df, f_index=None, parameters=None, call_num=None):
     Returns the difference of a particle's values on a particular column at span separation in frames to a new column. Please be aware
     this is the difference between current frame and frame - span for each particle.
     
-
+    Parameters
+    ----------
     column_name
         Input column name
     output_name
@@ -797,7 +823,8 @@ def mean(df, f_index=None, parameters=None, call_num=None):
     placed at the centre of the rolling window. i.e [2,4,6,8,4] with window 3 would result
     in [NaN, 4, 6, 6, Nan].
     
-
+    Parameters
+    ----------
     column_name
         Input column name
     output_name
@@ -865,7 +892,8 @@ def median(df, f_index=None, parameters=None, call_num=None):
     placed at the centre of the rolling window. i.e [2,4,4,8,4] with window 3 would result
     in [NaN, 4, 4, 4, Nan].
     
-
+    Parameters
+    ----------
     column_name
         Input column name
     output_name
@@ -933,7 +961,8 @@ def rate(df, f_index=None, parameters=None, call_num=None):
     beginning of particle trajectories where calc is not possible. The 
     rate is calculated from diff between current frame and frame - span.
     
-
+    Parameters
+    ----------
     column_name
         Input column names
     output_name
@@ -1007,7 +1036,8 @@ def add_frame_data(df, f_index=None, parameters=None, call_num=None):
     The file should have one column with the data for 
     each frame listed on the correct line. 
 
-    
+    Parameters
+    ----------
     data_filename
         filename with extension for the df to be loaded. Assumes file is in same directory as video
     new_column_name

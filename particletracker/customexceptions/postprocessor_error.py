@@ -15,13 +15,13 @@ class ContourAreaError(PostprocessorError):
 class ContourBoxesError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
-        self.error_msg = 'contour boxes error'
+        self.error_msg = 'contour boxes error - works only with contours method'
         self.e = e
 
 class DifferenceError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
-        self.error_msg = 'difference error'
+        self.error_msg = 'difference error - requires preprocessed dataframe and select use_part_processed'
         self.e = e
 
 class MagnitudeError(PostprocessorError):
@@ -57,7 +57,7 @@ class MinError(PostprocessorError):
 class RateError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
-        self.error_msg = 'rate error'
+        self.error_msg = 'rate error - requires preprocessed dataframe and select use_part_processed'
         self.e = e
 
 class ClassifyError(PostprocessorError):
