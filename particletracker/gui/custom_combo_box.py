@@ -1,10 +1,13 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
-from ..general.parameters import ok_to_duplicate_method_check
-
-
 class ComboBoxAndButton(QWidget):
+    """
+    This widget combines the drop down menu for selecting each 
+    method with the push button that results in it being added
+    to the draggable list.
+
+    """
     def __init__(self, title, parent, *args, **kwargs):
         self.font = QFont()
         self.font.setPointSize(12)
@@ -41,7 +44,6 @@ class ComboBoxAndButton(QWidget):
         draggable_list = self.parent.list_draggable_lists[tab_index]
         count = 1
 
-        #if ok_to_duplicate_method_check(method):
         if dynamic:
             while method in draggable_list.method_list:
                 method = method.split('*')[0] + '*' + str(count)

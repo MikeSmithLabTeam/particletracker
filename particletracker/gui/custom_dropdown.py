@@ -4,6 +4,12 @@ from PyQt5.QtGui import *
 
 
 class QCustomDropdown(QWidget):
+    """
+    This is used as one method of displaying options for parameter selection for the 
+    different tracking methods. (ie if there is a finite list of choices).  The parameters dictionary specifies
+    these as a value and a tuple: e.g 'show_output':[False, ('True','False')].    
+    """
+
     returnPressed = pyqtSignal()
 
     def __init__(self, title=None, value_=None, options=None, *args, **kwargs):

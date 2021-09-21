@@ -64,13 +64,17 @@ class MainWindow(QMainWindow):
                     self.settings_filename = self.movie_filename[:-4] + '_expt.param'
                 except:
                     print('tried to load current params - falling back on initial settings file')
+        
         self.open_tracker()
         self.setWindowTitle("Particle Tracker")
+
         self.main_panel = QWidget()
         self.main_layout = QHBoxLayout()  # Contains view and settings layout
         self.view_layout = QVBoxLayout()  # Contains image, image toggle button and frame slider
         self.settings_layout = QVBoxLayout()  # Contains tab widget with all tracking controls
-        self.init_ui(self.view_layout, self.settings_layout)
+
+        self.init_ui()#self.view_layout, self.settings_layout)
+        
         self.main_layout.addLayout(self.view_layout,3)
         self.main_layout.addLayout(self.settings_layout,2)
         self.main_panel.setLayout(self.main_layout)
@@ -79,7 +83,7 @@ class MainWindow(QMainWindow):
         self.showMaximized()
         
 
-    def init_ui(self, view_layout, settings_layout, reboot=True):
+    def init_ui(self):#, view_layout, settings_layout, reboot=True):
         if not hasattr(self, 'file_menu'):
             self.setup_menus_toolbar()
         else:
@@ -87,12 +91,20 @@ class MainWindow(QMainWindow):
             #and open a new video which has no .hdf5 file.
             self.use_part_button.setChecked(False)
 
-        self.setup_viewer(view_layout)# Contains image window, frame slider and spinbox.
-        self.setup_settings_panel(settings_layout)# Contains all widgets on rhs.
+        self.setup_viewer(self.view_layout)# Contains image window, frame slider and spinbox.
+        self.setup_settings_panel(self.settings_layout)# Contains all widgets on rhs of gui.
       
 
+        """------------------------------------------------------------------------------
+        ------------------------------------------------------------------------------
+        SETUP MENUS AND TOOLBAR
+        
+        Setup of all the menus and toolbars at the bottom. The statusbar at the bottom
+        is also initialised here.
+        ---------------------------------------------------------------------------------
+        ---------------------------------------------------------------------------------"""
+
     def setup_menus_toolbar(self):
-        #is for python gui, 
         dir,_ =os.path.split(os.path.abspath(__file__))
         resources_dir = os.path.join(dir,'icons','icons')
         #Use these lines when using pyinstaller.
@@ -196,7 +208,6 @@ class MainWindow(QMainWindow):
         self.process_menu.addAction(self.use_part_button)
         self.process_menu.addAction(process_button)
         
-
         docs = QAction('help', self)
         docs.triggered.connect(self.open_docs)
         about = QAction('about', self)
@@ -206,7 +217,6 @@ class MainWindow(QMainWindow):
         self.help_menu.addAction(about)
 
        
-
     def open_docs(self):
         webbrowser.open('https://particle-tracker.readthedocs.io/en/latest/', new=1, autoraise=True)
     
@@ -221,6 +231,17 @@ class MainWindow(QMainWindow):
             We are happy to consider feature requests."""
             )
         msg.show()
+
+
+
+        """-----------------------------------------------------------------------------------------------
+        --------------------------------------------------------------------------------------------------
+        SETUP VIEWER
+        
+        Setup for the viewer panel - LHS of Gui includes viewer, frame selector and capture v preprocessing
+        image toggle button.
+        --------------------------------------------------------------------------------------------------
+        ----------------------------------------------------------------------------------------------"""
 
     def setup_viewer(self, view_layout):
         '''
@@ -268,15 +289,19 @@ class MainWindow(QMainWindow):
         self.update_viewer()
         
 
-    '''
+    '''---------------------------------------------------------------
     -------------------------------------------------------------------
+    SETUP SETTINGS PANEL
+
     Settings panel is the rhs of gui containing all the param adjustors
     -------------------------------------------------------------------
+    --------------------------------------------------------------------
     '''
     def setup_settings_panel(self, settings_layout):
         self.toplevel_settings = CheckableTabWidget(self.tracker, self.viewer, self.param_change, self.method_change, reboot=self.reboot, parent=self)
         self.toplevel_settings.checkBoxChanged.connect(self.frame_selector_slot)
         settings_layout.addWidget(self.toplevel_settings)
+
 
     """
     ---------------------------------------------------------------         
@@ -286,12 +311,22 @@ class MainWindow(QMainWindow):
     ----------------------------------------------------------------
     """
     def open_tracker(self):
+        """PTWorkFlow is the top level class that controls the entire tracking process
+        """
         self.tracker = PTWorkflow(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
 
+
+
     @pyqtSlot(float, float)
     def coords_clicked(self, x, y):
+        """This slot is linked to a left mouse click in the viewer
+        x and y are the coordinates of the click. The coords and rgb 
+        values are displayed in the status bar temporarily and outputted
+        to the command window.
+
+        """
         print('Coords')
         print(x, y)
         print('Intensities [r,g,b]')
@@ -311,13 +346,22 @@ class MainWindow(QMainWindow):
         self.status_bar.setStyleSheet("background-color : lightGray")
         self.status_bar.clearMessage()
         
-
     @pyqtSlot(int)
     def frame_selector_slot(self, value):
         self.update_viewer()
 
     @pyqtSlot()
     def param_change(self, value):
+        """
+        This slot is linked to by a wide variety of signals from the rhs of the gui
+        Whenever a parameter is changed via a slider etc a signal is sent to this slot
+        which contains the new value. the signal has meta data associated with it 
+        which tells us where the signal has come from and hence what needs to be done with the value
+
+        The values are sent to update the dictionary of settings and the viewer is reloaded with the image
+        processed with the new settings.
+
+        """
         sender = self.sender()
         paramdict_location=sender.meta
         
@@ -350,13 +394,24 @@ class MainWindow(QMainWindow):
         
         self.update_viewer()
 
+
     @pyqtSlot(tuple)
     def method_change(self, value):
+        """
+        This slot is linked to a change in the methods (top rhs of gui). 
+        MyListWidget in custom_drag_drop_list has the signal but we also trigger
+        that signal in custom_combo_box.py in omboBoxAndButton.add_method_button_click()
+        """
         sender = self.sender()
         location = [sender.title, sender.title + '_method']
         self.update_dictionary_params(location, value, 'list')
         self.update_param_widgets(sender.title)
         self.update_viewer()
+
+
+        """------------------------------------------------------
+        Various methods to update sections of the program.
+        -------------------------------------------------------"""
 
     def update_dictionary_params(self, location, value, widget_type):
         if len(location) == 2:
@@ -427,7 +482,11 @@ class MainWindow(QMainWindow):
             else:
                 self.toggle_img.setText("Captured Image")
             self.update_viewer()
+    
 
+        """-----------------------------------------------------------------
+        File input and output
+        -------------------------------------------------------------------"""
 
     def open_movie_dialog(self):
         options = QFileDialog.Options()
@@ -488,13 +547,18 @@ class MainWindow(QMainWindow):
         file_settings_name=file_settings_name.split('.')[0] + '.param'
         write_paramdict_file(self.tracker.parameters, file_settings_name)
 
+    def export_to_csv_click(self):
+        self.csv = self.export_to_csv.isChecked
+
+
+        """------------------------------------------------------------
+        Functions that control the processing
+        --------------------------------------------------------------"""
     def live_update_button_click(self):
         if self.live_update_button.isChecked():
             self.update_viewer()
 
-    def export_to_csv_click(self):
-        self.csv = self.export_to_csv.isChecked
-
+    
     def process_part_button_click(self):
         '''
         This button processes the movie but it skips the postprocess and annotation steps

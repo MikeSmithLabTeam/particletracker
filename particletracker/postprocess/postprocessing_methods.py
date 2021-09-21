@@ -785,6 +785,7 @@ def difference(df, f_index=None, parameters=None, call_num=None):
     except Exception as e:
         raise DifferenceError(e)
 
+
 def mean(df, f_index=None, parameters=None, call_num=None):
     '''
     Rolling mean of a particles values. 
@@ -850,6 +851,7 @@ def mean(df, f_index=None, parameters=None, call_num=None):
         return df
     except Exception as e:
         raise MeanError(e)
+        
 
 def median(df, f_index=None, parameters=None, call_num=None):
     '''

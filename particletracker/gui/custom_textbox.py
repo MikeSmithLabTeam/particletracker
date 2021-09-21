@@ -17,6 +17,12 @@ from ..customexceptions import *
 
 
 class QModCustomTextBox(QCustomTextBox):
+    """
+    This widget is the text box with checkbox used for
+    the crop and mask tools interface at bottom right of gui.
+    Key functionality for the dragging shapes on the image
+    is provided by SelectAreaWidget from qtwidgets repo.
+    """
     returnPressed = pyqtSignal(str)
 
     def __init__(self, img_viewer, parent=None, *args, **kwargs):

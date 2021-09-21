@@ -6,7 +6,15 @@ from qtwidgets import QCustomSlider, QCustomSliderDecimal, QCustomTextBox, Selec
 from .custom_textbox import QModCustomTextBox
 from .custom_dropdown import QCustomDropdown
 
+
 class CollectionParamAdjustors(QWidget):
+    """
+    Class groups together all the parameter selectors found in the 
+    bottom right corner of the gui. It also handles building and updating them.
+    The only exception is the crop tab which has its own class below called
+    CropMask
+
+    """
     def __init__(self, title, param_dict, param_change, *args, **kwargs):
         super(CollectionParamAdjustors, self).__init__(*args, **kwargs)
         self.title = title
@@ -110,6 +118,9 @@ class CollectionParamAdjustors(QWidget):
             
 
 class CropMask(QWidget):
+    """
+    Handles building the widgets on the crop tab
+    """
     valueChanged = pyqtSignal(str)
 
     def __init__(self, title, param_dict, param_change, img_viewer, parent=None, *args, **kwargs):

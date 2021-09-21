@@ -7,6 +7,11 @@ from ..gui.custom_combo_box import ComboBoxAndButton
 from ..gui.custom_slidergroupwidgets import CollectionParamAdjustors, CropMask
 
 class CheckableTabWidget(QTabWidget):
+    """
+    Fairly high level widget that handles the tabbed pages structure on the rhs of the gui.
+    Into this widget we build the layouts for the upper and lower sections and instantiate
+    MyListWidget, ComboBoxAndButton and either CollectionParamAdjustors or CropMask.
+    """
     checkBoxChanged = pyqtSignal(int)
 
     checkBoxList = []

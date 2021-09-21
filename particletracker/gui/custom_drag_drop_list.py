@@ -6,6 +6,10 @@ from PyQt5.QtGui import *
 
 
 class MyListWidget(QListWidget):   
+    """
+    This widget implements the draggable list to control
+    which methods are run and in which order.
+    """
     listChanged = pyqtSignal(tuple)
 
     def __init__(self, parent, method_change, param_dict, title, dynamic=True, *args, **kwargs):
