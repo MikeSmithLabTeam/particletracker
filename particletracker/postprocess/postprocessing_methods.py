@@ -1,3 +1,4 @@
+from PyQt5.QtCore import center
 import numpy as np
 import scipy.spatial as sp
 import trackpy as tp
@@ -627,255 +628,6 @@ def _get_class_subset(df, f, parameters, method=None):
     return subset_df
 
 
-'''
----------------------------------------------------------------------------------------------
-All these methods depend on information from other frames. ie they won't work unless
-multiple frames have been processed and you are using part.
----------------------------------------------------------------------------------------------
-'''
-def difference(df, f_index=None, parameters=None, call_num=None):
-    '''
-    Difference of a particles values on user selected column. 
-
-    Notes
-    -----
-    Returns the difference of a particle's values on a particular column at span separation in frames to a new column.
-    
-
-    column_name
-        Input column name
-    output_name
-        Column name for median data
-    span
-        number of frames over which to calculate rolling median
-    
-    
-    Args
-    ----
-
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
-    '''
-    try:    
-        params = parameters['postprocess']
-        method_key = get_method_key('difference', call_num)
-        column = params[method_key]['column_name']
-        output_name = params[method_key]['output_name']
-        span = get_param_val(params[method_key]['span'])
-    
-        if output_name not in df.columns:
-            df[output_name] = np.nan
-
-        start=f_index-span - 1
-        if start < 0:
-            start = 0
-        
-        df_frames = df.loc[start:f_index,[column,'particle']]
-        df_diff=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
-        #df_output.reset_index('particle', inplace=True)
-        df.loc[f_index,[output_name]]=df_diff.loc[f_index]
-    
-        return df
-    except Exception as e:
-        raise DifferenceError(e)
-
-def mean(df, f_index=None, parameters=None, call_num=None):
-    '''
-    Rolling mean of a particles values. 
-
-    Notes
-    -----
-    Returns the rolling mean of a particle's values to a new column. Useful
-    to reduce fluctuations or tracking inaccuracies.
-    
-
-    column_name
-        Input column name
-    output_name
-        Column name for mean data
-    span
-        number of frames over which to calculate rolling mean
-    
-    
-    Args
-    ----
-
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
-
-    '''
-    
-
-    try:
-        params = parameters['postprocess']
-        method_key = get_method_key('mean', call_num)
-        column = params[method_key]['column_name']
-        output_name = params[method_key]['output_name']
-        span = get_param_val(params[method_key]['span'])
-
-        if output_name not in df.columns:
-            df[output_name] = np.nan
-
-        start=f_index-span - 1
-        if start < 0:
-            start = 0
-        
-        df_frames = df.loc[start:f_index,[column,'particle']]
-        df_output=df_frames.groupby('particle')[column].rolling(span).mean().transform(lambda x:x).to_frame(name=output_name)
-        df_output.reset_index('particle', inplace=True)
-        df.loc[f_index,[output_name]]=df_output.loc[f_index]
-        return df
-    except Exception as e:
-        raise MeanError(e)
-
-def median(df, f_index=None, parameters=None, call_num=None):
-    '''
-    Median of a particles values. 
-
-    Notes
-    -----
-    Returns the median of a particle's values to a new column. Useful 
-    before classification to answer to which group a particle's properties
-    usually belong.
-    
-
-    column_name
-        Input column name
-    output_name
-        Column name for median data
-    span
-        number of frames over which to calculate rolling median
-    
-    
-    Args
-    ----
-
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
-
-    '''
-    
-    try:
-        params = parameters['postprocess']
-        method_key = get_method_key('median', call_num)
-        column = params[method_key]['column_name']
-        output_name = params[method_key]['output_name']
-        span = get_param_val(params[method_key]['span'])
-       
-        if output_name not in df.columns:
-            df[output_name] = np.nan
-
-        start=f_index-span + 1
-        if start < 0:
-            start = 0
-        
-        df_frames = df.loc[start:f_index,[column,'particle']]
-        df_output=df_frames.groupby('particle')[column].rolling(span).median().transform(lambda x:x).to_frame(name=output_name)
-        df_output.reset_index('particle', inplace=True)
-        df.loc[f_index,[output_name]]=df_output.loc[f_index]
-        
-        return df
-    except Exception as e:
-        raise MedianError(e)
-
-
-def rate(df, f_index=None, parameters=None, call_num=None):
-    '''
-    Rate of change of a particle property with frame
-    
-    Notes
-    -----
-    Rate function takes an input column and calculates the
-    rate of change of the quantity. Nans are inserted at end and 
-    beginning of particle trajectories where calc is not possible.
-    
-
-    column_name
-        Input column names
-    output_name
-        Output column name
-    fps
-        numerical value indicating the number of frames per second
-    span
-        number of frames over which to calculate rolling difference
-    
-    
-    
-    Args
-    ----
-
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
-
-    '''
-    try:
-        params = parameters['postprocess']
-        method_key = get_method_key('rate', call_num)
-        column = params[method_key]['column_name']
-        output_name = params[method_key]['output_name']
-        span = get_param_val(params[method_key]['span'])
-        fps= params[method_key]['fps']
-
-        if output_name not in df.columns:
-            df[output_name] = np.nan
-
-        start=f_index-span - 1
-        if start < 0:
-            start = 0
-        
-        
-        df_frames = df.loc[start:f_index,[column,'particle']]
-        df_output=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
-        df_output.reset_index('particle', inplace=True)
-        df.loc[f_index,[output_name]]=df_output.loc[f_index]*float(fps)
-        return df
-    except Exception as e:
-        raise RateError(e)
-
 def remove_masked(df, f_index=None, parameters=None, call_num=None):
     '''
     Remove masked objects
@@ -964,6 +716,279 @@ def _point_inside_mask(point, mask_contour_list):
         if result != -1:
             inside = True
     return inside
+
+
+'''
+---------------------------------------------------------------------------------------------
+All these methods depend on information from other frames. ie they won't work unless
+multiple frames have been processed and you are using part.
+---------------------------------------------------------------------------------------------
+'''
+def difference(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Difference of a particles values on user selected column. 
+
+    Notes
+    -----
+    Returns the difference of a particle's values on a particular column at span separation in frames to a new column. Please be aware
+    this is the difference between current frame and frame - span for each particle.
+    
+
+    column_name
+        Input column name
+    output_name
+        Column name for median data
+    span
+        number of frames over which to calculate rolling median
+    
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
+    '''
+    try:    
+        params = parameters['postprocess']
+        method_key = get_method_key('difference', call_num)
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
+    
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+
+        start=f_index-span - 1
+        if start < 0:
+            start = 0
+        
+        finish=f_index + span + 1
+        if finish > df.index.max():
+            finish = df.index.max()
+        
+        df_frames = df.loc[start:finish,[column,'particle']]
+        df_diff=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+        df.loc[f_index,[output_name]]=df_diff.loc[f_index]
+    
+        return df
+    except Exception as e:
+        raise DifferenceError(e)
+
+def mean(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Rolling mean of a particles values. 
+
+    Notes
+    -----
+    Returns the rolling mean of a particle's values to a new column. Useful
+    to reduce fluctuations or tracking inaccuracies. The value of the mean is
+    placed at the centre of the rolling window. i.e [2,4,6,8,4] with window 3 would result
+    in [NaN, 4, 6, 6, Nan].
+    
+
+    column_name
+        Input column name
+    output_name
+        Column name for mean data
+    span
+        number of frames over which to calculate rolling mean
+    
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
+
+    '''
+    
+
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('mean', call_num)
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
+
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+
+        start=f_index-span - 1
+        if start < 0:
+            start = 0
+        
+        finish=f_index + span + 1
+        if finish > df.index.max():
+            finish = df.index.max()
+        
+        df_frames = df.loc[start:finish,[column,'particle']]
+        df_output=df_frames.groupby('particle')[column].rolling(span, center=True).mean().transform(lambda x:x).to_frame(name=output_name)
+        df_output.reset_index('particle', inplace=True)
+        df.loc[f_index,[output_name]]=df_output.loc[f_index]
+        return df
+    except Exception as e:
+        raise MeanError(e)
+
+def median(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Median of a particles values. 
+
+    Notes
+    -----
+    Returns the median of a particle's values to a new column. Useful 
+    before classification to answer to which group a particle's properties
+    usually belong. The value of the median is
+    placed at the centre of the rolling window. i.e [2,4,4,8,4] with window 3 would result
+    in [NaN, 4, 4, 4, Nan].
+    
+
+    column_name
+        Input column name
+    output_name
+        Column name for median data
+    span
+        number of frames over which to calculate rolling median
+    
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
+
+    '''
+    
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('median', call_num)
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
+       
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+
+        start=f_index-span + 1
+        if start < 0:
+            start = 0
+
+        finish=f_index + span + 1
+        if finish > df.index.max():
+            finish = df.index.max()
+        
+        
+        df_frames = df.loc[start:finish,[column,'particle']]
+        df_output=df_frames.groupby('particle')[column].rolling(span, center=True).median().transform(lambda x:x).to_frame(name=output_name)
+        df_output.reset_index('particle', inplace=True)
+        df.loc[f_index,[output_name]]=df_output.loc[f_index]
+        
+        return df
+    except Exception as e:
+        raise MedianError(e)
+
+
+def rate(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Rate of change of a particle property with frame
+    
+    Notes
+    -----
+    Rate function takes an input column and calculates the
+    rate of change of the quantity. Nans are inserted at end and 
+    beginning of particle trajectories where calc is not possible. The 
+    rate is calculated from diff between current frame and frame - span.
+    
+
+    column_name
+        Input column names
+    output_name
+        Output column name
+    fps
+        numerical value indicating the number of frames per second
+    span
+        number of frames over which to calculate rolling difference
+    
+    
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
+
+    '''
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('rate', call_num)
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
+        fps= params[method_key]['fps']
+
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+
+        start=f_index-span - 1
+        if start < 0:
+            start = 0
+        
+        finish=f_index + span + 1
+        if finish > df.index.max():
+            finish = df.index.max()
+        
+        
+        df_frames = df.loc[start:finish,[column,'particle']]
+        df_output=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+        df.loc[f_index,[output_name]]=df_output.loc[f_index] / (float(span)/float(fps))
+        return df
+    except Exception as e:
+        raise RateError(e)
+
+
 
 '''
 ------------------------------------------------------------------------------------------------
