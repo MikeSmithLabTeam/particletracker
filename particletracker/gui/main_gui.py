@@ -10,6 +10,7 @@ import numpy as np
 import qimage2ndarray
 import webbrowser
 import shutil
+import time
 
 from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
@@ -21,7 +22,7 @@ from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.param_file_creator import create_param_file
 from ..general.imageformat import bgr_to_rgb
-from ..gui.progress_bar import ProgressDialog
+
 from .. import project
 
 
@@ -161,9 +162,14 @@ class MainWindow(QMainWindow):
         close_button.triggered.connect(self.close_button_click)
         self.toolbar.addAction(close_button)
 
-        statusbar = QStatusBar(self)
-        self.setStatusBar(statusbar)
         menu = self.menuBar()
+
+        self.status_bar = QStatusBar(self)
+        font = QFont()
+        font.setPointSize(14)
+        self.status_bar.setFont(font)
+        self.setStatusBar(self.status_bar)
+        
 
         '''
         ---------------------------------------------------------------------------------------------
@@ -198,6 +204,8 @@ class MainWindow(QMainWindow):
 
         self.help_menu.addAction(docs)
         self.help_menu.addAction(about)
+
+       
 
     def open_docs(self):
         webbrowser.open('https://particle-tracker.readthedocs.io/en/latest/', new=1, autoraise=True)
@@ -291,18 +299,18 @@ class MainWindow(QMainWindow):
         output = qimage2ndarray.rgb_view(Qimg)
         print(output[int(y),int(x),:])
 
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.status_bar.hide)
+        self.timer.timeout.connect(self.reset_statusbar)
         self.timer.start(8000)
         self.status_bar.setStyleSheet("background-color : green")
         self.status_bar.showMessage("Coords (x,y): ("+str(x)+','+str(y) +') \t Intensities [r,g,b]:'+str(output[int(y),int(x),:]))    
         self.show()
   
 
-    def reset_statusbar(status_bar):
-        status_bar.hide()
+    def reset_statusbar(self):
+        self.status_bar.setStyleSheet("background-color : lightGray")
+        self.status_bar.clearMessage()
+        
 
     @pyqtSlot(int)
     def frame_selector_slot(self, value):
@@ -523,11 +531,10 @@ class MainWindow(QMainWindow):
             self.use_part_button.setChecked(False)
             QMessageBox.about(self, "", "You must run 'Process Part' before you can use this")
 
-    def process_button_click(self):
-        #Trying to link progressbar value to percentage of frames tracked
-        #self.progress_bar = ProgressDialog()
-        self.tracker.pt.track_progress.connect(test_progress)#self.progress_bar.setProgressVal) 
-      
+    def process_button_click(self): 
+        self.status_bar.setStyleSheet("background-color : lightBlue")
+        self.status_bar.showMessage("Depending on the size of your movie etc this could take awhile. You can track progress in the command window.")    
+        self.show()
 
         self.tracker.reset_annotator()
         if self.autosave_on_process.isChecked():
@@ -539,12 +546,11 @@ class MainWindow(QMainWindow):
             self.tracker.process(csv=self.csv)
 
         write_paramdict_file(self.tracker.parameters, self.movie_filename[:-4] + '_expt.param')
+        
+        self.reset_statusbar()
+        QMessageBox.about(self, "", "Processing Finished")
         self.reboot(open_settings=False)
 
     def close_button_click(self):
         sys.exit()
 
-
-@pyqtSlot(int, int, int, int)
-def test_progress(f, start, stop, step):
-    print(f)

@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QStatusBar
+
 
 """
 ----------------------------------------------------------------------------------------------------
@@ -8,10 +8,10 @@ These functions pick up the error messages and display them temporarily in the s
 """
 
 def flash_error_msg(e, self):
-    self.status_bar = QStatusBar()
-    self.setStatusBar(self.status_bar)
+    #self.status_bar = QStatusBar()
+    #self.setStatusBar(self.status_bar)
     self.timer = QTimer(self)
-    self.timer.timeout.connect(self.status_bar.hide)#lambda x=self.status_bar:reset_statusbar(x))
+    self.timer.timeout.connect(self.reset_statusbar)#lambda x=self.status_bar:reset_statusbar(x))
     self.timer.start(5000)
     self.status_bar.setStyleSheet("background-color : red")
     self.status_bar.showMessage("There is an error: " + e.error_process + e.error_msg)    
