@@ -14,12 +14,14 @@ import shutil
 from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
 
+
 from .custom_tab_widget import CheckableTabWidget
 from ..project import PTWorkflow
 from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.param_file_creator import create_param_file
 from ..general.imageformat import bgr_to_rgb
+from ..gui.progress_bar import ProgressDialog
 from .. import project
 
 
@@ -522,6 +524,11 @@ class MainWindow(QMainWindow):
             QMessageBox.about(self, "", "You must run 'Process Part' before you can use this")
 
     def process_button_click(self):
+        #Trying to link progressbar value to percentage of frames tracked
+        self.progress_bar = ProgressDialog()
+        self.tracker.pt.track_progress.connect(self.progress_bar.setProgressVal) 
+      
+
         self.tracker.reset_annotator()
         if self.autosave_on_process.isChecked():
             write_paramdict_file(self.tracker.parameters, self.settings_filename)
@@ -532,7 +539,6 @@ class MainWindow(QMainWindow):
             self.tracker.process(csv=self.csv)
 
         write_paramdict_file(self.tracker.parameters, self.movie_filename[:-4] + '_expt.param')
-        QMessageBox.about(self, "", "Processing Finished")
         self.reboot(open_settings=False)
 
     def close_button_click(self):

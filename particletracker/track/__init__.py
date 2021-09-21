@@ -1,4 +1,5 @@
 import os
+from PyQt5.QtCore import pyqtSignal, QObject
 from tqdm import tqdm
 import numpy as np
 
@@ -6,7 +7,9 @@ from ..general import dataframes
 from ..track import tracking_methods as tm
 
 
-class ParticleTracker:
+class ParticleTracker(QObject):
+    track_progress = pyqtSignal(int, int, int, int)
+
     """
     Class to track the locations of the particles in a video_crop.
 
@@ -21,7 +24,7 @@ class ParticleTracker:
 
     """
 
-    def __init__(self, parameters=None, preprocessor=None, vidobject=None, data_filename=None):
+    def __init__(self, parameters=None, preprocessor=None, vidobject=None, data_filename=None, *args, **kwargs):
         """
 
         Parameters
@@ -38,6 +41,7 @@ class ParticleTracker:
             Filepath for datastore
 
         """
+        super(ParticleTracker,self).__init__(*args, **kwargs)
 
         self.filename = os.path.splitext(vidobject.filename)[0]
         self.parameters = parameters
@@ -78,10 +82,13 @@ class ParticleTracker:
                 step=1
 
             self.cap.set_frame(start)
+            
             for f in tqdm(range(start, stop, step), 'Tracking'):
                 try:
                     df_frame = self.analyse_frame()
                     data.add_tracking_data(f, df_frame)
+                    #Signal to indicate how many frames tracked
+                    self.track_progress.emit(f, start, stop, step)
                 except:
                     pass
             
