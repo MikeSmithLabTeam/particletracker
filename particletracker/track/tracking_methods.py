@@ -69,7 +69,7 @@ def trackpy(ppframe,frame, parameters=None):
         ?!
     raw_mass
         total integrated brightness in raw_image
-        
+
 
     Args
     ----
@@ -92,14 +92,12 @@ def trackpy(ppframe,frame, parameters=None):
 
     try:
         method_key = get_method_key('trackpy')
-        use_percentile = get_param_val(parameters[method_key]['use_percentile'])
+        #use_percentile = get_param_val(parameters[method_key]['use_percentile'])
         use_minmass = get_param_val(parameters[method_key]['use_minmass'])
         df = tp.locate(ppframe,
                        get_param_val(parameters[method_key]['diameter']),
-                       minmass=get_param_val(parameters[method_key][
-                                                 'minmass']) if use_minmass else None,
-                       percentile=get_param_val(
-                           parameters[method_key]['diameter']) if use_percentile else 64,  # default for percentile is 64 not None
+                       minmass=get_param_val(parameters[method_key]['minmass']) if use_minmass else None,
+                       percentile=get_param_val(parameters[method_key]['diameter']),# if use_percentile else 64,  # default for percentile is 64 not None
                        invert=get_param_val(parameters[method_key]['invert']),
                        max_iterations=get_param_val(parameters[method_key]['max_iterations'])
                        )
