@@ -12,11 +12,12 @@ from particletracker.gui.main_gui import MainWindow
 
 def track_gui(movie_filename=None, settings_filename=None):
     '''
+    track_gui is a simple function that launches the main gui tracking window.
 
     Parameters
     ----------
-    movie: optional path to movie to process
-    settings: optional path to .param settings config file
+    movie: optional path to movie to process if not specified a dialogue window prompts user to navigate to file.
+    settings: optional path to .param settings config file, if not set a default config file is automatically generated using create_param_file in general.param_file_creator
 
     Returns None
     -------
@@ -44,7 +45,7 @@ def track_gui(movie_filename=None, settings_filename=None):
 
 
 
-def track_batchprocess(moviefilter, settings,
+def batchprocess(moviefilter, settings,
                        crop=True,
                        preprocess=True,
                        track=True,
@@ -53,6 +54,7 @@ def track_batchprocess(moviefilter, settings,
                        annotate=True, 
                        excel=False):
     '''
+    batchprocess enables you to process all files specified with a filefilter using a single settings.param file
 
     Parameters
     ----------

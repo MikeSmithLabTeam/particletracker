@@ -26,7 +26,7 @@ following code:
    from particletracker import track_batchprocess
    moviefilter = '/A/path/selector/movie*00?.mp4'
    settings = '/full/path/to/settings.param'
-   track_batchprocess(moviefilter, settings,annotate=True)
+   batchprocess(moviefilter, settings,annotate=True)
 
 You can optionally turn off the different steps so if you just want the data and don't want to 
 produce annotated videos you could feed in the keyword argument annotate=False.
