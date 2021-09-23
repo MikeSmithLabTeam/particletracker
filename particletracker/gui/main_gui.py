@@ -67,6 +67,7 @@ class MainWindow(QMainWindow):
                     print('tried to load current params - falling back on initial settings file')
         
         self.open_tracker()
+        self.setup_pandas_viewer()
         self.setWindowTitle("Particle Tracker")
 
         self.main_panel = QWidget()
@@ -402,6 +403,7 @@ class MainWindow(QMainWindow):
                 self.tracker.cap.set_mask()          
         
         self.update_viewer()
+        self.update_pandas_view()
 
 
     @pyqtSlot(tuple)
@@ -627,7 +629,18 @@ class MainWindow(QMainWindow):
     def close_button_click(self):
         sys.exit()
 
+    def setup_pandas_viewer(self):
+        self.pandas_viewer = PandasWidget(self)
+        fname = self.tracker.data_filename
+        fname = fname[:-5] + '_temp.hdf5'
+        self.pandas_viewer.update(fname)
+
     def pandas_button_click(self):
-        w = PandasWidget(self.tracker.data_filename, frame_number=self.frame_selector.value(), parent=self)
-        w.show()
+        self.pandas_viewer.show()
+
+    def update_pandas_view(self):
+        fname = self.tracker.data_filename
+        if not self.use_part_button.isChecked():
+            fname = fname[:-5]+'_temp.hdf5'
+        self.pandas_viewer.update(fname)
 

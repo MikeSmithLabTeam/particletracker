@@ -1,6 +1,7 @@
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
+from ..customexceptions import PandasViewError
 
 class pandasModel(QtCore.QAbstractTableModel):
 
@@ -26,17 +27,19 @@ class pandasModel(QtCore.QAbstractTableModel):
         return None
 
 class PandasWidget(QtWidgets.QDialog):
-    def __init__(self, df_filename='', frame_number=0, parent=None):
+    def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
-        df = pd.read_hdf(df_filename).loc[frame_number].reset_index()
-        model = pandasModel(df)
-        view = QtWidgets.QTableView()
-        view.setModel(model)
-        view.resize(800, 600)
+        self.view = QtWidgets.QTableView()
+        model = pandasModel(pd.DataFrame())
+        self.view.setModel(model)
+        self.view.resize(800, 600)
+        self.view.show()
+        self.view.setModel(model)
+        self.view.resize(800, 600)
         lay = QtWidgets.QHBoxLayout()
-        lay.addWidget(view)
+        lay.addWidget(self.view)
         self.setLayout(lay)
-        view.show()
+        self.view.show()
         self.setWindowTitle('df')
         self.resize(800, 600)
         self.center()
@@ -46,4 +49,13 @@ class PandasWidget(QtWidgets.QDialog):
         cp = QtWidgets.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
+
+    def update(self, filename):
+        try:
+            df = pd.read_hdf(filename).reset_index()
+        except Exception as e:
+            df = pd.DataFrame()
+            raise PandasViewError(e)
+        model = pandasModel(df)
+        self.view.setModel(model)
 

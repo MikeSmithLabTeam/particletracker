@@ -79,3 +79,8 @@ class CsvError(BaseError):
     def __init__(self, e):
         super().__init__(e)
         self.error_process = 'Error writing to csv'
+
+class PandasViewError(BaseError):
+    def __init__(self, e):
+        super().__init__(e)
+        self.error_process = "Error reading dataframe in viewer"
