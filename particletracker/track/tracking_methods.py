@@ -35,16 +35,22 @@ def trackpy(ppframe,frame, parameters=None):
 
     Parameters
     ----------
+    First five parameters expose trackpy options. For more information
+    see http://soft-matter.github.io/trackpy/v0.5.0/generated/trackpy.locate.html#trackpy.locate
+    
     diameter
         An estimate of the objects to be tracked feature size in pixels
-
-    'minmass'
+    minmass
         The minimum integrated brightness.
+    percentile
+        Features must have a peak brighter than pixels in this percentile. This helps eliminate spurious peaks.
     invert
         Set True if looking for dark objects on bright background
+    max_iterations
+        max number of loops to refine the center of mass, default 10
     get_intensities
         If not False results in the software extracting a circular region around each particle of radius set by intensity radius and running a method in intensity_methods. Select the method by writing its name in the get_intensities box.
-    'intensity_radius'
+    intensity_radius
         The radius of the extracted intensity around each particle centre, see get_intensities.
     show_output'
         print tracked data to terminal window.
