@@ -1,9 +1,11 @@
+import os
+
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
+
 from ..customexceptions import PandasViewError
 
-import os
 
 class pandasModel(QtCore.QAbstractTableModel):
 
