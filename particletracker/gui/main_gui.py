@@ -25,6 +25,7 @@ from ..general.imageformat import bgr_to_rgb
 
 from .. import project
 
+from .pandas_view import PandasWidget
 
 class MainWindow(QMainWindow):
     
@@ -173,6 +174,12 @@ class MainWindow(QMainWindow):
         close_button = QAction(QIcon(os.path.join(resources_dir,"cross-button.png")), "Close", self)
         close_button.triggered.connect(self.close_button_click)
         self.toolbar.addAction(close_button)
+
+        self.toolbar.addSeparator()
+
+        pandas_button = QAction(QIcon(os.path.join(resources_dir, "view_pandas.png")), "Show Dataframe View", self)
+        pandas_button.triggered.connect(self.pandas_button_click)
+        self.toolbar.addAction(pandas_button)
 
         menu = self.menuBar()
 
@@ -617,4 +624,8 @@ class MainWindow(QMainWindow):
 
     def close_button_click(self):
         sys.exit()
+
+    def pandas_button_click(self):
+        w = PandasWidget(self.tracker.data_filename, frame_number=self.frame_selector.value(), parent=self)
+        w.show()
 
