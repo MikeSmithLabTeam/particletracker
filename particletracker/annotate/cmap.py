@@ -15,6 +15,8 @@ def colour_array(subset_df, f, parameters, method=None):
         elif cmap_type == 'dynamic':
             cmap_column = parameters[method]['cmap_column']
             colour_data = subset_df[[cmap_column]].values
+            if np.iscomplexobj(colour_data):
+                colour_data = np.angle(colour_data)
             cmap_max = get_param_val(parameters[method]['cmap_max'])
             cmap_min = get_param_val(parameters[method]['cmap_min'])
             try:
