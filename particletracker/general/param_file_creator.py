@@ -53,9 +53,7 @@ def create_param_file(filename):
     track = {
         'track_method':('contours',),
         'trackpy':{'diameter':[7,1, 101,2],
-                   'use_percentile': [False, ('True', 'False')],
                    'percentile': [64, 0, 100, 1],
-                   'use_minmass': [False, ('True', 'False')],
                    'minmass': [100.0, 0.0, 1000.0, 0.1],
                    'invert':[False, ('True','False')],
                    'get_intensities':False,

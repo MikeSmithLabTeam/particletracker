@@ -37,10 +37,7 @@ def trackpy(ppframe,frame, parameters=None):
     ----------
     diameter
         An estimate of the objects to be tracked feature size in pixels
-    use_percentile
 
-    use_minmass
-        False or True to use minmass filter.
     'minmass'
         The minimum integrated brightness.
     invert
@@ -92,14 +89,13 @@ def trackpy(ppframe,frame, parameters=None):
 
     try:
         method_key = get_method_key('trackpy')
-        #use_percentile = get_param_val(parameters[method_key]['use_percentile'])
-        use_minmass = get_param_val(parameters[method_key]['use_minmass'])
         df = tp.locate(ppframe,
                        get_param_val(parameters[method_key]['diameter']),
-                       minmass=get_param_val(parameters[method_key]['minmass']) if use_minmass else None,
-                       percentile=get_param_val(parameters[method_key]['diameter']),# if use_percentile else 64,  # default for percentile is 64 not None
+                       minmass=get_param_val(parameters[method_key]['minmass']),
+                       percentile=get_param_val(parameters[method_key]['percentile']),
                        invert=get_param_val(parameters[method_key]['invert']),
-                       max_iterations=get_param_val(parameters[method_key]['max_iterations'])
+                       max_iterations=get_param_val(parameters[method_key]['max_iterations']),
+                       engine='numba'
                        )
         if parameters[method_key]['get_intensities'] != False:
             x = df['x'].to_numpy()
