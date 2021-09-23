@@ -150,6 +150,12 @@ class MainWindow(QMainWindow):
 
         self.toolbar.addSeparator()
 
+        pandas_button = QAction(
+            QIcon(os.path.join(resources_dir, "view_pandas.png")),
+            "Show Dataframe View", self)
+        pandas_button.triggered.connect(self.pandas_button_click)
+        self.toolbar.addAction(pandas_button)
+
         self.csv=False
         self.export_to_csv = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to csv', self)
         self.export_to_csv.triggered.connect(self.export_to_csv_click)
@@ -175,11 +181,7 @@ class MainWindow(QMainWindow):
         close_button.triggered.connect(self.close_button_click)
         self.toolbar.addAction(close_button)
 
-        self.toolbar.addSeparator()
 
-        pandas_button = QAction(QIcon(os.path.join(resources_dir, "view_pandas.png")), "Show Dataframe View", self)
-        pandas_button.triggered.connect(self.pandas_button_click)
-        self.toolbar.addAction(pandas_button)
 
         menu = self.menuBar()
 
