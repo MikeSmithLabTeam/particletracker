@@ -16,8 +16,15 @@ def colour_array(subset_df, f, parameters, method=None):
             cmap_column = parameters[method]['cmap_column']
             colour_data = subset_df[[cmap_column]].values
             cmap_max = get_param_val(parameters[method]['cmap_max'])
-            cmap_min = get_param_val(parameters[method]['cmap_min'])           
-            cmap_name = 'jet'
+            cmap_min = get_param_val(parameters[method]['cmap_min'])
+            try:
+                cmap_name = get_param_val(parameters[method]['cmap_name'])
+                assert cmap_name in plt.colormaps(), "Colormap isn't available, setting to jet"
+            except Exception as e:
+                cmap_name = 'jet'
+                # print('reached this point')
+                # raise CmapError(e)
+                print("Cmap set to jet")
             
             norm = colors.Normalize(vmin=cmap_min, vmax=cmap_max, clip=True)
             colour_obj = plt.get_cmap(cmap_name, np.size(colour_data))
