@@ -74,6 +74,6 @@ def track_batchprocess(moviefilter, settings,
         tracker.link_select = link
         tracker.postprocess_select = postprocess
         tracker.annotate_select = annotate
-        tracker.process(excel=excel)
+        tracker.process(csv=excel)
 
 
