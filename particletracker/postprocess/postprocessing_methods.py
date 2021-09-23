@@ -1020,6 +1020,70 @@ def rate(df, f_index=None, parameters=None, call_num=None):
         raise RateError(e)
 
 
+def hexatic_order(df, f_index=None, parameters=None, call_num=None):
+    """
+    Calculates the hexatic order parameter of each particle
+
+
+    Parameters
+    ----------
+    threshold
+        Distance threshold for calculation of neighbors
+
+
+    Args
+    ----------
+    df
+        The dataframe for all data
+    f_index
+        Integer for the frame in twhich calculations need to be made
+    parameters
+        Nested dict object
+    call_num
+
+    Returns
+    -------
+    df with additional column
+
+    """
+
+
+
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('hexatic_order', call_num)
+        threshold = get_param_val(params[method_key]['threshold'])
+
+        if 'hexatic_order' not in df.columns:
+            df['hexatic_order'] = np.nan
+            df['number_of_neighbors'] = np.nan
+
+        df_frame = df.loc[f_index]
+        points = df_frame[['x', 'y']].values
+        list_indices, point_indices = sp.Delaunay(points).vertex_neighbor_vertices
+        repeat = list_indices[1:] - list_indices[:-1]
+        vectors = points[point_indices] - np.repeat(points, repeat, axis=0)
+        angles = np.angle(vectors[:, 0] + 1j*vectors[:, 1])
+        length_filteres = np.linalg.norm(vectors, axis=1) < threshold
+        summands = np.exp(6j*angles)
+        summands *= length_filteres
+        list_indices -= 1
+        # sum the angles and count neighbours for each particle
+        stacked = np.cumsum((summands, length_filteres), axis=1)[:, list_indices[1:]]
+        stacked[:, 1:] = np.diff(stacked, axis=1)
+        neighbors = stacked[1, :]
+        indxs = neighbors != 0
+        orders = np.zeros_like(neighbors)
+        orders[indxs] = stacked[0, indxs] / neighbors[indxs]
+        df_frame['hexatic_order'] = orders
+        df_frame['number_of_neighbors'] = neighbors
+        df.loc[f_index] = df_frame
+        return df
+
+
+    except Exception as e:
+        raise HexaticOrderError(e)
+
 
 '''
 ------------------------------------------------------------------------------------------------

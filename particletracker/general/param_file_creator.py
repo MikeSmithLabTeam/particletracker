@@ -136,7 +136,10 @@ def create_param_file(filename):
         'add_frame_data':{
             'new_column_name':'data',
             'data_filename':None
-                  }
+                  },
+        'hexatic_order':{
+            'threshold': [10, 1, 100, 1]
+        }
 
         }
 
