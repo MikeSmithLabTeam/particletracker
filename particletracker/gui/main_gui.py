@@ -633,7 +633,7 @@ class MainWindow(QMainWindow):
         self.pandas_viewer = PandasWidget(self)
         fname = self.tracker.data_filename
         fname = fname[:-5] + '_temp.hdf5'
-        self.pandas_viewer.update(fname)
+        self.pandas_viewer.update_file(fname)
 
     def pandas_button_click(self):
         self.pandas_viewer.show()
@@ -642,5 +642,5 @@ class MainWindow(QMainWindow):
         fname = self.tracker.data_filename
         if not self.use_part_button.isChecked():
             fname = fname[:-5]+'_temp.hdf5'
-        self.pandas_viewer.update(fname)
+        self.pandas_viewer.update_file(fname)
 

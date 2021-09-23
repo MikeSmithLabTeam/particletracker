@@ -71,7 +71,7 @@ class PandasWidget(QtWidgets.QDialog):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
-    def update(self, filename):
+    def update_file(self, filename):
         self.filename = filename
         try:
             df = pd.read_hdf(filename).reset_index()
