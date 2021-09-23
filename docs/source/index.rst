@@ -31,6 +31,7 @@ Reference
 .. toctree::
    :maxdepth: 1
 
+   rstfiles/reference/launch_tracking.rst
    rstfiles/reference/preprocess_ref.rst
    rstfiles/reference/track_ref
    rstfiles/reference/postprocess_ref.rst

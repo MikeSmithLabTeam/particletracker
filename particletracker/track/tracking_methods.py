@@ -35,19 +35,22 @@ def trackpy(ppframe,frame, parameters=None):
 
     Parameters
     ----------
+    First five parameters expose trackpy options. For more information
+    see http://soft-matter.github.io/trackpy/v0.5.0/generated/trackpy.locate.html#trackpy.locate
+    
     diameter
         An estimate of the objects to be tracked feature size in pixels
-    use_percentile
-
-    use_minmass
-        False or True to use minmass filter.
-    'minmass'
+    minmass
         The minimum integrated brightness.
+    percentile
+        Features must have a peak brighter than pixels in this percentile. This helps eliminate spurious peaks.
     invert
         Set True if looking for dark objects on bright background
+    max_iterations
+        max number of loops to refine the center of mass, default 10
     get_intensities
         If not False results in the software extracting a circular region around each particle of radius set by intensity radius and running a method in intensity_methods. Select the method by writing its name in the get_intensities box.
-    'intensity_radius'
+    intensity_radius
         The radius of the extracted intensity around each particle centre, see get_intensities.
     show_output'
         print tracked data to terminal window.
@@ -69,7 +72,7 @@ def trackpy(ppframe,frame, parameters=None):
         ?!
     raw_mass
         total integrated brightness in raw_image
-        
+
 
     Args
     ----
@@ -92,16 +95,13 @@ def trackpy(ppframe,frame, parameters=None):
 
     try:
         method_key = get_method_key('trackpy')
-        use_percentile = get_param_val(parameters[method_key]['use_percentile'])
-        use_minmass = get_param_val(parameters[method_key]['use_minmass'])
         df = tp.locate(ppframe,
                        get_param_val(parameters[method_key]['diameter']),
-                       minmass=get_param_val(parameters[method_key][
-                                                 'minmass']) if use_minmass else None,
-                       percentile=get_param_val(
-                           parameters[method_key]['diameter']) if use_percentile else 64,  # default for percentile is 64 not None
+                       minmass=get_param_val(parameters[method_key]['minmass']),
+                       percentile=get_param_val(parameters[method_key]['percentile']),
                        invert=get_param_val(parameters[method_key]['invert']),
-                       max_iterations=get_param_val(parameters[method_key]['max_iterations'])
+                       max_iterations=get_param_val(parameters[method_key]['max_iterations']),
+                       engine='numba'
                        )
         if parameters[method_key]['get_intensities'] != False:
             x = df['x'].to_numpy()
