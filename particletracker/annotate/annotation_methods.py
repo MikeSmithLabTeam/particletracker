@@ -648,7 +648,7 @@ def voronoi(frame, data, f, parameters=None, call_num=None):
                                           thickness=int(thickness))
         return frame
     except Exception as e:
-        VoronoiError(e)
+        raise VoronoiError(e)
 
 def _draw_polygon(img, pts, col=(0,0,255), thickness=1, closed=True):
     if np.any(np.isnan(pts[0])):
