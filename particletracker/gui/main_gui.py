@@ -76,7 +76,7 @@ class MainWindow(QMainWindow):
         self.view_layout = QVBoxLayout()  # Contains image, image toggle button and frame slider
         self.settings_layout = QVBoxLayout()  # Contains tab widget with all tracking controls
 
-        self.init_ui()#self.view_layout, self.settings_layout)
+        self.init_ui()
         
         
 
@@ -311,7 +311,7 @@ class MainWindow(QMainWindow):
         frame_selector_layout.addWidget(self.reset_frame_range)
         view_layout.addLayout(frame_selector_layout)
         
-        
+        self.update_viewer()
         
 
     '''---------------------------------------------------------------
