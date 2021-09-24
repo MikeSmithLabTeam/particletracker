@@ -15,6 +15,7 @@ import time
 from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
 
+from scipy import spatial
 
 from .custom_tab_widget import CheckableTabWidget
 from ..project import PTWorkflow
@@ -350,6 +351,15 @@ class MainWindow(QMainWindow):
         self.status_bar.setStyleSheet("background-color : green")
         self.status_bar.showMessage("Coords (x,y): ("+str(x)+','+str(y) +') \t Intensities [r,g,b]:'+str(output[int(y),int(x),:]))    
         self.show()
+
+        if self.pandas_viewer.isVisible():
+            points = self.pandas_viewer.df[['x', 'y']].values
+            tree = spatial.KDTree(points)
+            dist, idx = tree.query((x, y))
+            self.pandas_viewer.view.selectRow(idx)
+
+
+
   
 
     def reset_statusbar(self):
