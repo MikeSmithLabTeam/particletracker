@@ -73,10 +73,10 @@ class PandasWidget(QtWidgets.QDialog):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
-    def update_file(self, filename):
+    def update_file(self, filename, frame):
         self.filename = filename
         try:
-            df = pd.read_hdf(filename).reset_index()
+            df = pd.read_hdf(filename)#.reset_index()
         except Exception as e:
             df = pd.DataFrame()
             raise PandasViewError(e)

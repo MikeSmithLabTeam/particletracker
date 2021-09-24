@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
                     print('tried to load current params - falling back on initial settings file')
         
         self.open_tracker()
-        self.setup_pandas_viewer()
+        
         self.setWindowTitle("Particle Tracker")
 
         self.main_panel = QWidget()
@@ -78,12 +78,17 @@ class MainWindow(QMainWindow):
 
         self.init_ui()#self.view_layout, self.settings_layout)
         
+        
+
         self.main_layout.addLayout(self.view_layout,3)
         self.main_layout.addLayout(self.settings_layout,2)
         self.main_panel.setLayout(self.main_layout)
         self.setCentralWidget(self.main_panel)
         self.showFullScreen()
         self.showMaximized()
+
+        self.setup_pandas_viewer()
+       
         
 
     def init_ui(self):#, view_layout, settings_layout, reboot=True):
@@ -150,12 +155,13 @@ class MainWindow(QMainWindow):
         self.live_update_button.triggered.connect(self.live_update_button_click)
         self.toolbar.addAction(self.live_update_button)
 
-        self.toolbar.addSeparator()
 
         pandas_button = QAction(
             QIcon(os.path.join(resources_dir, "view_pandas.png")),
             "Show Dataframe View", self)
         pandas_button.triggered.connect(self.pandas_button_click)
+        pandas_button.setCheckable(True)
+        pandas_button.setChecked(False)
         self.toolbar.addAction(pandas_button)
 
         self.toolbar.addSeparator()
@@ -216,6 +222,7 @@ class MainWindow(QMainWindow):
         self.file_menu.addSeparator()
         self.file_menu.addAction(close_button)
 
+        self.tool_menu.addAction(self.live_update_button)
         self.tool_menu.addAction(pandas_button)
 
         self.process_menu.addAction(self.autosave_on_process)
@@ -304,7 +311,7 @@ class MainWindow(QMainWindow):
         frame_selector_layout.addWidget(self.reset_frame_range)
         view_layout.addLayout(frame_selector_layout)
         
-        self.update_viewer()
+        
         
 
     '''---------------------------------------------------------------
@@ -378,6 +385,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot(int)
     def frame_selector_slot(self, value):
         self.update_viewer()
+        
 
     @pyqtSlot()
     def param_change(self, value):
@@ -493,6 +501,9 @@ class MainWindow(QMainWindow):
                 self.viewer.setImage(bgr_to_rgb(proc_img))
             else:
                 self.viewer.setImage(bgr_to_rgb(annotated_img))
+            if hasattr(MainWindow, 'pandas_viewer'):
+                self.update_pandas_view()
+            
         
     def reset_viewer(self):
         self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],
@@ -500,6 +511,8 @@ class MainWindow(QMainWindow):
                                            step_=1,
                                            )
         self.movie_label.setText(self.movie_filename)
+        if hasattr(MainWindow, 'pandas_viewer'):
+                self.update_pandas_view()
 
     def reset_frame_range_click(self):
         self.tracker.cap.set_frame_range((0,None,1))
@@ -581,6 +594,26 @@ class MainWindow(QMainWindow):
         self.csv = self.export_to_csv.isChecked
 
 
+        """-------------------------------------------------------------
+        Functions relevant to the tools section
+        --------------------------------------------------------------"""
+    def setup_pandas_viewer(self):
+        if hasattr(self, 'pandas_viewer'):
+            self.pandas_viewer.close()
+            self.pandas_viewer.deleteLater()
+        self.pandas_viewer = PandasWidget(self)
+        self.update_pandas_view()
+
+    def pandas_button_click(self):
+        self.pandas_viewer.show()
+
+    def update_pandas_view(self):
+        fname = self.tracker.data_filename
+        if not self.use_part_button.isChecked():
+            fname = fname[:-5]+'_temp.hdf5'
+        self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
+      
+
         """------------------------------------------------------------
         Functions that control the processing
         --------------------------------------------------------------"""
@@ -648,18 +681,5 @@ class MainWindow(QMainWindow):
     def close_button_click(self):
         sys.exit()
 
-    def setup_pandas_viewer(self):
-        self.pandas_viewer = PandasWidget(self)
-        fname = self.tracker.data_filename
-        fname = fname[:-5] + '_temp.hdf5'
-        self.pandas_viewer.update_file(fname)
 
-    def pandas_button_click(self):
-        self.pandas_viewer.show()
-
-    def update_pandas_view(self):
-        fname = self.tracker.data_filename
-        if not self.use_part_button.isChecked():
-            fname = fname[:-5]+'_temp.hdf5'
-        self.pandas_viewer.update_file(fname)
 
