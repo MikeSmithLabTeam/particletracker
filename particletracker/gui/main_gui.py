@@ -158,6 +158,8 @@ class MainWindow(QMainWindow):
         pandas_button.triggered.connect(self.pandas_button_click)
         self.toolbar.addAction(pandas_button)
 
+        self.toolbar.addSeparator()
+
         self.csv=False
         self.export_to_csv = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to csv', self)
         self.export_to_csv.triggered.connect(self.export_to_csv_click)
@@ -200,6 +202,7 @@ class MainWindow(QMainWindow):
         ---------------------------------------------------------------------------------------------
         '''
         self.file_menu = menu.addMenu("&File")
+        self.tool_menu = menu.addMenu("Tools")
         self.process_menu = menu.addMenu("Process options")
         self.help_menu = menu.addMenu("Help")
 
@@ -213,11 +216,15 @@ class MainWindow(QMainWindow):
         self.file_menu.addSeparator()
         self.file_menu.addAction(close_button)
 
+        self.tool_menu.addAction(pandas_button)
+
         self.process_menu.addAction(self.autosave_on_process)
         self.process_menu.addAction(self.export_to_csv)
         self.process_menu.addAction(process_part_button)
         self.process_menu.addAction(self.use_part_button)
         self.process_menu.addAction(process_button)
+
+
         
         docs = QAction('help', self)
         docs.triggered.connect(self.open_docs)
