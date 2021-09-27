@@ -86,7 +86,6 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.main_panel)
         self.showFullScreen()
         self.showMaximized()
-
         self.setup_pandas_viewer()
        
         
@@ -156,13 +155,13 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.live_update_button)
 
 
-        pandas_button = QAction(
+        self.pandas_button = QAction(
             QIcon(os.path.join(resources_dir, "view_pandas.png")),
             "Show Dataframe View", self)
-        pandas_button.triggered.connect(self.pandas_button_click)
-        pandas_button.setCheckable(True)
-        pandas_button.setChecked(False)
-        self.toolbar.addAction(pandas_button)
+        self.pandas_button.triggered.connect(self.pandas_button_click)
+        self.pandas_button.setCheckable(True)
+        self.pandas_button.setChecked(False)
+        self.toolbar.addAction(self.pandas_button)
 
         self.toolbar.addSeparator()
 
@@ -223,7 +222,7 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(close_button)
 
         self.tool_menu.addAction(self.live_update_button)
-        self.tool_menu.addAction(pandas_button)
+        self.tool_menu.addAction(self.pandas_button)
 
         self.process_menu.addAction(self.autosave_on_process)
         self.process_menu.addAction(self.export_to_csv)
@@ -601,7 +600,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'pandas_viewer'):
             self.pandas_viewer.close()
             self.pandas_viewer.deleteLater()
-        self.pandas_viewer = PandasWidget(self)
+        self.pandas_viewer = PandasWidget(parent=self)
         self.update_pandas_view()
 
     def pandas_button_click(self):

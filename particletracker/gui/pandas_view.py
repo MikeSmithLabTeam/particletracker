@@ -1,7 +1,7 @@
 import os
 
 import pandas as pd
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 
 from ..customexceptions import PandasViewError
@@ -33,6 +33,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 class PandasWidget(QtWidgets.QDialog):
     def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
+        self.parent = parent
         self.view = QtWidgets.QTableView()
         model = pandasModel(pd.DataFrame())
         self.view.setModel(model)
@@ -57,8 +58,13 @@ class PandasWidget(QtWidgets.QDialog):
         self.resize(800, 600)
         self.center()
 
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.parent.pandas_button.setChecked(False)
+        return super().closeEvent(a0)
+
     def close_button_clicked(self):
         self.hide()
+        self.parent.pandas_button.setChecked(False)
 
     def save_button_clicked(self):
         options = QtWidgets.QFileDialog.Options()
@@ -76,11 +82,15 @@ class PandasWidget(QtWidgets.QDialog):
     def update_file(self, filename, frame):
         self.filename = filename
         try:
-            df = pd.read_hdf(filename)#.reset_index()
+            df = pd.read_hdf(filename)            
+            if 'frame' in df.columns:
+                df2 = df[df.index == frame]    
+            else:
+                df2 = df.reset_index()
         except Exception as e:
-            df = pd.DataFrame()
+            self.df = pd.DataFrame()
             raise PandasViewError(e)
-        self.df = df
-        model = pandasModel(df)
+        self.df=df2
+        model = pandasModel(df2)
         self.view.setModel(model)
 
