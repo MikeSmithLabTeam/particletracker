@@ -429,7 +429,10 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     This function will subtract a background from the image. It has several 
     options: mean will subtract the average value from the image. img will subtract a preprepared
     background img from the img. Before subtracting the background image it is blurred according to
-    the settings.
+    the settings. 
+    
+    N.B. You must apply either a grayscale or color_channel method before the subtract_bkg method. 
+    The software subtracts the grayscale version of the background image from the current image.
 
 
     
