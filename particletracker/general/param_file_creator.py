@@ -55,27 +55,24 @@ def create_param_file(filename):
         'trackpy':{'diameter':[7,1, 101,2],
                    'percentile': [64, 0, 100, 1],
                    'minmass': [100.0, 0.0, 1000.0, 0.1],
+                   'max_iterations': [10, 1, 50, 1],
                    'invert':[False, ('True','False')],
                    'get_intensities':False,
-                   'intensity_radius':[2,1,200,1],
-                   'max_iterations': [10, 1, 50, 1],
-                   'show_output':[False, ('True','False')]
+                   'intensity_radius':[2,1,200,1]                   
                    },
         'hough':{'min_dist':[105,1,501,2],
                   'p1':[75, 1, 201,2],
                   'p2':[39, 1, 201,2],
                   'min_rad':[10, 1, 301,2],
                   'max_rad':[50, 1, 301,2],
-                  'get_intensities':False,
-                  'show_output':[False, ('True','False')]
+                  'get_intensities':False
                  },
         'contours':{'noise_cutoff':[2,1,50,1],
                     'area_min':[20, 1, 2000, 1],
                     'area_max':[2000, 1, 20000, 1],
                     'aspect_min':[1.0,1.0,10.0,0.1],
                     'aspect_max':[10.0,1.0,10.0,0.1],
-                    'get_intensities':False,
-                    'show_output':[False, ('True','False')]
+                    'get_intensities':False
                     },
         }
 
