@@ -125,8 +125,7 @@ def trackpy(ppframe,frame, parameters=None):
 
                 intensity.append(value)
             df['intensities'] = np.array(intensity)
-        if get_param_val(parameters[method_key]['show_output']):
-            print(df.head(n=50))
+
         return df
     except Exception as e:
         raise TrackpyError(e)
@@ -215,12 +214,8 @@ def hough(ppframe, frame,parameters=None):
                 intensity.append(value)
 
             circles_dict['intensities']=np.array(intensity)
-
-        
+   
         df = pd.DataFrame(circles_dict)
-        
-        if get_param_val(parameters[method_key]['show_output']):
-            print(df.head(n=50))
 
         return df
     except Exception as e:
@@ -311,8 +306,6 @@ def contours(pp_frame, frame, parameters=None):
             info_headings = ['x', 'y', 'area', 'contours']
         df = pd.DataFrame(data=info, columns=info_headings)
 
-        if get_param_val(parameters[method_key]['show_output']):
-            print(df.head(n=50))
         return df
     except Exception as e:
         raise ContoursError(e)
