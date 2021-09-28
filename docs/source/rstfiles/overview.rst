@@ -72,6 +72,11 @@ If you are working with big images or the tracking method is slow for
 your dataset you don't want the gui to update every time you change a single parameter. If you toggle
 the live updates button this won't update until you toggle it back on. 
 
+- View dynamic data viewer
+
+Clicking this button opens a new window which contains all the data from the currently tracked frame. Double clicking with the left mouse button
+near a particle in the image will highlight the row of data corresponding to the particle.
+
 - Export processed results to excel
 
 This option enables you to select if the results will also be published to an excel file.
