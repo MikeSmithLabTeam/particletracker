@@ -138,6 +138,7 @@ def classify(df, f_index=None, parameters=None, call_num=None):
 
         df_frame[output_name] = df_frame[column].apply(_classify_fn, lower_threshold_value=lower_threshold_value, upper_threshold_value=upper_threshold_value)
         df.loc[f_index]=df_frame
+   
         return df
     except Exception as e:
         raise ClassifyError(e)
@@ -191,6 +192,7 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
     try:
         params = parameters['postprocess']
         method_key = get_method_key('contour_boxes', call_num)
+        
         if 'box_cx' not in df.columns:
             df['box_cx'] = np.nan
             df['box_cy'] = np.nan
@@ -239,7 +241,7 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
         df_frame['box_pts'] = box_pts
 
         df.loc[f_index] = df_frame
-
+        
         return df
     except Exception as e:
         ContourBoxesError(e)

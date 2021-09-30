@@ -604,7 +604,10 @@ class MainWindow(QMainWindow):
         self.update_pandas_view()
 
     def pandas_button_click(self):
-        self.pandas_viewer.show()
+        if self.pandas_button.isChecked():
+            self.pandas_viewer.show()
+        else:
+            self.pandas_viewer.hide()
 
     def update_pandas_view(self):
         fname = self.tracker.data_filename

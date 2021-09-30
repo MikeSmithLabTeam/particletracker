@@ -61,10 +61,11 @@ class PandasWidget(QtWidgets.QDialog):
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.parent.pandas_button.setChecked(False)
         return super().closeEvent(a0)
-
+    
     def close_button_clicked(self):
         self.hide()
         self.parent.pandas_button.setChecked(False)
+        
 
     def save_button_clicked(self):
         options = QtWidgets.QFileDialog.Options()
