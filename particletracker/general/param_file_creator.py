@@ -31,7 +31,7 @@ def create_param_file(filename):
         'blur':{'kernel':[1,1,15,2]},
         'medianblur':{'kernel':[3,1,15,2]},
         'gamma':{'gamma':[1.00,0.01,10.00,0.01]},
-        'subtract_bkg':{'subtract_bkg_type':['mean',('mean','image')],
+        'subtract_bkg':{'subtract_bkg_type':['mean',('mean','grayscale','red','green','blue')],
                     'subtract_bkg_filename':None,
                     'subtract_bkg_blur_kernel': [3,1,15,2],
                     'subtract_bkg_invert':[True,('True','False')],
