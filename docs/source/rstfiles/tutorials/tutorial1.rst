@@ -1,6 +1,6 @@
-.. _Example1:
+.. _Tutorial1:
 
-Example 1 - Eye tracking
+Tutorial 1 - Eye tracking
 ========================
 
 In this first example we are going to do some eye tracking using the hough tracking method. This is probably
@@ -139,5 +139,5 @@ Load up the video eyes.mp4 from the testdata folder and try the following steps.
     you can supply the path and filename of the settings filename as keyword arguments to the track_gui. These files can
     also be used with the track_batchprocess() method to process a whole folder of videos using the same settings. See :ref:`Batch Processing<Batch>`
     
-    :ref:`Example 2 <Example2>` 
+    :ref:`Tutorial 2 <Tutorial2>` 
 

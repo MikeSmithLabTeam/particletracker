@@ -1,6 +1,6 @@
-.. _Example5:
+.. _Tutorial5:
 
-Example 5 - Birefringent Discs
+Tutorial 5 - Birefringent Discs
 ==============================
 
 Read below or watch the video:
@@ -49,5 +49,5 @@ the radius of a circle in pixels about this centroid to send to the get_intensit
 Whilst the implementation is currently rather limited this can easily be extended by using the 
 template defined in user_methods to analyse the details of each tracked object. 
 
-:ref:`Example 6 <Example6>` 
+:ref:`Tutorial 6 <Tutorial6>` 
 

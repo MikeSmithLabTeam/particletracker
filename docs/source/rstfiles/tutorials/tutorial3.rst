@@ -1,6 +1,6 @@
-.. _Example3:
+.. _Tutorial3:
 
-Example 3 - Swelling Hydrogels
+Tutorial 3 - Swelling Hydrogels
 ==============================
 
 Read below or watch the video:
@@ -93,7 +93,7 @@ identified.
     Click "Process" to gather the data.
 
 
-:ref:`Example 4<Example4>` 
+:ref:`Tutorial 4<Tutorial4>` 
 
 
 

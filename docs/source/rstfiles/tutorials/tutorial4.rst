@@ -1,6 +1,6 @@
-.. _Example4:
+.. _Tutorial4:
 
-Example 4 - Tracking Bacteria
+Tutorial 4 - Tracking Bacteria
 =============================
 
 Read below or watch the video:
@@ -56,4 +56,4 @@ it is then relatively simple to perform calculations on a subset of the data.
 
 Finish this example by clicking the "Process" button
 
-:ref:`Example 5<Example5>` 
+:ref:`Tutorial 5<Tutorial5>` 
