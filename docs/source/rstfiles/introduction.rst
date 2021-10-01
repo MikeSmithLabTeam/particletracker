@@ -21,3 +21,24 @@ ParticleTracker incorporates several different tracking algorithms with a standa
 setup different particle tracking projects. Depending on what you want to achieve this should be possible without
 any coding ability. On the other hand we've also designed the project so that you can easily add 
 to and extend the code. Importantly however, you are just coding the bit that needs your novel input.
+
+Reporting Issues
+----------------
+
+We aim to test this software against the testdata described in the tutorials however bugs do slip through. 
+If you become aware of an issue please report it https://github.com/MikeSmithLabTeam/particletracker/issues 
+
+
+Citing ParticleTracker
+----------------------
+
+ParticleTracker was created by Mike Smith and James Downs and is offered as open source software which is free for you
+to use. If you use this software for any academic publications please cite this work using the following paper:
+
+"ParticleTracker: a gui based particle tracking software" Journal of Open Source Software (2021), M.I. Smith, J.G. Downs."
+
+ParticleTracker also relies on two other libraries. Trackpy is used not only for the "trackpy" tracking method but also
+for the linking algorithm. You should therefore also cite this project (https://zenodo.org/record/3492186#.YUMkp7hKjIV). 
+
+OpenCV is used for the contours and hough circles
+tracking methods and the annotation.
