@@ -38,7 +38,7 @@ to use. If you use this software for any academic publications please cite this 
 "ParticleTracker: a gui based particle tracking software" Journal of Open Source Software (2021), M.I. Smith, J.G. Downs."
 
 ParticleTracker also relies on two other libraries. Trackpy is used not only for the "trackpy" tracking method but also
-for the linking algorithm. You should therefore also cite this project (https://zenodo.org/record/3492186#.YUMkp7hKjIV). 
+for the linking algorithm. You should therefore also cite this project (https://zenodo.org/record/4682814#.YVcuc9rMLIU). 
 
 OpenCV is used for the contours and hough circles
 tracking methods and the annotation.
