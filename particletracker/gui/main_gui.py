@@ -1,31 +1,26 @@
+#Packages
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import os
 from os.path import isfile
 from pathlib import Path
-import cv2
 import sys
-import numpy as np
 import qimage2ndarray
 import webbrowser
-import shutil
-import time
+from scipy import spatial
 
+#Our other repos
 from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
 
-from scipy import spatial
-
+#This project
 from .custom_tab_widget import CheckableTabWidget
 from ..project import PTWorkflow
 from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.param_file_creator import create_param_file
 from ..general.imageformat import bgr_to_rgb
-
-from .. import project
-
 from .pandas_view import PandasWidget
 
 class MainWindow(QMainWindow):
@@ -41,7 +36,7 @@ class MainWindow(QMainWindow):
                 movie_filename = None
             
         if movie_filename is None:
-            ok, self.movie_filename = self.open_movie_dialog()
+            ok = self.open_movie_dialog()
 
         if settings_filename is not None:
             if isfile(settings_filename):
@@ -190,8 +185,6 @@ class MainWindow(QMainWindow):
         close_button.triggered.connect(self.close_button_click)
         self.toolbar.addAction(close_button)
 
-
-
         menu = self.menuBar()
 
         self.status_bar = QStatusBar(self)
@@ -272,8 +265,8 @@ class MainWindow(QMainWindow):
         Viewer is the LHS of gui containing window, frame_slider etc
         '''
         self.viewer_is_setup = True
-        self.movie_label = QLabel(self.movie_filename)
-        self.settings_label = QLabel(self.settings_filename)
+        self.movie_label = QLabel('Current Video :  ' + self.movie_filename)
+        self.settings_label = QLabel('Current Settings :  ' + self.settings_filename)
         self.viewer = QImageViewer()
         self.viewer.leftMouseButtonDoubleClicked.connect(self.coords_clicked)
         self.toggle_img = QPushButton("Captured Image")
@@ -372,18 +365,23 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage("Coords (x,y): ("+str(x)+','+str(y) +') \t Intensities [r,g,b]:'+str(output[int(y),int(x),:]))    
         self.show()
 
-
-
-
-  
-
     def reset_statusbar(self):
         self.status_bar.setStyleSheet("background-color : lightGray")
         self.status_bar.clearMessage()
         
     @pyqtSlot(int)
-    def frame_selector_slot(self, value):
-        self.update_viewer()
+    def frame_selector_slot(self, value): 
+        try:
+            self.update_viewer()
+        except:
+            msg=QMessageBox(self)
+            msg.setText(
+            """FYI the software just tried to crash but we caught it! This usually happens
+            if the video you load and the current settings file have incompatible frame ranges.
+            We've resolved this by resetting the frame_range to the entire video length"""
+            )
+            msg.show()
+            self.reset_frame_range()
         
 
     @pyqtSlot()
@@ -544,9 +542,9 @@ class MainWindow(QMainWindow):
  
         if ok:
             self.movie_filename = movie_filename
-            return True, movie_filename
+            return True
         else:
-            return False, movie_filename
+            return False
 
     def open_settings_dialog(self):
         options = QFileDialog.Options()
@@ -558,6 +556,7 @@ class MainWindow(QMainWindow):
             settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File",
                                                                self.settings_filename.split('.')[0],
                                                                "settings (*.param)", options=options)
+        
         if ok:
             self.settings_filename = settings_filename
             return True
@@ -571,15 +570,14 @@ class MainWindow(QMainWindow):
         self.reboot()
 
     def open_movie_click(self):
-        ok, self.movie_filename=self.open_movie_dialog()
-        if ok:
+        if self.open_movie_dialog():
             self.reboot()
         
     def open_settings_button_click(self):
-        ok=self.open_settings_dialog()
-        if ok:
-            self.reboot()
-        
+        if self.open_settings_dialog():
+            self.reboot()       
+
+
     def save_settings_button_click(self):
         options = QFileDialog.Options()
         #options |= QFileDialog.DontUseNativeDialog
@@ -592,6 +590,7 @@ class MainWindow(QMainWindow):
     def export_to_csv_click(self):
         self.csv = self.export_to_csv.isChecked
 
+    
 
         """-------------------------------------------------------------
         Functions relevant to the tools section

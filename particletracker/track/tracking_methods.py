@@ -121,7 +121,7 @@ def trackpy(ppframe,frame, parameters=None):
                     masked_img[~mask] = 0
                     value = getattr(im, get_param_val(parameters[method_key]['get_intensities']))(masked_img)
                 except:
-                    value = np.Nan
+                    value = np.nan
 
                 intensity.append(value)
             df['intensities'] = np.array(intensity)
@@ -209,7 +209,7 @@ def hough(ppframe, frame,parameters=None):
                     masked_img[~mask] = 0
                     value = getattr(im, get_param_val(parameters[method_key]['get_intensities']))(masked_img)
                 except:
-                    value = np.Nan
+                    value = np.nan
 
                 intensity.append(value)
 

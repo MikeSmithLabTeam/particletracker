@@ -67,14 +67,14 @@ def angle(df, f_index=None, parameters=None, call_num=None):
         if output_name not in df.columns:
             df[output_name] = np.nan
     
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
         
         if units == 'degrees':
             df_frame[output_name] = np.arctan2(df_frame[columny],df_frame[columnx])*(180/np.pi)
         else:
             df_frame[output_name] = np.arctan2(df_frame[columny],df_frame[columnx])
     
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
     
         return df
     except Exception as e:
@@ -134,10 +134,10 @@ def classify(df, f_index=None, parameters=None, call_num=None):
 
         if output_name not in df.columns:
             df[output_name] = np.nan
-        df_frame = df.loc[f_index]
-
+        df_frame = df.loc[[f_index]]
+      
         df_frame[output_name] = df_frame[column].apply(_classify_fn, lower_threshold_value=lower_threshold_value, upper_threshold_value=upper_threshold_value)
-        df.loc[f_index]=df_frame
+        df.loc[[f_index]]=df_frame
    
         return df
     except Exception as e:
@@ -202,7 +202,7 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
             df['box_area'] = np.nan
             df['box_pts'] = np.nan
         
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
         contours = df_frame[['contours']].values
         
         box_cx = []
@@ -240,7 +240,7 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
         df_frame['box_area'] = box_area
         df_frame['box_pts'] = box_pts
 
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
         
         return df
     except Exception as e:
@@ -301,10 +301,10 @@ def logic_AND(df, f_index=None, parameters=None, call_num=None):
         output_name = params[method_key]['output_name']
         if output_name not in df.columns:
             df[output_name] = np.nan
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
         
         df_frame[output_name] = df_frame[column1] * df_frame[column2]
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
         
         return df
     except Exception as e:
@@ -352,10 +352,10 @@ def logic_NOT(df, f_index=None, parameters=None, call_num=None):
         output_name = params[method_key]['output_name']
         if output_name not in df.columns:
             df[output_name] = np.nan
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
 
         df_frame[output_name] = ~df_frame[column]
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
         return df
     except Exception as e:
         raise LogicNotError(e)
@@ -404,10 +404,10 @@ def logic_OR(df, f_index=None, parameters=None, call_num=None):
 
         if output_name not in df.columns:
             df[output_name] = np.nan
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
 
         df_frame[output_name] = df_frame[column1] + df_frame[column2]
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
         return df
     except  Exception as e:
         raise LogicOrError(e)
@@ -453,10 +453,10 @@ def magnitude(df, f_index=None, parameters=None, call_num=None):
         
         if output_name not in df.columns:
             df[output_name] = np.nan
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
 
         df_frame[output_name] = (df_frame[column]**2 + df_frame[column2]**2)**0.5
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
         return df
     except Exception as e:
         raise MagnitudeError(e)
@@ -517,13 +517,13 @@ def neighbours(df, f_index=None, parameters=None, call_num=None):
         
         if 'neighbours' not in df.columns:
             df['neighbours'] = np.nan
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
 
         if method == 'delaunay':
             df_frame =_find_delaunay(df_frame, parameters=params)
         elif method == 'kdtree':
              df_frame =_find_kdtree(df_frame, parameters=params)     
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
     
         return df
     except Exception as e:
@@ -604,13 +604,13 @@ def voronoi(df, f_index=None, parameters=None, call_num=None):
             df['voronoi'] = np.nan
             df['voronoi_area'] = np.nan
 
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
 
         points = df_frame[['x', 'y']].values
         vor = sp.Voronoi(points)
         df_frame['voronoi']=_get_voronoi_coords(vor)
         df_frame['voronoi_area']=_voronoi_props(vor)
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
     
         return df
     except Exception as e:
@@ -710,7 +710,7 @@ def remove_masked(df, f_index=None, parameters=None, call_num=None):
         mask = np.array([_point_inside_mask(point, contour_list) for point in points])
         for column in df_frame.columns:
             df_frame[column] = df_frame[column].where(mask)
-        df.loc[f_index] = df_frame
+        df_frame = df.loc[[f_index]]
         df.dropna(how='all',inplace=True)
         return df
     except Exception as e:
