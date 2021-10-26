@@ -21,6 +21,19 @@ Add the following argument to setup.py setuptools.setup()
 
     dependency_links=['https://github.com/MikeSmithLabTeam/particletracker/tarball/repo/master#egg=package-1.0'],
     
+## Citation
+Markdown:
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.03611/status.svg)](https://doi.org/10.21105/joss.03611)
+
+HTML:
+<a style="border-width:0" href="https://doi.org/10.21105/joss.03611">
+  <img src="https://joss.theoj.org/papers/10.21105/joss.03611/status.svg" alt="DOI badge" >
+</a>
+
+reStructuredText:
+.. image:: https://joss.theoj.org/papers/10.21105/joss.03611/status.svg
+   :target: https://doi.org/10.21105/joss.03611
+   
 ## Contributions
 Details about contributing to the ParticleTracker project can be found [here](https://github.com/MikeSmithLabTeam/particletracker/blob/master/CONTRIBUTING.md)
 
