@@ -812,7 +812,7 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
     except Exception as e:
         raise HexaticOrderError(e)
 
-
+"""
 def audio_frequency(df, f_index=None, parameters=None, call_num=None):
     
     try:
@@ -833,6 +833,7 @@ def audio_frequency(df, f_index=None, parameters=None, call_num=None):
         return df
     except Exception as e:
         raise AudioFrequencyError(e)
+"""
 
 '''
 ---------------------------------------------------------------------------------------------
