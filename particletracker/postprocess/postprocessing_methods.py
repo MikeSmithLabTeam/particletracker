@@ -8,7 +8,7 @@ import subprocess
 import pandas as pd
 
 from labvision import audio, video
-#from moviepy.editor import AudioFileClip
+from moviepy.editor import AudioFileClip
 
 from ..general.parameters import get_method_key, get_param_val
 from ..customexceptions.postprocessor_error import *
@@ -812,9 +812,24 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
     except Exception as e:
         raise HexaticOrderError(e)
 
-"""
+
 def audio_frequency(df, f_index=None, parameters=None, call_num=None):
-    
+    """Decodes the audio frequency in our videos. We use this to 
+    encode information about the acceleration being applied to a video
+    directly into the audio channel. This enables us to get the info back out
+
+    Args:
+        df ([type]): [description]
+        f_index ([type], optional): [description]. Defaults to None.
+        parameters ([type], optional): [description]. Defaults to None.
+        call_num ([type], optional): [description]. Defaults to None.
+
+    Raises:
+        AudioFrequencyError: [description]
+
+    Returns:
+        [type]: [description]
+    """
     try:
         filename = parameters['experiment']['video_filename']
         command = f"ffmpeg -i {filename} -ar 48000 -ss {0.02*f_index} -to {0.02*(f_index+1)} -vn out.wav"
@@ -833,7 +848,7 @@ def audio_frequency(df, f_index=None, parameters=None, call_num=None):
         return df
     except Exception as e:
         raise AudioFrequencyError(e)
-"""
+
 
 '''
 ---------------------------------------------------------------------------------------------
