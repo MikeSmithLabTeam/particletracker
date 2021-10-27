@@ -580,8 +580,7 @@ def voronoi(df, f_index=None, parameters=None, call_num=None):
     you can use "voronoi" in the annotation section.
 
 
-    New Columns
-    -----------
+    
     'voronoi'       -   The voronoi coordinates that surround a particle
     'voronoi_area'  -   The area of the voronoi cell associated with a particle
 
