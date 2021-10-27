@@ -760,7 +760,8 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
 
 
     Args
-    ----------
+    ----
+
     df
         The dataframe for all data
     f_index
@@ -808,26 +809,25 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
         df.loc[f_index] = df_frame
         return df
 
-
     except Exception as e:
         raise HexaticOrderError(e)
 
 
 def audio_frequency(df, f_index=None, parameters=None, call_num=None):
-    """Decodes the audio frequency in our videos. We use this to 
+    """
+    Decodes the audio frequency in our videos. We use this to 
     encode information about the acceleration being applied to a video
     directly into the audio channel. This enables us to get the info back out
 
-    Args:
+    Args
+    ----
         df ([type]): [description]
         f_index ([type], optional): [description]. Defaults to None.
         parameters ([type], optional): [description]. Defaults to None.
         call_num ([type], optional): [description]. Defaults to None.
 
-    Raises:
-        AudioFrequencyError: [description]
-
-    Returns:
+    Returns
+    -------
         [type]: [description]
     """
     try:
