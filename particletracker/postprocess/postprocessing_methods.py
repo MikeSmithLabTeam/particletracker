@@ -166,6 +166,7 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
 
     New Columns
     -----------
+    
     'box_cx'    -   Centre of mass x coord of calculated box
     'box_cy'    -   Centre of mass y coord of calculated box
     'box_angle' -   the angle of the long axis of the box relative to the x axis 
@@ -566,18 +567,21 @@ def _find_delaunay(df, parameters=None, call_num=None):
     df.loc[:, ['neighbours']] = indices
     return df
 
+
 def voronoi(df, f_index=None, parameters=None, call_num=None):
     """
     Calculate the voronoi network of particle.
 
     Notes
     -----
+
     The voronoi network is explained here: https://en.wikipedia.org/wiki/Voronoi_diagram
     This function also calculates the associated area of the voronoi cells.To visualise the result
     you can use "voronoi" in the annotation section.
 
     New Columns
     -----------
+
     'voronoi'       -   The voronoi coordinates that surround a particle
     'voronoi_area'  -   The area of the voronoi cell associated with a particle
 
