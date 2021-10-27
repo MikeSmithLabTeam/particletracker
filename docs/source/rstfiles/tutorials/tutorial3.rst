@@ -1,7 +1,7 @@
 .. _Tutorial3:
 
 Tutorial 3 - Swelling Hydrogels
-==============================
+===============================
 
 Read below or watch the video:
 

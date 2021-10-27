@@ -1,7 +1,7 @@
 .. _Tutorial6:
 
 Tutorial 6 - Working with the final data in a Jupyter Notebook
-=============================================================
+==============================================================
 Read below or watch the video
 
 .. raw:: html

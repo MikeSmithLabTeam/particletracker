@@ -1,7 +1,7 @@
 .. _Tutorial5:
 
 Tutorial 5 - Birefringent Discs
-==============================
+===============================
 
 Read below or watch the video:
 

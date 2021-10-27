@@ -1,7 +1,7 @@
 .. _Tutorial1:
 
 Tutorial 1 - Eye tracking
-========================
+=========================
 
 In this first example we are going to do some eye tracking using the hough tracking method. This is probably
 not the most common particle tracking case but it makes a good introduction to the software since the number

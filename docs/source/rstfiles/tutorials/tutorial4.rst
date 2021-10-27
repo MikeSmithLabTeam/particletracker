@@ -1,7 +1,7 @@
 .. _Tutorial4:
 
 Tutorial 4 - Tracking Bacteria
-=============================
+==============================
 
 Read below or watch the video:
 

@@ -1,7 +1,7 @@
 .. _Tutorial2:
 
 Tutorial 2 - Diffusing colloids with trackpy
-===========================================
+============================================
 
 In this example we are going to use an existing python based particle tracking code known as trackpy. 
 The details of this project can be found here (http://soft-matter.github.io/trackpy/v0.4.2/). Although
