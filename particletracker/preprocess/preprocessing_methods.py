@@ -1,12 +1,13 @@
 import cv2
 import numpy as np
 
-from labvision.images import display
+from labvision.images import bgr_to_gray
 
 from ..general.parameters import  get_param_val, get_method_key
 from ..crop import crop
 from ..customexceptions.preprocessor_error import *
 from ..user_methods import *
+
 
 def adaptive_threshold(frame, parameters=None, call_num=None):
     '''
@@ -432,13 +433,13 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     the settings. 
     
     N.B. You must apply either a grayscale or color_channel method before the subtract_bkg method. 
-    The software subtracts the grayscale version of the background image from the current image.
+    The software subtracts the mean image value, grayscale or color_channel version of the background image which you select from the current image.
 
 
     
 
     subtract_bkg_type
-        Type of background substraction to be performed. Options are are 'mean' or 'img'. 
+        Type of background substraction to be performed. Options are are 'mean' or 'grayscale','red','green','blue'. 
     subtract_bkg_filename
         filename of background image. If None it will look for a file named moviefilename_bkgimg.png. Otherwise it looks for the filename specified. The filename is assumed to be in the same directory as the movie. Alternatively specify the full path to the file. 
     subtract_bkg_blur_kernel
@@ -452,7 +453,7 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     Args
     ----
     frame
-        This is must be a grayscale / single colour channel image
+        This must be a grayscale / single colour channel image
     parameters
         Nested dictionary like object (same as .param files or output from general.param_file_creator.py
     call_num
@@ -473,7 +474,7 @@ def subtract_bkg(frame, parameters=None, call_num=None):
             mean_val = int(np.mean(frame))
             subtract_frame = mean_val * np.ones(np.shape(frame), dtype=np.uint8)
             frame2=frame
-        elif bkgtype == 'image':
+        else:
             # This option subtracts the previously created image which is added to dictionary.
             #These parameters are fed to the blur function
             temp_params = {}
@@ -482,10 +483,19 @@ def subtract_bkg(frame, parameters=None, call_num=None):
             #Load bkg img
             if params['subtract_bkg_filename'] is None:
                 name = parameters['experiment']['video_filename']
-                subtract_frame = cv2.imread(name[:-4] + '_bkgimg.png',cv2.IMREAD_GRAYSCALE)
+                bkg_frame = cv2.imread(name[:-4] + '_bkgimg.png')#,cv2.IMREAD_GRAYSCALE)
             else:
-                subtract_frame = cv2.imread(params['subtract_bkg_filename'],cv2.IMREAD_GRAYSCALE)
+                bkg_frame = cv2.imread(params['subtract_bkg_filename'])#,cv2.IMREAD_GRAYSCALE)
          
+            if bkgtype == 'grayscale':
+                subtract_frame = bgr_to_gray(bkg_frame)
+            elif bkgtype == 'red':
+                subtract_frame = bkg_frame[:,:,2]
+            elif bkgtype == 'green':
+                subtract_frame = bkg_frame[:,:,1]
+            elif bkgtype == 'blue':
+                subtract_frame = bkg_frame[:,:,0]
+
             subtract_frame = crop(subtract_frame, parameters['crop'])
            
             frame2 = blur(frame, temp_params)

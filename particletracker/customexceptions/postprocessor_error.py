@@ -112,3 +112,8 @@ class RemoveMaskedError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
         self.error_msg = "remove masked objects error"
+
+class AudioFrequencyError(PostprocessorError):
+    def __init__(self, e):
+        super().__init__(e)
+        self.error_msg = "Audio frequency error, ffmpeg must be installed on system"

@@ -4,7 +4,10 @@ import scipy.spatial as sp
 import trackpy as tp
 import cv2
 import os
+import subprocess
 import pandas as pd
+
+from labvision import audio, video
 
 from ..general.parameters import get_method_key, get_param_val
 from ..customexceptions.postprocessor_error import *
@@ -18,15 +21,15 @@ All these methods operate on single frames
 def angle(df, f_index=None, parameters=None, call_num=None):
     '''
     Angle calculates the angle specified by two components.
-    
+
     Notes
     -----
     Usually angle is used following calculating the difference along x and y trajectories.
     It assumes you want to calculate from x_column as dx and y_column as dy
     it uses tan2 so that -dx and +dy give a different result to +dx and -dy
     Angles are output in radians or degrees given by parameters['angle']['units']
-    
-    
+
+
     Parameters
     ----------
 
@@ -38,7 +41,7 @@ def angle(df, f_index=None, parameters=None, call_num=None):
         New column name to store angle df
     units
         'degrees' or 'radians'
-    
+
     Args
     ----
 
@@ -66,16 +69,28 @@ def angle(df, f_index=None, parameters=None, call_num=None):
 
         if output_name not in df.columns:
             df[output_name] = np.nan
+<<<<<<< HEAD
     
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
         
+=======
+
+        df_frame = df.loc[f_index]
+
+>>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         if units == 'degrees':
             df_frame[output_name] = np.arctan2(df_frame[columny],df_frame[columnx])*(180/np.pi)
         else:
             df_frame[output_name] = np.arctan2(df_frame[columny],df_frame[columnx])
+<<<<<<< HEAD
     
+        df.loc[[f_index]] = df_frame
+    
+=======
+
         df.loc[f_index] = df_frame
-    
+
+>>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         raise AngleError(e)
@@ -134,11 +149,16 @@ def classify(df, f_index=None, parameters=None, call_num=None):
 
         if output_name not in df.columns:
             df[output_name] = np.nan
-        df_frame = df.loc[f_index]
-
+        df_frame = df.loc[[f_index]]
+      
         df_frame[output_name] = df_frame[column].apply(_classify_fn, lower_threshold_value=lower_threshold_value, upper_threshold_value=upper_threshold_value)
-        df.loc[f_index]=df_frame
+<<<<<<< HEAD
+        df.loc[[f_index]]=df_frame
    
+=======
+        df.loc[f_index]=df_frame
+
+>>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         raise ClassifyError(e)
@@ -192,7 +212,7 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
     try:
         params = parameters['postprocess']
         method_key = get_method_key('contour_boxes', call_num)
-        
+
         if 'box_cx' not in df.columns:
             df['box_cx'] = np.nan
             df['box_cy'] = np.nan
@@ -201,17 +221,22 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
             df['box_width'] = np.nan
             df['box_area'] = np.nan
             df['box_pts'] = np.nan
+<<<<<<< HEAD
         
+        df_frame = df.loc[[f_index]]
+=======
+
         df_frame = df.loc[f_index]
+>>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         contours = df_frame[['contours']].values
-        
+
         box_cx = []
         box_cy = []
         box_angle = []
         box_length = []
         box_width = []
-        box_area = [] 
-            
+        box_area = []
+
         if np.shape(contours)[0] == 1:
             df_empty = np.isnan(contours[0])
             if np.all(df_empty):
@@ -227,7 +252,7 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
             box_width.append(info_contour[3])
             box_length.append(info_contour[4])
             box_area.append(info_contour[3]*info_contour[4])
-            if index == 0:   
+            if index == 0:
                 box_pts=[info_contour[5]]
             else:
                 box_pts.append(info_contour[5])
@@ -240,8 +265,13 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
         df_frame['box_area'] = box_area
         df_frame['box_pts'] = box_pts
 
-        df.loc[f_index] = df_frame
+<<<<<<< HEAD
+        df.loc[[f_index]] = df_frame
         
+=======
+        df.loc[f_index] = df_frame
+
+>>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         ContourBoxesError(e)
@@ -292,7 +322,7 @@ def logic_AND(df, f_index=None, parameters=None, call_num=None):
 
 
     '''
-    
+
     try:
         params = parameters['postprocess']
         method_key = get_method_key('logic_AND', call_num)
@@ -301,11 +331,19 @@ def logic_AND(df, f_index=None, parameters=None, call_num=None):
         output_name = params[method_key]['output_name']
         if output_name not in df.columns:
             df[output_name] = np.nan
-        df_frame = df.loc[f_index]
+<<<<<<< HEAD
+        df_frame = df.loc[[f_index]]
         
         df_frame[output_name] = df_frame[column1] * df_frame[column2]
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
         
+=======
+        df_frame = df.loc[f_index]
+
+        df_frame[output_name] = df_frame[column1] * df_frame[column2]
+        df.loc[f_index] = df_frame
+
+>>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         raise LogicAndError(e)
@@ -344,7 +382,7 @@ def logic_NOT(df, f_index=None, parameters=None, call_num=None):
 
     '''
 
-       
+
     try:
         params = parameters['postprocess']
         method_key = get_method_key('logic_NOT', call_num)
@@ -352,10 +390,10 @@ def logic_NOT(df, f_index=None, parameters=None, call_num=None):
         output_name = params[method_key]['output_name']
         if output_name not in df.columns:
             df[output_name] = np.nan
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
 
         df_frame[output_name] = ~df_frame[column]
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
         return df
     except Exception as e:
         raise LogicNotError(e)
@@ -394,7 +432,7 @@ def logic_OR(df, f_index=None, parameters=None, call_num=None):
 
     '''
 
-    
+
     try:
         params = parameters['postprocess']
         method_key = get_method_key('logic_OR', call_num)
@@ -404,10 +442,10 @@ def logic_OR(df, f_index=None, parameters=None, call_num=None):
 
         if output_name not in df.columns:
             df[output_name] = np.nan
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
 
         df_frame[output_name] = df_frame[column1] + df_frame[column2]
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
         return df
     except  Exception as e:
         raise LogicOrError(e)
@@ -450,13 +488,13 @@ def magnitude(df, f_index=None, parameters=None, call_num=None):
         column = params[method_key]['column_name']
         column2 = params[method_key]['column_name2']
         output_name = params[method_key]['output_name']
-        
+
         if output_name not in df.columns:
             df[output_name] = np.nan
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
 
         df_frame[output_name] = (df_frame[column]**2 + df_frame[column2]**2)**0.5
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
         return df
     except Exception as e:
         raise MagnitudeError(e)
@@ -514,17 +552,23 @@ def neighbours(df, f_index=None, parameters=None, call_num=None):
         params = parameters['postprocess']
         method_key = get_method_key('neighbours', call_num)
         method = get_param_val(params[method_key]['method'])
-        
+
         if 'neighbours' not in df.columns:
             df['neighbours'] = np.nan
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
 
         if method == 'delaunay':
             df_frame =_find_delaunay(df_frame, parameters=params)
         elif method == 'kdtree':
+<<<<<<< HEAD
              df_frame =_find_kdtree(df_frame, parameters=params)     
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
     
+=======
+             df_frame =_find_kdtree(df_frame, parameters=params)
+        df.loc[f_index] = df_frame
+
+>>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         raise NeighboursError(e)
@@ -544,7 +588,7 @@ def _find_kdtree(df, parameters=None):
         neighbour_ids.append([particle_ids[row[i+1]] for i in range(num_neighbours) if row[i+1] != fill_val])
     df.loc[:, ['neighbours']] = neighbour_ids
     return df
-    
+
 def _find_delaunay(df, parameters=None, call_num=None):
     method_key = get_method_key('neighbours')
     cutoff = get_param_val(parameters[method_key]['cutoff'])
@@ -599,19 +643,24 @@ def voronoi(df, f_index=None, parameters=None, call_num=None):
     try:
         params = parameters['postprocess']
         method_key = get_method_key('voronoi')
-        
+
         if 'voronoi' not in df.columns:
             df['voronoi'] = np.nan
             df['voronoi_area'] = np.nan
 
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
 
         points = df_frame[['x', 'y']].values
         vor = sp.Voronoi(points)
         df_frame['voronoi']=_get_voronoi_coords(vor)
         df_frame['voronoi_area']=_voronoi_props(vor)
-        df.loc[f_index] = df_frame
+<<<<<<< HEAD
+        df.loc[[f_index]] = df_frame
     
+=======
+        df.loc[f_index] = df_frame
+
+>>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         raise VoronoiError(e)
@@ -698,7 +747,7 @@ def remove_masked(df, f_index=None, parameters=None, call_num=None):
     try:
         params = parameters['postprocess']
         method_key = get_method_key('remove_masked', call_num)
-        
+
         mask_method_list = list(parameters['crop']['crop_method'])
         if 'crop_box' in mask_method_list: mask_method_list.remove('crop_box')
 
@@ -710,7 +759,7 @@ def remove_masked(df, f_index=None, parameters=None, call_num=None):
         mask = np.array([_point_inside_mask(point, contour_list) for point in points])
         for column in df_frame.columns:
             df_frame[column] = df_frame[column].where(mask)
-        df.loc[f_index] = df_frame
+        df_frame = df.loc[[f_index]]
         df.dropna(how='all',inplace=True)
         return df
     except Exception as e:
@@ -743,283 +792,6 @@ def _point_inside_mask(point, mask_contour_list):
         if result != -1:
             inside = True
     return inside
-
-
-'''
----------------------------------------------------------------------------------------------
-All these methods depend on information from other frames. ie they won't work unless
-multiple frames have been processed and you are using part.
----------------------------------------------------------------------------------------------
-'''
-def difference(df, f_index=None, parameters=None, call_num=None):
-    '''
-    Difference of a particles values on user selected column. 
-
-    Notes
-    -----
-    Returns the difference of a particle's values on a particular column at span separation in frames to a new column. Please be aware
-    this is the difference between current frame and frame - span for each particle.
-    
-    Parameters
-    ----------
-    column_name
-        Input column name
-    output_name
-        Column name for median data
-    span
-        number of frames over which to calculate rolling median
-    
-    
-    Args
-    ----
-
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
-    '''
-    try:    
-        params = parameters['postprocess']
-        method_key = get_method_key('difference', call_num)
-        column = params[method_key]['column_name']
-        output_name = params[method_key]['output_name']
-        span = get_param_val(params[method_key]['span'])
-    
-        if output_name not in df.columns:
-            df[output_name] = np.nan
-
-        start=f_index-span - 1
-        if start < 0:
-            start = 0
-        
-        finish=f_index + span + 1
-        if finish > df.index.max():
-            finish = df.index.max()
-        
-        df_frames = df.loc[start:finish,[column,'particle']]
-        df_diff=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
-        df.loc[f_index,[output_name]]=df_diff.loc[f_index]
-    
-        return df
-    except Exception as e:
-        raise DifferenceError(e)
-
-
-def mean(df, f_index=None, parameters=None, call_num=None):
-    '''
-    Rolling mean of a particles values. 
-
-    Notes
-    -----
-    Returns the rolling mean of a particle's values to a new column. Useful
-    to reduce fluctuations or tracking inaccuracies. The value of the mean is
-    placed at the centre of the rolling window. i.e [2,4,6,8,4] with window 3 would result
-    in [NaN, 4, 6, 6, Nan].
-    
-    Parameters
-    ----------
-    column_name
-        Input column name
-    output_name
-        Column name for mean data
-    span
-        number of frames over which to calculate rolling mean
-    
-    
-    Args
-    ----
-
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
-
-    '''
-    
-
-    try:
-        params = parameters['postprocess']
-        method_key = get_method_key('mean', call_num)
-        column = params[method_key]['column_name']
-        output_name = params[method_key]['output_name']
-        span = get_param_val(params[method_key]['span'])
-
-        if output_name not in df.columns:
-            df[output_name] = np.nan
-
-        start=f_index-span - 1
-        if start < 0:
-            start = 0
-        
-        finish=f_index + span + 1
-        if finish > df.index.max():
-            finish = df.index.max()
-        
-        df_frames = df.loc[start:finish,[column,'particle']]
-        df_output=df_frames.groupby('particle')[column].rolling(span, center=True).mean().transform(lambda x:x).to_frame(name=output_name)
-        df_output.reset_index('particle', inplace=True)
-        df.loc[f_index,[output_name]]=df_output.loc[f_index]
-        return df
-    except Exception as e:
-        raise MeanError(e)
-        
-
-def median(df, f_index=None, parameters=None, call_num=None):
-    '''
-    Median of a particles values. 
-
-    Notes
-    -----
-    Returns the median of a particle's values to a new column. Useful 
-    before classification to answer to which group a particle's properties
-    usually belong. The value of the median is
-    placed at the centre of the rolling window. i.e [2,4,4,8,4] with window 3 would result
-    in [NaN, 4, 4, 4, Nan].
-    
-    Parameters
-    ----------
-    column_name
-        Input column name
-    output_name
-        Column name for median data
-    span
-        number of frames over which to calculate rolling median
-    
-    
-    Args
-    ----
-
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
-
-    '''
-    
-    try:
-        params = parameters['postprocess']
-        method_key = get_method_key('median', call_num)
-        column = params[method_key]['column_name']
-        output_name = params[method_key]['output_name']
-        span = get_param_val(params[method_key]['span'])
-       
-        if output_name not in df.columns:
-            df[output_name] = np.nan
-
-        start=f_index-span + 1
-        if start < 0:
-            start = 0
-
-        finish=f_index + span + 1
-        if finish > df.index.max():
-            finish = df.index.max()
-        
-        
-        df_frames = df.loc[start:finish,[column,'particle']]
-        df_output=df_frames.groupby('particle')[column].rolling(span, center=True).median().transform(lambda x:x).to_frame(name=output_name)
-        df_output.reset_index('particle', inplace=True)
-        df.loc[f_index,[output_name]]=df_output.loc[f_index]
-        
-        return df
-    except Exception as e:
-        raise MedianError(e)
-
-
-def rate(df, f_index=None, parameters=None, call_num=None):
-    '''
-    Rate of change of a particle property with frame
-    
-    Notes
-    -----
-    Rate function takes an input column and calculates the
-    rate of change of the quantity. Nans are inserted at end and 
-    beginning of particle trajectories where calc is not possible. The 
-    rate is calculated from diff between current frame and frame - span.
-    
-    Parameters
-    ----------
-    column_name
-        Input column names
-    output_name
-        Output column name
-    fps
-        numerical value indicating the number of frames per second
-    span
-        number of frames over which to calculate rolling difference
-    
-    
-    
-    Args
-    ----
-
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
-
-    '''
-    try:
-        params = parameters['postprocess']
-        method_key = get_method_key('rate', call_num)
-        column = params[method_key]['column_name']
-        output_name = params[method_key]['output_name']
-        span = get_param_val(params[method_key]['span'])
-        fps= params[method_key]['fps']
-
-        if output_name not in df.columns:
-            df[output_name] = np.nan
-
-        start=f_index-span - 1
-        if start < 0:
-            start = 0
-        
-        finish=f_index + span + 1
-        if finish > df.index.max():
-            finish = df.index.max()
-        
-        
-        df_frames = df.loc[start:finish,[column,'particle']]
-        df_output=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
-        df.loc[f_index,[output_name]]=df_output.loc[f_index] / (float(span)/float(fps))
-        return df
-    except Exception as e:
-        raise RateError(e)
 
 
 def hexatic_order(df, f_index=None, parameters=None, call_num=None):
@@ -1087,6 +859,307 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
         raise HexaticOrderError(e)
 
 
+def audio_frequency(df, f_index=None, parameters=None, call_num=None):
+    from moviepy.editor import AudioFileClip
+    try:
+        filename = parameters['experiment']['video_filename']
+        command = f"ffmpeg -i {filename} -ar 48000 -ss {0.02*f_index} -to {0.02*(f_index+1)} -vn out.wav"
+        if os.path.exists("out.wav"):
+            os.remove("out.wav")
+        subprocess.call(command, shell=True, stderr=subprocess.DEVNULL)
+        audio_arr = AudioFileClip("out.wav").to_soundarray(fps=48000, nbytes=2)[:, 0]
+        ft = np.abs(np.fft.fft(audio_arr, n=len(audio_arr)))
+        freq = np.fft.fftfreq(len(audio_arr), 1/48000)
+        peak = int(abs(freq[np.argmax(ft)]))
+        if 'audio_frequency' not in df.columns:
+            df['audio_frequency'] = -1.0
+        df_frame = df.loc[f_index]
+        df_frame['audio_frequency'] = peak
+        df.loc[f_index] = df_frame
+        return df
+    except Exception as e:
+        raise AudioFrequencyError(e)
+
+'''
+---------------------------------------------------------------------------------------------
+All these methods depend on information from other frames. ie they won't work unless
+multiple frames have been processed and you are using part.
+---------------------------------------------------------------------------------------------
+'''
+def difference(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Difference of a particles values on user selected column. 
+
+    Notes
+    -----
+    Returns the difference of a particle's values on a particular column at span separation in frames to a new column. Please be aware
+    this is the difference between current frame and frame - span for each particle.
+    
+    Parameters
+    ----------
+    column_name
+        Input column name
+    output_name
+        Column name for median data
+    span
+        number of frames over which to calculate rolling median
+    
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
+    '''
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('difference', call_num)
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
+
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+
+        start=f_index-span - 1
+        if start < 0:
+            start = 0
+
+        finish=f_index + span + 1
+        if finish > df.index.max():
+            finish = df.index.max()
+
+        df_frames = df.loc[start:finish,[column,'particle']]
+        df_diff=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+        df.loc[f_index,[output_name]]=df_diff.loc[f_index]
+
+        return df
+    except Exception as e:
+        raise DifferenceError(e)
+
+
+def mean(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Rolling mean of a particles values. 
+
+    Notes
+    -----
+    Returns the rolling mean of a particle's values to a new column. Useful
+    to reduce fluctuations or tracking inaccuracies. The value of the mean is
+    placed at the centre of the rolling window. i.e [2,4,6,8,4] with window 3 would result
+    in [NaN, 4, 6, 6, Nan].
+    
+    Parameters
+    ----------
+    column_name
+        Input column name
+    output_name
+        Column name for mean data
+    span
+        number of frames over which to calculate rolling mean
+    
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
+
+    '''
+
+
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('mean', call_num)
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
+
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+
+        start=f_index-span - 1
+        if start < 0:
+            start = 0
+
+        finish=f_index + span + 1
+        if finish > df.index.max():
+            finish = df.index.max()
+
+        df_frames = df.loc[start:finish,[column,'particle']]
+        df_output=df_frames.groupby('particle')[column].rolling(span, center=True).mean().transform(lambda x:x).to_frame(name=output_name)
+        df_output.reset_index('particle', inplace=True)
+        df.loc[f_index,[output_name]]=df_output.loc[f_index]
+        return df
+    except Exception as e:
+        raise MeanError(e)
+
+
+def median(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Median of a particles values. 
+
+    Notes
+    -----
+    Returns the median of a particle's values to a new column. Useful 
+    before classification to answer to which group a particle's properties
+    usually belong. The value of the median is
+    placed at the centre of the rolling window. i.e [2,4,4,8,4] with window 3 would result
+    in [NaN, 4, 4, 4, Nan].
+    
+    Parameters
+    ----------
+    column_name
+        Input column name
+    output_name
+        Column name for median data
+    span
+        number of frames over which to calculate rolling median
+    
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
+
+    '''
+
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('median', call_num)
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
+
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+
+        start=f_index-span + 1
+        if start < 0:
+            start = 0
+
+        finish=f_index + span + 1
+        if finish > df.index.max():
+            finish = df.index.max()
+
+
+        df_frames = df.loc[start:finish,[column,'particle']]
+        df_output=df_frames.groupby('particle')[column].rolling(span, center=True).median().transform(lambda x:x).to_frame(name=output_name)
+        df_output.reset_index('particle', inplace=True)
+        df.loc[f_index,[output_name]]=df_output.loc[f_index]
+
+        return df
+    except Exception as e:
+        raise MedianError(e)
+
+
+def rate(df, f_index=None, parameters=None, call_num=None):
+    '''
+    Rate of change of a particle property with frame
+    
+    Notes
+    -----
+    Rate function takes an input column and calculates the
+    rate of change of the quantity. Nans are inserted at end and 
+    beginning of particle trajectories where calc is not possible. The 
+    rate is calculated from diff between current frame and frame - span.
+    
+    Parameters
+    ----------
+    column_name
+        Input column names
+    output_name
+        Output column name
+    fps
+        numerical value indicating the number of frames per second
+    span
+        number of frames over which to calculate rolling difference
+    
+    
+    
+    Args
+    ----
+
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+
+
+    '''
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('rate', call_num)
+        column = params[method_key]['column_name']
+        output_name = params[method_key]['output_name']
+        span = get_param_val(params[method_key]['span'])
+        fps= params[method_key]['fps']
+
+        if output_name not in df.columns:
+            df[output_name] = np.nan
+
+        start=f_index-span - 1
+        if start < 0:
+            start = 0
+
+        finish=f_index + span + 1
+        if finish > df.index.max():
+            finish = df.index.max()
+
+
+        df_frames = df.loc[start:finish,[column,'particle']]
+        df_output=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+        df.loc[f_index,[output_name]]=df_output.loc[f_index] / (float(span)/float(fps))
+        return df
+    except Exception as e:
+        raise RateError(e)
+
+
+
+
+
 '''
 ------------------------------------------------------------------------------------------------
 This function allows you to load data into a column opposite each frame number
@@ -1137,11 +1210,11 @@ def add_frame_data(df, f_index=None, parameters=None, call_num=None):
             filename = filename + '.csv'
         new_df = pd.read_csv(filename, header=None, squeeze=True)
         df[params[method_key]['new_column_name']] = new_df
-    
+
         return df
     except  Exception as e:
         raise AddFrameDataError(e)
-    
+
 
 
 

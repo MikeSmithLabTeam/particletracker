@@ -1,6 +1,6 @@
-.. _Example6:
+.. _Tutorial6:
 
-Example 6 - Working with the final data in a Jupyter Notebook
+Tutorial 6 - Working with the final data in a Jupyter Notebook
 =============================================================
 Read below or watch the video
 
@@ -50,3 +50,5 @@ the option in future to open a new notebook for future projects,  but in this ca
 the "data_examples.ipynb" file. This notebook gives some simple examples of how to interact with the 
 data files produced by ParticleTracker. When the jupyter notebook opens you can run each small cell
 sequentially by selecting the cell and then clicking the play button on the toolbar or "shift" + "enter".
+
+:ref:`Tutorial 7 <Tutorial7>` 

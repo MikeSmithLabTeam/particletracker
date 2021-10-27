@@ -47,11 +47,11 @@ To follow these through you will need to download the testdata folder. This is a
 which will walk you through from start to finish. 
 
 - :ref:`Overview<Overview>`
-- :ref:`Example1 - Eye Tracking <Example1>`
-- :ref:`Example2 - Diffusing Colloids <Example2>`
-- :ref:`Example3 - Swelling Hydrogels <Example3>`
-- :ref:`Example4 - Bacteria <Example4>`
-- :ref:`Example5 - Birefringent Discs <Example5>`
+- :ref:`Tutorial1 - Eye Tracking <Tutorial1>`
+- :ref:`Tutorial2 - Diffusing Colloids <Tutorial2>`
+- :ref:`Tutorial3 - Swelling Hydrogels <Tutorial3>`
+- :ref:`Tutorial4 - Bacteria <Tutorial4>`
+- :ref:`Tutorial5 - Birefringent Discs <Tutorial5>`
 
 Working with the output data
 ----------------------------
@@ -69,5 +69,10 @@ server from where you can open the data_example.ipynb file. This jupyter noteboo
 helps explain the format of the output data and shows you how to manipulate it to extract the aggregated
 data you probably want. 
 
-- :ref:`Example6 - Working with the final data in a Jupyter Notebook <Example6>`
+- :ref:`Tutorial6 - Working with the final data in a Jupyter Notebook <Tutorial6>`
+
+Other tips and Tricks
+---------------------
+
+- :ref:`Tutorial7 - Assorted tips and tricks to help you using ParticleTracker <Tutorial7>`
 
