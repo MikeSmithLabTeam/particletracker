@@ -69,28 +69,16 @@ def angle(df, f_index=None, parameters=None, call_num=None):
 
         if output_name not in df.columns:
             df[output_name] = np.nan
-<<<<<<< HEAD
     
         df_frame = df.loc[[f_index]]
         
-=======
-
-        df_frame = df.loc[f_index]
-
->>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         if units == 'degrees':
             df_frame[output_name] = np.arctan2(df_frame[columny],df_frame[columnx])*(180/np.pi)
         else:
             df_frame[output_name] = np.arctan2(df_frame[columny],df_frame[columnx])
-<<<<<<< HEAD
     
         df.loc[[f_index]] = df_frame
     
-=======
-
-        df.loc[f_index] = df_frame
-
->>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         raise AngleError(e)
@@ -152,13 +140,8 @@ def classify(df, f_index=None, parameters=None, call_num=None):
         df_frame = df.loc[[f_index]]
       
         df_frame[output_name] = df_frame[column].apply(_classify_fn, lower_threshold_value=lower_threshold_value, upper_threshold_value=upper_threshold_value)
-<<<<<<< HEAD
         df.loc[[f_index]]=df_frame
    
-=======
-        df.loc[f_index]=df_frame
-
->>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         raise ClassifyError(e)
@@ -221,13 +204,8 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
             df['box_width'] = np.nan
             df['box_area'] = np.nan
             df['box_pts'] = np.nan
-<<<<<<< HEAD
         
         df_frame = df.loc[[f_index]]
-=======
-
-        df_frame = df.loc[f_index]
->>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         contours = df_frame[['contours']].values
 
         box_cx = []
@@ -265,13 +243,8 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
         df_frame['box_area'] = box_area
         df_frame['box_pts'] = box_pts
 
-<<<<<<< HEAD
         df.loc[[f_index]] = df_frame
         
-=======
-        df.loc[f_index] = df_frame
-
->>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         ContourBoxesError(e)
@@ -331,19 +304,11 @@ def logic_AND(df, f_index=None, parameters=None, call_num=None):
         output_name = params[method_key]['output_name']
         if output_name not in df.columns:
             df[output_name] = np.nan
-<<<<<<< HEAD
         df_frame = df.loc[[f_index]]
         
         df_frame[output_name] = df_frame[column1] * df_frame[column2]
         df.loc[[f_index]] = df_frame
         
-=======
-        df_frame = df.loc[f_index]
-
-        df_frame[output_name] = df_frame[column1] * df_frame[column2]
-        df.loc[f_index] = df_frame
-
->>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         raise LogicAndError(e)
@@ -560,15 +525,9 @@ def neighbours(df, f_index=None, parameters=None, call_num=None):
         if method == 'delaunay':
             df_frame =_find_delaunay(df_frame, parameters=params)
         elif method == 'kdtree':
-<<<<<<< HEAD
              df_frame =_find_kdtree(df_frame, parameters=params)     
         df.loc[[f_index]] = df_frame
     
-=======
-             df_frame =_find_kdtree(df_frame, parameters=params)
-        df.loc[f_index] = df_frame
-
->>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         raise NeighboursError(e)
@@ -654,13 +613,8 @@ def voronoi(df, f_index=None, parameters=None, call_num=None):
         vor = sp.Voronoi(points)
         df_frame['voronoi']=_get_voronoi_coords(vor)
         df_frame['voronoi_area']=_voronoi_props(vor)
-<<<<<<< HEAD
         df.loc[[f_index]] = df_frame
     
-=======
-        df.loc[f_index] = df_frame
-
->>>>>>> 3810d559da7dce7cc16827f8732df748bce8c9ef
         return df
     except Exception as e:
         raise VoronoiError(e)
