@@ -35,12 +35,6 @@ Citing ParticleTracker
 ParticleTracker was created by Mike Smith and James Downs and is offered as open source software which is free for you
 to use. If you use this software for any academic publications please cite this work using the following paper:
 
-"ParticleTracker: a gui based particle tracking software" Journal of Open Source Software 6, 3611 (2021), M.I. Smith, J.G. Downs."
-
-Markdown:
-[![DOI](https://joss.theoj.org/papers/10.21105/joss.03611/status.svg)](https://doi.org/10.21105/joss.03611)
-
-
 
 ParticleTracker also relies on two other libraries. Trackpy is used not only for the "trackpy" tracking method but also
 for the linking algorithm. You should therefore also cite this project (https://zenodo.org/record/4682814#.YVcuc9rMLIU). 
