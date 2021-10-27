@@ -8,7 +8,7 @@ import subprocess
 import pandas as pd
 
 from labvision import audio, video
-from moviepy.editor import AudioFileClip
+#from moviepy.editor import AudioFileClip
 
 from ..general.parameters import get_method_key, get_param_val
 from ..customexceptions.postprocessor_error import *
@@ -827,7 +827,7 @@ def audio_frequency(df, f_index=None, parameters=None, call_num=None):
         peak = int(abs(freq[np.argmax(ft)]))
         if 'audio_frequency' not in df.columns:
             df['audio_frequency'] = -1.0
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
         df_frame['audio_frequency'] = peak
         df.loc[f_index] = df_frame
         return df
