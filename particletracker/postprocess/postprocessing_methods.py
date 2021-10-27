@@ -8,6 +8,7 @@ import subprocess
 import pandas as pd
 
 from labvision import audio, video
+from moviepy.editor import AudioFileClip
 
 from ..general.parameters import get_method_key, get_param_val
 from ..customexceptions.postprocessor_error import *
@@ -813,7 +814,7 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
 
 
 def audio_frequency(df, f_index=None, parameters=None, call_num=None):
-    from moviepy.editor import AudioFileClip
+    
     try:
         filename = parameters['experiment']['video_filename']
         command = f"ffmpeg -i {filename} -ar 48000 -ss {0.02*f_index} -to {0.02*(f_index+1)} -vn out.wav"

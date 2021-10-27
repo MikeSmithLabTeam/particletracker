@@ -39,7 +39,7 @@ from PyQt5.QtWidgets import QListWidget
 
 #Although the docs built the automodule didn't import the code
 #It built locally with 'make html' but not when pushed and built on ReadTheDocs
-autodoc_mock_imports = ['cv2','tqdm', 'qimage2ndarray', 'matplotlib','numpy','scipy','slicerator','ffmpeg','sh', 'pandas', 'importlib','trackpy','sip','PyQt5','PyQt5.QtCore','PyQt5.QtGui','PyQt5.QtWidgets','filehandling','labvision','qtwidgets']
+autodoc_mock_imports = ['cv2','tqdm', 'qimage2ndarray', 'matplotlib','numpy','scipy','slicerator','ffmpeg','sh', 'pandas', 'importlib','trackpy','sip','PyQt5','PyQt5.QtCore','PyQt5.QtGui','PyQt5.QtWidgets','filehandling','labvision','qtwidgets','moviepy']
 
 
 
