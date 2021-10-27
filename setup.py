@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='particletracker',
-    version='0.1',
+    version='2.0',
     packages=setuptools.find_packages(
         exclude=('tests', 'docs')
     ),
