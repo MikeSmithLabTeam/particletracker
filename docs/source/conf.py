@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'ParticleTracker'
-copyright = '2020, Mike Smith, James Downs, Nathan Smith'
-author = 'Mike Smith, James Downs, Nathan Smith'
+copyright = '2020, Mike Smith, James Downs'
+author = 'Mike Smith, James Downs'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '2.0.0'
 master_doc = 'index'
 
 # -- General configuration ---------------------------------------------------
