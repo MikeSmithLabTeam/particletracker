@@ -164,8 +164,6 @@ def contour_boxes(df, f_index=None, parameters=None, call_num=None):
     rotated bounding rectangle that contains the contour. This is useful for 
     calculating the orientation of shapes.
 
-    New Columns
-    -----------
 
     'box_cx'    -   Centre of mass x coord of calculated box
     'box_cy'    -   Centre of mass y coord of calculated box
@@ -489,9 +487,7 @@ def neighbours(df, f_index=None, parameters=None, call_num=None):
     cutoff
         distance in pixels beyond which particles are no longer considered neighbours
 
-    New Columns
-    -----------
-
+ 
     'neighbours'    -   A list of particle indices which are neighbours
 
     
