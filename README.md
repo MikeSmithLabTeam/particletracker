@@ -29,6 +29,16 @@ M.I. Smith, J.G. Downs, J. Open Source Software 6, 3611 (2021)
 Markdown:
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.03611/status.svg)](https://doi.org/10.21105/joss.03611)
     
+## Citation
+To cite this project in your publications please cite the following paper:
+"ParticleTracker: a gui based particle tracking software"
+M.I. Smith, J.G. Downs, J. Open Source Software 6, 3611 (2021)
+
+Markdown:
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.03611/status.svg)](https://doi.org/10.21105/joss.03611)
+
+
+   
 ## Contributions
 Details about contributing to the ParticleTracker project can be found [here](https://github.com/MikeSmithLabTeam/particletracker/blob/master/CONTRIBUTING.md)
 
