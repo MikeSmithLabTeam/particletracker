@@ -23,7 +23,7 @@ following code:
 
 .. code-block:: python
 
-   from particletracker import track_batchprocess
+   from particletracker import batchprocess
    moviefilter = '/A/path/selector/movie*00?.mp4'
    settings = '/full/path/to/settings.param'
    batchprocess(moviefilter, settings,annotate=True)
