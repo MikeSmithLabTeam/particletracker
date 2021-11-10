@@ -474,6 +474,10 @@ def subtract_bkg(frame, parameters=None, call_num=None):
             mean_val = int(np.mean(frame))
             subtract_frame = mean_val * np.ones(np.shape(frame), dtype=np.uint8)
             frame2=frame
+        elif bkgtype == 'median':
+            median_val = int(np.median(frame))
+            subtract_frame = median_val * np.ones(np.shape(frame), dtype=np.uint8)
+            frame2=frame
         else:
             # This option subtracts the previously created image which is added to dictionary.
             #These parameters are fed to the blur function

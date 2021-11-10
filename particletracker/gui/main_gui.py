@@ -13,6 +13,7 @@ from scipy import spatial
 #Our other repos
 from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
+from labvision.images import write_img
 
 #This project
 from .custom_tab_widget import CheckableTabWidget
@@ -158,6 +159,12 @@ class MainWindow(QMainWindow):
         self.pandas_button.setChecked(False)
         self.toolbar.addAction(self.pandas_button)
 
+        self.snapshot_button = QAction(
+            QIcon(os.path.join(resources_dir, "camera.png")),
+            "Take snapshot", self)
+        self.snapshot_button.triggered.connect(self.snapshot_button_click)
+        self.toolbar.addAction(self.snapshot_button)
+
         self.toolbar.addSeparator()
 
         self.csv=False
@@ -216,6 +223,7 @@ class MainWindow(QMainWindow):
 
         self.tool_menu.addAction(self.live_update_button)
         self.tool_menu.addAction(self.pandas_button)
+        self.tool_menu.addAction(self.snapshot_button)
 
         self.process_menu.addAction(self.autosave_on_process)
         self.process_menu.addAction(self.export_to_csv)
@@ -614,6 +622,18 @@ class MainWindow(QMainWindow):
             fname = fname[:-5]+'_temp.hdf5'
         self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
       
+    def snapshot_button_click(self):
+        print('Saving current image to movie file directorty...')
+        img = qimage2ndarray.byte_view(self.viewer.image())
+        n=0
+        while n < 1000:
+            img_name = self.movie_filename[:-4] + '_frame' + str(self.frame_selector.value()) + '_' + str(n) +'.png'
+            if Path(img_name).is_file():
+                n = n+1
+            else:
+                write_img(img, img_name)
+                break
+        
 
         """------------------------------------------------------------
         Functions that control the processing
