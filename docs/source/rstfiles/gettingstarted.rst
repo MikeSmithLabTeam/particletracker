@@ -52,6 +52,7 @@ which will walk you through from start to finish.
 - :ref:`Tutorial3 - Swelling Hydrogels <Tutorial3>`
 - :ref:`Tutorial4 - Bacteria <Tutorial4>`
 - :ref:`Tutorial5 - Birefringent Discs <Tutorial5>`
+- :ref:`Tutorial7 - Tips and Tricks <Tutorial7>`
 
 Working with the output data
 ----------------------------
