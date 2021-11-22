@@ -608,7 +608,7 @@ class MainWindow(QMainWindow):
             self.pandas_viewer.close()
             self.pandas_viewer.deleteLater()
         self.pandas_viewer = PandasWidget(parent=self)
-        self.update_pandas_view()
+        #self.update_pandas_view()
 
     def pandas_button_click(self):
         if self.pandas_button.isChecked():
