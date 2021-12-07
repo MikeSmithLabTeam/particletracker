@@ -137,6 +137,9 @@ def create_param_file(filename):
                   },
         'hexatic_order':{
             'threshold': [10, 1, 100, 1]
+        },
+        'Re_Im_Components':{
+            'column_name': 'hexatic_order'
         }
 
         }

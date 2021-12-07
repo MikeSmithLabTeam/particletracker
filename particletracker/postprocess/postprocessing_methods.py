@@ -787,7 +787,7 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
             df['hexatic_order'] = np.nan
             df['number_of_neighbors'] = np.nan
 
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
         points = df_frame[['x', 'y']].values
         list_indices, point_indices = sp.Delaunay(points).vertex_neighbor_vertices
         repeat = list_indices[1:] - list_indices[:-1]
@@ -806,11 +806,64 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
         orders[indxs] = stacked[0, indxs] / neighbors[indxs]
         df_frame['hexatic_order'] = orders
         df_frame['number_of_neighbors'] = neighbors
-        df.loc[f_index] = df_frame
+        df.loc[[f_index]] = df_frame
         return df
 
     except Exception as e:
         raise HexaticOrderError(e)
+
+
+def Re_Im_Components(df, f_index=None, parameters=None, call_num=None):
+    """
+    Extracts the real, complex and complex angle from a complex number and puts them in
+    new columns. Mainly useful for subsequent annotation with dynamic colour map.
+
+
+    Parameters
+    ----------
+    column_name : name of column containing complex values
+
+    Args
+    ----
+
+    df
+        The dataframe for all data
+    f_index
+        Integer for the frame in twhich calculations need to be made
+    parameters
+        Nested dict object
+    call_num
+
+    Returns
+    -------
+    df with 3 additional columns containing real, imaginary and complex angle
+    New columns are called "column_name" + "_Re" or "_Im" or "_Ang"
+
+    """
+
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('real', call_num)
+        column_name = get_param_val(params[method_key]['Re_Im_Components'])
+        
+
+        if column_name + '_Re' not in df.columns:
+            df[column_name + '_Re'] = np.nan
+            df[column_name + '_Im'] = np.nan
+            df[column_name + '_Ang'] = np.nan
+        
+        df_frame = df.loc[[f_index]]
+        df_frame[column_name + '_Re'] = np.real(df_frame[column_name])
+        df_frame[column_name + '_Im'] = np.imag(df_frame[column_name])
+        df_frame[column_name + '_Ang'] = np.angle(df_frame[column_name])
+
+        df.loc[[f_index]] = df_frame
+        
+        
+        return df
+
+    except Exception as e:
+        raise RealError(e)
 
 
 def audio_frequency(df, f_index=None, parameters=None, call_num=None):
