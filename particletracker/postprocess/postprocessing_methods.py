@@ -810,8 +810,52 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
     except Exception as e:
         raise HexaticOrderError(e)
 
+def absolute(df, f_index=None, parameters=None, call_num=None):
+    """Returns new column with absolute value of input column
 
-def Re_Im_Components(df, f_index=None, parameters=None, call_num=None):
+    Parameters
+    ----------
+    column_name : name of column containing input values
+
+    Args
+    ----
+
+    df
+        The dataframe for all data
+    f_index
+        Integer for the frame in twhich calculations need to be made
+    parameters
+        Nested dict object
+    call_num
+
+    Returns
+    -------
+    df with additional column containing absolute value of input_column.
+    New column is named "column_name" + "_abs"
+
+    """
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('absolute', call_num)
+        column_name = get_param_val(params[method_key]['column_name'])
+        
+
+        if column_name + '_abs' not in df.columns:
+            df[column_name + 'abs'] = np.nan
+            
+        
+        df_frame = df.loc[[f_index]]
+        
+        df_frame[column_name + '_abs'] = np.abs(df_frame[column_name])
+        df.loc[[f_index]] = df_frame        
+        return df
+
+    except Exception as e:
+        raise absolute_Error(e)
+
+
+
+def re_im_components(df, f_index=None, parameters=None, call_num=None):
     """
     Extracts the real, complex and complex angle from a complex number and puts them in
     new columns. Mainly useful for subsequent annotation with dynamic colour map.
@@ -841,20 +885,20 @@ def Re_Im_Components(df, f_index=None, parameters=None, call_num=None):
 
     try:
         params = parameters['postprocess']
-        method_key = get_method_key('Re_Im_Components', call_num)
+        method_key = get_method_key('re_im_components', call_num)
         column_name = get_param_val(params[method_key]['column_name'])
         
 
-        if column_name + '_Re' not in df.columns:
-            df[column_name + '_Re'] = np.nan
-            df[column_name + '_Im'] = np.nan
-            df[column_name + '_Ang'] = np.nan
+        if column_name + '_re' not in df.columns:
+            df[column_name + '_re'] = np.nan
+            df[column_name + '_im'] = np.nan
+            df[column_name + '_ang'] = np.nan
         
         df_frame = df.loc[[f_index]]
         
-        df_frame[column_name + '_Re'] = np.real(df_frame[column_name])
-        df_frame[column_name + '_Im'] = np.imag(df_frame[column_name])
-        df_frame[column_name + '_Ang'] = np.angle(df_frame[column_name])
+        df_frame[column_name + '_re'] = np.real(df_frame[column_name])
+        df_frame[column_name + '_im'] = np.imag(df_frame[column_name])
+        df_frame[column_name + '_ang'] = np.angle(df_frame[column_name])
 
         df.loc[[f_index]] = df_frame
         
@@ -862,7 +906,7 @@ def Re_Im_Components(df, f_index=None, parameters=None, call_num=None):
         return df
 
     except Exception as e:
-        raise Re_Im_Components_Error(e)
+        raise re_im_components_Error(e)
 
 
 def audio_frequency(df, f_index=None, parameters=None, call_num=None):

@@ -105,14 +105,21 @@ class VoronoiError(PostprocessorError):
 class HexaticOrderError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
-        self.error_msg = 'Hexatic error'
+        self.error_msg = 'hexatic error'
         self.e = e
 
-class Re_Im_Components_Error(PostprocessorError):
+class re_im_components_Error(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
-        self.error_msg = 'Check you are working with a complex number in the input column'
+        self.error_msg = 're_im_components error - Check you are working with a complex number in the input column'
         self.e = e
+
+class absolute_Error(PostprocessorError):
+    def __init__(self, e):
+        super().__init__(e)
+        self.error_msg = 'absolute error'
+        self.e = e
+
 
 class RemoveMaskedError(PostprocessorError):
     def __init__(self, e):
