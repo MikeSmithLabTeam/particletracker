@@ -776,8 +776,6 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
 
     """
 
-
-
     try:
         params = parameters['postprocess']
         method_key = get_method_key('hexatic_order', call_num)
@@ -785,7 +783,7 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
 
         if 'hexatic_order' not in df.columns:
             df['hexatic_order'] = np.nan
-            df['number_of_neighbors'] = np.nan
+            df['number_of_neighbors'] = np.nan #Change name to indicate associated with hexatic methoc
 
         df_frame = df.loc[[f_index]]
         points = df_frame[['x', 'y']].values
@@ -793,19 +791,19 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
         repeat = list_indices[1:] - list_indices[:-1]
         vectors = points[point_indices] - np.repeat(points, repeat, axis=0)
         angles = np.angle(vectors[:, 0] + 1j*vectors[:, 1])
-        length_filteres = np.linalg.norm(vectors, axis=1) < threshold
+        length_filters = np.linalg.norm(vectors, axis=1) < threshold
         summands = np.exp(6j*angles)
-        summands *= length_filteres
+        summands *= length_filters
         list_indices -= 1
         # sum the angles and count neighbours for each particle
-        stacked = np.cumsum((summands, length_filteres), axis=1)[:, list_indices[1:]]
+        stacked = np.cumsum((summands, length_filters), axis=1)[:, list_indices[1:]]
         stacked[:, 1:] = np.diff(stacked, axis=1)
         neighbors = stacked[1, :]
         indxs = neighbors != 0
         orders = np.zeros_like(neighbors)
         orders[indxs] = stacked[0, indxs] / neighbors[indxs]
         df_frame['hexatic_order'] = orders
-        df_frame['number_of_neighbors'] = neighbors
+        df_frame['number_of_neighbors'] = neighbors #Force this output to be real.
         df.loc[[f_index]] = df_frame
         return df
 
@@ -843,8 +841,8 @@ def Re_Im_Components(df, f_index=None, parameters=None, call_num=None):
 
     try:
         params = parameters['postprocess']
-        method_key = get_method_key('real', call_num)
-        column_name = get_param_val(params[method_key]['Re_Im_Components'])
+        method_key = get_method_key('Re_Im_Components', call_num)
+        column_name = get_param_val(params[method_key]['column_name'])
         
 
         if column_name + '_Re' not in df.columns:
@@ -853,6 +851,7 @@ def Re_Im_Components(df, f_index=None, parameters=None, call_num=None):
             df[column_name + '_Ang'] = np.nan
         
         df_frame = df.loc[[f_index]]
+        
         df_frame[column_name + '_Re'] = np.real(df_frame[column_name])
         df_frame[column_name + '_Im'] = np.imag(df_frame[column_name])
         df_frame[column_name + '_Ang'] = np.angle(df_frame[column_name])
@@ -863,7 +862,7 @@ def Re_Im_Components(df, f_index=None, parameters=None, call_num=None):
         return df
 
     except Exception as e:
-        raise RealError(e)
+        raise Re_Im_Components_Error(e)
 
 
 def audio_frequency(df, f_index=None, parameters=None, call_num=None):

@@ -108,6 +108,12 @@ class HexaticOrderError(PostprocessorError):
         self.error_msg = 'Hexatic error'
         self.e = e
 
+class Re_Im_Components_Error(PostprocessorError):
+    def __init__(self, e):
+        super().__init__(e)
+        self.error_msg = 'Check you are working with a complex number in the input column'
+        self.e = e
+
 class RemoveMaskedError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)

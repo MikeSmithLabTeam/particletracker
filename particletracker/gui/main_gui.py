@@ -443,13 +443,14 @@ class MainWindow(QMainWindow):
         """
         This slot is linked to a change in the methods (top rhs of gui). 
         MyListWidget in custom_drag_drop_list has the signal but we also trigger
-        that signal in custom_combo_box.py in omboBoxAndButton.add_method_button_click()
+        that signal in custom_combo_box.py in ComboBoxAndButton.add_method_button_click()
         """
         sender = self.sender()
         location = [sender.title, sender.title + '_method']
         self.update_dictionary_params(location, value, 'list')
         self.update_param_widgets(sender.title)
         self.update_viewer()
+        self.update_pandas_view()
 
 
         """------------------------------------------------------
