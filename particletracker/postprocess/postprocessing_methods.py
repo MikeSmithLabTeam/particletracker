@@ -750,12 +750,14 @@ def _point_inside_mask(point, mask_contour_list):
 
 def hexatic_order(df, f_index=None, parameters=None, call_num=None):
     """
-    Calculates the hexatic order parameter of each particle
+    Calculates the hexatic order parameter of each particle. Neighbours are 
+    calculated using the Delaunay network with a cutoff distance defined by "cutoff"
+    parameter.
 
 
     Parameters
     ----------
-    threshold
+    cutoff
         Distance threshold for calculation of neighbors
 
 
@@ -803,7 +805,7 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
         orders = np.zeros_like(neighbors)
         orders[indxs] = stacked[0, indxs] / neighbors[indxs]
         df_frame['hexatic_order'] = orders
-        df_frame['number_of_neighbors'] = neighbors #Force this output to be real.
+        df_frame['number_of_neighbors'] = np.real(neighbors)
         df.loc[[f_index]] = df_frame
         return df
 
