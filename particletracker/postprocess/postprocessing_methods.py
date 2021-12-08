@@ -908,7 +908,7 @@ def real_imag(df, f_index=None, parameters=None, call_num=None):
         return df
 
     except Exception as e:
-        raise re_im_components_Error(e)
+        raise real_imag_Error(e)
 
 
 def audio_frequency(df, f_index=None, parameters=None, call_num=None):
