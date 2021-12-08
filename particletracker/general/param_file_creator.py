@@ -138,7 +138,7 @@ def create_param_file(filename):
         'hexatic_order':{
             'threshold': [10, 1, 100, 1]
         },
-        're_im_components':{
+        'real_imag':{
             'column_name': 'hexatic_order'
         },
         'absolute':{
