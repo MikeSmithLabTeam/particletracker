@@ -108,7 +108,7 @@ class HexaticOrderError(PostprocessorError):
         self.error_msg = 'hexatic error'
         self.e = e
 
-class re_im_components_Error(PostprocessorError):
+class RealImagError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
         self.error_msg = 're_im_components error - Check you are working with a complex number in the input column'
