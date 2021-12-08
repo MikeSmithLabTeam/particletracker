@@ -136,7 +136,7 @@ def create_param_file(filename):
             'data_filename':None
                   },
         'hexatic_order':{
-            'threshold': [10, 1, 100, 1]
+            'cutoff': [10, 1, 100, 1]
         },
         'real_imag':{
             'column_name': 'hexatic_order'
