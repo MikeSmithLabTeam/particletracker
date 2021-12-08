@@ -114,7 +114,7 @@ class RealImagError(PostprocessorError):
         self.error_msg = 'real_imag error - Check you are working with a complex number in the input column'
         self.e = e
 
-class absolute_Error(PostprocessorError):
+class AbsoluteError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
         self.error_msg = 'absolute error'
