@@ -851,7 +851,7 @@ def absolute(df, f_index=None, parameters=None, call_num=None):
         return df
 
     except Exception as e:
-        raise absolute_Error(e)
+        raise AbsoluteError(e)
 
 
 
@@ -908,7 +908,7 @@ def real_imag(df, f_index=None, parameters=None, call_num=None):
         return df
 
     except Exception as e:
-        raise real_imag_Error(e)
+        raise RealImagError(e)
 
 
 def audio_frequency(df, f_index=None, parameters=None, call_num=None):
