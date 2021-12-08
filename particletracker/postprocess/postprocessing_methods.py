@@ -855,9 +855,9 @@ def absolute(df, f_index=None, parameters=None, call_num=None):
 
 
 
-def re_im_components(df, f_index=None, parameters=None, call_num=None):
+def real_imag(df, f_index=None, parameters=None, call_num=None):
     """
-    Extracts the real, complex and complex angle from a complex number and puts them in
+    Extracts the real, imaginary, complex magnitude and complex angle from a complex number and puts them in
     new columns. Mainly useful for subsequent annotation with dynamic colour map.
 
 
@@ -892,12 +892,14 @@ def re_im_components(df, f_index=None, parameters=None, call_num=None):
         if column_name + '_re' not in df.columns:
             df[column_name + '_re'] = np.nan
             df[column_name + '_im'] = np.nan
+            df[column_name + '_mag'] = np.nan
             df[column_name + '_ang'] = np.nan
         
         df_frame = df.loc[[f_index]]
         
         df_frame[column_name + '_re'] = np.real(df_frame[column_name])
         df_frame[column_name + '_im'] = np.imag(df_frame[column_name])
+        df_frame[column_name + '_mag'] = np.absolute(df_frame[column_name])
         df_frame[column_name + '_ang'] = np.angle(df_frame[column_name])
 
         df.loc[[f_index]] = df_frame
