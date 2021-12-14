@@ -781,7 +781,7 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
     try:
         params = parameters['postprocess']
         method_key = get_method_key('hexatic_order', call_num)
-        threshold = get_param_val(params[method_key]['threshold'])
+        threshold = get_param_val(params[method_key]['cutoff'])
 
         if 'hexatic_order' not in df.columns:
             df['hexatic_order'] = np.nan
@@ -887,7 +887,7 @@ def real_imag(df, f_index=None, parameters=None, call_num=None):
 
     try:
         params = parameters['postprocess']
-        method_key = get_method_key('re_im_components', call_num)
+        method_key = get_method_key('real_imag', call_num)
         column_name = get_param_val(params[method_key]['column_name'])
         
 
