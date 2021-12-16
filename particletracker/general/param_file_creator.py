@@ -65,6 +65,7 @@ def create_param_file(filename):
                   'p2':[39, 1, 201,2],
                   'min_rad':[10, 1, 301,2],
                   'max_rad':[50, 1, 301,2],
+                  'remove_masked':[False, ('True','False')],
                   'get_intensities':False
                  },
         'contours':{'noise_cutoff':[2,1,50,1],
@@ -130,7 +131,6 @@ def create_param_file(filename):
                 'fps':50.0,
                 'span':[5,1,20,1]
                   },
-        'remove_masked':{},
         'add_frame_data':{
             'new_column_name':'data',
             'data_filename':None

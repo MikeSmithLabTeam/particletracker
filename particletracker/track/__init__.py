@@ -101,7 +101,7 @@ class ParticleTracker(QObject):
         Pandas dataframe with tracked data.
         """
         frame = self.cap.read_frame()
-        method = self.parameters['track_method'][0]
+        method = self.parameters['track']['track_method'][0]
         if self.ip is None:
             preprocessed_frame = frame
         else:

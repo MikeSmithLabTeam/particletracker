@@ -18,7 +18,7 @@ Tracking Methods
 
 '''
 
-def trackpy(ppframe,frame, parameters=None):
+def trackpy(ppframe,frame, params=None):
     """
     Trackpy implementation
 
@@ -91,7 +91,7 @@ def trackpy(ppframe,frame, parameters=None):
 
     """
 
-
+    parameters=params['track']
 
     try:
         method_key = get_method_key('trackpy')
@@ -131,7 +131,7 @@ def trackpy(ppframe,frame, parameters=None):
         raise TrackpyError(e)
 
 
-def hough(ppframe, frame,parameters=None):
+def hough(ppframe, frame,params=None):
     '''
     Performs the opencv hough circles transform to locate circles in an image.
 
@@ -158,6 +158,8 @@ def hough(ppframe, frame,parameters=None):
         Control parameter 
     p2
         Control parameter
+    remove_masked
+        Some circles have centres under the masked region. Selecting true removes this
     get_intensities
         If not False results in the software extracting a circular region around each particle of radius set by tracking and running a method in intensity_methods. Select the method by writing its name in the get_intensities box.
 
@@ -176,6 +178,8 @@ def hough(ppframe, frame,parameters=None):
     -------
         Dataframe containing data from a single frame
     '''
+    parameters=params['track']
+
     try:
         method_key = get_method_key('hough')
         circles = np.squeeze(cv2.HoughCircles(
@@ -192,6 +196,24 @@ def hough(ppframe, frame,parameters=None):
         except:
             circles_dict={'x':[np.nan],'y':[np.nan],'r':[np.nan]}
         
+
+        remove_masked =  get_param_val(parameters[method_key]['remove_masked'])
+        if remove_masked:
+            #Create contour from mask
+            mask_method_list = list(params['crop']['crop_method'])
+            if 'crop_box' in mask_method_list: mask_method_list.remove('crop_box')
+
+            contour_list = []
+            contour_list.append(_contour_from_mask(params['crop'][mask_method_list[0]],mask_method_list[0]))
+
+            for i in range(len(circles_dict['x'])):
+                point = (circles_dict['x'][i],circles_dict['y'][i])
+                inside = _point_inside_mask(point, contour_list)
+                if not inside:
+                    circles_dict['x'] = np.delete(circles_dict['x'],i)
+                    circles_dict['y'] = np.delete(circles_dict['y'],i)
+                    circles_dict['r'] = np.delete(circles_dict['r'],i)
+
         if (parameters[method_key]['get_intensities'] != False):
             
             intensity = []
@@ -263,9 +285,10 @@ def contours(pp_frame, frame, parameters=None):
         Dataframe containing data from a single frame
 
     '''
+    
     try:  
         method_key = get_method_key('contours')
-        params = parameters[method_key]
+        params = parameters['track'][method_key]
         get_intensities = (get_param_val(params['get_intensities']) != False)
     
         sz = np.shape(frame)
@@ -386,6 +409,31 @@ def _find_intensity_inside_contour(contour, frame, intensity_method):
         print(e)
 
 
+def _contour_from_mask(mask_pts, mask_type):
+    if mask_type == 'mask_rectangle':
+        x1 = mask_pts[0][0]
+        x2 = mask_pts[1][0]
+        y1 = mask_pts[0][1]
+        y2 = mask_pts[1][1]
 
+        contour = [np.array([[x1,y1],[x1,y2],[x2,y2],[x2, y1]])]
+    elif mask_type == 'mask_ellipse':
+        pass
+    elif mask_type == 'mask_circle':
+        pass
+    elif mask_type == 'mask_polygon':
+        pass
+    else:
+        print('Error unrecognised mask type')
+        raise Exception
+    return contour
 
+def _point_inside_mask(point, mask_contour_list):
+    inside = False
+    for contour in mask_contour_list:
+
+        result = cv2.pointPolygonTest(contour[0], point, False)
+        if result != -1:
+            inside = True
+    return inside
 

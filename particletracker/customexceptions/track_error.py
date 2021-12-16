@@ -19,6 +19,11 @@ class HoughCirclesError(TrackError):
         self.e=e
 
 
+class RemoveMaskedError(TrackError):
+    def __init__(self, e):
+        super().__init__(e)
+        self.error_msg = "remove masked objects error"
+
 """--------------------------------------------------------------------------------------
 These exceptions are associated with the get_intensities methods
 -------------------------------------------------------------------------------------------
