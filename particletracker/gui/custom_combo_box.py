@@ -45,6 +45,7 @@ class ComboBoxAndButton(QWidget):
         count = 1
 
         if dynamic:
+            #Check to see if this is a duplicate method if so add *count to end.
             while method in draggable_list.method_list:
                 method = method.split('*')[0] + '*' + str(count)
                 count = count + 1

@@ -9,6 +9,7 @@ import sys
 import qimage2ndarray
 import webbrowser
 from scipy import spatial
+import copy
 
 #Our other repos
 from qtwidgets.sliders import QCustomSlider
@@ -445,6 +446,7 @@ class MainWindow(QMainWindow):
         MyListWidget in custom_drag_drop_list has the signal but we also trigger
         that signal in custom_combo_box.py in ComboBoxAndButton.add_method_button_click()
         """
+        print('method_change_slot')
         sender = self.sender()
         location = [sender.title, sender.title + '_method']
         self.update_dictionary_params(location, value, 'list')
@@ -474,7 +476,8 @@ class MainWindow(QMainWindow):
                         else:
                             assert '*' in item, "Key not in dict and doesn't contain *"
                             if type(self.tracker.parameters[location[0]][item.split('*')[0]]) is dict:
-                                    self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]].copy()
+                                    self.tracker.parameters[location[0]][item] = copy.deepcopy(self.tracker.parameters[location[0]][item.split('*')[0]])
+                            
                             else:
                                 self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]]
             else:
