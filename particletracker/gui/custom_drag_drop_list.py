@@ -80,12 +80,16 @@ class MyListWidget(QListWidget):
         widget = self.currentItem()
         new_method_list = self.get_new_method_list()
         new_item_indices = [i for i in range(len(new_method_list)) if new_method_list[i] == active_method]
-        if old_item_index in new_item_indices:
-            #Move method down in list
-            new_method_list.pop(old_item_index)
-        else:
-            #Move method up in list
-            new_method_list.pop(old_item_index+1)
+
+        # Behaviour of drop event has changed in a recent update so that it doesn't create the copy
+        # Only remove the copy if its actually there
+        if len(new_method_list) > len(old_method_list):
+            if old_item_index in new_item_indices:
+                #Move method down in list
+                new_method_list.pop(old_item_index)
+            else:
+                #Move method up in list
+                new_method_list.pop(old_item_index+1)
         self.method_list = new_method_list
         self.clear()
         self.add_draggable_list_methods()
