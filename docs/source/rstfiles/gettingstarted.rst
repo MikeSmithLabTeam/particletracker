@@ -12,21 +12,22 @@ Python Version
 --------------
 
 If you installed the python version, then every time you want to run the software you should
-open the anaconda command prompt with your conda environment activated:
-
-On Windows type Anaconda at the windows search and then select "Anaconda Prompt"
+open the anaconda command prompt with your conda environment activated. On Windows type Anaconda at the windows search and then select "Anaconda Prompt".
 On Linux and Mac open a terminal. Then type "conda activate particle" (assuming you followed our installation steps). Finally, navigate
-to the folder where you will store your python scripts: "cd path\to\folder"
+to the folder where you will store your python scripts: "cd path\to\folder".
+
+You could also do this within an IDE just make sure your python interpreter is running from the conda environment.
 
 After this, the place to start is with the track_gui() function which is contained in the ParticleTracker. 
-To start the tracking gui you need to  run the following very simple script within your conda environment (see installation).
+To start the tracking gui you need to write a simple python script into a file and save it with a .py extension.
+The simple script looks like this:
 
 .. code-block:: python
    
    from particletracker import track_gui
    track_gui()
    
-This will ask you to select a video file to perform tracking on.
+When you run this script a dialogue will open asking you to select a video file to perform tracking on.
 To save typing this in each time and perhaps select a custom set of settings you can however modify
 the code above to include a video filename and a settings filename. You need to include the full path to each file:
 
