@@ -657,105 +657,16 @@ def _get_class_subset(df, f, parameters, method=None):
     return subset_df
 
 
-def remove_masked(df, f_index=None, parameters=None, call_num=None):
-    '''
-    Remove masked objects
-    
-    Notes
-    -----
-    The Hough circles tracking method can find circles with centres 
-    outside the masked area. This method enables you to remove those 
-    points from the data.
-    
-    Parameters
-    ----------
-    column_name
-        Input column names
-    output_name
-        Output column name
-    fps
-        numerical value indicating the number of frames per second
-    span
-        number of frames over which to calculate rolling difference
-    
-    
-    
-    Args
-    ----
-
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe
-
-
-    '''
-    try:
-        params = parameters['postprocess']
-        method_key = get_method_key('remove_masked', call_num)
-
-        mask_method_list = list(parameters['crop']['crop_method'])
-        if 'crop_box' in mask_method_list: mask_method_list.remove('crop_box')
-
-        contour_list = []
-        contour_list.append(_contour_from_mask(parameters['crop'][mask_method_list[0]],mask_method_list[0]))
-
-        df_frame = df.loc[f_index]
-        points = df_frame[['x','y']].apply(tuple, axis=1).values
-        mask = np.array([_point_inside_mask(point, contour_list) for point in points])
-        for column in df_frame.columns:
-            df_frame[column] = df_frame[column].where(mask)
-        df_frame = df.loc[[f_index]]
-        df.dropna(how='all',inplace=True)
-        return df
-    except Exception as e:
-        raise RemoveMaskedError(e)
-
-def _contour_from_mask(mask_pts, mask_type):
-    if mask_type == 'mask_rectangle':
-        x1 = mask_pts[0][0]
-        x2 = mask_pts[1][0]
-        y1 = mask_pts[0][1]
-        y2 = mask_pts[1][1]
-
-        contour = [np.array([[x1,y1],[x1,y2],[x2,y2],[x2, y1]])]
-    elif mask_type == 'mask_ellipse':
-        pass
-    elif mask_type == 'mask_circle':
-        pass
-    elif mask_type == 'mask_polygon':
-        pass
-    else:
-        print('Error unrecognised mask type')
-        raise Exception
-    return contour
-
-def _point_inside_mask(point, mask_contour_list):
-    inside = False
-    for contour in mask_contour_list:
-
-        result = cv2.pointPolygonTest(contour[0], point, False)
-        if result != -1:
-            inside = True
-    return inside
-
-
 def hexatic_order(df, f_index=None, parameters=None, call_num=None):
     """
-    Calculates the hexatic order parameter of each particle
+    Calculates the hexatic order parameter of each particle. Neighbours are 
+    calculated using the Delaunay network with a cutoff distance defined by "cutoff"
+    parameter.
 
 
     Parameters
     ----------
-    threshold
+    cutoff
         Distance threshold for calculation of neighbors
 
 
@@ -776,41 +687,139 @@ def hexatic_order(df, f_index=None, parameters=None, call_num=None):
 
     """
 
-
-
     try:
         params = parameters['postprocess']
         method_key = get_method_key('hexatic_order', call_num)
-        threshold = get_param_val(params[method_key]['threshold'])
+        threshold = get_param_val(params[method_key]['cutoff'])
 
         if 'hexatic_order' not in df.columns:
             df['hexatic_order'] = np.nan
-            df['number_of_neighbors'] = np.nan
+            df['number_of_neighbors'] = np.nan #Change name to indicate associated with hexatic methoc
 
-        df_frame = df.loc[f_index]
+        df_frame = df.loc[[f_index]]
         points = df_frame[['x', 'y']].values
         list_indices, point_indices = sp.Delaunay(points).vertex_neighbor_vertices
         repeat = list_indices[1:] - list_indices[:-1]
         vectors = points[point_indices] - np.repeat(points, repeat, axis=0)
         angles = np.angle(vectors[:, 0] + 1j*vectors[:, 1])
-        length_filteres = np.linalg.norm(vectors, axis=1) < threshold
+        length_filters = np.linalg.norm(vectors, axis=1) < threshold
         summands = np.exp(6j*angles)
-        summands *= length_filteres
+        summands *= length_filters
         list_indices -= 1
         # sum the angles and count neighbours for each particle
-        stacked = np.cumsum((summands, length_filteres), axis=1)[:, list_indices[1:]]
+        stacked = np.cumsum((summands, length_filters), axis=1)[:, list_indices[1:]]
         stacked[:, 1:] = np.diff(stacked, axis=1)
         neighbors = stacked[1, :]
         indxs = neighbors != 0
         orders = np.zeros_like(neighbors)
         orders[indxs] = stacked[0, indxs] / neighbors[indxs]
         df_frame['hexatic_order'] = orders
-        df_frame['number_of_neighbors'] = neighbors
-        df.loc[f_index] = df_frame
+        df_frame['number_of_neighbors'] = np.real(neighbors)
+        df.loc[[f_index]] = df_frame
         return df
 
     except Exception as e:
         raise HexaticOrderError(e)
+
+def absolute(df, f_index=None, parameters=None, call_num=None):
+    """Returns new column with absolute value of input column
+
+    Parameters
+    ----------
+    column_name : name of column containing input values
+
+    Args
+    ----
+
+    df
+        The dataframe for all data
+    f_index
+        Integer for the frame in twhich calculations need to be made
+    parameters
+        Nested dict object
+    call_num
+
+    Returns
+    -------
+    df with additional column containing absolute value of input_column.
+    New column is named "column_name" + "_abs"
+
+    """
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('absolute', call_num)
+        column_name = get_param_val(params[method_key]['column_name'])
+        
+
+        if column_name + '_abs' not in df.columns:
+            df[column_name + 'abs'] = np.nan
+            
+        
+        df_frame = df.loc[[f_index]]
+        
+        df_frame[column_name + '_abs'] = np.abs(df_frame[column_name])
+        df.loc[[f_index]] = df_frame        
+        return df
+
+    except Exception as e:
+        raise AbsoluteError(e)
+
+
+
+def real_imag(df, f_index=None, parameters=None, call_num=None):
+    """
+    Extracts the real, imaginary, complex magnitude and complex angle from a complex number and puts them in
+    new columns. Mainly useful for subsequent annotation with dynamic colour map.
+
+
+    Parameters
+    ----------
+    column_name : name of column containing complex values
+
+    Args
+    ----
+
+    df
+        The dataframe for all data
+    f_index
+        Integer for the frame in twhich calculations need to be made
+    parameters
+        Nested dict object
+    call_num
+
+    Returns
+    -------
+    df with 3 additional columns containing real, imaginary and complex angle
+    New columns are called "column_name" + "_Re" or "_Im" or "_Ang"
+
+    """
+
+    try:
+        params = parameters['postprocess']
+        method_key = get_method_key('real_imag', call_num)
+        column_name = get_param_val(params[method_key]['column_name'])
+        
+
+        if column_name + '_re' not in df.columns:
+            df[column_name + '_re'] = np.nan
+            df[column_name + '_im'] = np.nan
+            df[column_name + '_mag'] = np.nan
+            df[column_name + '_ang'] = np.nan
+        
+        df_frame = df.loc[[f_index]]
+        
+        df_frame[column_name + '_re'] = np.real(df_frame[column_name])
+        df_frame[column_name + '_im'] = np.imag(df_frame[column_name])
+        df_frame[column_name + '_mag'] = np.absolute(df_frame[column_name])
+        df_frame[column_name + '_ang'] = np.angle(df_frame[column_name])
+
+        df.loc[[f_index]] = df_frame
+        
+        
+        return df
+
+    except Exception as e:
+        raise RealImagError(e)
 
 
 def audio_frequency(df, f_index=None, parameters=None, call_num=None):

@@ -105,13 +105,20 @@ class VoronoiError(PostprocessorError):
 class HexaticOrderError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
-        self.error_msg = 'Hexatic error'
+        self.error_msg = 'hexatic error'
         self.e = e
 
-class RemoveMaskedError(PostprocessorError):
+class RealImagError(PostprocessorError):
     def __init__(self, e):
         super().__init__(e)
-        self.error_msg = "remove masked objects error"
+        self.error_msg = 'real_imag error - Check you are working with a complex number in the input column'
+        self.e = e
+
+class AbsoluteError(PostprocessorError):
+    def __init__(self, e):
+        super().__init__(e)
+        self.error_msg = 'absolute error'
+        self.e = e
 
 class AudioFrequencyError(PostprocessorError):
     def __init__(self, e):

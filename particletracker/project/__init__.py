@@ -50,7 +50,7 @@ class PTWorkflow:
         self.ip = preprocess.Preprocessor(self.parameters)
         
         self.pt = track.ParticleTracker(
-            parameters=self.parameters['track'], preprocessor=self.ip,
+            parameters=self.parameters, preprocessor=self.ip,
             vidobject=self.cap, data_filename=self.data_filename)
         self.link = link.LinkTrajectory(
             data_filename=self.data_filename,

@@ -7,7 +7,8 @@ class QCustomDropdown(QWidget):
     """
     This is used as one method of displaying options for parameter selection for the 
     different tracking methods. (ie if there is a finite list of choices).  The parameters dictionary specifies
-    these as a value and a tuple: e.g 'show_output':[False, ('True','False')].    
+    these as a value and a tuple: e.g 'show_output':[False, ('True','False')].   
+    It is not used for the actual adding methods drop down. This is in the custom_combo_box.py 
     """
 
     returnPressed = pyqtSignal()
