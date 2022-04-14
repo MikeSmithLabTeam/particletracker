@@ -84,4 +84,6 @@ This is what one is usually accessing. The second is the result from analysing
 all the frames either with the "process_part" or "process". When you check the "use_part"
 the software switches from using the vidname_temp.hdf5 file to the vidname.hdf5 to perform
 postprocessing / annotation. This is sometimes necessary. For instance to calculate
-a trajectory you must work with data from other frames. 
+a trajectory you must work with data from other frames. The vidname.hdf5 also represents the data file
+to which your tracked video data is stored and is the one you should access in the Jupyter Notebook
+to continue with the analysis.

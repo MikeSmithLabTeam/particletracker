@@ -2,17 +2,15 @@
 
 Tutorial 6 - Working with the final data in a Jupyter Notebook
 ==============================================================
-Read below or watch the video
+Watch the video
 
 .. raw:: html
 
    <iframe width="560" height="315" src="https://www.youtube.com/embed/BhGaWuiPADg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
 
 
-If you used the precompiled executable of ParticleTracker you may not have 
-set up the details described in installation for working with a Jupyter Notebook.
-If you don't plan to use the python version of ParticleTracker but want to analyse the output
-then follow these steps:
+Its possible that during installation you may not have 
+set up the details described for working with a Jupyter Notebook.
 
 - Download and install miniconda (https://docs.conda.io/en/latest/miniconda.html)
 - Open a conda terminal
