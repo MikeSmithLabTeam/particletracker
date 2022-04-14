@@ -37,10 +37,6 @@ class PandasWidget(QtWidgets.QDialog):
         self.view = QtWidgets.QTableView()
         model = pandasModel(pd.DataFrame())
         self.view.setModel(model)
-        self.view.resize(800, 600)
-        self.view.show()
-        self.view.setModel(model)
-        self.view.resize(800, 600)
         lay = QtWidgets.QVBoxLayout()
         lay.addWidget(self.view)
         button_layout = QtWidgets.QHBoxLayout()
@@ -55,8 +51,11 @@ class PandasWidget(QtWidgets.QDialog):
         self.setLayout(lay)
         self.view.show()
         self.setWindowTitle('df')
-        self.resize(800, 600)
-        self.center()
+        w = int(self.parent.screen_size.width() / 2)
+        h = int(self.parent.screen_size.height() / 1.5)
+        self.resize(w, h)
+        self.move(int(0.975*w),int(h/5))
+        
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.parent.pandas_button.setChecked(False)

@@ -27,9 +27,10 @@ from .pandas_view import PandasWidget
 
 class MainWindow(QMainWindow):
     
-    def __init__(self, *args, movie_filename=None, settings_filename=None, **kwargs):
+    def __init__(self, *args, movie_filename=None, settings_filename=None, screen_size=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
         
+        self.screen_size = screen_size
         self.movie_filename=None
         if movie_filename is not None:
             if isfile(movie_filename):
@@ -81,7 +82,9 @@ class MainWindow(QMainWindow):
         self.main_layout.addLayout(self.settings_layout,2)
         self.main_panel.setLayout(self.main_layout)
         self.setCentralWidget(self.main_panel)
-        self.showFullScreen()
+        #self.showFullScreen()
+        
+        self.setMaximumSize(self.screen_size.width()-10, self.screen_size.height()-10)
         self.showMaximized()
         self.setup_pandas_viewer()
        
