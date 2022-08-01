@@ -11,6 +11,16 @@ ParticleTracker is a gui based particle tracking software that brings together a
 [Youtube Playlist of Tutorials](https://www.youtube.com/playlist?list=PL56zLBbX0yZZw18yyMM9tD0fLrobmdbJG)
 
 ## Installation from github
+Full details in documentation but in brief:
+
+Create fresh Conda environment
+
+    conda install git
+
+    conda install pyqt
+
+    conda install pytables
+
     pip install git+https://github.com/MikeSmithLabTeam/particletracker
     
 ## Updating if already installed
