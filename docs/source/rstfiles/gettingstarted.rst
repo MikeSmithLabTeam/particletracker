@@ -19,7 +19,7 @@ The simple script looks like this:
    from particletracker import track_gui
    track_gui()
    
-When you run this script a dialogue will open asking you to select a video file to perform tracking on.
+When you run this script a dialogue will open asking you to select a video file to perform tracking on. 
 To save typing this in each time and perhaps select a custom set of settings you can however modify
 the code above to include a video filename and a settings filename. You need to include the full path to each file:
 
@@ -27,6 +27,8 @@ the code above to include a video filename and a settings filename. You need to 
 
    from particletracker import track_gui
    track_gui(movie_filename="FullPathToMovie.mp4", settings_filename="FullPathToSettings.param")
+
+If you have images instead of videos watch the "How can I use images rather than video?" tutorial (:ref:`Tutorial7 - Tips and Tricks <Tutorial7>`).
 
 
 Building a tracking project
