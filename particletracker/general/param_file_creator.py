@@ -191,6 +191,7 @@ def create_param_file(filename):
                     'classifier': [True, ('True','False')],#For static or dynamic
                     'thickness':2
                    },
+        'external_circles':{'filename':''},
         'contours':{'cmap_type':['static',('dynamic','static')],
                     'cmap_column':'x',#For dynamic
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
