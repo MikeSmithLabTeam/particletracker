@@ -62,7 +62,7 @@ class PTWorkflow:
                                                data_filename=self.data_filename,
                                                parameters=self.parameters[
                                                    'annotate'], frame=self.cap.read_frame(n=n))
-        self.frame = self.cap.read_frame()
+        self.frame = self.cap.read_frame(n)
 
     def reset_annotator(self):
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
