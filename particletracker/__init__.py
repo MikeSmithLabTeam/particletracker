@@ -34,9 +34,11 @@ def track_gui(movie_filename=None, settings_filename=None):
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
         app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     
+    screen_size = app.primaryScreen().size()
+
     window = MainWindow(
         movie_filename=movie_filename,
-        settings_filename=settings_filename)
+        settings_filename=settings_filename, screen_size=screen_size)
     window.show()
     #Start event loop
     app.exec_()

@@ -3,7 +3,7 @@
 Batch Processing files
 ======================
 
-If you are using python once you have got a working .param settings file using the gui, 
+Once you have got a working .param settings file using the gui, 
 you can then batch process movies using the same settings. We can specify the movies to 
 process using a pattern matching moviefilter. It accepts wildcard characters. 
 * replaces any continuous set of characters. ? replaces a single character.

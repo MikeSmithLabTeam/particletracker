@@ -4,45 +4,18 @@ Installation and Getting Started
 Installation
 ------------
 
-There are two different options for installation. 
-
-1. You can download the precompiled executables
-2. You can install the python code. 
-
-
-
-Using the precompiled executables
----------------------------------
-
-The first method enables you to do pretty much everything but won't allow you to add to or modify the code
-to do something specific to your use case. This might be a good way to test if the software fits your needs
-before investing too much time, especially if you don't know any python. Due to the way its packaged the files are huge but if your computer complains you probably shouldn't be trying to use this software on that computer anyway! If you want to remove it you can just delete the entire folder.
-
-You can download the precompiled versions for Windows and Linux here:
-
-https://www.nottingham.ac.uk/~ppzmis/software.html
-
-To use, download the windows or linux zip and extract to a directory. You should also download and extract testdata.zip which contains 
-some example movies and parameter files which can be used to work through the tutorials. 
-The software in this format has been tested on Windows 10 and Ubuntu 18.04 / 20.04 LTS. 
-However, the python version of the software has been much more carefully tested and so we would suggest 
-that this is the default method. Even if you know no python you should have no problems setting this up with 
-the instructions below and this should run on any system. The python version whilst requiring more 
-installation steps can be run with 2 lines of code. 
+Even if you know no python you should have no problems setting this up with 
+the instructions below and this should run on any system. It can be run with 2 lines of code! 
 If you encounter problems please report them via the issues tracker on the github page
 
 https://github.com/MikeSmithLabTeam/particletracker/issues
 
-One feature of this project, which is only available via a python installation, 
-is that we have tried to make extending it as easy as possible. 
+An additional feature of this project, is that we have tried to make extending it as easy as possible. 
 It might mean as little as adding a few lines of python code into a preconfigured template.
 
-Using the python version
-------------------------
+The software should work on all operating systems (Windows, Linux, Mac). It has only been thoroughly tested on Windows 10 and Ubuntu Linux.
 
-The python version should work on all operating systems (Windows, Linux, Mac). It has only been thoroughly tested on Windows 10 and Ubuntu Linux.
-
-To install the python version here is a step by step recommended guide to setting things up.  In
+To install here is a step by step recommended guide to setting things up.  In
 case you are coming to this new to python or new to programming we provide the steps in a lot of detail.
 If you are comfortable in python skip through! 
 
@@ -52,7 +25,7 @@ If you are comfortable in python skip through!
 On Windows type Anaconda at the windows search and then select "Anaconda Prompt"
 On Linux and Mac open a terminal. 
 
-- Create a conda environment by typing "conda create -n particle"
+- Create a conda environment by typing "conda create -n particle" where particle here is the name of the environment.
 - Type "conda activate particle"
 - conda install git
 - conda install pyqt
@@ -90,7 +63,7 @@ Verifying the installation
 --------------------------
 
 To verify that the installation is working correctly you should read the getting started section which 
-explains how to launch the software for both the precompiled and python versions. Once you have done 
+explains how to launch the software. Once you have done 
 this there are 5 example videos which also act as tutorials which should enable you to verify and test 
 the core functionality of the software.
 
