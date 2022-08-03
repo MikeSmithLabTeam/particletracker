@@ -100,8 +100,7 @@ def trackpy(ppframe,frame, params=None):
                        minmass=get_param_val(parameters[method_key]['minmass']),
                        percentile=get_param_val(parameters[method_key]['percentile']),
                        invert=get_param_val(parameters[method_key]['invert']),
-                       max_iterations=get_param_val(parameters[method_key]['max_iterations']),
-                       engine='numba'
+                       max_iterations=get_param_val(parameters[method_key]['max_iterations'])
                        )
         if parameters[method_key]['get_intensities'] != False:
             x = df['x'].to_numpy()

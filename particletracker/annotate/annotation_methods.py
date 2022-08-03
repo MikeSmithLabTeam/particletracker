@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import warnings
 
+import pandas as pd
+
 from ..general.parameters import get_param_val, get_method_key
 from .cmap import colour_array
 from ..customexceptions.annotator_error import *
@@ -423,6 +425,19 @@ def circles(frame, data, f, parameters=None, call_num=None):
     except Exception as e:
         raise CirclesError(e)
 
+
+def external_circles(frame, data, f, parameters=None, call_num=None):
+    try:
+        method_key = get_method_key('external_circles', call_num=call_num)
+        data_name = get_param_val(parameters[method_key]['filename'])
+        data = pd.read_hdf(data_name)
+        circles = data.loc[0, ['x`` ', 'y']].values
+        for i, circle in enumerate(circles):
+            frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), 2, (0, 255, 255), 2)
+        return frame
+    except Exception as e:
+        print(e)
+        return frame
 
 
 def contours(frame, data, f, parameters=None, call_num=None):
