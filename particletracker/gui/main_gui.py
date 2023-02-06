@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
             if not open_settings:
                 try:
                     #This allows for continuity of parameters after processing.
-                    self.settings_filename = self.movie_filename[:-4] + '_expt.param'
+                    self.settings_filename = self.movie_filename.replace('*','')[:-4] + '_expt.param'
                 except:
                     print('tried to load current params - falling back on initial settings file')
         
@@ -549,12 +549,17 @@ class MainWindow(QMainWindow):
 
         if self.movie_filename is None:
             movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie", QDir.homePath(),
-                                                            "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v)", options=options)
+                                                            "All files (*.*);; mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v);;png (*.png);;jpg (*.jpg);;tiff (*.tiff)", options=options)
         else:
             movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie",
                                                             self.movie_filename.split('.')[0],
-                                                            "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v)", options=options)
+                                                            "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v);;png (*.png);;jpg (*.jpg);;tiff (*.tiff)", options=options)
  
+        """Convert filename to include wild card character in place of trailing numbers. 
+        When read by ReadVideo it will find all imgs in a folder with same format.
+        """
+        movie_filename = create_wildcard_filename_img_seq(movie_filename)
+
         if ok:
             self.movie_filename = movie_filename
             return True
@@ -626,7 +631,7 @@ class MainWindow(QMainWindow):
     def update_pandas_view(self):
         fname = self.tracker.data_filename
         if not self.use_part_button.isChecked():
-            fname = fname[:-5]+'_temp.hdf5'
+            fname = create_stub_filename(fname) +'_temp.hdf5'
         self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
       
     def snapshot_button_click(self):
@@ -711,3 +716,18 @@ class MainWindow(QMainWindow):
 
 
 
+def create_wildcard_filename_img_seq(movie_filename):
+
+    if os.path.splitext(movie_filename)[1] in ['.png','.jpg','.tiff']:
+        path, filename = os.path.split(movie_filename)
+        filename_stub, ext = os.path.splitext(filename)
+        movie_filename = os.path.join(path, ''.join([letter for letter in filename_stub if letter.isalpha()]) + '*' + ext)
+
+    return movie_filename
+
+def create_stub_filename(movie_filename):
+    """Remove all the trailing numbers and extension from a set of images"""
+    filename_stub, _ = os.path.splitext(movie_filename)
+    if os.path.splitext(movie_filename)[1] in ['.png','.jpg','.tiff']:
+        filename_stub = os.path.join(path, ''.join([letter for letter in filename_stub if letter.isalpha()]))
+    return filename_stub

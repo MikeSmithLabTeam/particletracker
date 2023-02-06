@@ -17,7 +17,7 @@ class PTWorkflow:
         self.video_filename = video_filename
         self.error_reporting=error_reporting
         self.filename = os.path.splitext(self.video_filename)[0]
-        self.data_filename = self.filename + '.hdf5'
+        self.data_filename = self.filename.replace('*','') + '.hdf5'
 
         self.param_filename = param_filename
         self.parameters = read_paramdict_file(self.param_filename)
