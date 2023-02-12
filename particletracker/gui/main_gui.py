@@ -26,6 +26,8 @@ from ..general.imageformat import bgr_to_rgb
 from ..general.dataframes import data_filename_create
 from .pandas_view import PandasWidget
 
+IMG_FILE_EXT = ('.png','.jpg','.tiff','.JPG')
+
 class MainWindow(QMainWindow):
     
     def __init__(self, *args, movie_filename=None, settings_filename=None, screen_size=None, **kwargs):
@@ -343,6 +345,7 @@ class MainWindow(QMainWindow):
     def open_tracker(self):
         """PTWorkFlow is the top level class that controls the entire tracking process
         """
+        print(self.movie_filename)
         self.tracker = PTWorkflow(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
@@ -559,7 +562,7 @@ class MainWindow(QMainWindow):
         When read by ReadVideo it will find all imgs in a folder with same format.
         """
         movie_filename = create_wildcard_filename_img_seq(movie_filename)
-
+        
         if ok:
             self.movie_filename = movie_filename
             return True
@@ -723,7 +726,7 @@ def create_wildcard_filename_img_seq(movie_filename):
     vid001.mp4 --> vid001.mp4
     """
 
-    if os.path.splitext(movie_filename)[1] in ['.png','.jpg','.tiff']:
+    if os.path.splitext(movie_filename)[1] in IMG_FILE_EXT:
         path, filename = os.path.split(movie_filename)
         filename_stub, ext = os.path.splitext(filename)
         movie_filename = os.path.join(path, ''.join([letter for letter in filename_stub if letter.isalpha()]) + '*' + ext)
