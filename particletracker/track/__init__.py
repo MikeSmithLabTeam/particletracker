@@ -42,12 +42,11 @@ class ParticleTracker(QObject):
 
         """
         super(ParticleTracker,self).__init__(*args, **kwargs)
-
-        self.filename = os.path.splitext(vidobject.filename)[0]
+        
         self.parameters = parameters
         self.ip = preprocessor
         self.cap = vidobject
-        self.data_filename = self.filename + '.hdf5'
+        self.data_filename = data_filename
 
     def track(self, f_index=None):
         """

@@ -23,6 +23,7 @@ from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.param_file_creator import create_param_file
 from ..general.imageformat import bgr_to_rgb
+from ..general.dataframes import data_filename_create
 from .pandas_view import PandasWidget
 
 class MainWindow(QMainWindow):
@@ -34,7 +35,7 @@ class MainWindow(QMainWindow):
         self.movie_filename=None
         if movie_filename is not None:
             if isfile(movie_filename):
-                self.movie_filename = str(Path(movie_filename))
+                self.movie_filename = create_wildcard_filename_img_seq(str(Path(movie_filename)))
             else:
                 movie_filename = None
             
@@ -449,7 +450,6 @@ class MainWindow(QMainWindow):
         MyListWidget in custom_drag_drop_list has the signal but we also trigger
         that signal in custom_combo_box.py in ComboBoxAndButton.add_method_button_click()
         """
-        print('method_change_slot')
         sender = self.sender()
         location = [sender.title, sender.title + '_method']
         self.update_dictionary_params(location, value, 'list')
@@ -620,7 +620,6 @@ class MainWindow(QMainWindow):
             self.pandas_viewer.close()
             self.pandas_viewer.deleteLater()
         self.pandas_viewer = PandasWidget(parent=self)
-        #self.update_pandas_view()
 
     def pandas_button_click(self):
         if self.pandas_button.isChecked():
@@ -631,7 +630,7 @@ class MainWindow(QMainWindow):
     def update_pandas_view(self):
         fname = self.tracker.data_filename
         if not self.use_part_button.isChecked():
-            fname = create_stub_filename(fname) +'_temp.hdf5'
+            fname = fname[:-5] +'_temp.hdf5'
         self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
       
     def snapshot_button_click(self):
@@ -639,7 +638,7 @@ class MainWindow(QMainWindow):
         img = qimage2ndarray.byte_view(self.viewer.image())
         n=0
         while n < 1000:
-            img_name = self.movie_filename[:-4] + '_frame' + str(self.frame_selector.value()) + '_' + str(n) +'.png'
+            img_name = self.tracker.data_filename[:-5] + '_frame' + str(self.frame_selector.value()) + '_' + str(n) +'.png'
             if Path(img_name).is_file():
                 n = n+1
             else:
@@ -677,7 +676,7 @@ class MainWindow(QMainWindow):
         and tracker.process_frame take a keyword use_part which
         is set by checking toggle status of this button.
         '''
-        if isfile(self.movie_filename[:-4] + '.hdf5'):
+        if isfile(self.tracker.data_filename):
             for i in range(5):#index cycles through different tabs from experiment to link
                 if self.use_part_button.isChecked():
                     self.toplevel_settings.disable_tabs(i,enable=False)
@@ -705,7 +704,7 @@ class MainWindow(QMainWindow):
         else:
             self.tracker.process(csv=self.csv)
 
-        write_paramdict_file(self.tracker.parameters, self.movie_filename[:-4] + '_expt.param')
+        write_paramdict_file(self.tracker.parameters, self.tracker.data_filename[:-5] + '_expt.param')
         
         self.reset_statusbar()
         QMessageBox.about(self, "", "Processing Finished")
@@ -717,6 +716,12 @@ class MainWindow(QMainWindow):
 
 
 def create_wildcard_filename_img_seq(movie_filename):
+    """Wrangle input filenames
+    
+    Changes individual img to wildcard version but leaves videos unchanged
+    img002.png --> img*.png
+    vid001.mp4 --> vid001.mp4
+    """
 
     if os.path.splitext(movie_filename)[1] in ['.png','.jpg','.tiff']:
         path, filename = os.path.split(movie_filename)
@@ -725,9 +730,4 @@ def create_wildcard_filename_img_seq(movie_filename):
 
     return movie_filename
 
-def create_stub_filename(movie_filename):
-    """Remove all the trailing numbers and extension from a set of images"""
-    filename_stub, _ = os.path.splitext(movie_filename)
-    if os.path.splitext(movie_filename)[1] in ['.png','.jpg','.tiff']:
-        filename_stub = os.path.join(path, ''.join([letter for letter in filename_stub if letter.isalpha()]))
-    return filename_stub
+

@@ -6,6 +6,7 @@ from ..crop import ReadCropVideo
 from .. import preprocess, track, link, postprocess, \
     annotate
 from ..general.writeread_param_dict import read_paramdict_file
+from ..general.dataframes import data_filename_create
 from ..customexceptions import BaseError, flash_error_msg
 
 class PTWorkflow:
@@ -16,14 +17,11 @@ class PTWorkflow:
     def __init__(self, video_filename=None, param_filename=None, error_reporting=None):
         self.video_filename = video_filename
         self.error_reporting=error_reporting
-        self.filename = os.path.splitext(self.video_filename)[0]
-        self.data_filename = self.filename.replace('*','') + '.hdf5'
-
+        self.data_filename = data_filename_create(self.video_filename)
         self.param_filename = param_filename
         self.parameters = read_paramdict_file(self.param_filename)
         self.select_tabs()
         self._setup()
-
 
     def select_tabs(self):
         self.experiment_select = self.parameters['selected']['experiment']
@@ -35,7 +33,7 @@ class PTWorkflow:
         self.annotate_select = self.parameters['selected']['annotate']
 
     def _setup(self):
-        ''' Setup is a internal class method it instantiates the reader object
+        ''' Setup is an internal class method it instantiates the reader object
         Depending on the settings in PARAMETERS this may also crop the video frames
         as they are requested.'''
         datapath=os.path.dirname(self.video_filename)
@@ -44,11 +42,11 @@ class PTWorkflow:
         self._create_processes()
 
     def _create_processes(self, n=0):
+
         self.cap = ReadCropVideo(parameters=self.parameters,
                                  filename=self.video_filename,error_reporting=self.error_reporting
                                  )
         self.ip = preprocess.Preprocessor(self.parameters)
-        
         self.pt = track.ParticleTracker(
             parameters=self.parameters, preprocessor=self.ip,
             vidobject=self.cap, data_filename=self.data_filename)

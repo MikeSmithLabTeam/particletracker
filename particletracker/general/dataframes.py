@@ -2,6 +2,21 @@ import os
 import numpy as np
 import pandas as pd
 
+def data_filename_create(movie_filename):
+    """Wrangle input filenames
+    
+    Changes individual img to wildcard version but leaves videos unchanged
+    img002.png --> img.hdf5
+    img*.png --> img.hdf5
+    vid001.mp4 --> vid001.hdf5
+    """
+    path, filename = os.path.split(movie_filename)
+    filename_stub, ext = os.path.splitext(filename)
+    if os.path.splitext(movie_filename)[1] in ['.png','.jpg','.tiff','.JPG']:   
+        data_filename = os.path.join(path, ''.join([letter for letter in filename_stub if letter.isalpha()]) + '.hdf5')
+    else:
+        data_filename = os.path.join(path, filename_stub + '.hdf5')
+    return data_filename
 
 class DataStore:
     """
