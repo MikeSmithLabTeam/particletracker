@@ -24,6 +24,7 @@ class PTWorkflow:
         self._setup()
 
     def select_tabs(self):
+        """Boolean values that determine whether tabs are selected"""
         self.experiment_select = self.parameters['selected']['experiment']
         self.crop_select = self.parameters['selected']['crop']
         self.preprocess_select = self.parameters['selected']['preprocess']
@@ -33,7 +34,7 @@ class PTWorkflow:
         self.annotate_select = self.parameters['selected']['annotate']
 
     def _setup(self):
-        ''' Setup is an internal class method it instantiates the reader object
+        ''' Setup is an internal class method it instantiates the video reader object.
         Depending on the settings in PARAMETERS this may also crop the video frames
         as they are requested.'''
         datapath=os.path.dirname(self.video_filename)
@@ -42,10 +43,19 @@ class PTWorkflow:
         self._create_processes()
 
     def _create_processes(self, n=0):
-
+        """A particle tracking project needs:
+        1. A video reading object
+        2. Something that handles preprocessing of the images
+        3. A tracker to locate objects in the images
+        4. A linker that creates trajectories of particles between frames
+        5. A postprocessor that does analysis - eg calc velocities or neighbours
+        6. An annotator which adds features to the final image to visualise the results
+        
+        """
         self.cap = ReadCropVideo(parameters=self.parameters,
                                  filename=self.video_filename,error_reporting=self.error_reporting
                                  )
+        self.frame = self.cap.read_frame(n)
         self.ip = preprocess.Preprocessor(self.parameters)
         self.pt = track.ParticleTracker(
             parameters=self.parameters, preprocessor=self.ip,
@@ -60,7 +70,7 @@ class PTWorkflow:
                                                data_filename=self.data_filename,
                                                parameters=self.parameters[
                                                    'annotate'], frame=self.cap.read_frame(n=n))
-        self.frame = self.cap.read_frame(n)
+        
 
     def reset_annotator(self):
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
