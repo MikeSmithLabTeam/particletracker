@@ -38,6 +38,7 @@ class TrackingAnnotator:
             self.cap.set_frame(start)
             for f in tqdm(range(start, stop, step), 'Annotating'):
                 frame = self.cap.read_frame()
+                print('check')
                 try:
                     for method in self.parameters['annotate_method']:
                         method_name, call_num = get_method_name(method)

@@ -82,6 +82,7 @@ class DataStore:
         col_names: list of str
             Titles of each D properties for dataframe columns
         """
+        print('tracking data om Dataframes')
         if isinstance(tracked_data, pd.DataFrame):
             self._add_tracking_dataframe(frame, tracked_data)
         else:
@@ -89,7 +90,7 @@ class DataStore:
 
     def _add_tracking_dataframe(self, frame, data):
         data['frame'] = frame
-        self.df = self.df.append(data.set_index('frame'))
+        self.df = pd.concat([self.df,data.set_index('frame')])
 
     def _add_tracking_array(self, frame, data, col_names):
         if isinstance(data, np.ndarray):

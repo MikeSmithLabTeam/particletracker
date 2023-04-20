@@ -284,7 +284,7 @@ def contours(pp_frame, frame, parameters=None):
         Dataframe containing data from a single frame
 
     '''
-    
+
     try:  
         method_key = get_method_key('contours')
         params = parameters['track'][method_key]
@@ -327,7 +327,7 @@ def contours(pp_frame, frame, parameters=None):
         else:
             info_headings = ['x', 'y', 'area', 'contours']
         df = pd.DataFrame(data=info, columns=info_headings)
-
+        
         return df
     except Exception as e:
         raise ContoursError(e)

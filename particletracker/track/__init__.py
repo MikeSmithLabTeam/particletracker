@@ -87,7 +87,7 @@ class ParticleTracker(QObject):
                     df_frame = self.analyse_frame()
                     data.add_tracking_data(f, df_frame)
                     #Signal to indicate how many frames tracked
-                    self.track_progress.emit(f, start, stop, step)
+                    self.track_progress.emit(f, start, stop, step)               
                 except:
                     print('tracking failed')
             
@@ -109,7 +109,7 @@ class ParticleTracker(QObject):
         
         #Apply tracking track method to frame
         df_frame = getattr(tm, method)(preprocessed_frame, frame, self.parameters)
-        
+    
         if df_frame.empty:
             for column in df_frame.columns:
                 df_frame[column] = [np.nan]
