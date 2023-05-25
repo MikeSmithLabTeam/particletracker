@@ -1,6 +1,6 @@
 from tqdm import tqdm
 
-from labvision.video import WriteVideo, WriteVideoFFMPEG
+from labvision.video import WriteVideo
 
 from ..annotate import annotation_methods as am
 from ..general import dataframes
