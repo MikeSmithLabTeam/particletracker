@@ -543,7 +543,9 @@ def _find_kdtree(df, parameters=None):
     fill_val = np.size(particle_ids)
     for index, row in enumerate(indices):
         neighbour_ids.append([particle_ids[row[i+1]] for i in range(num_neighbours) if row[i+1] != fill_val])
-    df.loc[:, ['neighbours']] = neighbour_ids
+    
+    #df.loc[:, ['neighbours']] = neighbour_ids
+    df.loc['neighbours'] = neighbour_ids
     return df
 
 def _find_delaunay(df, parameters=None, call_num=None):
@@ -561,7 +563,8 @@ def _find_delaunay(df, parameters=None, call_num=None):
     indices = []
     for index, row in enumerate(neighbour_ids):
         indices.append([particle_ids[neighbour_ids[index][j]] for j,dummy in enumerate(row) if neighbour_dists[index][j]])
-    df.loc[:, ['neighbours']] = indices
+    #df.loc[:, ['neighbours']] = indices
+    df['neighbours']=indices
     return df
 
 
