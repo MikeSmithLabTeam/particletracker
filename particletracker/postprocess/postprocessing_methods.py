@@ -1190,7 +1190,7 @@ def add_frame_data(df, f_index=None, parameters=None, call_num=None):
         filename = os.path.join(datapath,params[method_key]['data_filename'])
         if '.csv' not in filename:
             filename = filename + '.csv'
-        new_df = pd.read_csv(filename, header=None, squeeze=True)
+        new_df = pd.read_csv(filename, header=None).squeeze("columns")
         df[params[method_key]['new_column_name']] = new_df
 
         return df
