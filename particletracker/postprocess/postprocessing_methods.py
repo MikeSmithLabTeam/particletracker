@@ -755,7 +755,7 @@ def absolute(df, f_index=None, parameters=None, call_num=None):
         
 
         if column_name + '_abs' not in df.columns:
-            df[column_name + 'abs'] = np.nan
+            df[column_name + '_abs'] = np.nan
             
         
         df_frame = df.loc[[f_index]]
