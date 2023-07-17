@@ -7,9 +7,8 @@ from ..postprocess import postprocessing_methods as pm
 
 class PostProcessor:
     def __init__(self, parameters=None, data_filename=None):
-        self.parameters = parameters
-
         self.data_filename = data_filename
+        self.parameters = parameters      
 
     def process(self, f_index=None, use_part=False):
         if f_index is None:

@@ -102,8 +102,8 @@ class DataStore:
             print('type wrong')
         data_dict['frame'] = frame
         new_df = pd.DataFrame(data_dict).set_index('frame')
-        self.df = self.df.append(new_df)
-        
+        self.df = pd.concat([self.df, new_df])
+
 
     def append_store(self, store):
         """
