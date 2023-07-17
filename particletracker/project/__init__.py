@@ -100,10 +100,10 @@ class PTWorkflow:
                     self.pt.track()
                 if self.link_select:
                     self.link.link_trajectories()
-            if self.postprocess_select:
-                self.pp.process(use_part=use_part)
-            if self.annotate_select:
-                self.an.annotate(use_part=use_part)
+                if self.postprocess_select:
+                    self.pp.process(use_part=use_part)
+                if self.annotate_select:
+                    self.an.annotate(use_part=use_part)
         
             if csv:
                 try:
