@@ -103,7 +103,7 @@ class DataStore:
         data_dict['frame'] = frame
         new_df = pd.DataFrame(data_dict).set_index('frame')
         self.df = self.df.append(new_df)
-        #self.df = pd.concat([self.df, new_df.set_index('frame')])
+        
 
     def append_store(self, store):
         """
