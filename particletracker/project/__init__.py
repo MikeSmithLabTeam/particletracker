@@ -152,10 +152,10 @@ class PTWorkflow:
                     self.pt.track(f_index=frame_num)            
                 if self.link_select:
                     self.link.link_trajectories(f_index=frame_num)
-                if self.postprocess_select:
-                    self.pp.process(f_index=frame_num, use_part=use_part)
-                if self.annotate_select:
-                    annotatedframe = self.an.annotate(f_index=frame_num, use_part=use_part)
+            if self.postprocess_select:
+                self.pp.process(f_index=frame_num, use_part=use_part)
+            if self.annotate_select:
+                annotatedframe = self.an.annotate(f_index=frame_num, use_part=use_part)
             else:
                 annotatedframe = self.cap.read_frame(frame_num)
         except BaseError as e:     

@@ -112,7 +112,7 @@ class DataStore:
         ----------
         store: seperate instance of this class
         """
-        self.df = self.df.append(store.df)
+        self.df = pd.concat([self.df, store.df])
 
     def get_column(self, name):
         return self.df[name].values
@@ -137,12 +137,13 @@ class DataStore:
         self.df = self.df.reset_index()
 
     def save(self, filename=None):
-        try:
+        if True:
+        #try:
             if filename is None:
                 self.df.to_hdf(self.filename,'data')
             else:
                 self.df.to_hdf(filename, 'data')
-        except Exception as e:
+       # except Exception as e:
             print('Error in general.dataframes')
             print(e)
             print('Error in DataStore.save')
