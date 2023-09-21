@@ -82,7 +82,6 @@ class DataStore:
         col_names: list of str
             Titles of each D properties for dataframe columns
         """
-        print('tracking data om Dataframes')
         if isinstance(tracked_data, pd.DataFrame):
             self._add_tracking_dataframe(frame, tracked_data)
         else:
@@ -102,7 +101,7 @@ class DataStore:
             print('type wrong')
         data_dict['frame'] = frame
         new_df = pd.DataFrame(data_dict).set_index('frame')
-        self.df = self.df.append(new_df)
+        self.df = pd.concat([self.df,new_df])
 
     def append_store(self, store):
         """
@@ -111,7 +110,7 @@ class DataStore:
         ----------
         store: seperate instance of this class
         """
-        self.df = self.df.append(store.df)
+        self.df = pd.concat([self.df, store.df])
 
     def get_column(self, name):
         return self.df[name].values

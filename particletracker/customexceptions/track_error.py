@@ -34,3 +34,9 @@ class MeanIntensityError(TrackError):
         super().__init__(e)
         self.error_msg = 'When using get_intensities.mean_intensity there was an error'
         self.e=e
+
+class RedBlueError(TrackError):
+    def __init__(self,e):
+        super().__init__(e)
+        self.error_msg = 'When using get_intensities.red_blue there was an error'
+        self.e=e

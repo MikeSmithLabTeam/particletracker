@@ -18,7 +18,7 @@ Tracking Methods
 
 '''
 
-def trackpy(ppframe,frame, params=None):
+def trackpy(ppframe, frame, params=None):
     """
     Trackpy implementation
 
@@ -194,7 +194,6 @@ def hough(ppframe, frame,params=None):
             circles_dict = {'x': circles[:, 0], 'y': circles[:, 1], 'r': circles[:, 2]}
         except:
             circles_dict={'x':[np.nan],'y':[np.nan],'r':[np.nan]}
-        
 
         remove_masked =  get_param_val(parameters[method_key]['remove_masked'])
         if remove_masked:
