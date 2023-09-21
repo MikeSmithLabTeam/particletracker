@@ -7,23 +7,19 @@ from ..postprocess import postprocessing_methods as pm
 
 class PostProcessor:
     def __init__(self, parameters=None, data_filename=None):
-        self.parameters = parameters
-
         self.data_filename = data_filename
+        self.parameters = parameters      
 
     def process(self, f_index=None, use_part=False):
         if f_index is None:
-            input_filename = self.data_filename
-            output_filename = self.data_filename
+            data_filename = self.data_filename
         else:
             if use_part:
-                input_filename = self.data_filename
-                output_filename = self.data_filename
+                data_filename = self.data_filename
             else:
-                input_filename = self.data_filename[:-5] + '_temp.hdf5'
-                output_filename = self.data_filename[:-5] + '_temp.hdf5'
-
-        with DataStore(input_filename, load=True) as data:
+                data_filename = self.data_filename[:-5] + '_temp.hdf5'
+                
+        with DataStore(data_filename, load=True) as data:
             if f_index is None:
                 frame_range = self.parameters['experiment']['frame_range']
                 start=frame_range[0]
@@ -42,6 +38,6 @@ class PostProcessor:
                     data.df = getattr(pm, method_name)(data.df, f_index=f,parameters=self.parameters, call_num=call_num)
                     #comment
 
-            data.save(filename=output_filename)
+            data.save(filename=data_filename)
 
 
