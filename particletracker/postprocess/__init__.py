@@ -21,7 +21,7 @@ class PostProcessor:
                 
         with DataStore(data_filename, load=True) as data:
             if f_index is None:
-                frame_range = self.parameters['experiment']['frame_range']
+                frame_range = self.parameters['config']['frame_range']
                 start=frame_range[0]
                 stop=frame_range[1]
                 if stop is None:

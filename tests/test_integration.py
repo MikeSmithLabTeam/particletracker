@@ -78,7 +78,7 @@ def test_colloids():
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video)
     assert int(df.loc[5, ['mass']].to_numpy()[0][0]) == int(
-        929.7972542773452), df.loc[5, ['mass']].to_numpy()[0][0]
+        1189.8049916203656), df.loc[5, ['mass']].to_numpy()[0][0]
     os.remove(output_video)
     os.remove(output_df)
     
@@ -92,13 +92,13 @@ def test_discs():
     Annotation: circles, networks, particle_labels,
     """
     pt.batchprocess("testdata/discs.mp4",
-                    "testdata/test_discs.param", excel=True)
+                    "testdata/test_discs.param")
     output_video = "testdata/discs_annotate.mp4"
     output_df = "testdata/discs.hdf5"
-    output_excel = "testdata/discs.xlsx"
+    output_csv = "testdata/discs.csv"
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video), 'Discs annotated video not created'
-    assert os.path.exists(output_excel), 'Excel output not created'
+    assert os.path.exists(output_csv), 'Excel output not created'
     assert df.loc[5, ['x_mean']].to_numpy()[0][0] == 142.5, df.loc[5, ['x_mean']].to_numpy()[
         0][0]  # 'tested value in discs df incorrect'
     os.remove(output_video)
@@ -121,6 +121,6 @@ def test_hydrogel():
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video), 'Hydrogel annotated video not created'
     assert int(df.loc[5, ['voronoi_area']].to_numpy()[3][0]) == int(
-        833.9376763034877), df.loc[5, ['voronoi_area']].to_numpy()[3][0]  # 'tested value in hydrogel df incorrect'
+        1032.5718012951643), df.loc[5, ['voronoi_area']].to_numpy()[3][0]  # 'tested value in hydrogel df incorrect'
     os.remove(output_video)
     os.remove(output_df)

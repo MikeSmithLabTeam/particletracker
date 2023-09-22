@@ -29,7 +29,9 @@ class CheckableTabWidget(QTabWidget):
         self.list_draggable_lists = []
         self.list_param_adjustors = []
         self.list_param_adjustor_layouts = []
-        tab_list = list(self.param_dict.keys()).copy()
+        #ignore config and don't make a tab for it
+        tab_list = list(self.param_dict.keys()).copy()[1:]
+        
         if 'selected' in tab_list: tab_list.remove('selected')
         for index, key in enumerate(tab_list):
             self.add_tab(QLabel(), key, index)

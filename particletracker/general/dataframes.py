@@ -137,9 +137,9 @@ class DataStore:
     def save(self, filename=None):
         try:
             if filename is None:
-                self.df.to_hdf(self.filename,'data')
+                self.df.to_hdf(self.filename,'data',format=None)
             else:
-                self.df.to_hdf(filename, 'data')
+                self.df.to_hdf(filename, 'data', format=None)
         except Exception as e:
             print('Error in general.dataframes')
             print(e)

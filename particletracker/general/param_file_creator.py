@@ -1,12 +1,18 @@
 from .writeread_param_dict import write_paramdict_file
 
 def create_param_file(filename):
+    #Config does not result in any gui elements being created
+    config = {'csv_export':True,
+              'live_updates':True,
+              'autosave_settings':True,
+              'frame_range':(0,None,1)
+              }
+    
     experiment = {'experiment_method':('video_filename','sample', 'fps'),
                   'video_filename':None,
                   'sample':'Sample',
                   'fps':30,
                   'metadata':None,
-                  'frame_range':(0,None,1)
                   }
 
     crop = {'crop_method': ('crop_box',),
@@ -256,7 +262,8 @@ def create_param_file(filename):
         
         }
 
-    selected = {'experiment':True,
+    selected = {
+                'experiment':True,
                 'crop':True,
                 'preprocess':True,
                 'track':True,
@@ -266,6 +273,7 @@ def create_param_file(filename):
                 }
 
     PARAMETERS = {
+        'config':config,
         'experiment': experiment,
         'crop': crop,
         'preprocess':preprocess,

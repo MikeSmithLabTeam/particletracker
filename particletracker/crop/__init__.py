@@ -10,11 +10,11 @@ class ReadCropVideo(ReadVideo):
         if error_reporting is not None:
             self.error = error_reporting
         try:
-            ReadVideo.__init__(self, filename=filename, frame_range=parameters['experiment']['frame_range'])
+            ReadVideo.__init__(self, filename=filename, frame_range=parameters['config']['frame_range'])
         except:
             #Avoid crash if new video has num_frames < max_frames in settings file.
-            parameters['experiment']['frame_range'] = (0, None, 1)
-            ReadVideo.__init__(self, filename=filename, frame_range=parameters['experiment']['frame_range'])
+            parameters['config']['frame_range'] = (0, None, 1)
+            ReadVideo.__init__(self, filename=filename, frame_range=parameters['config']['frame_range'])
 
         self.parameters = parameters['crop']
         '''

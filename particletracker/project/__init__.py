@@ -78,7 +78,7 @@ class PTWorkflow:
                                                        parameters=self.parameters[
                                                            'annotate'], frame=self.cap.read_frame(self.parameters['experiment']['frame_range'][0]))
 
-    def process(self, use_part=False, csv=False):
+    def process(self, use_part=False):
         """Process an entire video
 
         Process is called on the main instance using the command
@@ -105,7 +105,7 @@ class PTWorkflow:
                 if self.annotate_select:
                     self.an.annotate(use_part=use_part)
         
-            if csv:
+            if self.parameters['config']['csv_export']:
                 try:
                     df = pd.read_hdf(self.data_filename)
                     df.to_csv(self.data_filename[:-5] + '.csv')

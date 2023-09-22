@@ -32,8 +32,8 @@ class MainWindow(QMainWindow):
     
     def __init__(self, *args, movie_filename=None, settings_filename=None, screen_size=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
-        
         self.screen_size = screen_size
+        
         self.movie_filename=None
         if movie_filename is not None:
             if isfile(movie_filename):
@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
                 movie_filename = None
             
         if movie_filename is None:
-            ok = self.open_movie_dialog()
+            self.open_movie_dialog()
 
         if settings_filename is not None:
             if isfile(settings_filename):
@@ -78,8 +78,6 @@ class MainWindow(QMainWindow):
         self.settings_layout = QVBoxLayout()  # Contains tab widget with all tracking controls
 
         self.init_ui()
-        
-        
 
         self.main_layout.addLayout(self.view_layout,3)
         self.main_layout.addLayout(self.settings_layout,2)
@@ -89,9 +87,7 @@ class MainWindow(QMainWindow):
         
         self.setMaximumSize(self.screen_size.width()-10, self.screen_size.height()-10)
         self.showMaximized()
-        self.setup_pandas_viewer()
-       
-        
+        self.setup_pandas_viewer()   
 
     def init_ui(self):#, view_layout, settings_layout, reboot=True):
         if not hasattr(self, 'file_menu'):
@@ -146,17 +142,17 @@ class MainWindow(QMainWindow):
 
         self.autosave_on_process = QAction(QIcon(os.path.join(resources_dir,"autosave.png")), 'Autosave settings on process', self)
         self.autosave_on_process.setCheckable(True)
-        self.autosave_on_process.setChecked(True)
+        self.autosave_on_process.setChecked(self.tracker.parameters['config']['autosave_settings'])
+        self.autosave_on_process.triggered.connect(self.autosave_button_click)
         self.toolbar.addAction(self.autosave_on_process)
 
         self.toolbar.addSeparator()
 
         self.live_update_button = QAction(QIcon(os.path.join(resources_dir,"arrow-circle.png")), "Live Updates", self)
         self.live_update_button.setCheckable(True)
-        self.live_update_button.setChecked(True)
+        self.live_update_button.setChecked(self.tracker.parameters['config']['live_updates'])
         self.live_update_button.triggered.connect(self.live_update_button_click)
         self.toolbar.addAction(self.live_update_button)
-
 
         self.pandas_button = QAction(
             QIcon(os.path.join(resources_dir, "view_pandas.png")),
@@ -174,10 +170,10 @@ class MainWindow(QMainWindow):
 
         self.toolbar.addSeparator()
 
-        self.csv=False
         self.export_to_csv = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to csv', self)
-        self.export_to_csv.triggered.connect(self.export_to_csv_click)
         self.export_to_csv.setCheckable(True)
+        self.export_to_csv.setChecked(self.tracker.parameters['config']['csv_export'])
+        self.export_to_csv.triggered.connect(self.export_to_csv_click)
         self.toolbar.addAction(self.export_to_csv)
 
         process_part_button = QAction(QIcon(os.path.join(resources_dir,"clapperboard--minus.png")), "Process part", self)
@@ -291,18 +287,18 @@ class MainWindow(QMainWindow):
         
         frame_selector_layout = QHBoxLayout()
 
-        if self.tracker.parameters['experiment']['frame_range'][1] is None:
+        if self.tracker.parameters['config']['frame_range'][1] is None:
             max_val = self.tracker.cap.num_frames - 1
         else:
-            max_val=self.tracker.parameters['experiment']['frame_range'][1] - 1
+            max_val=self.tracker.parameters['config']['frame_range'][1] - 1
         self.frame_selector = QCustomSlider(title='Frame',
-                                            min_=self.tracker.parameters['experiment']['frame_range'][0],
+                                            min_=self.tracker.parameters['config']['frame_range'][0],
                                             max_=max_val,
-                                            step_=self.tracker.parameters['experiment']['frame_range'][2],
+                                            step_=self.tracker.parameters['config']['frame_range'][2],
                                             value_=self.tracker.cap.frame_range[0],
                                             spinbox=True,
                                             )
-        self.frame_selector.meta = ['experiment','frame']
+        self.frame_selector.meta = ['config','frame']
         self.frame_selector.valueChanged.connect(lambda x=self.frame_selector.value():self.param_change(x))
         self.frame_selector.rangeChanged.connect(lambda x: self.param_change(x))
         self.frame_selector.widget = 'slider'
@@ -345,7 +341,6 @@ class MainWindow(QMainWindow):
     def open_tracker(self):
         """PTWorkFlow is the top level class that controls the entire tracking process
         """
-        print(self.movie_filename)
         self.tracker = PTWorkflow(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
@@ -416,12 +411,12 @@ class MainWindow(QMainWindow):
         paramdict_location=sender.meta
         
         if sender.meta == 'ResetFrameRange':
-            self.update_dictionary_params(['experiment','frame_range'],(0,self.tracker.cap.num_frames-1,1), 'button')
+            self.update_dictionary_params(['config','frame_range'],(0,self.tracker.cap.num_frames-1,1), 'button')
             self.tracker.cap.set_frame_range((0,self.tracker.cap.num_frames,1))
         elif ('frame' in paramdict_location[1]) and (type(value) == tuple):
             frame_range = (self.frame_selector.slider._min,self.frame_selector.slider._max+1,self.frame_selector.slider._step)
             if (frame_range[1] <= self.tracker.cap.num_frames) | (frame_range[1] is None):
-                self.update_dictionary_params(['experiment','frame_range'],frame_range, 'slider')
+                self.update_dictionary_params(['config','frame_range'],frame_range, 'slider')
                 self.tracker.cap.set_frame_range(frame_range)
             else:
                 self.reset_frame_range_click()
@@ -611,13 +606,12 @@ class MainWindow(QMainWindow):
         write_paramdict_file(self.tracker.parameters, file_settings_name)
 
     def export_to_csv_click(self):
-        self.csv = self.export_to_csv.isChecked
+        self.tracker.parameters['config']['csv_export'] = self.export_to_csv.isChecked()
 
-    
+    """-------------------------------------------------------------
+    Functions relevant to the tools section
+    --------------------------------------------------------------"""
 
-        """-------------------------------------------------------------
-        Functions relevant to the tools section
-        --------------------------------------------------------------"""
     def setup_pandas_viewer(self):
         if hasattr(self, 'pandas_viewer'):
             self.pandas_viewer.close()
@@ -652,11 +646,14 @@ class MainWindow(QMainWindow):
         """------------------------------------------------------------
         Functions that control the processing
         --------------------------------------------------------------"""
+    def autosave_button_click(self):
+        self.tracker.parameters['config']['autosave_settings'] = self.autosave_on_process.isChecked()
+
     def live_update_button_click(self):
         if self.live_update_button.isChecked():
             self.update_viewer()
+        self.tracker.parameters['config']['live_updates'] = self.live_update_button.isChecked()
 
-    
     def process_part_button_click(self):
         '''
         This button processes the movie but it skips the postprocess and annotation steps
@@ -703,9 +700,9 @@ class MainWindow(QMainWindow):
             write_paramdict_file(self.tracker.parameters, self.settings_filename)
 
         if self.use_part_button.isChecked():
-            self.tracker.process(use_part=True, csv=self.csv)
+            self.tracker.process(use_part=True)
         else:
-            self.tracker.process(csv=self.csv)
+            self.tracker.process()
 
         write_paramdict_file(self.tracker.parameters, self.tracker.data_filename[:-5] + '_expt.param')
         

@@ -255,7 +255,7 @@ def _rotated_bounding_rectangle(contour):
     try:
         rect = cv2.minAreaRect(contour[0])
         box = cv2.boxPoints(rect)
-        box = np.int0(box)
+        box = np.int32(box)
         dim = np.sort(rect[1])
         #[centrex, centrey, angle, length, width, box_corners]
         info = [rect[0][0], rect[0][1], rect[2], dim[0], dim[1], box]

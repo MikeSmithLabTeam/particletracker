@@ -179,7 +179,8 @@ def hough(ppframe, frame,params=None):
     '''
     parameters=params['track']
 
-    try:
+    #try:
+    if True:
         method_key = get_method_key('hough')
         circles = np.squeeze(cv2.HoughCircles(
                     ppframe,
@@ -238,8 +239,8 @@ def hough(ppframe, frame,params=None):
         df = pd.DataFrame(circles_dict)
 
         return df
-    except Exception as e:
-        raise HoughCirclesError(e)
+    #except Exception as e:
+    #    raise HoughCirclesError(e)
 
 
 def contours(pp_frame, frame, parameters=None):
