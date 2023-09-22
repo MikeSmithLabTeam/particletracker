@@ -135,13 +135,12 @@ class DataStore:
         self.df = self.df.reset_index()
 
     def save(self, filename=None):
-        if True:
-        #try:
+        try:
             if filename is None:
                 self.df.to_hdf(self.filename,'data')
             else:
                 self.df.to_hdf(filename, 'data')
-       # except Exception as e:
+        except Exception as e:
             print('Error in general.dataframes')
             print(e)
             print('Error in DataStore.save')
