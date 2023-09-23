@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 from labvision.video import ReadVideo
-from ..customexceptions import CropMaskError, flash_error_msg
+from ..customexceptions import error_return_frame,  error_handling#flash_error_msg, CropMaskError,
 
 class ReadCropVideo(ReadVideo):
 
@@ -129,28 +129,39 @@ class ReadCropVideo(ReadVideo):
             mask = cv2.rectangle(img, pts[0], pts[1], 255, thickness=-1)
         return mask
 
+    @error_return_frame
     def apply_mask(self,frame):
-        try:        
-            #mask = crop(self.mask, self.parameters)
-            return cv2.bitwise_and(frame, self.mask)        
-        except Exception as e:
-            error = CropMaskError(e)
-            flash_error_msg(error, self.error)
-            return frame
-
+        return cv2.bitwise_and(frame, self.mask)        
+    
+    @error_return_frame
     def apply_crop(self, frame):
-        try:
-            return crop(frame, self.parameters)
-        except Exception as e:
-            error = CropMaskError(e)
-            flash_error_msg(error, self.error)
-            return frame
+        return crop(frame, self.parameters)
 
-        
     def read_frame(self, n=None):
         frame=super().read_frame(n=n)
         cropped_frame=self.apply_crop(frame)
         return cropped_frame
+
+"""
+    def apply_mask(self,frame):
+        #mask = crop(self.mask, self.parameters)
+        return cv2.bitwise_and(frame, self.mask)        
+    except Exception as e:
+            error = CropMaskError(e)
+            flash_error_msg(error, self.error)
+            return frame
+
+            
+def apply_crop(self, frame):
+    try:
+        return crop(frame, self.parameters)
+    except Exception as e:
+        error = CropMaskError(e)
+        flash_error_msg(error, self.error)
+        return frame
+"""
+        
+    
 
 def crop(frame, parameters):
     if np.size(np.shape(frame)) == 3:

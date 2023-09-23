@@ -34,6 +34,8 @@ def create_param_file(filename):
                               },
         'colour_channel':{'colour':['red',('red','green','blue')]},
         'distance':{},
+        'brightness_contrast':{'brightness':[0,-255,255,1],
+                               'contrast' :[1.0,0.0,10.0,0.01]},
         'blur':{'kernel':[1,1,15,2]},
         'medianblur':{'kernel':[3,1,15,2]},
         'gamma':{'gamma':[1.00,0.01,10.00,0.01]},

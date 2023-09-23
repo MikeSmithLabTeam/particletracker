@@ -1,14 +1,16 @@
+from cgi import parse_multipart
 import cv2
 import numpy as np
 
 from labvision.images import bgr_to_gray
 
-from ..general.parameters import  get_param_val, get_method_key
+from ..general.parameters import  param_parse, get_param_val, get_method_key
 from ..crop import crop
 from ..customexceptions import error_handling
 from ..user_methods import *
 
 @error_handling
+@param_parse
 def adaptive_threshold(frame, parameters=None, call_num=None):
     '''
     Perform an adaptive threshold on a grayscale image
@@ -20,15 +22,12 @@ def adaptive_threshold(frame, parameters=None, call_num=None):
     pixels around it. This enables you to cope with gradual changes in illumination
     across the image etc.
 
-    
-
     block_size
         Size of local block of pixels to calculate threshold on
     C
         The mean-c value see here: http://homepages.inf.ed.ac.uk/rbf/HIPR2/adpthrsh.htm
     ad_mode
         Inverts behaviour (True or False)
-
 
     Args
     ----
@@ -42,21 +41,15 @@ def adaptive_threshold(frame, parameters=None, call_num=None):
     Returns
     -------
         binary image with 255 above threshold else 0.
-
     '''
-    method_key = get_method_key('adaptive_threshold', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    block = get_param_val(params['block_size'])
-    const = get_param_val(params['C'])
-    invert = get_param_val(params['ad_mode'])
-
-    if invert:
-        out = cv2.adaptiveThreshold(frame,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, block, const)
+    if parameters['ad_mode']:
+        out = cv2.adaptiveThreshold(frame,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, parameters['block_size'], parameters['C'])
     else:
-        out = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block, const)
+        out = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, parameters['block_size'], parameters['C'])
     return out
     
 @error_handling
+@param_parse
 def blur(frame, parameters=None, call_num=None):
     '''
     Performs a gaussian blur on the image
@@ -85,15 +78,19 @@ def blur(frame, parameters=None, call_num=None):
     -------
         single colour channel image.
 
-    '''
-    method_key = get_method_key('blur', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    kernel = get_param_val(params['kernel'])
-    
-    out = cv2.GaussianBlur(frame, (kernel, kernel), 0)
+    '''    
+    out = cv2.GaussianBlur(frame, (parameters['kernel'], parameters['kernel']), 0)
     return out      
 
+
 @error_handling
+@param_parse
+def brightness_contrast(frame, parameters=None, call_num=None):
+    return  cv2.convertScaleAbs(frame, alpha=parameters['contrast'], beta=parameters['brightness'])
+
+
+@error_handling
+@param_parse
 def colour_channel(frame, parameters=None, call_num=None):
     '''
     This selects the specified colour channel of a colour image
@@ -116,23 +113,19 @@ def colour_channel(frame, parameters=None, call_num=None):
         Single colour channel image
 
     '''
-    if np.size(np.shape(frame)) == 3:
-        method_key = get_method_key('colour_channel', call_num=call_num)
-        params = get_param_val(parameters['preprocess'][method_key])
-        colour = get_param_val(params['colour'])
-    
-        #Assumes frame has bgr format.
-        if colour == 'red':
-            index = 2
-        elif colour == 'green':
-            index = 1
-        elif colour == 'blue':
-            index = 0
-        else:
-            raise Exception        
+    #Assumes frame has bgr format.
+    if parameters['colour'] == 'red':
+        index = 2
+    elif parameters['colour'] == 'green':
+        index = 1
+    elif parameters['colour'] == 'blue':
+        index = 0
+    else:
+        raise Exception        
     return frame[:,:,index]
         
 @error_handling
+@param_parse
 def dilation(frame, parameters=None, call_num=None):
     '''
     Dilate a binary image
@@ -164,16 +157,9 @@ def dilation(frame, parameters=None, call_num=None):
         binary image 
 
     '''
-    method_key = get_method_key('dilation', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    kernel = get_param_val(params['dilation_kernel'])
-    iterations = get_param_val(params['iterations'])
+    return cv2.dilate(frame, parameters['dilation_kernel'], iterations=parameters['iterations'])
 
-    kernel = np.ones((kernel, kernel))
-
-    return cv2.dilate(frame, kernel, iterations=iterations)
-
-@error_handling        
+@error_handling       
 def distance(frame, parameters=None, call_num=None):
     '''
     Perform a distance transform on a binary image
@@ -209,6 +195,7 @@ def distance(frame, parameters=None, call_num=None):
     return dist.astype(np.uint8)
 
 @error_handling
+@param_parse
 def erosion(frame, parameters=None, call_num=None):
     '''
     Perform an erosion operation on a binary image
@@ -243,16 +230,11 @@ def erosion(frame, parameters=None, call_num=None):
 
     '''
 
-    method_key = get_method_key('erosion', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    kernel = get_param_val(params['erosion_kernel'])
-    iterations = get_param_val(params['iterations'])
-
-    kernel = np.ones((kernel, kernel))
-
-    return cv2.erode(frame, kernel, iterations=iterations)
+    kernel = parameters['erosion_kernel']
+    return cv2.erode(frame, np.ones((kernel, kernel)), iterations=iterations)
        
 @error_handling
+@param_parse
 def gamma(image, parameters=None, call_num=None):
     '''
     Apply look up table to image with power gamma
@@ -280,11 +262,7 @@ def gamma(image, parameters=None, call_num=None):
         grayscale image
 
     '''
- 
-    method_key = get_method_key('gamma', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-
-    gamma = get_param_val(params['gamma'])
+    gamma = parameters['gamma']
     # build a lookup table mapping the pixel values [0, 255] to
     # their adjusted gamma values
     if gamma == 0:
@@ -314,9 +292,6 @@ def grayscale(frame, parameters=None, call_num=None):
         grayscale image
 
     '''
-    method_key = get_method_key('grayscale', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    
     sz = np.shape(frame)
 
     if np.size(sz) == 3:
@@ -352,6 +327,7 @@ def invert(frame, parameters=None, call_num=None):
     return ~frame
            
 @error_handling
+@param_parse
 def medianblur(frame, parameters=None, call_num=None):
     '''
     Performs a medianblur on the image. 
@@ -377,10 +353,7 @@ def medianblur(frame, parameters=None, call_num=None):
         grayscale image
 
     '''
-    method_key = get_method_key('medianblur', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    kernel = get_param_val(params['kernel'])
-    out = cv2.medianBlur(frame, kernel)
+    out = cv2.medianBlur(frame, parameters['kernel'])
     return out
         
 @error_handling
@@ -484,14 +457,13 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     return frame2
 
 @error_handling
+@param_parse
 def threshold(frame, parameters=None, call_num=None):
     '''
     Apply a global threshold
 
     This applies OpenCVs threshold. This sets pixels to 255 or 0 depending on whether
     they are above or below the given value.
-
-    
     
     threshold
         Threshold value to determine whether pixels are black or white
@@ -513,14 +485,7 @@ def threshold(frame, parameters=None, call_num=None):
         grayscale image
 
     '''
-    method_key = get_method_key('threshold', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    threshold = get_param_val(params['threshold'])
-    mode = get_param_val(params['th_mode'])
-    if mode:
-        ret, out = cv2.threshold(frame,threshold,255,1)
-    else:
-        ret, out = cv2.threshold(frame,threshold,255,0)
+    ret, out = cv2.threshold(frame,parameters['threshold'],255,int(parameters['th_mode']))
     return out
 
 @error_handling
@@ -556,7 +521,8 @@ def fill_holes(frame, parameters=None, call_num=None):
     out = frame | im_floodfill_inv
     return out
 
-@error_handling       
+@error_handling   
+@param_parse    
 def absolute_diff(frame, parameters=None, call_num=None):
     '''
     Calculates the absolute difference of pixels from a reference value
@@ -586,9 +552,7 @@ def absolute_diff(frame, parameters=None, call_num=None):
     -------
         grayscale image
     '''
-    method_key = get_method_key('absolute_diff', call_num=call_num)
-    params = parameters['preprocess'][method_key]
-    mean_val = int(get_param_val(params['value']))
+    mean_val = int(parameters['value'])
     subtract_frame = mean_val*np.ones(np.shape(frame), dtype=np.uint8)         
 
     frame1 = cv2.subtract(subtract_frame, frame)
@@ -597,7 +561,7 @@ def absolute_diff(frame, parameters=None, call_num=None):
     frame2 = cv2.normalize(frame2, frame2,0,255,cv2.NORM_MINMAX)
     frame = cv2.add(frame1, frame2)
 
-    if get_param_val(params['normalise']) == True:
+    if parameters['normalise'] == True:
         frame = cv2.normalize(frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
 
     return frame

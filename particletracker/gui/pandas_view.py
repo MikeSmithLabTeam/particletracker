@@ -4,7 +4,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 
-from ..customexceptions import PandasViewError
+from ..customexceptions import *
 
 
 class pandasModel(QtCore.QAbstractTableModel):
@@ -65,7 +65,6 @@ class PandasWidget(QtWidgets.QDialog):
         self.hide()
         self.parent.pandas_button.setChecked(False)
         
-
     def save_button_clicked(self):
         options = QtWidgets.QFileDialog.Options()
         directory = os.path.split(self.filename)[0]

@@ -1,3 +1,4 @@
+import functools
 
 def get_param_val(param):
     '''
@@ -13,6 +14,7 @@ def get_param_val(param):
         return param
 
 def get_method_name(method):
+    """get_method_name function. This function returns the method name and call number from the method string."""
     if '*' in method:
         method_name, call_num = method.split('*')
     else:
@@ -21,6 +23,7 @@ def get_method_name(method):
     return method_name, call_num
 
 def get_method_key(method, call_num=None):
+    """get_method_key function. This function returns the method key for the parameters dictionary. It checks if the method is called multiple times and if so, appends the call number to the method name."""
     if call_num is None:
         method_key = method
     else:
@@ -63,3 +66,15 @@ def parse_values(sender, value):
 def ok_to_duplicate_method_check(method):
     not_to_be_duplicated = ['crop_box']
     return method not in not_to_be_duplicated
+
+
+def param_parse(func):
+    """param_format decorator. This performs steps to correctly format the parameters for the function call."""
+    @functools.wraps(func)
+    def wrapper_param_format(*args, **kwargs):
+        method_key = get_method_key(func.__name__, call_num=kwargs['call_num'])
+        params = kwargs['parameters']['preprocess'][method_key]
+        params = {key : get_param_val(value) for (key, value) in params.items()}
+        kwargs['parameters'] = params
+        return func(*args, **kwargs)
+    return wrapper_param_format
