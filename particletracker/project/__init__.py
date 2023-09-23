@@ -158,8 +158,9 @@ class PTWorkflow:
                 annotatedframe = self.an.annotate(f_index=frame_num, use_part=use_part)
             else:
                 annotatedframe = self.cap.read_frame(frame_num)
-        except BaseError as e:     
+        except BaseError as e:   
             if self.error_reporting is not None:
+                print(e)
                 flash_error_msg(e, self.error_reporting)
             annotatedframe = self.cap.read_frame(frame_num)
             self.error_reporting.toggle_img.setChecked(False)

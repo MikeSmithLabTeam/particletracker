@@ -5,10 +5,10 @@ from labvision.images import bgr_to_gray
 
 from ..general.parameters import  get_param_val, get_method_key
 from ..crop import crop
-from ..customexceptions.preprocessor_error import *
+from ..customexceptions import error_handling
 from ..user_methods import *
 
-
+@error_handling
 def adaptive_threshold(frame, parameters=None, call_num=None):
     '''
     Perform an adaptive threshold on a grayscale image
@@ -44,23 +44,19 @@ def adaptive_threshold(frame, parameters=None, call_num=None):
         binary image with 255 above threshold else 0.
 
     '''
-    
-    try:
-        method_key = get_method_key('adaptive_threshold', call_num=call_num)
-        params = parameters['preprocess'][method_key]
-        block = get_param_val(params['block_size'])
-        const = get_param_val(params['C'])
-        invert = get_param_val(params['ad_mode'])
+    method_key = get_method_key('adaptive_threshold', call_num=call_num)
+    params = parameters['preprocess'][method_key]
+    block = get_param_val(params['block_size'])
+    const = get_param_val(params['C'])
+    invert = get_param_val(params['ad_mode'])
 
+    if invert:
+        out = cv2.adaptiveThreshold(frame,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, block, const)
+    else:
+        out = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block, const)
+    return out
     
-        if invert:
-            out = cv2.adaptiveThreshold(frame,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, block, const)
-        else:
-            out = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block, const)
-        return out
-    except Exception as e:
-        raise AdaptiveThresholdError(e)
-
+@error_handling
 def blur(frame, parameters=None, call_num=None):
     '''
     Performs a gaussian blur on the image
@@ -90,18 +86,14 @@ def blur(frame, parameters=None, call_num=None):
         single colour channel image.
 
     '''
+    method_key = get_method_key('blur', call_num=call_num)
+    params = parameters['preprocess'][method_key]
+    kernel = get_param_val(params['kernel'])
     
-    try:
-        method_key = get_method_key('blur', call_num=call_num)
-        params = parameters['preprocess'][method_key]
-        kernel = get_param_val(params['kernel'])
-       
-        out = cv2.GaussianBlur(frame, (kernel, kernel), 0)
-        return out
-    except Exception as e:
-        raise BlurError(e)
-        
+    out = cv2.GaussianBlur(frame, (kernel, kernel), 0)
+    return out      
 
+@error_handling
 def colour_channel(frame, parameters=None, call_num=None):
     '''
     This selects the specified colour channel of a colour image
@@ -124,27 +116,23 @@ def colour_channel(frame, parameters=None, call_num=None):
         Single colour channel image
 
     '''
-
-    try:
-        if np.size(np.shape(frame)) == 3:
-            method_key = get_method_key('colour_channel', call_num=call_num)
-            params = get_param_val(parameters['preprocess'][method_key])
-            colour = get_param_val(params['colour'])
+    if np.size(np.shape(frame)) == 3:
+        method_key = get_method_key('colour_channel', call_num=call_num)
+        params = get_param_val(parameters['preprocess'][method_key])
+        colour = get_param_val(params['colour'])
+    
+        #Assumes frame has bgr format.
+        if colour == 'red':
+            index = 2
+        elif colour == 'green':
+            index = 1
+        elif colour == 'blue':
+            index = 0
+        else:
+            raise Exception        
+    return frame[:,:,index]
         
-            #Assumes frame has bgr format.
-            if colour == 'red':
-                index = 2
-            elif colour == 'green':
-                index = 1
-            elif colour == 'blue':
-                index = 0
-            else:
-                raise Exception        
-        return frame[:,:,index]
-    except Exception as e:
-        raise ColorChannelError(e)
-        
-
+@error_handling
 def dilation(frame, parameters=None, call_num=None):
     '''
     Dilate a binary image
@@ -176,18 +164,16 @@ def dilation(frame, parameters=None, call_num=None):
         binary image 
 
     '''
-    try:
-        method_key = get_method_key('dilation', call_num=call_num)
-        params = parameters['preprocess'][method_key]
-        kernel = get_param_val(params['dilation_kernel'])
-        iterations = get_param_val(params['iterations'])
+    method_key = get_method_key('dilation', call_num=call_num)
+    params = parameters['preprocess'][method_key]
+    kernel = get_param_val(params['dilation_kernel'])
+    iterations = get_param_val(params['iterations'])
 
-        kernel = np.ones((kernel, kernel))
-    
-        return cv2.dilate(frame, kernel, iterations=iterations)
-    except Exception as e:
-        raise DilationError(e)
-        
+    kernel = np.ones((kernel, kernel))
+
+    return cv2.dilate(frame, kernel, iterations=iterations)
+
+@error_handling        
 def distance(frame, parameters=None, call_num=None):
     '''
     Perform a distance transform on a binary image
@@ -218,14 +204,11 @@ def distance(frame, parameters=None, call_num=None):
         Grayscale image
 
     '''
-    try:
-        dist = cv2.distanceTransform(frame, cv2.DIST_L2, 5)
-        dist = 255*dist/np.max(dist)
-        return dist.astype(np.uint8)
-    except Exception as e:
-        raise DistanceError(e)
-     
+    dist = cv2.distanceTransform(frame, cv2.DIST_L2, 5)
+    dist = 255*dist/np.max(dist)
+    return dist.astype(np.uint8)
 
+@error_handling
 def erosion(frame, parameters=None, call_num=None):
     '''
     Perform an erosion operation on a binary image
@@ -259,19 +242,17 @@ def erosion(frame, parameters=None, call_num=None):
         binary image with 255 above threshold else 0.
 
     '''
-    try:
-        method_key = get_method_key('erosion', call_num=call_num)
-        params = parameters['preprocess'][method_key]
-        kernel = get_param_val(params['erosion_kernel'])
-        iterations = get_param_val(params['iterations'])
 
-        kernel = np.ones((kernel, kernel))
-    
-        return cv2.erode(frame, kernel, iterations=iterations)
-    except Exception as e:
-        raise ErosionError(e)
-        
+    method_key = get_method_key('erosion', call_num=call_num)
+    params = parameters['preprocess'][method_key]
+    kernel = get_param_val(params['erosion_kernel'])
+    iterations = get_param_val(params['iterations'])
 
+    kernel = np.ones((kernel, kernel))
+
+    return cv2.erode(frame, kernel, iterations=iterations)
+       
+@error_handling
 def gamma(image, parameters=None, call_num=None):
     '''
     Apply look up table to image with power gamma
@@ -282,8 +263,6 @@ def gamma(image, parameters=None, call_num=None):
     however not in a linear way. The mapping follows a power law
     with exponent gamma/100.0.
  
-    
-
     gamma
         single float can be positive or negative. The true value applied is the displayed value / 100.
                     
@@ -301,28 +280,25 @@ def gamma(image, parameters=None, call_num=None):
         grayscale image
 
     '''
-    try:
-        method_key = get_method_key('gamma', call_num=call_num)
-        params = parameters['preprocess'][method_key]
+ 
+    method_key = get_method_key('gamma', call_num=call_num)
+    params = parameters['preprocess'][method_key]
 
-        gamma = get_param_val(params['gamma'])
-        # build a lookup table mapping the pixel values [0, 255] to
-        # their adjusted gamma values
-        if gamma == 0:
-            gamma = 0.000001
-        invGamma = 1.0 / gamma
+    gamma = get_param_val(params['gamma'])
+    # build a lookup table mapping the pixel values [0, 255] to
+    # their adjusted gamma values
+    if gamma == 0:
+        gamma = 0.000001
+    invGamma = 1.0 / gamma
 
-        table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
 
-        return cv2.LUT(image, table)
-    except Exception as e:
-        raise GammaError(e)
+    return cv2.LUT(image, table)
 
+@error_handling
 def grayscale(frame, parameters=None, call_num=None):
     '''
     This converts a colour image to a grayscale image
- 
-   
 
     Args
     ----
@@ -338,19 +314,16 @@ def grayscale(frame, parameters=None, call_num=None):
         grayscale image
 
     '''
+    method_key = get_method_key('grayscale', call_num=call_num)
+    params = parameters['preprocess'][method_key]
     
-    try:
-        method_key = get_method_key('grayscale', call_num=call_num)
-        params = parameters['preprocess'][method_key]
-        
-        sz = np.shape(frame)
-    
-        if np.size(sz) == 3:
-            frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        return frame
-    except Exception as e:
-          raise GrayscaleError(e) 
-    
+    sz = np.shape(frame)
+
+    if np.size(sz) == 3:
+        frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    return frame
+
+@error_handling    
 def invert(frame, parameters=None, call_num=None):
     '''
     Invert image
@@ -376,12 +349,9 @@ def invert(frame, parameters=None, call_num=None):
         same as input image
 
     '''
-    try:
-        return ~frame
-    except Exception as e:
-        raise InvertError(e)
-        
-
+    return ~frame
+           
+@error_handling
 def medianblur(frame, parameters=None, call_num=None):
     '''
     Performs a medianblur on the image. 
@@ -390,11 +360,8 @@ def medianblur(frame, parameters=None, call_num=None):
     -----
     Setting each pixel to median value in the area specified by the kernel.
 
-    
-
     kernel
         An integer value n that specifies kernel shape (n,n)
-
 
     Args
     ----
@@ -410,16 +377,13 @@ def medianblur(frame, parameters=None, call_num=None):
         grayscale image
 
     '''
-    try:
-        method_key = get_method_key('medianblur', call_num=call_num)
-        params = parameters['preprocess'][method_key]
-        kernel = get_param_val(params['kernel'])
-        out = cv2.medianBlur(frame, kernel)
-        return out
-    except Exception as e:
-        raise MedianError(e)
+    method_key = get_method_key('medianblur', call_num=call_num)
+    params = parameters['preprocess'][method_key]
+    kernel = get_param_val(params['kernel'])
+    out = cv2.medianBlur(frame, kernel)
+    return out
         
-
+@error_handling
 def subtract_bkg(frame, parameters=None, call_num=None):
     '''
     Subtract a background
@@ -463,68 +427,63 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     -------
         grayscale image
 
-    '''
-    
-    try:
-        method_key = get_method_key('subtract_bkg', call_num=call_num)
-        params = parameters['preprocess'][method_key]
-    
-        bkgtype = get_param_val(params['subtract_bkg_type'])
-        if  bkgtype == 'mean':
-            mean_val = int(np.mean(frame))
-            subtract_frame = mean_val * np.ones(np.shape(frame), dtype=np.uint8)
-            frame2=frame
-        elif bkgtype == 'median':
-            median_val = int(np.median(frame))
-            subtract_frame = median_val * np.ones(np.shape(frame), dtype=np.uint8)
-            frame2=frame
+'''
+    method_key = get_method_key('subtract_bkg', call_num=call_num)
+    params = parameters['preprocess'][method_key]
+
+    bkgtype = get_param_val(params['subtract_bkg_type'])
+    if  bkgtype == 'mean':
+        mean_val = int(np.mean(frame))
+        subtract_frame = mean_val * np.ones(np.shape(frame), dtype=np.uint8)
+        frame2=frame
+    elif bkgtype == 'median':
+        median_val = int(np.median(frame))
+        subtract_frame = median_val * np.ones(np.shape(frame), dtype=np.uint8)
+        frame2=frame
+    else:
+        # This option subtracts the previously created image which is added to dictionary.
+        #These parameters are fed to the blur function
+        temp_params = {}
+        temp_params['preprocess'] = {
+            'blur': {'kernel': get_param_val(params['subtract_bkg_blur_kernel'])}}
+        #Load bkg img
+        if params['subtract_bkg_filename'] is None:
+            name = parameters['experiment']['video_filename']
+            bkg_frame = cv2.imread(name[:-4] + '_bkgimg.png')#,cv2.IMREAD_GRAYSCALE)
         else:
-            # This option subtracts the previously created image which is added to dictionary.
-            #These parameters are fed to the blur function
-            temp_params = {}
-            temp_params['preprocess'] = {
-                'blur': {'kernel': get_param_val(params['subtract_bkg_blur_kernel'])}}
-            #Load bkg img
-            if params['subtract_bkg_filename'] is None:
-                name = parameters['experiment']['video_filename']
-                bkg_frame = cv2.imread(name[:-4] + '_bkgimg.png')#,cv2.IMREAD_GRAYSCALE)
-            else:
-                bkg_frame = cv2.imread(params['subtract_bkg_filename'])#,cv2.IMREAD_GRAYSCALE)
-         
-            if bkgtype == 'grayscale':
-                subtract_frame = bgr_to_gray(bkg_frame)
-            elif bkgtype == 'red':
-                subtract_frame = bkg_frame[:,:,2]
-            elif bkgtype == 'green':
-                subtract_frame = bkg_frame[:,:,1]
-            elif bkgtype == 'blue':
-                subtract_frame = bkg_frame[:,:,0]
+            bkg_frame = cv2.imread(params['subtract_bkg_filename'])#,cv2.IMREAD_GRAYSCALE)
+        
+        if bkgtype == 'grayscale':
+            subtract_frame = bgr_to_gray(bkg_frame)
+        elif bkgtype == 'red':
+            subtract_frame = bkg_frame[:,:,2]
+        elif bkgtype == 'green':
+            subtract_frame = bkg_frame[:,:,1]
+        elif bkgtype == 'blue':
+            subtract_frame = bkg_frame[:,:,0]
 
-            subtract_frame = crop(subtract_frame, parameters['crop'])
-           
-            frame2 = blur(frame, temp_params)
-            frame2 = frame2.astype(np.uint8)
-            subtract_frame  = blur(subtract_frame, temp_params)
-            subtract_frame =subtract_frame.astype(np.uint8)
+        subtract_frame = crop(subtract_frame, parameters['crop'])
+        
+        frame2 = blur(frame, temp_params)
+        frame2 = frame2.astype(np.uint8)
+        subtract_frame  = blur(subtract_frame, temp_params)
+        subtract_frame =subtract_frame.astype(np.uint8)
 
-        if get_param_val(params['subtract_bkg_invert']):
-            frame2 = cv2.subtract(subtract_frame, frame2)
-        else:
-            frame2 = cv2.subtract(frame2, subtract_frame)
+    if get_param_val(params['subtract_bkg_invert']):
+        frame2 = cv2.subtract(subtract_frame, frame2)
+    else:
+        frame2 = cv2.subtract(frame2, subtract_frame)
 
-        if np.max(frame) == 0:
-            frame2 = frame
+    if np.max(frame) == 0:
+        frame2 = frame
 
-        if get_param_val(params['subtract_bkg_norm'])==True:
-            frame2 = cv2.normalize(frame2, None, alpha=0, beta=255,
-                             norm_type=cv2.NORM_MINMAX)
-   
-        return frame2
-    except Exception as e:
-        print(e)
-        raise SubtractBkgError(e)
-       
+    if get_param_val(params['subtract_bkg_norm'])==True:
+        frame2 = cv2.normalize(frame2, None, alpha=0, beta=255,
+                            norm_type=cv2.NORM_MINMAX)
 
+    return frame2
+
+@error_handling
 def threshold(frame, parameters=None, call_num=None):
     '''
     Apply a global threshold
@@ -554,19 +513,17 @@ def threshold(frame, parameters=None, call_num=None):
         grayscale image
 
     '''
-    try:
-        method_key = get_method_key('threshold', call_num=call_num)
-        params = parameters['preprocess'][method_key]
-        threshold = get_param_val(params['threshold'])
-        mode = get_param_val(params['th_mode'])
-        if mode:
-            ret, out = cv2.threshold(frame,threshold,255,1)
-        else:
-            ret, out = cv2.threshold(frame,threshold,255,0)
-        return out
-    except Exception as e:
-        raise ThresholdError(e)
+    method_key = get_method_key('threshold', call_num=call_num)
+    params = parameters['preprocess'][method_key]
+    threshold = get_param_val(params['threshold'])
+    mode = get_param_val(params['th_mode'])
+    if mode:
+        ret, out = cv2.threshold(frame,threshold,255,1)
+    else:
+        ret, out = cv2.threshold(frame,threshold,255,0)
+    return out
 
+@error_handling
 def fill_holes(frame, parameters=None, call_num=None):
     '''
     Fills holes in a binary image.
@@ -590,17 +547,16 @@ def fill_holes(frame, parameters=None, call_num=None):
         binary image
 
     '''
-    try:
-        im_floodfill = frame.copy()
-        h, w = frame.shape[:2]
-        mask = np.zeros((h+2, w+2), np.uint8)
-        cv2.floodFill(im_floodfill, mask, (0,0), 255)
-        im_floodfill_inv = cv2.bitwise_not(im_floodfill)
-        out = frame | im_floodfill_inv
-        return out
-    except Exception as e:
-        raise FillHolesError(e)
-       
+
+    im_floodfill = frame.copy()
+    h, w = frame.shape[:2]
+    mask = np.zeros((h+2, w+2), np.uint8)
+    cv2.floodFill(im_floodfill, mask, (0,0), 255)
+    im_floodfill_inv = cv2.bitwise_not(im_floodfill)
+    out = frame | im_floodfill_inv
+    return out
+
+@error_handling       
 def absolute_diff(frame, parameters=None, call_num=None):
     '''
     Calculates the absolute difference of pixels from a reference value
@@ -612,14 +568,11 @@ def absolute_diff(frame, parameters=None, call_num=None):
     slightly above and below the focal plane as one set will look darker than the background 
     and the other set will look brighted than the background.
 
-    
-    
     value
         The value to take the absolute difference relative to
     normalise
         Stretch the intensity values to the full range 0-255, True or False
-    
-    
+        
     Args
     ----
     frame
@@ -633,22 +586,19 @@ def absolute_diff(frame, parameters=None, call_num=None):
     -------
         grayscale image
     '''
-    try:    
-        method_key = get_method_key('absolute_diff', call_num=call_num)
-        params = parameters['preprocess'][method_key]
-        mean_val = int(get_param_val(params['value']))
-        subtract_frame = mean_val*np.ones(np.shape(frame), dtype=np.uint8)         
+    method_key = get_method_key('absolute_diff', call_num=call_num)
+    params = parameters['preprocess'][method_key]
+    mean_val = int(get_param_val(params['value']))
+    subtract_frame = mean_val*np.ones(np.shape(frame), dtype=np.uint8)         
 
-        frame1 = cv2.subtract(subtract_frame, frame)
-        frame1 = cv2.normalize(frame1, frame1 ,0,255,cv2.NORM_MINMAX)
-        frame2 = cv2.subtract(frame, subtract_frame)
-        frame2 = cv2.normalize(frame2, frame2,0,255,cv2.NORM_MINMAX)
-        frame = cv2.add(frame1, frame2)
+    frame1 = cv2.subtract(subtract_frame, frame)
+    frame1 = cv2.normalize(frame1, frame1 ,0,255,cv2.NORM_MINMAX)
+    frame2 = cv2.subtract(frame, subtract_frame)
+    frame2 = cv2.normalize(frame2, frame2,0,255,cv2.NORM_MINMAX)
+    frame = cv2.add(frame1, frame2)
 
-        if get_param_val(params['normalise']) == True:
-            frame = cv2.normalize(frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+    if get_param_val(params['normalise']) == True:
+        frame = cv2.normalize(frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
 
-        return frame
-    except Exception as e:
-        raise AbsDiffError(e)
-        
+    return frame
+       

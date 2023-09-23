@@ -5,7 +5,7 @@ import pandas as pd
 
 from ..general.parameters import get_param_val, get_method_key
 from ..track import intensity_methods as im
-from ..customexceptions.track_error import *
+from ..customexceptions import *
 from ..user_methods import *
 
 
@@ -17,7 +17,7 @@ Tracking Methods
 --------------------------------------------------------------------------------------------
 
 '''
-
+@error_handling
 def trackpy(ppframe, frame, params=None):
     """
     Trackpy implementation
@@ -93,43 +93,41 @@ def trackpy(ppframe, frame, params=None):
 
     parameters=params['track']
 
-    try:
-        method_key = get_method_key('trackpy')
-        df = tp.locate(ppframe,
-                       get_param_val(parameters[method_key]['diameter']),
-                       minmass=get_param_val(parameters[method_key]['minmass']),
-                       percentile=get_param_val(parameters[method_key]['percentile']),
-                       invert=get_param_val(parameters[method_key]['invert']),
-                       max_iterations=get_param_val(parameters[method_key]['max_iterations'])
-                       )
-        if parameters[method_key]['get_intensities'] != False:
-            x = df['x'].to_numpy()
-            y = df['y'].to_numpy()
-            intensity = []
-            for i in range(np.size(x)):
-                xc = x[i]
-                yc = y[i]
-                rc = get_param_val(parameters[method_key]['intensity_radius'])
+   
+    method_key = get_method_key('trackpy')
+    df = tp.locate(ppframe,
+                    get_param_val(parameters[method_key]['diameter']),
+                    minmass=get_param_val(parameters[method_key]['minmass']),
+                    percentile=get_param_val(parameters[method_key]['percentile']),
+                    invert=get_param_val(parameters[method_key]['invert']),
+                    max_iterations=get_param_val(parameters[method_key]['max_iterations'])
+                    )
+    if parameters[method_key]['get_intensities'] != False:
+        x = df['x'].to_numpy()
+        y = df['y'].to_numpy()
+        intensity = []
+        for i in range(np.size(x)):
+            xc = x[i]
+            yc = y[i]
+            rc = get_param_val(parameters[method_key]['intensity_radius'])
 
-                try:
-                    # Try because some circles overlap the edge giving meaningless answers
-                    cut_out_frame = frame[int(yc - rc):int(yc + rc), int(xc - rc):int(xc + rc)]
-                    h, w = cut_out_frame.shape[:2]
-                    mask = _create_circular_mask(h, w)
-                    masked_img = cut_out_frame.copy()
-                    masked_img[~mask] = 0
-                    value = getattr(im, get_param_val(parameters[method_key]['get_intensities']))(masked_img)
-                except:
-                    value = np.nan
+            try:
+                # Try because some circles overlap the edge giving meaningless answers
+                cut_out_frame = frame[int(yc - rc):int(yc + rc), int(xc - rc):int(xc + rc)]
+                h, w = cut_out_frame.shape[:2]
+                mask = _create_circular_mask(h, w)
+                masked_img = cut_out_frame.copy()
+                masked_img[~mask] = 0
+                value = getattr(im, get_param_val(parameters[method_key]['get_intensities']))(masked_img)
+            except:
+                value = np.nan
 
-                intensity.append(value)
-            df['intensities'] = np.array(intensity)
+            intensity.append(value)
+        df['intensities'] = np.array(intensity)
 
-        return df
-    except Exception as e:
-        raise TrackpyError(e)
+    return df
 
-
+@error_handling
 def hough(ppframe, frame,params=None):
     '''
     Performs the opencv hough circles transform to locate circles in an image.
@@ -179,70 +177,67 @@ def hough(ppframe, frame,params=None):
     '''
     parameters=params['track']
 
-    #try:
-    if True:
-        method_key = get_method_key('hough')
-        circles = np.squeeze(cv2.HoughCircles(
-                    ppframe,
-                    cv2.HOUGH_GRADIENT,
-                    1,
-                    get_param_val(parameters[method_key]['min_dist']),
-                    param1=get_param_val(parameters[method_key]['p1']),
-                    param2=get_param_val(parameters[method_key]['p2']),
-                    minRadius=get_param_val(parameters[method_key]['min_rad']),
-                    maxRadius=get_param_val(parameters[method_key]['max_rad'])))
-        try:
-            circles_dict = {'x': circles[:, 0], 'y': circles[:, 1], 'r': circles[:, 2]}
-        except:
-            circles_dict={'x':[np.nan],'y':[np.nan],'r':[np.nan]}
 
-        remove_masked =  get_param_val(parameters[method_key]['remove_masked'])
-        if remove_masked:
-            #Create contour from mask
-            mask_method_list = list(params['crop']['crop_method'])
-            if 'crop_box' in mask_method_list: mask_method_list.remove('crop_box')
+    method_key = get_method_key('hough')
+    circles = np.squeeze(cv2.HoughCircles(
+                ppframe,
+                cv2.HOUGH_GRADIENT,
+                1,
+                get_param_val(parameters[method_key]['min_dist']),
+                param1=get_param_val(parameters[method_key]['p1']),
+                param2=get_param_val(parameters[method_key]['p2']),
+                minRadius=get_param_val(parameters[method_key]['min_rad']),
+                maxRadius=get_param_val(parameters[method_key]['max_rad'])))
+    try:
+        circles_dict = {'x': circles[:, 0], 'y': circles[:, 1], 'r': circles[:, 2]}
+    except:
+        circles_dict={'x':[np.nan],'y':[np.nan],'r':[np.nan]}
 
-            contour_list = []
-            contour_list.append(_contour_from_mask(params['crop'][mask_method_list[0]],mask_method_list[0]))
+    remove_masked =  get_param_val(parameters[method_key]['remove_masked'])
+    if remove_masked:
+        #Create contour from mask
+        mask_method_list = list(params['crop']['crop_method'])
+        if 'crop_box' in mask_method_list: mask_method_list.remove('crop_box')
 
-            for i in range(len(circles_dict['x'])):
-                point = (circles_dict['x'][i],circles_dict['y'][i])
-                inside = _point_inside_mask(point, contour_list)
-                if not inside:
-                    circles_dict['x'] = np.delete(circles_dict['x'],i)
-                    circles_dict['y'] = np.delete(circles_dict['y'],i)
-                    circles_dict['r'] = np.delete(circles_dict['r'],i)
+        contour_list = []
+        contour_list.append(_contour_from_mask(params['crop'][mask_method_list[0]],mask_method_list[0]))
 
-        if (parameters[method_key]['get_intensities'] != False):
-            
-            intensity = []
-            for i,_ in enumerate(circles_dict['x']):
-                xc = circles_dict['x'][i]
-                yc = circles_dict['y'][i]
-                rc = circles_dict['r'][i]
+        for i in range(len(circles_dict['x'])):
+            point = (circles_dict['x'][i],circles_dict['y'][i])
+            inside = _point_inside_mask(point, contour_list)
+            if not inside:
+                circles_dict['x'] = np.delete(circles_dict['x'],i)
+                circles_dict['y'] = np.delete(circles_dict['y'],i)
+                circles_dict['r'] = np.delete(circles_dict['r'],i)
 
-                try:
-                    #Try because some circles overlap the edge giving meaningless answers
-                    cut_out_frame = frame[int(yc - rc):int(yc + rc), int(xc - rc):int(xc + rc)]
-                    h,w= cut_out_frame.shape[:2]
-                    mask = _create_circular_mask(h, w)
-                    masked_img = cut_out_frame.copy()
-                    masked_img[~mask] = 0
-                    value = getattr(im, get_param_val(parameters[method_key]['get_intensities']))(masked_img)
-                except:
-                    value = np.nan
+    if (parameters[method_key]['get_intensities'] != False):
+        
+        intensity = []
+        for i,_ in enumerate(circles_dict['x']):
+            xc = circles_dict['x'][i]
+            yc = circles_dict['y'][i]
+            rc = circles_dict['r'][i]
 
-                intensity.append(value)
+            try:
+                #Try because some circles overlap the edge giving meaningless answers
+                cut_out_frame = frame[int(yc - rc):int(yc + rc), int(xc - rc):int(xc + rc)]
+                h,w= cut_out_frame.shape[:2]
+                mask = _create_circular_mask(h, w)
+                masked_img = cut_out_frame.copy()
+                masked_img[~mask] = 0
+                value = getattr(im, get_param_val(parameters[method_key]['get_intensities']))(masked_img)
+            except:
+                value = np.nan
 
-            circles_dict['intensities']=np.array(intensity)
-   
-        df = pd.DataFrame(circles_dict)
+            intensity.append(value)
 
-        return df
-    #except Exception as e:
-    #    raise HoughCirclesError(e)
+        circles_dict['intensities']=np.array(intensity)
 
+    df = pd.DataFrame(circles_dict)
 
+    return df
+
+@error_handling
 def contours(pp_frame, frame, parameters=None):
     '''
     Implementation of OpenCVs contours.
@@ -285,52 +280,49 @@ def contours(pp_frame, frame, parameters=None):
 
     '''
 
-    try:  
-        method_key = get_method_key('contours')
-        params = parameters['track'][method_key]
-        get_intensities = (get_param_val(params['get_intensities']) != False)
+    method_key = get_method_key('contours')
+    params = parameters['track'][method_key]
+    get_intensities = (get_param_val(params['get_intensities']) != False)
+
+    sz = np.shape(frame)
+    if np.shape(sz)[0] == 3:
+        frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)       
+
+    area_min = get_param_val(params['area_min'])
+    area_max = get_param_val(params['area_max'])
+    aspect_min = get_param_val(params['aspect_min'])
+    aspect_max = get_param_val(params['aspect_max'])
+    info = []
     
-        sz = np.shape(frame)
-        if np.shape(sz)[0] == 3:
-            frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)       
+    contour_pts = _find_contours(pp_frame)
+    for index, contour in enumerate(contour_pts):
+        M = cv2.moments(contour)
+        if M['m00'] > 0:
+            area = cv2.contourArea(contour)
+            
+            if (area < area_max) & (area > area_min):
+                cx = int(M['m10'] / M['m00'])
+                cy = int(M['m01'] / M['m00'])
 
-        area_min = get_param_val(params['area_min'])
-        area_max = get_param_val(params['area_max'])
-        aspect_min = get_param_val(params['aspect_min'])
-        aspect_max = get_param_val(params['aspect_max'])
-        info = []
-        
-        contour_pts = _find_contours(pp_frame)
-        for index, contour in enumerate(contour_pts):
-            M = cv2.moments(contour)
-            if M['m00'] > 0:
-                area = cv2.contourArea(contour)
-                
-                if (area < area_max) & (area > area_min):
-                    cx = int(M['m10'] / M['m00'])
-                    cy = int(M['m01'] / M['m00'])
+                rect = cv2.minAreaRect(contour)
+                (x, y), (w, h), angle = rect
+                aspect = max(w,h)/min(w,h)
 
-                    rect = cv2.minAreaRect(contour)
-                    (x, y), (w, h), angle = rect
-                    aspect = max(w,h)/min(w,h)
+                if (aspect <= aspect_max) & (aspect >= aspect_min):  
+                    if get_intensities:
+                        intensity = _find_intensity_inside_contour(contour, frame, get_intensities)
+                        info_contour = [cx, cy, area, contour, intensity]
+                    else:
+                        info_contour = [cx, cy, area, contour]
+                    info.append(info_contour)
 
-                    if (aspect <= aspect_max) & (aspect >= aspect_min):  
-                        if get_intensities:
-                            intensity = _find_intensity_inside_contour(contour, frame, get_intensities)
-                            info_contour = [cx, cy, area, contour, intensity]
-                        else:
-                            info_contour = [cx, cy, area, contour]
-                        info.append(info_contour)
-
-        if get_intensities:
-            info_headings = ['x', 'y', 'area', 'contours', 'intensities']
-        else:
-            info_headings = ['x', 'y', 'area', 'contours']
-        df = pd.DataFrame(data=info, columns=info_headings)
-        
-        return df
-    except Exception as e:
-        raise ContoursError(e)
+    if get_intensities:
+        info_headings = ['x', 'y', 'area', 'contours', 'intensities']
+    else:
+        info_headings = ['x', 'y', 'area', 'contours']
+    df = pd.DataFrame(data=info, columns=info_headings)
+    
+    return df
 
 '''
 ------------------------------------------------------------------------

@@ -6,7 +6,8 @@ you can update the software and simply replace this file. We provide templates
 below for adding to the software in each section. You should also back up the 
 parameters dictionary function which is located in general.param_file_creator.py
 
-To add an method you must create a method and a custom exception. 
+To add an method you must create a method and add the @error_handling decorator. 
+Note this has changed recently and means you no longer need the custom exception 
 The methods in a given section all take the same inputs and outputs.
 '''
 
@@ -21,7 +22,7 @@ from .general.parameters import get_method_name, get_method_key, get_param_val
 Preprocessing Methods
 --------------------------------------------------------------------------------------
 '''
-
+@error_handling
 def preprocess_method_name(frame, parameters=None, call_num=None):
     """
     Docstring for method. Replace 'example_method_name' in function name 
@@ -41,45 +42,39 @@ def preprocess_method_name(frame, parameters=None, call_num=None):
         returns a frame modified by the method
     """
 
-    try:
-        method_key = get_method_key('preprocess_method_name', call_num=call_num)
-        params = parameters['preprocess'][method_key]
+  
+    method_key = get_method_key('preprocess_method_name', call_num=call_num)
+    params = parameters['preprocess'][method_key]
 
-        """
-        Write the body of your code
+    """
+    Write the body of your code
 
-        Each function should have a corresponding entry in the dictionary. This can be created by 
-        the function in general.param_file_creator.py. Add a dictionary entry like this
+    Each function should have a corresponding entry in the dictionary. This can be created by 
+    the function in general.param_file_creator.py. Add a dictionary entry like this
 
-        'preprocess_method_name':{'param_produces_slider':[startval, minval, maxval, step],
-                               'drop_down_with_fixed_options':[value,('value', 'value1', 'value2')],
-                              'basic_text_box': True,
-                              'basic_text_box2': (0,255,0)
-                              }
-        
-        You can access other parameters associated with your method in the dictionary like this
-        params['basic_text_box']. All data is parsed so that 'None','True','False' become None, 
-        True, False. '(0,0,0,2)' becomes a tuple. '1' becomes 1 and other strings remain strings. 
-        If your param is a slider which has format [startval, min, max, step]then you need to 
-        wrap the return value:
+    'preprocess_method_name':{'param_produces_slider':[startval, minval, maxval, step],
+                            'drop_down_with_fixed_options':[value,('value', 'value1', 'value2')],
+                            'basic_text_box': True,
+                            'basic_text_box2': (0,255,0)
+                            }
+    
+    You can access other parameters associated with your method in the dictionary like this
+    params['basic_text_box']. All data is parsed so that 'None','True','False' become None, 
+    True, False. '(0,0,0,2)' becomes a tuple. '1' becomes 1 and other strings remain strings. 
+    If your param is a slider which has format [startval, min, max, step]then you need to 
+    wrap the return value:
 
-        value = get_param_val(params['param_produces_slider'])
+    value = get_param_val(params['param_produces_slider'])
 
-        There are two types of slider: integers and floats. The software looks at the type of step and uses this
-        to decide which to build. So if you want the ability to change to floats but to start with 1 write 1.0 in step.
+    There are two types of slider: integers and floats. The software looks at the type of step and uses this
+    to decide which to build. So if you want the ability to change to floats but to start with 1 write 1.0 in step.
 
-        """
-        
-        return frame
-    except Exception as e:
-        raise ExampleMethodNameError(e)
+    """
+    
+    return frame
 
-class ExampleMethodNameError(PreprocessorError):
-    """Implement this custom exception."""
-    def __init__(self,e):
-        super().__init__(e)
-        self.error_msg = 'specific error message to show user in status bar'
-        self.e=e
+
+
 
 '''
 --------------------------------------------------------------------------------------

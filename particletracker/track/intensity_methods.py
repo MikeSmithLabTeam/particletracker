@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..customexceptions.track_error import *
+from ..customexceptions import *
 from ..user_methods import *
 
 '''
@@ -13,22 +13,17 @@ tracking algorithm.
 -----------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------
 '''
-
+@error_handling
 def mean_intensity(masked_img):
-    
-    try:
-        mean_intensity =  np.mean(masked_img)
-        return mean_intensity
-    except Exception as e:
-        raise MeanIntensityError
+    mean_intensity =  np.mean(masked_img)
+    return mean_intensity
 
+@error_handling
 def red_blue(masked_img):
-    try:
-        from labvision.images.basics import display
-        red_img = masked_img[:,:,0]
-        blue_img = masked_img[:,:,2]
-        new_img = cv2.subtract(red_img, blue_img)
-        display(new_img)
+    from labvision.images.basics import display
+    red_img = masked_img[:,:,0]
+    blue_img = masked_img[:,:,2]
+    new_img = cv2.subtract(red_img, blue_img)
+    display(new_img)
         
-    except:
-        raise RedBlueError
+    
