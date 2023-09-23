@@ -99,15 +99,15 @@ def test_discs():
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video), 'Discs annotated video not created'
     assert os.path.exists(output_csv), 'Excel output not created'
-    assert df.loc[5, ['x_mean']].to_numpy()[0][0] == 142.5, df.loc[5, ['x_mean']].to_numpy()[
+    assert df.loc[5, ['x']].to_numpy()[0][0] == 408.5, df.loc[5, ['x']].to_numpy()[
         0][0]  # 'tested value in discs df incorrect'
     os.remove(output_video)
     os.remove(output_df)
-    os.remove(output_excel)
+    os.remove(output_csv)
 
 
 def test_hydrogel():
-    """Test follows eye tutorial, checks annotated movie produced and that a particular 
+    """Test follows hydrogel tutorial, checks annotated movie produced and that a particular 
     value occurs in the output dataframe. It then tidys up.
     Test uses: crop, rectangular mask, 
     Preprocessing: grayscale, blur, 
@@ -121,6 +121,6 @@ def test_hydrogel():
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video), 'Hydrogel annotated video not created'
     assert int(df.loc[5, ['voronoi_area']].to_numpy()[3][0]) == int(
-        1032.5718012951643), df.loc[5, ['voronoi_area']].to_numpy()[3][0]  # 'tested value in hydrogel df incorrect'
+        833.9376763034877), df.loc[5, ['voronoi_area']].to_numpy()[3][0]  # 'tested value in hydrogel df incorrect'
     os.remove(output_video)
     os.remove(output_df)

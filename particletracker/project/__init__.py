@@ -76,7 +76,7 @@ class PTWorkflow:
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
                                                        data_filename=self.data_filename,
                                                        parameters=self.parameters[
-                                                           'annotate'], frame=self.cap.read_frame(self.parameters['experiment']['frame_range'][0]))
+                                                           'annotate'], frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
 
     def process(self, use_part=False):
         """Process an entire video
