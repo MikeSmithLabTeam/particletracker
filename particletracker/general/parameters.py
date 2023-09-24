@@ -1,4 +1,5 @@
 import functools
+import os
 
 def get_param_val(param):
     '''
@@ -29,6 +30,10 @@ def get_method_key(method, call_num=None):
     else:
         method_key = method + '*' + call_num
     return method_key
+
+def get_parent(func):
+    filename = func.__file__
+    print(os.path.dirname(filename))
 
 def parse_values(sender, value):
     '''
@@ -73,8 +78,10 @@ def param_parse(func):
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         method_key = get_method_key(func.__name__, call_num=kwargs['call_num'])
-        params = kwargs['parameters']['preprocess'][method_key]
+        params = kwargs['parameters'][kwargs['section']][method_key]
         params = {key : get_param_val(value) for (key, value) in params.items()}
         kwargs['parameters'] = params
         return func(*args, **kwargs)
     return wrapper_param_format
+
+

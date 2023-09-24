@@ -6,21 +6,21 @@ from ..general.parameters import get_param_val
 from ..customexceptions import *
 
 @error_handling
-def colour_array(subset_df, f, parameters, method=None):
-    cmap_type = get_param_val(parameters[method]['cmap_type'])
+def colour_array(subset_df, f, parameters):
+    cmap_type = parameters['cmap_type']
     sz = np.shape(subset_df.index.values)
     if cmap_type == 'static':
-        colour_val = parameters[method]['colour']
+        colour_val = parameters['colour']
         colours = colour_val*np.ones((sz[0],3))
     elif cmap_type == 'dynamic':
-        cmap_column = parameters[method]['cmap_column']
+        cmap_column = parameters['cmap_column']
         colour_data = subset_df[[cmap_column]].values
         if np.iscomplexobj(colour_data):
             colour_data = np.angle(colour_data)
-        cmap_max = get_param_val(parameters[method]['cmap_max'])
-        cmap_min = get_param_val(parameters[method]['cmap_min'])
+        cmap_max = parameters['cmap_max']
+        cmap_min = parameters['cmap_min']
         try:
-            cmap_name = get_param_val(parameters[method]['cmap_name'])
+            cmap_name = parameters['cmap_name']
             assert cmap_name in plt.colormaps(), "Colormap isn't available, setting to jet"
         except Exception as e:
                 cmap_name = 'jet'

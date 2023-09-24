@@ -4,7 +4,7 @@ import warnings
 
 import pandas as pd
 
-from ..general.parameters import get_param_val, get_method_key
+from ..general.parameters import get_param_val, get_method_key, param_parse
 from .cmap import colour_array
 from ..customexceptions import *
 from ..user_methods import *
@@ -18,7 +18,8 @@ Text annotation
 --------------------------------------------------------------------------------------
 """
 @error_handling
-def text_label(frame, data, f, parameters=None, call_num=None):
+@param_parse
+def text_label(frame, data, f, parameters=None, *args, **kwargs):
     """
     Text labels place a static label on an image at specific location.
 
@@ -63,19 +64,19 @@ def text_label(frame, data, f, parameters=None, call_num=None):
     
 
     """
-    method_key = get_method_key('text_label', call_num=call_num)
-    text=parameters[method_key]['text']
-    position = parameters[method_key]['position']
+    text=parameters['text']
+    position = parameters['position']
     annotated_frame=cv2.putText(frame, text, position, cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                                int(parameters[method_key]['font_size']),
-                                parameters[method_key]['font_colour'],
-                                int(parameters[method_key]['font_thickness']),
+                                int(parameters['font_size']),
+                                parameters['font_colour'],
+                                int(parameters['font_thickness']),
                                 cv2.LINE_AA)
 
     return annotated_frame
 
 @error_handling
-def var_label(frame, data, f, parameters=None, call_num=None):
+@param_parse
+def var_label(frame, data, f, parameters=None, *args, **kwargs):
     """
     Var labels puts text on an image at specific location for each frame. The value
     displayed in that frame is mapped to a column in the dataframe. The values next 
@@ -125,27 +126,26 @@ def var_label(frame, data, f, parameters=None, call_num=None):
     
 
     """
-
-    method_key = get_method_key('var_label', call_num=call_num)
-    var_column=parameters[method_key]['var_column']
+    var_column=parameters['var_column']
     if var_column == 'index':
         text = str(f)
     else:
         print('test')
         info = np.unique(data.df.loc[f, var_column])[0]
         text = str(info)
-    position = parameters[method_key]['position']        
+    position = parameters['position']        
 
     annotated_frame=cv2.putText(frame, text, position, cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                                int(parameters[method_key]['font_size']),
-                                parameters[method_key]['font_colour'],
-                                int(parameters[method_key]['font_thickness']),
+                                int(parameters['font_size']),
+                                parameters['font_colour'],
+                                int(parameters['font_thickness']),
                                 cv2.LINE_AA)
 
     return annotated_frame
 
 @error_handling
-def particle_labels(frame, data, f, parameters=None, call_num=None):
+@param_parse
+def particle_labels(frame, data, f, parameters=None, *args, **kwargs):
     """
     Annotates image with particle info from one column. The most common use
     is to indicate the particle index but any column of data could be used.
@@ -195,12 +195,11 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
     
 
     """
-    method_key = get_method_key('particle_labels', call_num=None)
     x = data.get_info(f, 'x')
     y = data.get_info(f, 'y')
 
 
-    particle_values = data.get_info(f, parameters[method_key]['values_column'])#.astype(int)     
+    particle_values = data.get_info(f, parameters['values_column'])#.astype(int)     
 
     df_empty = np.isnan(particle_values[0])
     if np.all(df_empty):
@@ -209,9 +208,9 @@ def particle_labels(frame, data, f, parameters=None, call_num=None):
     for index, particle_val in enumerate(particle_values):
         frame = cv2.putText(frame, str(particle_val), (int(x[index]), int(y[index])),
                             cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                            int(parameters[method_key]['font_size']),
-                            parameters[method_key]['font_colour'],
-                            int(parameters[method_key]['font_thickness']),
+                            int(parameters['font_size']),
+                            parameters['font_colour'],
+                            int(parameters['font_thickness']),
                             cv2.LINE_AA)
 
     return frame
@@ -224,22 +223,23 @@ Particle annotation
 --------------------------------------------------------------------------------------
 """
 @error_handling
-def _get_class_subset(data, f, parameters, method=None):
+def _get_class_subset(data, f, parameters):
     """
     Internal function to get subset of particles
     """    
       
-    classifier_column= parameters[method]['classifier_column']
+    classifier_column= parameters['classifier_column']
     if classifier_column is None:
         subset_df = data.df.loc[f]
     else:
-        classifier = get_param_val(parameters[method]['classifier'])
+        classifier = parameters['classifier']
         temp = data.df.loc[f]
         subset_df = temp[temp[classifier_column] == classifier]
     return subset_df
 
 @error_handling
-def boxes(frame, data, f, parameters=None, call_num=None):
+@param_parse
+def boxes(frame, data, f, parameters=None, *args, **kwargs):
     """
     Boxes places a rotated rectangle on the image that encloses the contours of specified particles.
 
@@ -291,10 +291,7 @@ def boxes(frame, data, f, parameters=None, call_num=None):
     
 
     """
-
-    method_key = get_method_key('boxes', call_num=call_num)
-    thickness = get_param_val(parameters[method_key]['thickness'])
-    subset_df = _get_class_subset(data, f, parameters, method=method_key)
+    subset_df = _get_class_subset(data, f, parameters)
     box_pts = subset_df[['box_pts']].values
     
     if np.shape(box_pts)[0] == 1:
@@ -303,12 +300,11 @@ def boxes(frame, data, f, parameters=None, call_num=None):
             #0 boxes
             return frame
 
-    colours = colour_array(subset_df, f, parameters, method=method_key)
-    sz = np.shape(frame)
+    colours = colour_array(subset_df, f, parameters)
 
     for index, box in enumerate(box_pts):
         frame = _draw_contours(frame, box, col=colours[index],
-                                thickness=int(get_param_val(parameters[method_key]['thickness'])))
+                                thickness=int(parameters['thickness']))
 
     return frame
 
@@ -322,7 +318,8 @@ def _contour_inside_img(sz, contour):
     return inside
     
 @error_handling
-def circles(frame, data, f, parameters=None, call_num=None):
+@param_parse
+def circles(frame, data, f, parameters=None, *args, **kwargs):
     """
     Circles places a ring on every specified particle
     
@@ -376,29 +373,27 @@ def circles(frame, data, f, parameters=None, call_num=None):
     
 
     """
-
-    method_key = get_method_key('circles', call_num=call_num)
-    x_col_name = parameters[method_key]['xdata_column']
-    y_col_name = parameters[method_key]['ydata_column']
-    r_col_name = parameters[method_key]['rdata_column']
+    x_col_name = parameters['xdata_column']
+    y_col_name = parameters['ydata_column']
+    r_col_name = parameters['rdata_column']
     
-    if get_param_val(parameters[method_key]['rad_from_data']):
-        subset_df = _get_class_subset(data, f, parameters, method=method_key)
+    if get_param_val(parameters['rad_from_data']):
+        subset_df = _get_class_subset(data, f, parameters)
         circles = subset_df[[x_col_name, y_col_name, r_col_name]].values
         
     else:
-        data.add_particle_property('user_rad', get_param_val(parameters[method_key]['user_rad']))
-        subset_df = _get_class_subset(data, f, parameters, method=method_key)
+        data.add_particle_property('user_rad', parameters['user_rad'])
+        subset_df = _get_class_subset(data, f, parameters)
         circles = subset_df[[x_col_name, y_col_name, 'user_rad']].values
 
-    thickness = get_param_val(parameters[method_key]['thickness'])
+    thickness = parameters['thickness']
 
     #No objects found
     df_empty = np.isnan(circles[0])
     if np.all(df_empty):
         return frame
     
-    colours = colour_array(subset_df, f, parameters, method=method_key)
+    colours = colour_array(subset_df, f, parameters)
     
     if np.shape(circles) == (3,):#One object
         frame = cv2.circle(frame, (int(circles[0]), int(circles[1])), int(circles[2]), colours[0], int(thickness))
@@ -420,7 +415,8 @@ def external_circles(frame, data, f, parameters=None, call_num=None):
     return frame
 
 @error_handling
-def contours(frame, data, f, parameters=None, call_num=None):
+@param_parse
+def contours(frame, data, f, parameters=None, *args, **kwargs):
     """
     Contours draws the tracked contour returned from Contours tracking
     method onto the image.
@@ -469,12 +465,12 @@ def contours(frame, data, f, parameters=None, call_num=None):
         annotated frame : np.ndarray
     """
 
-    method_key = get_method_key('contours', call_num=call_num)
-    thickness = get_param_val(parameters[method_key]['thickness'])
     
-    subset_df = _get_class_subset(data, f, parameters, method=method_key)
+    thickness = parameters['thickness']
+    
+    subset_df = _get_class_subset(data, f, parameters)
     contour_pts = subset_df[['contours']].values
-    colours = colour_array(subset_df, f, parameters, method=method_key)
+    colours = colour_array(subset_df, f, parameters)
 
     if np.shape(contour_pts)[0] == 1:
         df_empty = np.isnan(contour_pts[0])
@@ -498,7 +494,8 @@ def _draw_contours(img, contours, col=(0,0,255), thickness=1):
     return img        
 
 @error_handling
-def networks(frame, data, f, parameters=None, call_num=None):
+@param_parse
+def networks(frame, data, f, parameters=None, *args, **kwargs):
     """
     Networks draws a network of lines between particles
 
@@ -548,13 +545,11 @@ def networks(frame, data, f, parameters=None, call_num=None):
         annotated frame : np.ndarray
     
     """
-
-    method_key = get_method_key('networks', call_num=call_num)
-    df = _get_class_subset(data, f, parameters, method=method_key)
+    df = _get_class_subset(data, f, parameters)
     df = df.set_index('particle')
     particle_ids = df.index.values
-    colours = colour_array(df, f, parameters, method=method_key)
-    thickness = get_param_val(parameters[method_key]['thickness'])
+    colours = colour_array(df, f, parameters)
+    thickness = parameters['thickness']
 
     for index, particle in enumerate(particle_ids):
         pt = df.loc[particle, ['x', 'y']].values
@@ -567,7 +562,8 @@ def networks(frame, data, f, parameters=None, call_num=None):
     return frame
 
 @error_handling
-def voronoi(frame, data, f, parameters=None, call_num=None):
+@param_parse
+def voronoi(frame, data, f, parameters=None, *args, **kwargs):
     """
     Voronoi draws the voronoi network that surrounds each particle
 
@@ -619,13 +615,11 @@ def voronoi(frame, data, f, parameters=None, call_num=None):
         annotated frame : np.ndarray
     
     """
+    thickness = parameters['thickness']
 
-    method_key = get_method_key('voronoi', call_num=call_num)
-    thickness = get_param_val(parameters[method_key]['thickness'])
-
-    subset_df = _get_class_subset(data, f, parameters, method=method_key)
+    subset_df = _get_class_subset(data, f, parameters)
     contour_pts = subset_df[['voronoi']].values
-    colours = colour_array(subset_df, f, parameters, method=method_key)
+    colours = colour_array(subset_df, f, parameters)
 
     if np.shape(contour_pts)[0] == 1:
         df_empty = np.isnan(contour_pts[0])
@@ -657,7 +651,8 @@ Particle motion annotation
 --------------------------------------------------------------------------------------
 """
 @error_handling
-def vectors(frame, data, f, parameters=None, call_num=None):
+@param_parse
+def vectors(frame, data, f, parameters=None, *args, **kwargs):
     """
     Vectors draw info onto images in the form of arrows. 
 
@@ -717,18 +712,16 @@ def vectors(frame, data, f, parameters=None, call_num=None):
         annotated frame : np.ndarray
     
     """
-
-    method_key = get_method_key('vectors', call_num=call_num)
-    dx = parameters[method_key]['dx_column']
-    dy = parameters[method_key]['dy_column']
+    dx = parameters['dx_column']
+    dy = parameters['dy_column']
     vectors = data.get_info(f, ['x', 'y',dx, dy])
 
-    thickness = get_param_val(parameters[method_key]['thickness'])
-    line_type = get_param_val(parameters[method_key]['line_type'])
-    tip_length = 0.01*get_param_val(parameters[method_key]['tip_length'])
-    vector_scale = 0.01*get_param_val(parameters[method_key]['vector_scale'])
+    thickness = parameters['thickness']
+    line_type = parameters['line_type']
+    tip_length = 0.01*parameters['tip_length']
+    vector_scale = 0.01*parameters['vector_scale']
 
-    colours = colour_array(data.df, f, parameters, method=method_key)
+    colours = colour_array(data.df, f, parameters)
 
     for i, vector in enumerate(vectors):
         frame = cv2.arrowedLine(frame, (int(vector[0]), int(vector[1])),
@@ -742,7 +735,8 @@ These methods require more than one frames data to be analysed so you'll need to
 
 """
 @error_handling
-def trajectories(frame, data, f, parameters=None, call_num=None):
+@param_parse
+def trajectories(frame, data, f, parameters=None, *args, **kwargs):
     """
     Trajectories draws the historical track of each particle onto an image. 
 
@@ -799,17 +793,16 @@ def trajectories(frame, data, f, parameters=None, call_num=None):
     
     """
     #This can only be run on a linked trajectory
-    method_key = get_method_key('trajectories', call_num=call_num)
-    x_col_name = parameters[method_key]['x_column']
-    y_col_name = parameters[method_key]['y_column']
+    x_col_name = parameters['x_column']
+    y_col_name = parameters['y_column']
 
     #In this case subset_df is only used to get the particle_ids and colours of trajectories.
-    subset_df = _get_class_subset(data, f, parameters, method=method_key)
+    subset_df = _get_class_subset(data, f, parameters)
     particle_ids = subset_df['particle'].values
 
-    colours = colour_array(subset_df, f, parameters, method=method_key)
-    thickness = get_param_val(parameters[method_key]['thickness'])
-    traj_length = get_param_val(parameters[method_key]['traj_length'])
+    colours = colour_array(subset_df, f, parameters)
+    thickness = parameters['thickness']
+    traj_length = parameters['traj_length']
 
     if (f-traj_length) < 0:
         traj_length = f

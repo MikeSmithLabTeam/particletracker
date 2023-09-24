@@ -18,7 +18,7 @@ Tracking Methods
 
 '''
 @error_handling
-def trackpy(ppframe, frame, params=None):
+def trackpy(ppframe, frame, params=None, *args, **kwargs):
     """
     Trackpy implementation
 
@@ -128,7 +128,7 @@ def trackpy(ppframe, frame, params=None):
     return df
 
 @error_handling
-def hough(ppframe, frame,params=None):
+def hough(ppframe, frame,params=None, *args, **kwargs):
     '''
     Performs the opencv hough circles transform to locate circles in an image.
 
@@ -238,7 +238,7 @@ def hough(ppframe, frame,params=None):
     return df
 
 @error_handling
-def contours(pp_frame, frame, parameters=None):
+def contours(pp_frame, frame, parameters=None, *args, **kwargs):
     '''
     Implementation of OpenCVs contours.
 

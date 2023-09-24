@@ -41,7 +41,7 @@ class TrackingAnnotator:
                 try:
                     for method in self.parameters['annotate_method']:
                         method_name, call_num = get_method_name(method)
-                        frame = getattr(am, method_name)(frame, data, f, self.parameters, call_num=call_num)
+                        frame = getattr(am, method_name)(frame, data, f, parameters=self.parameters, call_num=call_num, section='annotate')
                 except:
                     print('No data to annotate')
                 if f_index is None:

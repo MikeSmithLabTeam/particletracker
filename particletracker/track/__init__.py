@@ -109,7 +109,7 @@ class ParticleTracker(QObject):
             preprocessed_frame = self.cap.apply_mask(preprocessed_frame)
         
         #Apply tracking track method to frame
-        df_frame = getattr(tm, method)(preprocessed_frame, frame, self.parameters)
+        df_frame = getattr(tm, method)(preprocessed_frame, frame, self.parameters, section='track')
     
         if df_frame.empty:
             for column in df_frame.columns:

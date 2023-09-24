@@ -11,7 +11,7 @@ from ..user_methods import *
 
 @error_handling
 @param_parse
-def adaptive_threshold(frame, parameters=None, call_num=None):
+def adaptive_threshold(frame, parameters=None, *args, **kwargs):
     '''
     Perform an adaptive threshold on a grayscale image
 
@@ -50,7 +50,7 @@ def adaptive_threshold(frame, parameters=None, call_num=None):
     
 @error_handling
 @param_parse
-def blur(frame, parameters=None, call_num=None):
+def blur(frame, parameters=None, *args, **kwargs):
     '''
     Performs a gaussian blur on the image
 
@@ -85,13 +85,19 @@ def blur(frame, parameters=None, call_num=None):
 
 @error_handling
 @param_parse
-def brightness_contrast(frame, parameters=None, call_num=None):
+def brightness_contrast(frame, parameters=None, *args, **kwargs):
+    """Brightness and Contrast control
+    
+    This is implemented as g(x) = contrast * f(x) + brightness
+    
+    but with checks to make sure the values don't fall outside 0-255"""
+
     return  cv2.convertScaleAbs(frame, alpha=parameters['contrast'], beta=parameters['brightness'])
 
 
 @error_handling
 @param_parse
-def colour_channel(frame, parameters=None, call_num=None):
+def colour_channel(frame, parameters=None, *args, **kwargs):
     '''
     This selects the specified colour channel of a colour image
     
@@ -126,7 +132,7 @@ def colour_channel(frame, parameters=None, call_num=None):
         
 @error_handling
 @param_parse
-def dilation(frame, parameters=None, call_num=None):
+def dilation(frame, parameters=None, *args, **kwargs):
     '''
     Dilate a binary image
 
@@ -160,7 +166,7 @@ def dilation(frame, parameters=None, call_num=None):
     return cv2.dilate(frame, parameters['dilation_kernel'], iterations=parameters['iterations'])
 
 @error_handling       
-def distance(frame, parameters=None, call_num=None):
+def distance(frame, *args, **kwargs):
     '''
     Perform a distance transform on a binary image
 
@@ -196,7 +202,7 @@ def distance(frame, parameters=None, call_num=None):
 
 @error_handling
 @param_parse
-def erosion(frame, parameters=None, call_num=None):
+def erosion(frame, parameters=None, *args, **kwargs):
     '''
     Perform an erosion operation on a binary image
 
@@ -235,7 +241,7 @@ def erosion(frame, parameters=None, call_num=None):
        
 @error_handling
 @param_parse
-def gamma(image, parameters=None, call_num=None):
+def gamma(image, parameters=None, *args, **kwargs):
     '''
     Apply look up table to image with power gamma
 
@@ -274,7 +280,7 @@ def gamma(image, parameters=None, call_num=None):
     return cv2.LUT(image, table)
 
 @error_handling
-def grayscale(frame, parameters=None, call_num=None):
+def grayscale(frame, *args, **kwargs):
     '''
     This converts a colour image to a grayscale image
 
@@ -299,7 +305,7 @@ def grayscale(frame, parameters=None, call_num=None):
     return frame
 
 @error_handling    
-def invert(frame, parameters=None, call_num=None):
+def invert(frame, *args, **kwargs):
     '''
     Invert image
 
@@ -328,7 +334,7 @@ def invert(frame, parameters=None, call_num=None):
            
 @error_handling
 @param_parse
-def medianblur(frame, parameters=None, call_num=None):
+def medianblur(frame, parameters=None, *args, **kwargs):
     '''
     Performs a medianblur on the image. 
     
@@ -361,6 +367,10 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     '''
     Subtract a background
 
+
+    This method doesn't use param_parse because it needs access to 
+    the complete parameters dictionary. param_parse only passes the bit
+    defined for each method.
 
     Notes
     -----
@@ -458,7 +468,7 @@ def subtract_bkg(frame, parameters=None, call_num=None):
 
 @error_handling
 @param_parse
-def threshold(frame, parameters=None, call_num=None):
+def threshold(frame, parameters=None, *args, **kwargs):
     '''
     Apply a global threshold
 
@@ -489,7 +499,7 @@ def threshold(frame, parameters=None, call_num=None):
     return out
 
 @error_handling
-def fill_holes(frame, parameters=None, call_num=None):
+def fill_holes(frame, *args, **kwargs):
     '''
     Fills holes in a binary image.
 
@@ -523,7 +533,7 @@ def fill_holes(frame, parameters=None, call_num=None):
 
 @error_handling   
 @param_parse    
-def absolute_diff(frame, parameters=None, call_num=None):
+def absolute_diff(frame, parameters=None, *args, **kwargs):
     '''
     Calculates the absolute difference of pixels from a reference value
 
