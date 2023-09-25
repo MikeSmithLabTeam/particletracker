@@ -62,23 +62,15 @@ def angle(df, f_index=None, parameters=None, *args, **kwargs):
         updated dataframe including new column
 
     '''
-
-    params = parameters['postprocess']
-    method_key = get_method_key('angle', call_num)
-    columnx = params[method_key]['x_column']
-    columny = params[method_key]['y_column']
-    output_name = params[method_key]['output_name']
-    units=get_param_val(params[method_key]['units'])
-
     if parameters['output_name'] not in df.columns:
         df[parameters['output_name']] = np.nan
 
     df_frame = df.loc[[f_index]]
     
     if parameters['units'] == 'degrees':
-        df_frame[parameters['output_name']] = np.arctan2(df_frame[parameters['columny']],df_frame[parameters['columnx']])*(180/np.pi)
+        df_frame[parameters['output_name']] = np.arctan2(df_frame[parameters['y_column']],df_frame[parameters['x_column']])*(180/np.pi)
     else:
-        df_frame[parameters['output_name']] = np.arctan2(df_frame[parameters['columny']],df_frame[parameters['columnx']])
+        df_frame[parameters['output_name']] = np.arctan2(df_frame[parameters['y_column']],df_frame[parameters['x_column']])
     df.loc[[f_index]] = df_frame
     return df
 
@@ -637,7 +629,7 @@ def hexatic_order(df, f_index=None, parameters=None, *args, **kwargs):
 
     if 'hexatic_order' not in df.columns:
         df['hexatic_order'] = np.nan
-        df['number_of_neighbors'] = np.nan #Change name to indicate associated with hexatic methoc
+        df['number_of_neighbours'] = np.nan #Change name to indicate associated with hexatic methoc
 
     df_frame = df.loc[[f_index]]
     points = df_frame[['x', 'y']].values
@@ -657,7 +649,7 @@ def hexatic_order(df, f_index=None, parameters=None, *args, **kwargs):
     orders = np.zeros_like(neighbors)
     orders[indxs] = stacked[0, indxs] / neighbors[indxs]
     df_frame['hexatic_order'] = orders
-    df_frame['number_of_neighbors'] = np.real(neighbors)
+    df_frame['number_of_neighbours'] = np.real(neighbors)
     df.loc[[f_index]] = df_frame
     return df
 

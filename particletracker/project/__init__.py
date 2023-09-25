@@ -68,15 +68,15 @@ class PTWorkflow:
             parameters=self.parameters)
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
                                                data_filename=self.data_filename,
-                                               parameters=self.parameters[
-                                                   'annotate'], frame=self.cap.read_frame(n=n))
+                                               parameters=self.parameters, 
+                                               frame=self.cap.read_frame(n=n))
         
 
     def reset_annotator(self):
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
                                                        data_filename=self.data_filename,
-                                                       parameters=self.parameters[
-                                                           'annotate'], frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
+                                                       parameters=self.parameters, 
+                                                       frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
 
     def process(self, use_part=False):
         """Process an entire video

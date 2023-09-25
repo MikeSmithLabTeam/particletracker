@@ -3,7 +3,7 @@ import numpy as np
 import trackpy as tp
 import pandas as pd
 
-from ..general.parameters import get_param_val, get_method_key
+from ..general.parameters import get_param_val, get_method_key, param_parse
 from ..track import intensity_methods as im
 from ..customexceptions import *
 from ..user_methods import *

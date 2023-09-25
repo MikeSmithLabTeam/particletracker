@@ -317,7 +317,7 @@ def _contour_inside_img(sz, contour):
             inside = False
     return inside
     
-@error_handling
+#@error_handling
 @param_parse
 def circles(frame, data, f, parameters=None, *args, **kwargs):
     """

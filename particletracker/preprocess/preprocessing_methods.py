@@ -4,10 +4,11 @@ import numpy as np
 
 from labvision.images import bgr_to_gray
 
-from ..general.parameters import  param_parse, get_param_val, get_method_key
+from ..general.parameters import param_parse, get_param_val, get_method_key
 from ..crop import crop
 from ..customexceptions import error_handling
 from ..user_methods import *
+
 
 @error_handling
 @param_parse
@@ -43,11 +44,14 @@ def adaptive_threshold(frame, parameters=None, *args, **kwargs):
         binary image with 255 above threshold else 0.
     '''
     if parameters['ad_mode']:
-        out = cv2.adaptiveThreshold(frame,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, parameters['block_size'], parameters['C'])
+        out = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                    cv2.THRESH_BINARY_INV, parameters['block_size'], parameters['C'])
     else:
-        out = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, parameters['block_size'], parameters['C'])
+        out = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                    cv2.THRESH_BINARY, parameters['block_size'], parameters['C'])
     return out
-    
+
+
 @error_handling
 @param_parse
 def blur(frame, parameters=None, *args, **kwargs):
@@ -59,7 +63,7 @@ def blur(frame, parameters=None, *args, **kwargs):
     This applies OpenCVs gaussian blur to the image (https://en.wikipedia.org/wiki/Gaussian_blur)
     Usually useful to apply before subtracting 2 images.
 
-    
+
 
     blur_kernel
         single integer n specifying the size of kernel (n,n) 
@@ -78,21 +82,22 @@ def blur(frame, parameters=None, *args, **kwargs):
     -------
         single colour channel image.
 
-    '''    
-    out = cv2.GaussianBlur(frame, (parameters['kernel'], parameters['kernel']), 0)
-    return out      
+    '''
+    out = cv2.GaussianBlur(
+        frame, (parameters['kernel'], parameters['kernel']), 0)
+    return out
 
 
 @error_handling
 @param_parse
 def brightness_contrast(frame, parameters=None, *args, **kwargs):
     """Brightness and Contrast control
-    
+
     This is implemented as g(x) = contrast * f(x) + brightness
-    
+
     but with checks to make sure the values don't fall outside 0-255"""
 
-    return  cv2.convertScaleAbs(frame, alpha=parameters['contrast'], beta=parameters['brightness'])
+    return cv2.convertScaleAbs(frame, alpha=parameters['contrast'], beta=parameters['brightness'])
 
 
 @error_handling
@@ -100,8 +105,8 @@ def brightness_contrast(frame, parameters=None, *args, **kwargs):
 def colour_channel(frame, parameters=None, *args, **kwargs):
     '''
     This selects the specified colour channel of a colour image
-    
-    
+
+
     colour
         options are 'red', 'green', 'blue', We assume frame has (blue, green, red) format which is OpenCVs default. 
 
@@ -119,7 +124,7 @@ def colour_channel(frame, parameters=None, *args, **kwargs):
         Single colour channel image
 
     '''
-    #Assumes frame has bgr format.
+    # Assumes frame has bgr format.
     if parameters['colour'] == 'red':
         index = 2
     elif parameters['colour'] == 'green':
@@ -127,9 +132,10 @@ def colour_channel(frame, parameters=None, *args, **kwargs):
     elif parameters['colour'] == 'blue':
         index = 0
     else:
-        raise Exception        
-    return frame[:,:,index]
-        
+        raise Exception
+    return frame[:, :, index]
+
+
 @error_handling
 @param_parse
 def dilation(frame, parameters=None, *args, **kwargs):
@@ -140,15 +146,15 @@ def dilation(frame, parameters=None, *args, **kwargs):
     pixels to the edge of white regions according to the kernel and is
     useful for closing small holes or gaps.
     See an explanation -  https://en.wikipedia.org/wiki/Dilation_(morphology)
-    
-    
+
+
 
     dilation_kernel
         single integer n specifying dimension of kernel (n,n)
     iterations
         how many times to apply the operation
 
-                    
+
     Args
     ----
     frame
@@ -163,9 +169,11 @@ def dilation(frame, parameters=None, *args, **kwargs):
         binary image 
 
     '''
-    return cv2.dilate(frame, parameters['dilation_kernel'], iterations=parameters['iterations'])
+    kernel = parameters['dilation_kernel']
+    return cv2.dilate(frame, np.ones((kernel,kernel)), iterations=parameters['iterations'])
 
-@error_handling       
+
+@error_handling
 def distance(frame, *args, **kwargs):
     '''
     Perform a distance transform on a binary image
@@ -181,7 +189,7 @@ def distance(frame, *args, **kwargs):
 
     See here for explanation : https://en.wikipedia.org/wiki/Distance_transform
 
-                    
+
     Args
     ----
     frame
@@ -197,8 +205,9 @@ def distance(frame, *args, **kwargs):
 
     '''
     dist = cv2.distanceTransform(frame, cv2.DIST_L2, 5)
-    dist = 255*dist/np.max(dist)
+    dist = 255 * dist / np.max(dist)
     return dist.astype(np.uint8)
+
 
 @error_handling
 @param_parse
@@ -214,13 +223,13 @@ def erosion(frame, parameters=None, *args, **kwargs):
     Useful for separating objects and removing small pepper noise.
 
     See an explanation -  https://en.wikipedia.org/wiki/Erosion_(morphology)
-    
+
     Parameters:
 
     erosion_kernel :   single integer n specifying dimension of kernel (n,n)
     iterations      :   how many times to apply the operation
-    
-    
+
+
     Args
     ----
     frame
@@ -237,8 +246,9 @@ def erosion(frame, parameters=None, *args, **kwargs):
     '''
 
     kernel = parameters['erosion_kernel']
-    return cv2.erode(frame, np.ones((kernel, kernel)), iterations=iterations)
-       
+    return cv2.erode(frame, np.ones((kernel, kernel)), iterations=parameters['iterations'])
+
+
 @error_handling
 @param_parse
 def gamma(image, parameters=None, *args, **kwargs):
@@ -250,10 +260,10 @@ def gamma(image, parameters=None, *args, **kwargs):
     This generates a lookup table which maps the values 0-255 to 0-255
     however not in a linear way. The mapping follows a power law
     with exponent gamma/100.0.
- 
+
     gamma
         single float can be positive or negative. The true value applied is the displayed value / 100.
-                    
+
     Args
     ----
     frame
@@ -275,9 +285,11 @@ def gamma(image, parameters=None, *args, **kwargs):
         gamma = 0.000001
     invGamma = 1.0 / gamma
 
-    table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    table = np.array([((i / 255.0) ** invGamma) *
+                     255 for i in np.arange(0, 256)]).astype("uint8")
 
     return cv2.LUT(image, table)
+
 
 @error_handling
 def grayscale(frame, *args, **kwargs):
@@ -301,10 +313,11 @@ def grayscale(frame, *args, **kwargs):
     sz = np.shape(frame)
 
     if np.size(sz) == 3:
-        frame= cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return frame
 
-@error_handling    
+
+@error_handling
 def invert(frame, *args, **kwargs):
     '''
     Invert image
@@ -331,13 +344,14 @@ def invert(frame, *args, **kwargs):
 
     '''
     return ~frame
-           
+
+
 @error_handling
 @param_parse
 def medianblur(frame, parameters=None, *args, **kwargs):
     '''
     Performs a medianblur on the image. 
-    
+
     Notes
     -----
     Setting each pixel to median value in the area specified by the kernel.
@@ -361,9 +375,10 @@ def medianblur(frame, parameters=None, *args, **kwargs):
     '''
     out = cv2.medianBlur(frame, parameters['kernel'])
     return out
-        
+
+
 @error_handling
-def subtract_bkg(frame, parameters=None, call_num=None):
+def subtract_bkg(frame, parameters=None, call_num=None,*args, **kwargs):
     '''
     Subtract a background
 
@@ -378,12 +393,12 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     options: mean will subtract the average value from the image. img will subtract a preprepared
     background img from the img. Before subtracting the background image it is blurred according to
     the settings. 
-    
+
     N.B. You must apply either a grayscale or color_channel method before the subtract_bkg method. 
     The software subtracts the mean image value, grayscale or color_channel version of the background image which you select from the current image.
 
 
-    
+
 
     subtract_bkg_type
         Type of background substraction to be performed. Options are are 'mean' or 'grayscale','red','green','blue'. 
@@ -395,8 +410,8 @@ def subtract_bkg(frame, parameters=None, call_num=None):
         Subtract bkg from image or image from background.
     subtract_bkg_norm
         Stretch range of outputted intensities on resultant image to fill 0-255 - True or False               
-    
-    
+
+
     Args
     ----
     frame
@@ -415,42 +430,44 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     params = parameters['preprocess'][method_key]
 
     bkgtype = get_param_val(params['subtract_bkg_type'])
-    if  bkgtype == 'mean':
+    if bkgtype == 'mean':
         mean_val = int(np.mean(frame))
         subtract_frame = mean_val * np.ones(np.shape(frame), dtype=np.uint8)
-        frame2=frame
+        frame2 = frame
     elif bkgtype == 'median':
         median_val = int(np.median(frame))
         subtract_frame = median_val * np.ones(np.shape(frame), dtype=np.uint8)
-        frame2=frame
+        frame2 = frame
     else:
         # This option subtracts the previously created image which is added to dictionary.
-        #These parameters are fed to the blur function
+        # These parameters are fed to the blur function
         temp_params = {}
         temp_params['preprocess'] = {
             'blur': {'kernel': get_param_val(params['subtract_bkg_blur_kernel'])}}
-        #Load bkg img
+        # Load bkg img
         if params['subtract_bkg_filename'] is None:
             name = parameters['experiment']['video_filename']
-            bkg_frame = cv2.imread(name[:-4] + '_bkgimg.png')#,cv2.IMREAD_GRAYSCALE)
+            # ,cv2.IMREAD_GRAYSCALE)
+            bkg_frame = cv2.imread(name[:-4] + '_bkgimg.png')
         else:
-            bkg_frame = cv2.imread(params['subtract_bkg_filename'])#,cv2.IMREAD_GRAYSCALE)
-        
+            # ,cv2.IMREAD_GRAYSCALE)
+            bkg_frame = cv2.imread(params['subtract_bkg_filename'])
+
         if bkgtype == 'grayscale':
             subtract_frame = bgr_to_gray(bkg_frame)
         elif bkgtype == 'red':
-            subtract_frame = bkg_frame[:,:,2]
+            subtract_frame = bkg_frame[:, :, 2]
         elif bkgtype == 'green':
-            subtract_frame = bkg_frame[:,:,1]
+            subtract_frame = bkg_frame[:, :, 1]
         elif bkgtype == 'blue':
-            subtract_frame = bkg_frame[:,:,0]
+            subtract_frame = bkg_frame[:, :, 0]
 
         subtract_frame = crop(subtract_frame, parameters['crop'])
-        
+
         frame2 = blur(frame, temp_params)
         frame2 = frame2.astype(np.uint8)
-        subtract_frame  = blur(subtract_frame, temp_params)
-        subtract_frame =subtract_frame.astype(np.uint8)
+        subtract_frame = blur(subtract_frame, temp_params)
+        subtract_frame = subtract_frame.astype(np.uint8)
 
     if get_param_val(params['subtract_bkg_invert']):
         frame2 = cv2.subtract(subtract_frame, frame2)
@@ -460,11 +477,12 @@ def subtract_bkg(frame, parameters=None, call_num=None):
     if np.max(frame) == 0:
         frame2 = frame
 
-    if get_param_val(params['subtract_bkg_norm'])==True:
+    if get_param_val(params['subtract_bkg_norm']) == True:
         frame2 = cv2.normalize(frame2, None, alpha=0, beta=255,
-                            norm_type=cv2.NORM_MINMAX)
+                               norm_type=cv2.NORM_MINMAX)
 
     return frame2
+
 
 @error_handling
 @param_parse
@@ -474,13 +492,13 @@ def threshold(frame, parameters=None, *args, **kwargs):
 
     This applies OpenCVs threshold. This sets pixels to 255 or 0 depending on whether
     they are above or below the given value.
-    
+
     threshold
         Threshold value to determine whether pixels are black or white
     th_mode
         True or False to specify whether above threshold is white or black.
 
-    
+
     Args
     ----
     frame
@@ -495,8 +513,10 @@ def threshold(frame, parameters=None, *args, **kwargs):
         grayscale image
 
     '''
-    ret, out = cv2.threshold(frame,parameters['threshold'],255,int(parameters['th_mode']))
+    ret, out = cv2.threshold(
+        frame, parameters['threshold'], 255, int(parameters['th_mode']))
     return out
+
 
 @error_handling
 def fill_holes(frame, *args, **kwargs):
@@ -525,14 +545,15 @@ def fill_holes(frame, *args, **kwargs):
 
     im_floodfill = frame.copy()
     h, w = frame.shape[:2]
-    mask = np.zeros((h+2, w+2), np.uint8)
-    cv2.floodFill(im_floodfill, mask, (0,0), 255)
+    mask = np.zeros((h + 2, w + 2), np.uint8)
+    cv2.floodFill(im_floodfill, mask, (0, 0), 255)
     im_floodfill_inv = cv2.bitwise_not(im_floodfill)
     out = frame | im_floodfill_inv
     return out
 
-@error_handling   
-@param_parse    
+
+@error_handling
+@param_parse
 def absolute_diff(frame, parameters=None, *args, **kwargs):
     '''
     Calculates the absolute difference of pixels from a reference value
@@ -548,7 +569,7 @@ def absolute_diff(frame, parameters=None, *args, **kwargs):
         The value to take the absolute difference relative to
     normalise
         Stretch the intensity values to the full range 0-255, True or False
-        
+
     Args
     ----
     frame
@@ -563,16 +584,16 @@ def absolute_diff(frame, parameters=None, *args, **kwargs):
         grayscale image
     '''
     mean_val = int(parameters['value'])
-    subtract_frame = mean_val*np.ones(np.shape(frame), dtype=np.uint8)         
+    subtract_frame = mean_val * np.ones(np.shape(frame), dtype=np.uint8)
 
     frame1 = cv2.subtract(subtract_frame, frame)
-    frame1 = cv2.normalize(frame1, frame1 ,0,255,cv2.NORM_MINMAX)
+    frame1 = cv2.normalize(frame1, frame1, 0, 255, cv2.NORM_MINMAX)
     frame2 = cv2.subtract(frame, subtract_frame)
-    frame2 = cv2.normalize(frame2, frame2,0,255,cv2.NORM_MINMAX)
+    frame2 = cv2.normalize(frame2, frame2, 0, 255, cv2.NORM_MINMAX)
     frame = cv2.add(frame1, frame2)
 
     if parameters['normalise'] == True:
-        frame = cv2.normalize(frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+        frame = cv2.normalize(frame, None, alpha=0,
+                              beta=255, norm_type=cv2.NORM_MINMAX)
 
     return frame
-       

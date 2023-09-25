@@ -36,10 +36,11 @@ class TrackingAnnotator:
                 stop=f_index+1
                 step=1
             self.cap.set_frame(start)
+            
             for f in tqdm(range(start, stop, step), 'Annotating'):
                 frame = self.cap.read_frame()
                 try:
-                    for method in self.parameters['annotate_method']:
+                    for method in self.parameters['annotate']['annotate_method']:
                         method_name, call_num = get_method_name(method)
                         frame = getattr(am, method_name)(frame, data, f, parameters=self.parameters, call_num=call_num, section='annotate')
                 except:
