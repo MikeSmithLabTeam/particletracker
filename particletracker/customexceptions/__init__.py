@@ -53,7 +53,7 @@ Custom base class - used only to catch all custom exceptions
 class BaseError(Exception):
     def __init__(self, e):
         super().__init__(e)
-        print(e)
+        #print(e)
 
 """
 --------------------------------------------------------------

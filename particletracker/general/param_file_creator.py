@@ -27,13 +27,13 @@ def create_param_file(filename):
         'preprocess_method': ('grayscale','medianblur',),
         'grayscale':{},#'load_bkg_img':False,
         'threshold':{'threshold':[1,0,255,1],
-                     'th_mode':[True,('True', 'False')]},
+                     'invert':[True,('True', 'False')]},
         'adaptive_threshold':{'block_size': [29,1,300,2],
                               'C': [-23, -30, 30, 1],
-                              'ad_mode': [True, ('True', 'False')]
+                              'invert': [True, ('True', 'False')]
                               },
         'colour_channel':{'colour':['red',('red','green','blue')]},
-        'distance':{},
+        'distance':{'normalise':[True, ('True','False')]},
         'brightness_contrast':{'brightness':[0,-255,255,1],
                                'contrast' :[1.0,0.0,10.0,0.01]},
         'blur':{'kernel':[1,1,15,2]},
@@ -50,10 +50,10 @@ def create_param_file(filename):
                     },
         'fill_holes':{},
         'invert':{},
-        'erosion':{'erosion_kernel':[1,1,11,2],
+        'erosion':{'kernel':[1,1,11,2],
                     'iterations':[1,1,11,1]
                     },
-        'dilation':{'dilation_kernel':[1,1,11,2],
+        'dilation':{'kernel':[1,1,11,2],
                     'iterations':[1,1,11,1]
                     }
         }
