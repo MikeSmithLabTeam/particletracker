@@ -27,7 +27,7 @@ from ..general.imageformat import bgr_to_rgb
 from ..general.dataframes import data_filename_create
 from .pandas_view import PandasWidget
 
-from file_io import validate_filenames
+from file_io import validate_filenames, open_movie_dialog, open_settings_dialog
 IMG_FILE_EXT = ('.png','.jpg','.tiff','.JPG')
 
 
@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__(*args, **kwargs)
         
         self.screen_size = screen_size
-        self.movie_filename, self.settings_filename = validate_filenames(movie_filename, settings_filename)
+        self.movie_filename, self.settings_filename = validate_filenames(self, movie_filename, settings_filename)
         if 'default.param' in self.settings_filename:
             create_param_file(settings_filename)
         self.reboot()
@@ -525,7 +525,25 @@ class MainWindow(QMainWindow):
             self.update_viewer()
     
 
-       
+    def open_movie_click(self):
+        self.movie_filename = open_movie_dialog(self, self.movie_filename):
+        self.reboot()
+        
+    def open_settings_button_click(self):
+        self.settings_filename = open_settings_dialog(self, self.settings_filename):
+        self.reboot()    
+
+    def save_settings_button_click(self):
+        options = QFileDialog.Options()
+        #options |= QFileDialog.DontUseNativeDialog
+        file_settings_name, _ = QFileDialog.getSaveFileName(self, "Save Settings File", self.settings_filename.split('.')[0],
+                                                        "settings (*.param)", options=options)
+
+        file_settings_name=file_settings_name.split('.')[0] + '.param'
+        write_paramdict_file(self.tracker.parameters, file_settings_name)
+
+    def export_to_csv_click(self):
+        self.tracker.parameters['config']['csv_export'] = self.export_to_csv.isChecked()
 
     """-------------------------------------------------------------
     Functions relevant to the tools section
