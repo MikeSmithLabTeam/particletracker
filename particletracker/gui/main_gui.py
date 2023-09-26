@@ -28,31 +28,26 @@ from .pandas_view import PandasWidget
 
 IMG_FILE_EXT = ('.png','.jpg','.tiff','.JPG')
 
+def validate_filenames(self, movie_filename, settings_filename):
+    if isfile(movie_filename):
+        movie_filename = create_wildcard_filename_img_seq(str(Path(movie_filename)))
+    else:
+        self.open_movie_dialog()
+
+    if isfile(settings_filename):
+        settings_filename = str(Path(settings_filename))
+    else:
+        self.load_default_settings()
+
+    return movie_filename, settings_filename 
+
 class MainWindow(QMainWindow):
     
     def __init__(self, *args, movie_filename=None, settings_filename=None, screen_size=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
+        
         self.screen_size = screen_size
-        
-        self.movie_filename=None
-        if movie_filename is not None:
-            if isfile(movie_filename):
-                self.movie_filename = create_wildcard_filename_img_seq(str(Path(movie_filename)))
-            else:
-                movie_filename = None
-            
-        if movie_filename is None:
-            self.open_movie_dialog()
-
-        if settings_filename is not None:
-            if isfile(settings_filename):
-                self.settings_filename = str(Path(settings_filename))
-            else:
-                settings_filename = None
-        
-        if settings_filename is None:
-            self.load_default_settings()    
-
+        self.movie_filename, self.settings_filename = validate_filenames(self, movie_filename, settings_filename)
         self.reboot()
 
 
