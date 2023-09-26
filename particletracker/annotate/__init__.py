@@ -18,7 +18,7 @@ class TrackingAnnotator:
 
     def annotate(self, f_index=None, use_part=False):     
         if f_index is None:
-            frame = self.cap.read_frame(n=0)
+            frame = self.cap.read_frame(n=self.cap.frame_range[0])
             self.out = WriteVideo(filename=self.output_filename, frame=frame)
             data_filename = self.data_filename
         elif use_part:
