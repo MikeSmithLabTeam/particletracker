@@ -22,24 +22,15 @@ from ..project import PTWorkflow
 from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.param_file_creator import create_param_file
+
 from ..general.imageformat import bgr_to_rgb
 from ..general.dataframes import data_filename_create
 from .pandas_view import PandasWidget
 
+from file_io import validate_filenames
 IMG_FILE_EXT = ('.png','.jpg','.tiff','.JPG')
 
-def validate_filenames(self, movie_filename, settings_filename):
-    if isfile(movie_filename):
-        movie_filename = create_wildcard_filename_img_seq(str(Path(movie_filename)))
-    else:
-        self.open_movie_dialog()
 
-    if isfile(settings_filename):
-        settings_filename = str(Path(settings_filename))
-    else:
-        self.load_default_settings()
-
-    return movie_filename, settings_filename 
 
 class MainWindow(QMainWindow):
     
@@ -47,7 +38,9 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__(*args, **kwargs)
         
         self.screen_size = screen_size
-        self.movie_filename, self.settings_filename = validate_filenames(self, movie_filename, settings_filename)
+        self.movie_filename, self.settings_filename = validate_filenames(movie_filename, settings_filename)
+        if 'default.param' in self.settings_filename:
+            create_param_file(settings_filename)
         self.reboot()
 
 
@@ -532,76 +525,7 @@ class MainWindow(QMainWindow):
             self.update_viewer()
     
 
-        """-----------------------------------------------------------------
-        File input and output
-        -------------------------------------------------------------------"""
-
-    def open_movie_dialog(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-
-        if self.movie_filename is None:
-            movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie", QDir.homePath(),
-                                                            "All files (*.*);; mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v);;png (*.png);;jpg (*.jpg);;tiff (*.tiff)", options=options)
-        else:
-            movie_filename, ok = QFileDialog.getOpenFileName(self, "Open Movie",
-                                                            self.movie_filename.split('.')[0],
-                                                            "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v);;png (*.png);;jpg (*.jpg);;tiff (*.tiff)", options=options)
- 
-        """Convert filename to include wild card character in place of trailing numbers. 
-        When read by ReadVideo it will find all imgs in a folder with same format.
-        """
-        movie_filename = create_wildcard_filename_img_seq(movie_filename)
-        
-        if ok:
-            self.movie_filename = movie_filename
-            return True
-        else:
-            return False
-
-    def open_settings_dialog(self):
-        options = QFileDialog.Options()
-        #options |= QFileDialog.DontUseNativeDialog
-        if self.settings_filename is None:
-            settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File", '',
-                                                   "settings (*.param)", options=options)
-        else:
-            settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File",
-                                                               self.settings_filename.split('.')[0],
-                                                               "settings (*.param)", options=options)
-        
-        if ok:
-            self.settings_filename = settings_filename
-            return True
-        else:
-            return False
-
-    def load_default_settings(self):
-        pathname, _ = os.path.split(self.movie_filename)
-        self.settings_filename = os.path.normpath(os.path.join(pathname, 'default.param'))
-        create_param_file(self.settings_filename)
-        self.reboot()
-
-    def open_movie_click(self):
-        if self.open_movie_dialog():
-            self.reboot()
-        
-    def open_settings_button_click(self):
-        if self.open_settings_dialog():
-            self.reboot()       
-
-
-    def save_settings_button_click(self):
-        options = QFileDialog.Options()
-        #options |= QFileDialog.DontUseNativeDialog
-        file_settings_name, _ = QFileDialog.getSaveFileName(self, "Save Settings File", self.settings_filename.split('.')[0],
-                                                        "settings (*.param)", options=options)
-
-        file_settings_name=file_settings_name.split('.')[0] + '.param'
-        write_paramdict_file(self.tracker.parameters, file_settings_name)
-
-    def export_to_csv_click(self):
-        self.tracker.parameters['config']['csv_export'] = self.export_to_csv.isChecked()
+       
 
     """-------------------------------------------------------------
     Functions relevant to the tools section
@@ -710,19 +634,6 @@ class MainWindow(QMainWindow):
 
 
 
-def create_wildcard_filename_img_seq(movie_filename):
-    """Wrangle input filenames
-    
-    Changes individual img to wildcard version but leaves videos unchanged
-    img002.png --> img*.png
-    vid001.mp4 --> vid001.mp4
-    """
 
-    if os.path.splitext(movie_filename)[1] in IMG_FILE_EXT:
-        path, filename = os.path.split(movie_filename)
-        filename_stub, ext = os.path.splitext(filename)
-        movie_filename = os.path.join(path, ''.join([letter for letter in filename_stub if letter.isalpha()]) + '*' + ext)
-
-    return movie_filename
 
 
