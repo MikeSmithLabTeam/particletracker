@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
+IMG_FILE_EXT = ('.png','.jpg','.tiff','.JPG')
 
 def validate_filenames(self, movie_filename, settings_filename):
     """Validate filenames
@@ -23,11 +24,11 @@ def validate_filenames(self, movie_filename, settings_filename):
     _type_
         _description_
     """
-    if not os.path.isfile(movie_filename):
+    if movie_filename is None or not os.path.isfile(movie_filename):
         movie_filename = open_movie_dialog(self)
     movie_filename = _create_wildcard_filename_img_seq(str(Path(movie_filename)))
 
-    if not os.path.isfile(settings_filename):
+    if settings_filename is None or not os.path.isfile(settings_filename):
         settings_filename = _create_default_settings_filepath(movie_filename)
     settings_filename = str(Path(settings_filename))
 
@@ -72,9 +73,9 @@ def _create_default_settings_filepath(movie_filename):
     settings_filename = os.path.normpath(os.path.join(pathname, 'default.param'))
     return settings_filename
 
- """-----------------------------------------------------------------
-        File input and output
-        -------------------------------------------------------------------"""
+"""-----------------------------------------------------------------
+File input and output
+-------------------------------------------------------------------"""
 
 
           
@@ -82,14 +83,3 @@ def _create_default_settings_filepath(movie_filename):
 
     
 
-def open_settings_dialog(self, ):
-    options = QFileDialog.Options()
-    #options |= QFileDialog.DontUseNativeDialog
-    if self.settings_filename is None:
-        settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File", '',
-                                                "settings (*.param)", options=options)
-    else:
-        settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File",
-                                                            self.settings_filename.split('.')[0],
-                                                            "settings (*.param)", options=options)
-    return settings_filename

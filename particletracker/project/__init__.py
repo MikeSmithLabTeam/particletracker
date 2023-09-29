@@ -9,6 +9,7 @@ from ..general.writeread_param_dict import read_paramdict_file
 from ..general.dataframes import data_filename_create
 from ..customexceptions import BaseError, flash_error_msg
 
+
 class PTWorkflow:
     '''
     PTWorkflow is a parent class that handles the workflow of a particle tracking project.
@@ -16,7 +17,7 @@ class PTWorkflow:
 
     def __init__(self, video_filename=None, param_filename=None, error_reporting=None):
         self.video_filename = video_filename
-        self.error_reporting=error_reporting
+        self.error_reporting = error_reporting
         self.data_filename = data_filename_create(self.video_filename)
         self.param_filename = param_filename
         self.parameters = read_paramdict_file(self.param_filename)
@@ -37,7 +38,7 @@ class PTWorkflow:
         ''' Setup is an internal class method it instantiates the video reader object.
         Depending on the settings in PARAMETERS this may also crop the video frames
         as they are requested.'''
-        datapath=os.path.dirname(self.video_filename)
+        datapath = os.path.dirname(self.video_filename)
         self.parameters['experiment']['video_filename'] = self.video_filename
         self.parameters['postprocess']['add_frame_data']['data_path'] = datapath
         self._create_processes()
@@ -50,10 +51,10 @@ class PTWorkflow:
         4. A linker that creates trajectories of particles between frames
         5. A postprocessor that does analysis - eg calc velocities or neighbours
         6. An annotator which adds features to the final image to visualise the results
-        
+
         """
         self.cap = ReadCropVideo(parameters=self.parameters,
-                                 filename=self.video_filename,error_reporting=self.error_reporting
+                                 filename=self.video_filename, error_reporting=self.error_reporting
                                  )
         self.frame = self.cap.read_frame(n)
         self.ip = preprocess.Preprocessor(self.parameters)
@@ -67,16 +68,15 @@ class PTWorkflow:
             data_filename=self.data_filename,
             parameters=self.parameters)
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
-                                               data_filename=self.data_filename,
-                                               parameters=self.parameters, 
-                                               frame=self.cap.read_frame(n=n))
-        
+                                             data_filename=self.data_filename,
+                                             parameters=self.parameters,
+                                             frame=self.cap.read_frame(n=n))
 
     def reset_annotator(self):
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
-                                                       data_filename=self.data_filename,
-                                                       parameters=self.parameters, 
-                                                       frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
+                                             data_filename=self.data_filename,
+                                             parameters=self.parameters,
+                                             frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
 
     def process(self, use_part=False):
         """Process an entire video
@@ -93,7 +93,7 @@ class PTWorkflow:
 
         :return:
         """
-        
+
         try:
             if not use_part:
                 if self.track_select:
@@ -104,7 +104,7 @@ class PTWorkflow:
                     self.pp.process(use_part=use_part)
                 if self.annotate_select:
                     self.an.annotate(use_part=use_part)
-        
+
             if self.parameters['config']['csv_export']:
                 try:
                     df = pd.read_hdf(self.data_filename)
@@ -114,7 +114,6 @@ class PTWorkflow:
         except BaseError as e:
             if self.error_reporting is not None:
                 flash_error_msg(e, self.error_reporting)
-            
 
     def process_frame(self, frame_num, use_part=False):
         """Process a single frame
@@ -142,29 +141,29 @@ class PTWorkflow:
 
         """
         proc_frame = self.cap.read_frame(frame_num)
-        
+
         try:
             if not use_part:
                 if self.preprocess_select:
                     proc_frame = self.ip.process(proc_frame)
                     proc_frame = self.cap.apply_mask(proc_frame)
                 if self.track_select:
-                    self.pt.track(f_index=frame_num)            
+                    self.pt.track(f_index=frame_num)
                 if self.link_select:
                     self.link.link_trajectories(f_index=frame_num)
             if self.postprocess_select:
                 self.pp.process(f_index=frame_num, use_part=use_part)
             if self.annotate_select:
-                annotatedframe = self.an.annotate(f_index=frame_num, use_part=use_part)
+                annotatedframe = self.an.annotate(
+                    f_index=frame_num, use_part=use_part)
             else:
                 annotatedframe = self.cap.read_frame(frame_num)
-        except BaseError as e:   
+        except BaseError as e:
             if self.error_reporting is not None:
                 print(e)
                 flash_error_msg(e, self.error_reporting)
             annotatedframe = self.cap.read_frame(frame_num)
             self.error_reporting.toggle_img.setChecked(False)
             self.error_reporting.toggle_img.setText("Captured Image")
-            
-        return annotatedframe, proc_frame
 
+        return annotatedframe, proc_frame

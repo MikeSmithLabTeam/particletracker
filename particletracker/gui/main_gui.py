@@ -27,8 +27,8 @@ from ..general.imageformat import bgr_to_rgb
 from ..general.dataframes import data_filename_create
 from .pandas_view import PandasWidget
 
-from file_io import validate_filenames, open_movie_dialog, open_settings_dialog
-IMG_FILE_EXT = ('.png','.jpg','.tiff','.JPG')
+from .file_io import validate_filenames, open_movie_dialog
+
 
 
 
@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
         self.screen_size = screen_size
         self.movie_filename, self.settings_filename = validate_filenames(self, movie_filename, settings_filename)
         if 'default.param' in self.settings_filename:
-            create_param_file(settings_filename)
+            create_param_file(self.settings_filename)
         self.reboot()
 
 
@@ -232,6 +232,11 @@ class MainWindow(QMainWindow):
         self.help_menu.addAction(docs)
         self.help_menu.addAction(about)
 
+    def load_default_settings(self):
+        pathname, _ = os.path.split(self.movie_filename)
+        self.settings_filename = os.path.normpath(os.path.join(pathname, 'default.param'))
+        create_param_file(self.settings_filename)
+        self.reboot()
        
     def open_docs(self):
         webbrowser.open('https://particle-tracker.readthedocs.io/en/latest/', new=1, autoraise=True)
@@ -329,6 +334,7 @@ class MainWindow(QMainWindow):
     def open_tracker(self):
         """PTWorkFlow is the top level class that controls the entire tracking process
         """
+        
         self.tracker = PTWorkflow(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
@@ -526,12 +532,28 @@ class MainWindow(QMainWindow):
     
 
     def open_movie_click(self):
-        self.movie_filename = open_movie_dialog(self, self.movie_filename):
+        self.movie_filename = open_movie_dialog(self, self.movie_filename)
         self.reboot()
         
     def open_settings_button_click(self):
-        self.settings_filename = open_settings_dialog(self, self.settings_filename):
+        self.settings_filename = self.open_settings_dialog()
         self.reboot()    
+
+    def open_settings_dialog(self):
+        options = QFileDialog.Options()
+        #options |= QFileDialog.DontUseNativeDialog
+        if self.settings_filename is None:
+            settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File", '',
+                                                    "settings (*.param)", options=options)
+        else:
+            settings_filename, ok = QFileDialog.getOpenFileName(self, "Open Settings File",
+                                                                self.settings_filename.split('.')[0],
+                                                                "settings (*.param)", options=options)
+        if ok:
+            self.settings_filename = settings_filename
+            return True
+        else:
+            return False
 
     def save_settings_button_click(self):
         options = QFileDialog.Options()
