@@ -7,7 +7,7 @@ from PyQt5.QtGui import *
 
 IMG_FILE_EXT = ('.png','.jpg','.tiff','.JPG')
 
-def validate_filenames(self, movie_filename, settings_filename):
+def check_filenames(self, movie_filename, settings_filename):
     """Validate filenames
 
     Checks to see if None or valid filename. opens dialogues if not valid.
@@ -33,6 +33,7 @@ def validate_filenames(self, movie_filename, settings_filename):
     settings_filename = str(Path(settings_filename))
 
     return movie_filename, settings_filename 
+    
 
 def open_movie_dialog(self, movie_filename=None):
     """Called on start up if no movie filename supplied. Also called when open movie button is clicked."""
@@ -40,13 +41,15 @@ def open_movie_dialog(self, movie_filename=None):
     #options |= QFileDialog.DontUseNativeDialog
 
     if movie_filename is None:
-        movie_filename, _ = QFileDialog.getOpenFileName(self, 
+        filename, _ = QFileDialog.getOpenFileName(self, 
                                                          "Open Movie", QDir.homePath(),"All files (*.*);; mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v);;png (*.png);;jpg (*.jpg);;tiff (*.tiff)", options=options)
     else:
-        movie_filename, _ = QFileDialog.getOpenFileName(self, 
+        filename, _ = QFileDialog.getOpenFileName(self, 
                                                          "Open Movie",
                                                         self.movie_filename.split('.')[0],
                                                         "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v);;png (*.png);;jpg (*.jpg);;tiff (*.tiff)", options=options)
+    if filename:
+        movie_filename = filename
 
     return movie_filename
         
@@ -64,6 +67,21 @@ def _create_wildcard_filename_img_seq(movie_filename):
         movie_filename = os.path.join(path, ''.join([letter for letter in filename_stub if letter.isalpha()]) + '*' + ext)
     return movie_filename
 
+def open_settings_dialog(self, settings_filename=None):
+    options = QFileDialog.Options()
+    #options |= QFileDialog.DontUseNativeDialog
+    if settings_filename is None:
+        filename, _ = QFileDialog.getOpenFileName(self, "Open Settings File", '',
+                                                "settings (*.param)", options=options)
+    else:
+        filename, _ = QFileDialog.getOpenFileName(self, "Open Settings File",
+                                                            self.settings_filename.split('.')[0],
+                                                            "settings (*.param)", options=options)     
+    if filename:
+        settings_filename = filename
+
+    return settings_filename
+
 def _create_default_settings_filepath(movie_filename):
     """Create default settings filepath
     
@@ -72,6 +90,21 @@ def _create_default_settings_filepath(movie_filename):
     pathname, _ = os.path.split(movie_filename)
     settings_filename = os.path.normpath(os.path.join(pathname, 'default.param'))
     return settings_filename
+
+def save_settings_dialog(self, settings_filename):
+    options = QFileDialog.Options()
+    #options |= QFileDialog.DontUseNativeDialog
+    filename, _ = QFileDialog.getSaveFileName(self, "Save Settings File", 
+                                                       self.settings_filename.split('.')[0],
+                                                        "settings (*.param)", 
+                                                        options=options)
+    
+    if filename:
+        settings_filename = filename
+    
+    settings_filename=settings_filename.split('.')[0] + '.param'
+    return settings_filename
+
 
 """-----------------------------------------------------------------
 File input and output
