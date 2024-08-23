@@ -11,15 +11,19 @@ class PostProcessor:
         self.parameters = parameters      
 
     def process(self, f_index=None, use_part=False):
+        #If processing whole movie f_index is None else you are just processing one frame
         if f_index is None:
             data_filename = self.data_filename
         else:
+            #Use part relies on data from processing of whole movie
+            #else we are storing info in a temporary file.
             if use_part:
                 data_filename = self.data_filename
             else:
                 data_filename = self.data_filename[:-5] + '_temp.hdf5'
                 
         with DataStore(data_filename, load=True) as data:
+            #whole movie
             if f_index is None:
                 frame_range = self.parameters['config']['frame_range']
                 start=frame_range[0]
@@ -27,6 +31,7 @@ class PostProcessor:
                 if stop is None:
                     stop = data.df.index.max() + 1
                 step=frame_range[2]
+            #single frame
             else:
                 start=f_index
                 stop=f_index+1

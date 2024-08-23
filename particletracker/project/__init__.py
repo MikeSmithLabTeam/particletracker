@@ -7,12 +7,13 @@ from .. import preprocess, track, link, postprocess, \
     annotate
 from ..general.writeread_param_dict import read_paramdict_file
 from ..general.dataframes import data_filename_create
-from ..customexceptions import BaseError, flash_error_msg
+from ..customexceptions import BaseError, flash_error_msg, CsvError
 
 
 class PTWorkflow:
     '''
-    PTWorkflow is a parent class that handles the workflow of a particle tracking project.
+    PTWorkflow is a parent class that handles the workflow of a particle tracking project. If you don't worry about 
+    the gui then this is the top level class that handles everything. It is called directly by the batchprocess function.
     '''
 
     def __init__(self, video_filename=None, param_filename=None, error_reporting=None):
@@ -25,7 +26,7 @@ class PTWorkflow:
         self._setup()
 
     def select_tabs(self):
-        """Boolean values that determine whether tabs are selected"""
+        """Boolean values that determine which parts of the tracking process run"""
         self.experiment_select = self.parameters['selected']['experiment']
         self.crop_select = self.parameters['selected']['crop']
         self.preprocess_select = self.parameters['selected']['preprocess']
@@ -54,19 +55,25 @@ class PTWorkflow:
 
         """
         self.cap = ReadCropVideo(parameters=self.parameters,
-                                 filename=self.video_filename, error_reporting=self.error_reporting
-                                 )
+                                 filename=self.video_filename, error_reporting=self.error_reporting)
         self.frame = self.cap.read_frame(n)
+
         self.ip = preprocess.Preprocessor(self.parameters)
+        
         self.pt = track.ParticleTracker(
-            parameters=self.parameters, preprocessor=self.ip,
-            vidobject=self.cap, data_filename=self.data_filename)
+                            parameters=self.parameters, 
+                            preprocessor=self.ip,
+                            vidobject=self.cap, 
+                            data_filename=self.data_filename)
+        
         self.link = link.LinkTrajectory(
-            data_filename=self.data_filename,
-            parameters=self.parameters['link'])
+                            data_filename=self.data_filename,
+                            parameters=self.parameters['link'])
+        
         self.pp = postprocess.PostProcessor(
-            data_filename=self.data_filename,
-            parameters=self.parameters)
+                    data_filename=self.data_filename,
+                    parameters=self.parameters)
+        
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
                                              data_filename=self.data_filename,
                                              parameters=self.parameters,
@@ -84,6 +91,11 @@ class PTWorkflow:
         Process is called on the main instance using the command
         particle_tracking_instance.process(). One call results in the entire
         movie being processed according to the actions selected in the child class.
+
+        One potentially confusing thing is that if you process a single frame then you move sequentially
+        through preprocessor, tracker, linker, postprocessor and annotator. However, if you process the whole
+        then the preprocessor is called from within tracker. All frames are tracked and then all frames are linked etc.
+
         i.e track = True
             link = True etc
 
@@ -123,6 +135,10 @@ class PTWorkflow:
         frame_num and processes it according to the selected actions.
         ie. track=True, link=True
 
+        One potentially confusing thing is that if you process a single frame then you move sequentially
+        through preprocessor, tracker, linker, postprocessor and annotator. However, if you process the whole
+        then the preprocessor is called from within tracker. All frames are tracked and then all frames are linked etc.
+
         Notes
         -----
 
@@ -143,6 +159,7 @@ class PTWorkflow:
         proc_frame = self.cap.read_frame(frame_num)
 
         try:
+            #If using part then the first 5 stages are read from .hdf5 file
             if not use_part:
                 if self.preprocess_select:
                     proc_frame = self.ip.process(proc_frame)
@@ -151,11 +168,15 @@ class PTWorkflow:
                     self.pt.track(f_index=frame_num)
                 if self.link_select:
                     self.link.link_trajectories(f_index=frame_num)
+
+            # Postprocess the frame                
             if self.postprocess_select:
                 self.pp.process(f_index=frame_num, use_part=use_part)
+            
+            #Either annotate or return a blank frame
             if self.annotate_select:
                 annotatedframe = self.an.annotate(
-                    f_index=frame_num, use_part=use_part)
+                        f_index=frame_num, use_part=use_part)
             else:
                 annotatedframe = self.cap.read_frame(frame_num)
         except BaseError as e:

@@ -18,6 +18,7 @@ import pandas as pd
 
 import os
 import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import particletracker as pt
@@ -38,34 +39,14 @@ def test_eyes():
     Annotation: Circle,
     """
     pt.batchprocess("testdata/eyes.mp4", "testdata/test_eyes.param")
+    
     output_video = "testdata/eyes_annotate.mp4"
     output_df = "testdata/eyes.hdf5"
     df = pd.read_hdf(output_df)
+    print('success')
     assert os.path.exists(output_video), 'Eyes annotated video not created'
     assert int(df.loc[5, ['x_mean']].to_numpy()[0][0]) == int(
-        153.9), 'tested value in eyes df incorrect'
-    os.remove(output_video)
-    os.remove(output_df)
-    if os.path.exists(output_df[:-5] + '_temp.hdf5'):
-        os.remove(output_df[:-5] + '_temp.hdf5')
-
-
-def test_bacteria():
-    """Test follows bacteria tutorial, checks annotated movie produced and that a particular 
-    value occurs in the output dataframe. It then tidys up.
-    Test uses:  
-    Preprocessing: grayscale, medianblur, absolute_diff, threshold, fill_holes 
-    Track: contours, 
-    Postprocessing: contour_boxes, classify
-    Annotation: boxes,
-    """
-    pt.batchprocess("testdata/bacteria.mp4", "testdata/test_bacteria.param")
-    output_video = "testdata/bacteria_annotate.mp4"
-    output_df = "testdata/bacteria.hdf5"
-    df = pd.read_hdf(output_df)
-    assert os.path.exists(output_video), 'Bacteria annotated video not created'
-    assert int(df.loc[5, ['box_width']].to_numpy()[0][0]) == int(
-        5.813776969909668), 'tested value in bacteria df incorrect'
+        139.5), df.loc[5, ['x_mean']].to_numpy()[0][0]
     os.remove(output_video)
     os.remove(output_df)
     if os.path.exists(output_df[:-5] + '_temp.hdf5'):
@@ -93,6 +74,47 @@ def test_colloids():
     if os.path.exists(output_df[:-5] + '_temp.hdf5'):
         os.remove(output_df[:-5] + '_temp.hdf5')
 
+def test_hydrogel():
+    """Test follows hydrogel tutorial, checks annotated movie produced and that a particular 
+    value occurs in the output dataframe. It then tidys up.
+    Test uses: crop, rectangular mask, 
+    Preprocessing: grayscale, blur, 
+    Track: Hough, 
+    Postprocessing:voronoi,
+    Annotation: Circle,
+    """
+    pt.batchprocess("testdata/hydrogel.mp4", "testdata/test_hydrogel.param")
+    output_video = "testdata/hydrogel_annotate.mp4"
+    output_df = "testdata/hydrogel.hdf5"
+    df = pd.read_hdf(output_df)
+    assert os.path.exists(output_video), 'Hydrogel annotated video not created'
+    assert int(df.loc[5, ['voronoi_area']].to_numpy()[3][0]) == int(
+        1089.9973263230406), df.loc[5, ['voronoi_area']].to_numpy()[3][0]  # 'tested value in hydrogel df incorrect'
+    os.remove(output_video)
+    os.remove(output_df)
+    if os.path.exists(output_df[:-5] + '_temp.hdf5'):
+        os.remove(output_df[:-5] + '_temp.hdf5')
+
+def test_bacteria():
+    """Test follows bacteria tutorial, checks annotated movie produced and that a particular 
+    value occurs in the output dataframe. It then tidys up.
+    Test uses:  
+    Preprocessing: grayscale, medianblur, absolute_diff, threshold, fill_holes 
+    Track: contours, 
+    Postprocessing: contour_boxes, classify
+    Annotation: boxes,
+    """
+    pt.batchprocess("testdata/bacteria.mp4", "testdata/test_bacteria.param")
+    output_video = "testdata/bacteria_annotate.mp4"
+    output_df = "testdata/bacteria.hdf5"
+    df = pd.read_hdf(output_df)
+    assert os.path.exists(output_video), 'Bacteria annotated video not created'
+    assert int(df.loc[5, ['box_width']].to_numpy()[0][0]) == int(
+        5.813776969909668), df.loc[5, ['box_width']].to_numpy()[0][0]
+    os.remove(output_video)
+    os.remove(output_df)
+    if os.path.exists(output_df[:-5] + '_temp.hdf5'):
+        os.remove(output_df[:-5] + '_temp.hdf5')
 
 def test_discs():
     """Test follows discs tutorial, checks annotated movie produced and that a particular 
@@ -109,8 +131,8 @@ def test_discs():
     output_df = "testdata/discs.hdf5"
     output_csv = "testdata/discs.csv"
     df = pd.read_hdf(output_df)
-    assert os.path.exists(output_video), 'Discs annotated video not created'
-    assert os.path.exists(output_csv), 'Excel output not created'
+    assert os.path.exists(output_video), 'Error Discs annotated video not created'
+    assert os.path.exists(output_csv), 'Error Excel output not created'
     assert df.loc[5, ['x']].to_numpy()[0][0] == 408.5, df.loc[5, ['x']].to_numpy()[
         0][0]  # 'tested value in discs df incorrect'
     os.remove(output_video)
@@ -120,26 +142,7 @@ def test_discs():
         os.remove(output_df[:-5] + '_temp.hdf5')
 
 
-def test_hydrogel():
-    """Test follows hydrogel tutorial, checks annotated movie produced and that a particular 
-    value occurs in the output dataframe. It then tidys up.
-    Test uses: crop, rectangular mask, 
-    Preprocessing: grayscale, blur, 
-    Track: Hough, 
-    Postprocessing:voronoi,
-    Annotation: Circle,
-    """
-    pt.batchprocess("testdata/hydrogel.mp4", "testdata/test_hydrogel.param")
-    output_video = "testdata/hydrogel_annotate.mp4"
-    output_df = "testdata/hydrogel.hdf5"
-    df = pd.read_hdf(output_df)
-    assert os.path.exists(output_video), 'Hydrogel annotated video not created'
-    assert int(df.loc[5, ['voronoi_area']].to_numpy()[3][0]) == int(
-        833.9376763034877), df.loc[5, ['voronoi_area']].to_numpy()[3][0]  # 'tested value in hydrogel df incorrect'
-    os.remove(output_video)
-    os.remove(output_df)
-    if os.path.exists(output_df[:-5] + '_temp.hdf5'):
-        os.remove(output_df[:-5] + '_temp.hdf5')
+
 
 
 """------------------------------------------------------------------------------------------

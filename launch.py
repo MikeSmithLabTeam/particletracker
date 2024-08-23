@@ -5,5 +5,5 @@ from particletracker.general.parameters import get_parent
 import particletracker
 
 if __name__ == '__main__':
-    track_gui()
-    # test_eyes()
+    track_gui("testdata/discs.mp4")
+    #test_eyes()
