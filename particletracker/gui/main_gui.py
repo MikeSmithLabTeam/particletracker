@@ -36,7 +36,6 @@ class MainWindow(QMainWindow):
     
     def __init__(self, *args, movie_filename=None, settings_filename=None, screen_size=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
-        
         self.screen_size = screen_size
         self.movie_filename, self.settings_filename = check_filenames(self, movie_filename, settings_filename)
         if 'default.param' in self.settings_filename:

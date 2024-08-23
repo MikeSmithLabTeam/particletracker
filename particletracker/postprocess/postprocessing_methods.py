@@ -1,5 +1,6 @@
 from PyQt5.QtCore import center
 import numpy as np
+from pytest import param
 import scipy.spatial as sp
 import trackpy as tp
 import cv2

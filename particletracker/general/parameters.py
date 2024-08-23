@@ -74,9 +74,7 @@ def ok_to_duplicate_method_check(method):
 
 
 def param_parse(func):
-    """param_format decorator. 
-    
-    This is used to decorate preprocess_methods, postprocess_methods etc. It reduces the parameters dictionary to the method appropriate part and correctly formats the parameters."""
+    """param_format decorator. This performs steps to correctly format the parameters for the function call."""
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         method_key = get_method_key(func.__name__, call_num=kwargs['call_num'])
