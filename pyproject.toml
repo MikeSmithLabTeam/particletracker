@@ -1,0 +1,31 @@
+# This is a file that will install dependencies etc.
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "particletracker"
+version = "2.1.2"
+dependencies = [
+"sphinx>=4.0",
+"sphinx-autobuild>=2021.3.14",
+"sphinx-rtd-theme>=1.2.0",
+"opencv-python",
+"numpy",
+"matplotlib",
+"qimage2ndarray",
+"tqdm",
+"pandas",
+"trackpy",
+"tables",
+"pillow",
+"scipy",
+"slicerator",
+"labvision @ git+https://github.com/MikeSmithLabTeam/labvision",
+"qtwidgets @ git+https://github.com/MikeSmithLabTeam/qtwidgets",
+"filehandling @ git+https://github.com/MikeSmithLabTeam/filehandling"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
