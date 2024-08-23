@@ -4,6 +4,9 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages]
+find = {exclude = ["testdata"]}
+
 [project]
 name = "particletracker"
 version = "2.1.2"
