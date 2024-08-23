@@ -637,8 +637,11 @@ class MainWindow(QMainWindow):
             write_paramdict_file(self.tracker.parameters, self.settings_filename)
 
         if self.use_part_button.isChecked():
+            #This starts from original datafile of tracked data and then performs
+            # postprocessing and annotation steps only.
             self.tracker.process(use_part=True)
         else:
+            #Normal processing of entire movie. Either process_button_click or process_part_button_click
             self.tracker.process()
 
         write_paramdict_file(self.tracker.parameters, self.tracker.data_filename[:-5] + '_expt.param')

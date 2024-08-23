@@ -55,16 +55,18 @@ def open_movie_dialog(self, movie_filename=None):
         
 
 def _create_wildcard_filename_img_seq(movie_filename):
+    """When we select a single image we actually want all the images in that folder or sequence
+    in order for that to happen we need a path that includes a wildcard in place of the filename details but keeps the extension"""
     """Wrangle input filenames
     
     Changes individual img to wildcard version but leaves videos unchanged
-    img002.png --> img*.png
+    img002.png --> *.png
     vid001.mp4 --> vid001.mp4
     """
     if os.path.splitext(movie_filename)[1] in IMG_FILE_EXT:
         path, filename = os.path.split(movie_filename)
         filename_stub, ext = os.path.splitext(filename)
-        movie_filename = os.path.join(path, ''.join([letter for letter in filename_stub if letter.isalpha()]) + '*' + ext)
+        movie_filename = os.path.join(path, '*' + ext)
     return movie_filename
 
 def open_settings_dialog(self, settings_filename=None):
