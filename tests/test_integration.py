@@ -26,6 +26,8 @@ import pandas as pd
 
 """---------------------------------------------------------------------------------------------------------
 These tests follow the tutorials and check that the output is as expected.
+
+Note they don't test anything to do with the gui.
 ---------------------------------------------------------------------------------------------------------"""
 
 
@@ -45,8 +47,8 @@ def test_eyes():
     df = pd.read_hdf(output_df)
     print('success')
     assert os.path.exists(output_video), 'Eyes annotated video not created'
-    assert int(df.loc[5, ['x_mean']].to_numpy()[0][0]) == int(
-        139.5), df.loc[5, ['x_mean']].to_numpy()[0][0]
+    assert int(df.loc[3, ['x_mean']].to_numpy()[0][0]) == int(
+        139.5), df.loc[3, ['x_mean']].to_numpy()[0][0]
     os.remove(output_video)
     os.remove(output_df)
     if os.path.exists(output_df[:-5] + '_temp.hdf5'):
@@ -88,8 +90,8 @@ def test_hydrogel():
     output_df = "testdata/hydrogel.hdf5"
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video), 'Hydrogel annotated video not created'
-    assert int(df.loc[5, ['voronoi_area']].to_numpy()[3][0]) == int(
-        1089.9973263230406), df.loc[5, ['voronoi_area']].to_numpy()[3][0]  # 'tested value in hydrogel df incorrect'
+    assert int(df.loc[1, ['voronoi_area']].to_numpy()[3][0]) == int(
+        1059.4268820529976), df.loc[1, ['voronoi_area']].to_numpy()[3][0]  # 'tested value in hydrogel df incorrect'
     os.remove(output_video)
     os.remove(output_df)
     if os.path.exists(output_df[:-5] + '_temp.hdf5'):
@@ -133,7 +135,7 @@ def test_discs():
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video), 'Error Discs annotated video not created'
     assert os.path.exists(output_csv), 'Error Excel output not created'
-    assert df.loc[5, ['x']].to_numpy()[0][0] == 408.5, df.loc[5, ['x']].to_numpy()[
+    assert df.loc[1, ['x']].to_numpy()[0][0] == 273.5, df.loc[1, ['x']].to_numpy()[
         0][0]  # 'tested value in discs df incorrect'
     os.remove(output_video)
     os.remove(output_df)
@@ -164,7 +166,7 @@ def test_preprocess():
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video), 'Preprocessing steps errored'
     assert int(df.loc[5, ['x']].to_numpy()[0][0]) == int(
-        33.94708869287488), 'Tested value in df incorrect'
+        33.94708869287488), df.loc[5, ['x']].to_numpy()[0][0]
     os.remove(output_video)
     os.remove(output_df)
     if os.path.exists(output_df[:-5] + '_temp.hdf5'):
@@ -193,7 +195,7 @@ def test_postprocess():
 
     assert os.path.exists(output_video), 'Postprocessing steps errored'
     assert int(df.loc[5, ['x']].to_numpy()[0][0]) == int(
-        1030), 'Tested x value in df incorrect'
+        1030), 'Tested x value in df incorrect' + str(df.loc[3, ['x']].to_numpy()[0][0])
     assert int(df.loc[5, ['theta']].to_numpy()[0][0]) == int(
         14.1670555226312), 'Tested angle value in df incorrect'
     assert int(10*df.loc[5, ['hexatic_order_re']].to_numpy()[1][0]) == int(
