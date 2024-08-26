@@ -33,3 +33,4 @@ dependencies = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = ["ignore:tables"]

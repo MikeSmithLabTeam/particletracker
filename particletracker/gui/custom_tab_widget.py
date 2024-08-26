@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from ..gui.custom_drag_drop_list import MyListWidget
+from qtwidgets.draggable_list import MyListWidget
 from ..gui.custom_combo_box import ComboBoxAndButton
 from ..gui.custom_slidergroupwidgets import CollectionParamAdjustors, CropMask
 
@@ -72,10 +72,11 @@ class CheckableTabWidget(QTabWidget):
         and add button.
         The bottom half the slidergroups etc to adjust the individual parameters.
         '''
+        method_list = list(self.param_dict[title][title + '_method'])
         if ('track' in title) or ('link' in title):
-            self.draggable_list = MyListWidget(self, self.method_change, self.param_dict, title,  dynamic=False)
+            self.draggable_list = MyListWidget(method_list, dynamic=False)
         else:
-            self.draggable_list = MyListWidget(self, self.method_change, self.param_dict, title, dynamic=True)
+            self.draggable_list = MyListWidget(method_list, dynamic=True)
         self.list_draggable_lists.append(self.draggable_list)
         self.draggable_list.add_draggable_list_methods()
         self.draggable_list.listChanged.connect(self.method_change)

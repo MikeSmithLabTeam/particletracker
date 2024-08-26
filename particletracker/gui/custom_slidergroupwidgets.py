@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from qtwidgets import QCustomSlider, QCustomSliderDecimal, QCustomTextBox, SelectAreaWidget
+from qtwidgets import QCustomSlider, QCustomSliderDecimal, QCustomTextBox
 from .custom_textbox import QModCustomTextBox
 from .custom_dropdown import QCustomDropdown
 
