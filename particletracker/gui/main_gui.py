@@ -24,7 +24,6 @@ from ..general.parameters import parse_values
 from ..general.param_file_creator import create_param_file
 
 from ..general.imageformat import bgr_to_rgb
-from ..general.dataframes import data_filename_create
 from .pandas_view import PandasWidget
 
 from .file_io import check_filenames, open_movie_dialog, open_settings_dialog, save_settings_dialog
@@ -72,7 +71,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.main_panel)
         #self.showFullScreen()
         
-        self.setMaximumSize(self.screen_size.width()-10, self.screen_size.height()-10)
+        self.setMaximumSize(self.screen_size.width()-30, self.screen_size.height()-30)
         self.showMaximized()
         self.setup_pandas_viewer()   
 
@@ -554,6 +553,7 @@ class MainWindow(QMainWindow):
             self.pandas_viewer.close()
             self.pandas_viewer.deleteLater()
         self.pandas_viewer = PandasWidget(parent=self)
+        self.update_pandas_view()
 
     def pandas_button_click(self):
         if self.pandas_button.isChecked():

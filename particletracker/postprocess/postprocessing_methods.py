@@ -1081,8 +1081,20 @@ def add_frame_data(df, f_index=None, parameters=None, *args, **kwargs):
     #print('add_frame_data ',df[parameters['new_column_name']].dtype)
     return df
 
+def get_duty_cycle():
+    """The shaker amplitude in our experiments is encoded into the audio of our video frames. We
+    do this in units of the duty_cycle. This is extracted using a fft. The value of the duty_cycle is 
+    written in a column for each frame number."""
+    pass
 
-
+def calibrate_acceleration():
+    """Our experiments use a proxy known as the duty cycle to control the amplitude 
+    of the shaking applied. A calibration curve is measured which converts each duty cycle
+    to its corresponding value of gamma in g. This function assumes that the calibration file "shaker1_accelerometer......txt"
+    is stored in a folder called "Calibrations" which is in the same folder as the video. The calibration file should have two columns
+    duty_cycle, acceleration.
+    """
+    pass
 
 
 

@@ -74,9 +74,9 @@ class CheckableTabWidget(QTabWidget):
         '''
         method_list = list(self.param_dict[title][title + '_method'])
         if ('track' in title) or ('link' in title):
-            self.draggable_list = MyListWidget(method_list, dynamic=False)
+            self.draggable_list = MyListWidget(method_list, title=title, dynamic=False)
         else:
-            self.draggable_list = MyListWidget(method_list, dynamic=True)
+            self.draggable_list = MyListWidget(method_list, title=title, dynamic=True)
         self.list_draggable_lists.append(self.draggable_list)
         self.draggable_list.add_draggable_list_methods()
         self.draggable_list.listChanged.connect(self.method_change)
