@@ -1,4 +1,3 @@
-from PyQt5.QtCore import center
 import numpy as np
 from pytest import param
 import scipy.spatial as sp
@@ -71,6 +70,7 @@ def angle(df, f_index=None, parameters=None, *args, **kwargs):
         df_frame[parameters['output_name']] = np.arctan2(df_frame[parameters['y_column']],df_frame[parameters['x_column']])*(180/np.pi)
     else:
         df_frame[parameters['output_name']] = np.arctan2(df_frame[parameters['y_column']],df_frame[parameters['x_column']])
+    #print('angle ',df_frame[parameters['output_name']].dtype)
     df.loc[[f_index]] = df_frame
     return df
 
@@ -125,7 +125,7 @@ def classify(df, f_index=None, parameters=None, *args, **kwargs):
     
     df_frame[output_name] = df_frame[column].apply(_classify_fn, lower_threshold_value=lower_threshold_value, upper_threshold_value=upper_threshold_value)
     df.loc[[f_index]]=df_frame
-
+    #print('classify ',df_frame[output_name].dtype)
     return df
 
 
@@ -222,6 +222,11 @@ def contour_boxes(df, f_index=None, *args, **kwargs):
     df_frame['box_pts'] = box_pts
 
     df.loc[[f_index]] = df_frame
+    #print('contour_boxes ',df_frame['box_cx'].dtype)
+    #print('contour_boxes ',df_frame['box_angle'].dtype)
+    #print('contour_boxes ',df_frame['box_width'].dtype)
+    #print('contour_boxes ',df_frame['box_area'].dtype)
+    #print('contour_boxes ',df_frame['box_pts'].dtype)
     
     return df
 
@@ -409,6 +414,7 @@ def magnitude(df, f_index=None, parameters=None, *args, **kwargs):
 
     df_frame[output_name] = (df_frame[column]**2 + df_frame[column2]**2)**0.5
     df.loc[[f_index]] = df_frame
+    #print('magnitude ',df_frame[output_name].dtype)
     return df
 
 @error_handling
@@ -468,7 +474,7 @@ def neighbours(df, f_index=None, parameters=None, *args, **kwargs):
     elif method == 'kdtree':
             df_frame =_find_kdtree(df_frame, parameters=parameters)     
     df.loc[[f_index]] = df_frame
-
+    #print('neighbours ',df_frame['neighbours'].dtype)
     return df
 
 def _find_kdtree(df, parameters=None):
@@ -480,10 +486,9 @@ def _find_kdtree(df, parameters=None):
     _, indices = tree.query(points, k=num_neighbours+1, distance_upper_bound=cutoff)
     neighbour_ids = []
     fill_val = np.size(particle_ids)
-    for index, row in enumerate(indices):
+    for _, row in enumerate(indices):
         neighbour_ids.append([particle_ids[row[i+1]] for i in range(num_neighbours) if row[i+1] != fill_val])
     
-    #df.loc[:, ['neighbours']] = neighbour_ids
     df.loc['neighbours'] = neighbour_ids
     return df
 
@@ -502,7 +507,7 @@ def _find_delaunay(df, parameters=None):
     indices = []
     for index, row in enumerate(neighbour_ids):
         indices.append([particle_ids[neighbour_ids[index][j]] for j,dummy in enumerate(row) if neighbour_dists[index][j]])
-    #df.loc[:, ['neighbours']] = indices
+    
     df['neighbours']=indices
     return df
 
@@ -553,7 +558,8 @@ def voronoi(df, f_index=None, *args, **kwargs):
     df_frame['voronoi']=_get_voronoi_coords(vor)
     df_frame['voronoi_area']=_voronoi_props(vor)
     df.loc[[f_index]] = df_frame
-
+    #print('voronoi ',df_frame['voronoi'].dtype)
+    #print('voronoi ',df_frame['voronoi_area'].dtype)
     return df
 
 def _get_voronoi_coords(vor):
@@ -651,6 +657,8 @@ def hexatic_order(df, f_index=None, parameters=None, *args, **kwargs):
     df_frame['hexatic_order'] = orders
     df_frame['number_of_neighbours'] = np.real(neighbors)
     df.loc[[f_index]] = df_frame
+    #print('hexatic ',df_frame['hexatic_order'].dtype)
+    #print('hexatic ',df_frame['number_of_neighbours'].dtype)
     return df
 
 @error_handling
@@ -686,7 +694,8 @@ def absolute(df, f_index=None, parameters=None, *args, **kwargs):
     df_frame = df.loc[[f_index]]
     
     df_frame[column_name + '_abs'] = np.abs(df_frame[column_name])
-    df.loc[[f_index]] = df_frame        
+    df.loc[[f_index]] = df_frame    
+    #print('absolute ',df_frame[column_name + '_abs'].dtype)    
     return df
 
 @error_handling
@@ -732,7 +741,10 @@ def real_imag(df, f_index=None, parameters=None, *args, **kwargs):
     df_frame[column_name + '_ang'] = np.angle(df_frame[column_name])
 
     df.loc[[f_index]] = df_frame
-    
+    #print('real_imag ',df_frame[column_name + '_re'].dtype)
+    #print('real_imag ',df_frame[column_name + '_im'].dtype)
+    #print('real_imag ',df_frame[column_name + '_mag'].dtype)
+    #print('real_imag ',df_frame[column_name + '_ang'].dtype)
     return df
 
 @error_handling
@@ -831,7 +843,7 @@ def difference(df, f_index=None, parameters=None, *args, **kwargs):
     df_frames = df.loc[start:finish,[column,'particle']]
     df_diff=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
     df.loc[f_index,[output_name]]=df_diff.loc[f_index]
-
+    #print('difference ',df[output_name].dtype)
     return df
 
 @error_handling
@@ -891,6 +903,7 @@ def mean(df, f_index=None, parameters=None, *args, **kwargs):
     df_output=df_frames.groupby('particle')[column].rolling(span, center=True).mean().transform(lambda x:x).to_frame(name=output_name)
     df_output.reset_index('particle', inplace=True)
     df.loc[f_index,[output_name]]=df_output.loc[f_index]
+    #print('mean ',df_output[output_name].dtype)
     return df
 
 @error_handling
@@ -951,7 +964,7 @@ def median(df, f_index=None, parameters=None, *args, **kwargs):
     df_output=df_frames.groupby('particle')[column].rolling(span, center=True).median().transform(lambda x:x).to_frame(name=output_name)
     df_output.reset_index('particle', inplace=True)
     df.loc[f_index,[output_name]]=df_output.loc[f_index]
-
+    #print('median ',df_output[output_name].dtype)
     return df
 
 @error_handling
@@ -1014,6 +1027,7 @@ def rate(df, f_index=None, parameters=None, *args, **kwargs):
     df_frames = df.loc[start:finish,[column,'particle']]
     df_output=df_frames.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
     df.loc[f_index,[output_name]]=df_output.loc[f_index] / (float(span)/float(fps))
+    #print('rate ',df_output[output_name].dtype)
     return df
 
 
@@ -1064,7 +1078,7 @@ def add_frame_data(df, f_index=None, parameters=None, *args, **kwargs):
         filename = filename + '.csv'
     new_df = pd.read_csv(filename, header=None).squeeze("columns")
     df[parameters['new_column_name']] = new_df
-
+    #print('add_frame_data ',df[parameters['new_column_name']].dtype)
     return df
 
 
