@@ -5,7 +5,7 @@ import warnings
 import pandas as pd
 
 from ..general.parameters import get_param_val, get_method_key, param_parse
-from .cmap import colour_array
+from .cmap import colour_array, place_colourbar_in_image
 from ..customexceptions import *
 from ..user_methods import *
 
@@ -300,12 +300,14 @@ def boxes(frame, data, f, parameters=None, *args, **kwargs):
             #0 boxes
             return frame
 
-    colours = colour_array(subset_df, f, parameters)
+    (colours, colourbar) = colour_array(subset_df, f, parameters)
 
     for index, box in enumerate(box_pts):
         frame = _draw_contours(frame, box, col=colours[index],
                                 thickness=int(parameters['thickness']))
-
+        
+    if colourbar is not None:
+        frame = place_colourbar_in_image(frame, colourbar, parameters) 
     return frame
 
 
@@ -317,7 +319,7 @@ def _contour_inside_img(sz, contour):
             inside = False
     return inside
     
-#@error_handling
+@error_handling
 @param_parse
 def circles(frame, data, f, parameters=None, *args, **kwargs):
     """
@@ -393,14 +395,16 @@ def circles(frame, data, f, parameters=None, *args, **kwargs):
     if np.all(df_empty):
         return frame
     
-    colours = colour_array(subset_df, f, parameters)
+    (colours, colourbar) = colour_array(subset_df, f, parameters)
     
     if np.shape(circles) == (3,):#One object
         frame = cv2.circle(frame, (int(circles[0]), int(circles[1])), int(circles[2]), colours[0], int(thickness))
     else:
         for i, circle in enumerate(circles):
             frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), int(circle[2]), colours[i], int(thickness))
-
+    
+    if colourbar is not None:
+        frame = place_colourbar_in_image(frame, colourbar, parameters) 
     return frame
     
 @error_handling
@@ -436,6 +440,8 @@ def contours(frame, data, f, parameters=None, *args, **kwargs):
         Specifies max data value for colour map in dynamic mode
     cmap_scale
         Scale factor for colour map
+    colour_bar
+        Add a colour bar. This only works with dynamic cmap. The values can be None or a tuple specifying (x,y,width,height).
     colour
         Colour to be used for static cmap_type (B,G,R) values from 0-255
     classifier_column
@@ -463,15 +469,12 @@ def contours(frame, data, f, parameters=None, *args, **kwargs):
     Returns
     -----------
         annotated frame : np.ndarray
-    """
-
-    
+    """    
     thickness = parameters['thickness']
     
     subset_df = _get_class_subset(data, f, parameters)
     contour_pts = subset_df[['contours']].values
-    colours = colour_array(subset_df, f, parameters)
-
+    (colours, colourbar) = colour_array(subset_df, f, parameters)
     if np.shape(contour_pts)[0] == 1:
         df_empty = np.isnan(contour_pts[0])
         if np.all(df_empty):
@@ -482,6 +485,8 @@ def contours(frame, data, f, parameters=None, *args, **kwargs):
         frame = _draw_contours(frame, contour, col=colours[index],
                                         thickness=int(thickness))
     
+    if colourbar is not None:
+        frame = place_colourbar_in_image(frame, colourbar, parameters) 
     return frame
 
 @error_handling
@@ -548,7 +553,7 @@ def networks(frame, data, f, parameters=None, *args, **kwargs):
     df = _get_class_subset(data, f, parameters)
     df = df.set_index('particle')
     particle_ids = df.index.values
-    colours = colour_array(df, f, parameters)
+    (colours, colourbar) = colour_array(df, f, parameters)
     thickness = parameters['thickness']
 
     for index, particle in enumerate(particle_ids):
@@ -559,6 +564,8 @@ def networks(frame, data, f, parameters=None, *args, **kwargs):
             pt = df.loc[neighbour, ['x','y']].values
             pt2 = (int(pt[0]), int(pt[1]))
             frame = cv2.line(frame,pt1, pt2, colours[index], int(thickness), lineType=cv2.LINE_AA)
+    if colourbar is not None:
+        frame = place_colourbar_in_image(frame, colourbar, parameters) 
     return frame
 
 @error_handling
@@ -619,7 +626,7 @@ def voronoi(frame, data, f, parameters=None, *args, **kwargs):
 
     subset_df = _get_class_subset(data, f, parameters)
     contour_pts = subset_df[['voronoi']].values
-    colours = colour_array(subset_df, f, parameters)
+    (colours, colourbar) = colour_array(subset_df, f, parameters)
 
     if np.shape(contour_pts)[0] == 1:
         df_empty = np.isnan(contour_pts[0])
@@ -630,6 +637,8 @@ def voronoi(frame, data, f, parameters=None, *args, **kwargs):
     for index, contour in enumerate(contour_pts):
         frame = _draw_polygon(frame, contour, col=colours[index],
                                         thickness=int(thickness))
+    if colourbar is not None:
+        frame = place_colourbar_in_image(frame, colourbar, parameters) 
     return frame
 
 
@@ -721,12 +730,14 @@ def vectors(frame, data, f, parameters=None, *args, **kwargs):
     tip_length = 0.01*parameters['tip_length']
     vector_scale = 0.01*parameters['vector_scale']
 
-    colours = colour_array(data.df, f, parameters)
+    (colours, colourbar) = colour_array(data.df, f, parameters)
 
     for i, vector in enumerate(vectors):
         frame = cv2.arrowedLine(frame, (int(vector[0]), int(vector[1])),
                                 (int(vector[0]+vector[2]*vector_scale),int(vector[1]+vector[3]*vector_scale)),
                                 color=colours[i], thickness=int(thickness),line_type=line_type,shift=0,tipLength=tip_length)
+    if colourbar is not None:
+        frame = place_colourbar_in_image(frame, colourbar, parameters) 
     return frame
 
 
@@ -800,7 +811,7 @@ def trajectories(frame, data, f, parameters=None, *args, **kwargs):
     subset_df = _get_class_subset(data, f, parameters)
     particle_ids = subset_df['particle'].values
 
-    colours = colour_array(subset_df, f, parameters)
+    (colours, colourbar) = colour_array(subset_df, f, parameters)
     thickness = parameters['thickness']
     traj_length = parameters['traj_length']
 
@@ -817,4 +828,6 @@ def trajectories(frame, data, f, parameters=None, *args, **kwargs):
         traj_pts = np.array(traj_pts.values, np.int32).reshape((-1,1,2))
         frame = cv2.polylines(frame,[traj_pts],False,colours[index],int(thickness))
     
+    if colourbar is not None:
+        frame = place_colourbar_in_image(frame, colourbar, parameters)     
     return frame

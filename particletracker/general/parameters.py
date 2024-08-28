@@ -39,6 +39,8 @@ def parse_values(sender, value):
     '''
     Determines the type of QWidget sending and converts data to
     correct format for entry into the parameters dictionary.
+    A lot of this code is turning string representations into actual
+    python data types.
     '''
     
     if sender.widget == 'slider':
@@ -60,7 +62,9 @@ def parse_values(sender, value):
             value = tuple([tuple(map(int,split_string[i].split(','))) for i in range(len(split_string))])
             return value
         elif '(' in value:
-            return tuple(list(map(int, value[1:-1].replace(' ','').split(','))))
+            #Creates a tuple of values from a string representing a tuple
+            value = tuple(list(map(int, value[1:-1].replace(' ','').split(','))))
+            return value
         else:
             return value
     else:
@@ -74,7 +78,16 @@ def ok_to_duplicate_method_check(method):
 
 
 def param_parse(func):
-    """param_format decorator. This performs steps to correctly format the parameters for the function call."""
+    """param_format decorator. This performs steps to correctly format the parameters for the function call.
+    
+    When you call a function which has this decorator it extracts the method_key from the function name. It then extracts the 
+    section of the parameters dictionary corresponding to that method_key. It parses the parameter values to form
+    a dictionary which is then passed to the function as part of the kwargs. Only use this if you just
+    need the section of the dictionary corresponding to the method_key. If you need other bits of the dictionary
+    you'll need to implement this inside  your function and not have the decorator.
+
+    There is an example in preprocessing >  subtract_bkg
+    # """
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         method_key = get_method_key(func.__name__, call_num=kwargs['call_num'])

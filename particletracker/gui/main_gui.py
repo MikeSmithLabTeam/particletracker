@@ -483,6 +483,7 @@ class MainWindow(QMainWindow):
                 self.tracker.parameters[location[0]][location[1]][location[2]][0] = value 
             else:
                 self.tracker.parameters[location[0]][location[1]][location[2]] = value 
+                
 
     def update_param_widgets(self, title):
         for param_adjustor in self.toplevel_settings.list_param_adjustors:

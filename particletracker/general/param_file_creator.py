@@ -178,6 +178,7 @@ def create_param_file(filename):
                 'cmap_column':'x',  #None
                 'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
                 'cmap_min':[0.0,0.0,1000.0,0.1],
+                'colour_bar': None,#(x,y,width,height) or None
                 'cmap_name': 'jet',
                 'colour': (0, 255, 0),  # For static
                 'classifier_column': None,  # For static or dynamic
@@ -193,6 +194,7 @@ def create_param_file(filename):
                     'cmap_column':'x',#for dynamic
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
                     'cmap_min':[0.0,0.0,2000.0,0.1],
+                    'colour_bar': None,#(x,y,width,height) or None
                     'cmap_name': 'jet',
                     'colour': (0,255,0),#For static
                     'classifier_column': None,#For static or dynamic
@@ -204,7 +206,8 @@ def create_param_file(filename):
                     'cmap_column':'x',#For dynamic
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
                     'cmap_min':[0.0,0.0,1000.0,0.1],
-                'cmap_name': 'jet',
+                    'cmap_name': 'jet',
+                    'colour_bar': None,#(x,y,width,height) or None
                     'colour': (0,255,0),#For static
                     'classifier_column': None,#For static or dynamic
                     'classifier': [True, ('True','False')],
@@ -217,6 +220,7 @@ def create_param_file(filename):
                     'cmap_column':'x',#For dynamic
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
                     'cmap_min':[0.0,0.0,1000.0,0.1],
+                    'colour_bar': None,#(x,y,width,height) or None
                 'cmap_name': 'jet',
                     'colour': (64,224,208),#For static
                     'classifier_column':None,#For static or dynamic
@@ -233,6 +237,7 @@ def create_param_file(filename):
                     'cmap_column':'x',#For dynamic
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
                     'cmap_min':[0.0,0.0,1000.0,0.1],
+                    'colour_bar': None,#(x,y,width,height) or None
                 'cmap_name': 'jet',
                     'colour': (0,0,255),#For static
                     'classifier_column':None,#For static or dynamic
@@ -244,6 +249,7 @@ def create_param_file(filename):
                     'cmap_column':'x',#For dynamic                  
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
                     'cmap_min':[0.0,0.0,1000.0,0.1],
+                    'colour_bar': None,#(x,y,width,height) or None
                 'cmap_name': 'jet',
                     'classifier_column': None,
                     'classifier': [True, ('True','False')],
@@ -255,6 +261,7 @@ def create_param_file(filename):
                     'cmap_column':'voronoi_area',#For dynamic                      'classifier': 1,#For static or dynamic
                     'cmap_max':[100.0,0,1000.0,0.1],#For dynamic
                     'cmap_min':[0.0,0.0,1000.0,0.1],
+                    'colour_bar': None,#(x,y,width,height) or None
                 'cmap_name': 'jet',
                     'classifier_column': None,
                     'classifier': [True, ('True','False')],
