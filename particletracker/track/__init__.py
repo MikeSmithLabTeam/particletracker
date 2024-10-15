@@ -71,7 +71,6 @@ class ParticleTracker(QObject):
             data_filename = self.data_filename[:-5] + '_temp.hdf5'
 
         with dataframes.DataStore(data_filename) as data:
-            print(data.df)
             if f_index is None:
                 start = self.cap.frame_range[0]
                 stop = self.cap.frame_range[1]

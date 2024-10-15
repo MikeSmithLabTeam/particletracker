@@ -49,7 +49,7 @@ def open_movie_dialog(self, movie_filename=None):
                                                         self.movie_filename.split('.')[0],
                                                         "mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v);;png (*.png);;jpg (*.jpg);;tiff (*.tiff)", options=options)
     if filename:
-        movie_filename = filename
+        movie_filename = _create_wildcard_filename_img_seq(filename)
 
     return movie_filename
         
@@ -67,6 +67,7 @@ def _create_wildcard_filename_img_seq(movie_filename):
         path, filename = os.path.split(movie_filename)
         filename_stub, ext = os.path.splitext(filename)
         movie_filename = os.path.join(path, '*' + ext)
+        print('filename',movie_filename)
     return movie_filename
 
 def open_settings_dialog(self, settings_filename=None):

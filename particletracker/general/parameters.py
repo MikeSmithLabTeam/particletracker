@@ -33,7 +33,6 @@ def get_method_key(method, call_num=None):
 
 def get_parent(func):
     filename = func.__file__
-    print(os.path.dirname(filename))
 
 def parse_values(sender, value):
     '''

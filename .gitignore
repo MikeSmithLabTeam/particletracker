@@ -12,6 +12,7 @@ particletracker/testdata/
 *.hdf5
 *.xlsx
 *.param
+!testdata/*.param
 
 #Videos
 *.mp4
