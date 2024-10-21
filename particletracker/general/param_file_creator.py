@@ -100,6 +100,7 @@ def create_param_file(filename):
                  'output_name':'theta',
                  'units':['degrees',('radians','degrees')]},
         'audio_frequency':{},
+        'duty_to_acceleration':{'calibration_file':None},
         'classify':{'column_name':'x',
                     'output_name':'classifier',
                     'lower_threshold':[0.01, 0.01, 100.00, 0.01],

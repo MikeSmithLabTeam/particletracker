@@ -6,6 +6,7 @@ import cv2
 import os
 import subprocess
 import pandas as pd
+import scipy.optimize as opt
 
 from labvision import audio, video
 from moviepy.editor import AudioFileClip
@@ -781,6 +782,53 @@ def audio_frequency(df, f_index=None, parameters=None, *args, **kwargs):
     df.loc[f_index] = df_frame
     return df
 
+@error_handling
+@param_parse
+def duty_to_acceleration(df, f_index=None, parameters=None, *args, **kwargs):
+    """
+    Calculates dimensionless acceleration values of the system. Takes audio frequency 
+    from function: 'audio_frequency' and calculates duty cycle. Acceleration determined
+    from calibration data file supplied by user (must be .csv). 
+
+    Note: Duty cycles in calibration data file must be in integer steps.
+    
+    Args
+    ----
+        df ([type]): [description]
+        f_index ([type], optional): [description]. Defaults to None.
+        parameters ([type], optional): [description]. Defaults to None.
+        call_num ([type], optional): [description]. Defaults to None.
+
+    Returns
+    -------
+        [type]: [description]
+"""
+    if 'acceleration' not in df.columns:
+        df['duty_cycle'] = np.nan
+        df['acceleration'] = np.nan
+    
+    filepath = parameters['calibration_file']
+    calibration_data = pd.read_csv(str(filepath))
+
+    df_frame = df.loc[[f_index]] 
+    
+    peak_freq = df_frame['audio_frequency']
+    duty = (peak_freq.iloc[0] - 1000) / 15
+
+    cal_arr = calibration_data.to_numpy()
+    acc_data, duty_data = cal_arr[:,1], cal_arr[:,0]
+
+    func = lambda x,a,b,c,d,e, : a*x**4 + b*x**3 + c*x**2 + d*x + e
+    popt, pcov = opt.curve_fit(func, duty_data, acc_data)
+    duty_interp = np.linspace(np.min(duty_data), np.max(duty_data), 10000)
+    acc_interp = func(duty_interp, *popt)
+    duty_idx, = np.where(np.round(duty_interp,1)==np.round(duty,1))
+    acceleration = np.round(acc_interp[duty_idx[0]], 2)
+    df_frame['duty_cycle'] = duty
+    df_frame['acceleration'] = acceleration
+
+    df.loc[f_index] = df_frame    
+    return df
 
 '''
 ---------------------------------------------------------------------------------------------
