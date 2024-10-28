@@ -10,7 +10,7 @@ import scipy.optimize as opt
 
 from labvision import audio, video
 from moviepy.editor import AudioFileClip
-
+from ..general.calibration_fitting import calibration_fitting
 from ..general.parameters import get_method_key, get_param_val, param_parse
 from ..customexceptions import *
 from ..user_methods import *
@@ -788,9 +788,9 @@ def duty_to_acceleration(df, f_index=None, parameters=None, *args, **kwargs):
     """
     Calculates dimensionless acceleration values of the system. Takes audio frequency 
     from function: 'audio_frequency' and calculates duty cycle. Acceleration determined
-    from calibration data file supplied by user (must be .csv). 
-
-    Note: Duty cycles in calibration data file must be in integer steps.
+    from calibration data file supplied by user (must be .csv). Fitting of duty vs acceleration
+    is performed externally. 
+    Calibration data and fit params saved to "Z:/shaker/config"
     
     Args
     ----
@@ -807,27 +807,30 @@ def duty_to_acceleration(df, f_index=None, parameters=None, *args, **kwargs):
         df['duty_cycle'] = np.nan
         df['acceleration'] = np.nan
     
-    filepath = parameters['calibration_file']
-    calibration_data = pd.read_csv(str(filepath))
-
     df_frame = df.loc[[f_index]] 
-    
-    peak_freq = df_frame['audio_frequency']
-    duty = (peak_freq.iloc[0] - 1000) / 15
 
-    cal_arr = calibration_data.to_numpy()
-    acc_data, duty_data = cal_arr[:,1], cal_arr[:,0]
+    try:
+        filepath = parameters['calibration_filepath']
+        calibration_data = pd.read_csv(str(filepath))
+        path, name = filepath.rsplit('/', 1)
+        fit_params = np.loadtxt(str(path)+"/calibration_fit_param.txt")
+    except OSError as e:
+        raise Exception
 
     func = lambda x,a,b,c,d,e, : a*x**4 + b*x**3 + c*x**2 + d*x + e
-    popt, pcov = opt.curve_fit(func, duty_data, acc_data)
+
+    peak_freq = df_frame['audio_frequency']
+    duty = (peak_freq.iloc[0] - 1000) / 15
+    cal_arr = calibration_data.to_numpy()
+    duty_data = cal_arr[:,0]
     duty_interp = np.linspace(np.min(duty_data), np.max(duty_data), 10000)
-    acc_interp = func(duty_interp, *popt)
+    acc_interp = func(duty_interp, *fit_params)
     duty_idx, = np.where(np.round(duty_interp,1)==np.round(duty,1))
     acceleration = np.round(acc_interp[duty_idx[0]], 2)
+    
     df_frame['duty_cycle'] = duty
     df_frame['acceleration'] = acceleration
-
-    df.loc[f_index] = df_frame    
+    df.loc[f_index] = df_frame
     return df
 
 '''
