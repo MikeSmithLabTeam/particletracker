@@ -2,7 +2,7 @@ import numpy as np
 import scipy.optimize as opt
 import pandas as pd
 
-def calibration_fitting(filepath, filename, *args, **kwargs):
+def calibration_fit(filepath, filename, *args, **kwargs):
     """Function to fit a polynomial to given accelerometer calibration data.
     Takes filepath to .csv file, reads into a pandas dataframe, converts to
     numpy array then performs fit using scipy.optimize.curve_fit.

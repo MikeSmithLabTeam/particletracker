@@ -10,7 +10,6 @@ import scipy.optimize as opt
 
 from labvision import audio, video
 from moviepy.editor import AudioFileClip
-from ..general.calibration_fitting import calibration_fitting
 from ..general.parameters import get_method_key, get_param_val, param_parse
 from ..customexceptions import *
 from ..user_methods import *
@@ -789,7 +788,13 @@ def duty_to_acceleration(df, f_index=None, parameters=None, *args, **kwargs):
     Calculates dimensionless acceleration values of the system. Takes audio frequency 
     from function: 'audio_frequency' and calculates duty cycle. Acceleration determined
     from calibration data file supplied by user (must be .csv). Fitting of duty vs acceleration
-    is performed externally. 
+    is performed externally.
+    
+    Function fits a 4th order polynomial to acceleration calibration data using calibration_fit()
+    from particletracker.general.calibration_fitting.py. This function reads the fit parameters
+    from the output of calibration_fit() and uses them to interpolate duty cycle values into 
+    dimensionless accelerations.
+
     Calibration data and fit params saved to "Z:/shaker/config"
     
     Args
