@@ -52,8 +52,8 @@ def adaptive_threshold(img, parameters=None, *args, **kwargs):
     return bw_img
 
 @error_handling
-@param_parse
-def blur(img, parameters=None, *args, **kwargs):
+#@param_parse
+def blur(img, parameters=None, **kwargs):
     '''
     Performs a gaussian blur on the image
 
@@ -77,7 +77,9 @@ def blur(img, parameters=None, *args, **kwargs):
         single colour channel image.
 
     '''
-    kernel = (parameters['kernel'], parameters['kernel'])
+    method_key = get_method_key('blur', call_num=kwargs['call_num'])
+    params = get_param_val(parameters['preprocess'][method_key]['kernel'])
+    kernel = (params, params)
     gray_img = blurs.gaussian_blur(img, kernel=kernel)
     return gray_img
 
@@ -420,7 +422,7 @@ def subtract_bkg(img, parameters=None, call_num=None,*args, **kwargs):
             bkg_img = cv2.imread(params['subtract_bkg_filename'])
 
         if bkgtype == 'grayscale':
-            subtract_img = lab_imgs.colors.bgr_to_gray(bkg_img)
+            subtract_img = colours.bgr_to_gray(bkg_img)
         elif bkgtype == 'red':
             subtract_img = bkg_img[:, :, 2]
         elif bkgtype == 'green':
@@ -429,17 +431,15 @@ def subtract_bkg(img, parameters=None, call_num=None,*args, **kwargs):
             subtract_img = bkg_img[:, :, 0]
 
         subtract_img = crop(subtract_img, parameters['crop'])
-
-        img2 = blur(img, temp_params)
+        img2 = blur(img, temp_params, call_num=None)
         img2 = img2.astype(np.uint8)
-        subtract_img = blur(subtract_img, temp_params)
+        subtract_img = blur(subtract_img, temp_params, call_num=None)
         subtract_img = subtract_img.astype(np.uint8)
 
     if get_param_val(params['subtract_bkg_invert']):
         img2 = cv2.subtract(subtract_img, img2)
     else:
         img2 = cv2.subtract(img2, subtract_img)
-
     if np.max(img) == 0:
         img2 = img
 
