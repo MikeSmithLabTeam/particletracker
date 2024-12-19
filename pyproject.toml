@@ -21,8 +21,9 @@ dependencies = [
 "tables",
 "pillow",
 "scipy",
-"moviepy",
+"moviepy>=2.0",
 "slicerator",
+"pytest",
 "labvision @ git+https://github.com/MikeSmithLabTeam/labvision",
 "qtwidgets @ git+https://github.com/MikeSmithLabTeam/qtwidgets",
 "filehandling @ git+https://github.com/MikeSmithLabTeam/filehandling"

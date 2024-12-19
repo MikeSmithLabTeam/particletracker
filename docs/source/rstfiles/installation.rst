@@ -25,11 +25,11 @@ If you are comfortable in python skip through!
 On Windows type Anaconda at the windows search and then select "Anaconda Prompt"
 On Linux and Mac open a terminal. 
 
-- Create a conda environment by typing "conda create -n particle" where particle here is the name of the environment.
-- Type "conda activate particle"
+- Create a conda environment by typing "conda create -n particle" where particle here is the name of an `environment`.
+- Type `conda activate particle`
+- conda install pytables
 - conda install git
 - conda install pyqt
-- conda install pytables
 - pip install git+https://github.com/MikeSmithLabTeam/particletracker
 
 On Windows we sometimes ran into an error at this point concerning the hdflib that 
@@ -48,7 +48,7 @@ to upgrade use:
 - pip install --upgrade git+https://github.com/MikeSmithLabTeam/particletracker
 
 Once installed you will need some way to write simple code and execute it. The bare bones 
-approach is to use a notepad and write the few lines of code as detailed in "Getting started". Save 
+approach is to use notepad and write the few lines of code as detailed in "Getting started". Save 
 the file as eg. testscript.py and then from the conda command prompt navigate to the correct folder 
 and run this script using "python testscript.py". Alternatively and far better in the long run is to
 install a python IDE and learn how to run code in the conda environment you've 
@@ -64,7 +64,11 @@ Verifying the installation
 
 To verify that the installation is working correctly you should read the getting started section which 
 explains how to launch the software. Once you have done 
-this there are 5 example videos which also act as tutorials which should enable you to verify and test 
-the core functionality of the software.
+this there are 5 example videos which also act as tutorials which should enable you to verify and test the core functionality of the software.
+
+To download the testdata go to: https://download-directory.github.io/
+and paste in the following URL: https://github.com/MikeSmithLabTeam/particletracker/tree/master/testdata
+
+This will create a zip folder containing all the testdata and files needed for the tutorials.
 
 
