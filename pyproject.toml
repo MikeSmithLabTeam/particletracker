@@ -32,5 +32,4 @@ dependencies = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-filterwarnings = ["ignore:tables"]
+filterwarnings = ["ignore:your performance may suffer as PyTables will pickle object types that it cannot map directly to c-types:tables.PerformanceWarning"]

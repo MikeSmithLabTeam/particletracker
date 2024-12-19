@@ -9,7 +9,7 @@ import pandas as pd
 import scipy.optimize as opt
 
 from labvision import audio, video
-from moviepy.editor import AudioFileClip
+from moviepy.audio.io.AudioFileClip import AudioFileClip
 from ..general.parameters import get_method_key, get_param_val, param_parse
 from ..customexceptions import *
 from ..user_methods import *
@@ -20,7 +20,7 @@ All these methods operate on single frames
 '''
 @error_handling
 @param_parse
-def angle(df, f_index=None, parameters=None, *args, **kwargs):
+def angle(df,  *args, f_index=None, parameters=None, **kwargs):
     '''
     Angle calculates the angle specified by two components.
 
@@ -70,13 +70,13 @@ def angle(df, f_index=None, parameters=None, *args, **kwargs):
         df_frame[parameters['output_name']] = np.arctan2(df_frame[parameters['y_column']],df_frame[parameters['x_column']])*(180/np.pi)
     else:
         df_frame[parameters['output_name']] = np.arctan2(df_frame[parameters['y_column']],df_frame[parameters['x_column']])
-    #print('angle ',df_frame[parameters['output_name']].dtype)
+    
     df.loc[[f_index]] = df_frame
     return df
 
 @error_handling
 @param_parse
-def classify(df, f_index=None, parameters=None, *args, **kwargs):
+def classify(df, *args, f_index=None, parameters=None, **kwargs):
     '''
     Classifies particles based on values in a particular column
 
@@ -116,16 +116,14 @@ def classify(df, f_index=None, parameters=None, *args, **kwargs):
     '''
     column = parameters['column_name']
     output_name=parameters['output_name']
-    lower_threshold_value = parameters['lower_threshold']
-    upper_threshold_value = parameters['upper_threshold']
 
     if output_name not in df.columns:
         df[output_name] = np.nan
     df_frame = df.loc[[f_index]]
     
-    df_frame[output_name] = df_frame[column].apply(_classify_fn, lower_threshold_value=lower_threshold_value, upper_threshold_value=upper_threshold_value)
+    df_frame[output_name] = df_frame[column].apply(_classify_fn, lower_threshold_value=parameters['lower_threshold'], upper_threshold_value=parameters['upper_threshold'])
     df.loc[[f_index]]=df_frame
-    #print('classify ',df_frame[output_name].dtype)
+    
     return df
 
 
@@ -137,7 +135,7 @@ def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
 
 @error_handling
 @param_parse
-def contour_boxes(df, f_index=None, *args, **kwargs):
+def contour_boxes(df, *args, f_index=None, **kwargs):
     """
     Contour boxes calculates the rotated minimum area bounding box
 
@@ -222,11 +220,6 @@ def contour_boxes(df, f_index=None, *args, **kwargs):
     df_frame['box_pts'] = box_pts
 
     df.loc[[f_index]] = df_frame
-    #print('contour_boxes ',df_frame['box_cx'].dtype)
-    #print('contour_boxes ',df_frame['box_angle'].dtype)
-    #print('contour_boxes ',df_frame['box_width'].dtype)
-    #print('contour_boxes ',df_frame['box_area'].dtype)
-    #print('contour_boxes ',df_frame['box_pts'].dtype)
     
     return df
 
@@ -243,7 +236,7 @@ def _rotated_bounding_rectangle(contour):
 
 @error_handling
 @param_parse
-def logic_AND(df, f_index=None, parameters=None, *args, **kwargs):
+def logic_AND(df, *args, f_index=None, parameters=None, **kwargs):
     '''
     Applys a logical and operation to two columns of boolean values.
 
@@ -289,7 +282,7 @@ def logic_AND(df, f_index=None, parameters=None, *args, **kwargs):
 
 @error_handling
 @param_parse
-def logic_NOT(df, f_index=None, parameters=None, *args, **kwargs):
+def logic_NOT(df, *args, f_index=None, parameters=None, **kwargs):
     '''
     Apply a logical not operation to a column of boolean values.
 
@@ -323,6 +316,7 @@ def logic_NOT(df, f_index=None, parameters=None, *args, **kwargs):
     '''
     column = parameters['column_name']
     output_name = parameters['output_name']
+    
     if output_name not in df.columns:
         df[output_name] = np.nan
     df_frame = df.loc[[f_index]]
@@ -333,7 +327,7 @@ def logic_NOT(df, f_index=None, parameters=None, *args, **kwargs):
 
 @error_handling
 @param_parse
-def logic_OR(df, f_index=None, parameters=None, *args, **kwargs):
+def logic_OR(df, *args, f_index=None, parameters=None, **kwargs):
     '''
     Apply a logical or operation to two columns of boolean values.
 
@@ -376,7 +370,7 @@ def logic_OR(df, f_index=None, parameters=None, *args, **kwargs):
 
 @error_handling
 @param_parse
-def magnitude(df, f_index=None, parameters=None, *args, **kwargs):
+def magnitude(df, *args, f_index=None, parameters=None, **kwargs):
     '''
     Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
     
@@ -385,11 +379,9 @@ def magnitude(df, f_index=None, parameters=None, *args, **kwargs):
     column_name     :   First column
     column_name     :   Second column
     output_name     :   Column name for magnitude df
-    
-    
+        
     Args
     ----
-
     df
         The dataframe in which all data is stored
     f_index
@@ -414,12 +406,12 @@ def magnitude(df, f_index=None, parameters=None, *args, **kwargs):
 
     df_frame[output_name] = (df_frame[column]**2 + df_frame[column2]**2)**0.5
     df.loc[[f_index]] = df_frame
-    #print('magnitude ',df_frame[output_name].dtype)
+    
     return df
 
 @error_handling
 @param_parse
-def neighbours(df, f_index=None, parameters=None, *args, **kwargs):
+def neighbours(df, *args, f_index=None, parameters=None, **kwargs):
     '''
     Find the nearest neighbours of a particle
 
@@ -437,6 +429,7 @@ def neighbours(df, f_index=None, parameters=None, *args, **kwargs):
     ----------
     method
         'delaunay' or 'kdtree'
+        https: // docs.scipy.org / doc / scipy / reference / generated / scipy.spatial.Delaunay.html
     neighbours
         max number of neighbours to find. This is only relevant for the kdtree.
     cutoff
@@ -460,9 +453,7 @@ def neighbours(df, f_index=None, parameters=None, *args, **kwargs):
         updated dataframe including new column
 
 
-    '''
-    #https: // docs.scipy.org / doc / scipy / reference / generated / scipy.spatial.Delaunay.html
-    
+    '''    
     method = parameters['method']
 
     if 'neighbours' not in df.columns:
@@ -474,7 +465,7 @@ def neighbours(df, f_index=None, parameters=None, *args, **kwargs):
     elif method == 'kdtree':
             df_frame =_find_kdtree(df_frame, parameters=parameters)     
     df.loc[[f_index]] = df_frame
-    #print('neighbours ',df_frame['neighbours'].dtype)
+
     return df
 
 def _find_kdtree(df, parameters=None):
@@ -513,7 +504,7 @@ def _find_delaunay(df, parameters=None):
 
 @error_handling
 @param_parse
-def voronoi(df, f_index=None, *args, **kwargs):
+def voronoi(df, *args, f_index=None, **kwargs):
     """
     Calculate the voronoi network of particle.
 
@@ -602,22 +593,19 @@ def _get_class_subset(df, f, parameters, method=None):
 
 @error_handling
 @param_parse
-def hexatic_order(df, f_index=None, parameters=None, *args, **kwargs):
+def hexatic_order(df, *args, f_index=None, parameters=None, **kwargs):
     """
     Calculates the hexatic order parameter of each particle. Neighbours are 
     calculated using the Delaunay network with a cutoff distance defined by "cutoff"
     parameter.
-
 
     Parameters
     ----------
     cutoff
         Distance threshold for calculation of neighbors
 
-
     Args
     ----
-
     df
         The dataframe for all data
     f_index
@@ -629,7 +617,6 @@ def hexatic_order(df, f_index=None, parameters=None, *args, **kwargs):
     Returns
     -------
     df with additional column
-
     """
     threshold = parameters['cutoff']
 
@@ -647,6 +634,7 @@ def hexatic_order(df, f_index=None, parameters=None, *args, **kwargs):
     summands = np.exp(6j*angles)
     summands *= length_filters
     list_indices -= 1
+
     # sum the angles and count neighbours for each particle
     stacked = np.cumsum((summands, length_filters), axis=1)[:, list_indices[1:]]
     stacked[:, 1:] = np.diff(stacked, axis=1)
@@ -654,16 +642,16 @@ def hexatic_order(df, f_index=None, parameters=None, *args, **kwargs):
     indxs = neighbors != 0
     orders = np.zeros_like(neighbors)
     orders[indxs] = stacked[0, indxs] / neighbors[indxs]
+    
     df_frame['hexatic_order'] = orders
     df_frame['number_of_neighbours'] = np.real(neighbors)
     df.loc[[f_index]] = df_frame
-    #print('hexatic ',df_frame['hexatic_order'].dtype)
-    #print('hexatic ',df_frame['number_of_neighbours'].dtype)
+   
     return df
 
 @error_handling
 @param_parse
-def absolute(df, f_index=None, parameters=None, *args, **kwargs):
+def absolute(df, *args, f_index=None, parameters=None, **kwargs):
     """Returns new column with absolute value of input column
 
     Parameters
@@ -700,7 +688,7 @@ def absolute(df, f_index=None, parameters=None, *args, **kwargs):
 
 @error_handling
 @param_parse
-def real_imag(df, f_index=None, parameters=None, *args, **kwargs):
+def real_imag(df, *args, f_index=None, parameters=None, **kwargs):
     """
     Extracts the real, imaginary, complex magnitude and complex angle from a complex number and puts them in
     new columns. Mainly useful for subsequent annotation with dynamic colour map.
@@ -741,14 +729,10 @@ def real_imag(df, f_index=None, parameters=None, *args, **kwargs):
     df_frame[column_name + '_ang'] = np.angle(df_frame[column_name])
 
     df.loc[[f_index]] = df_frame
-    #print('real_imag ',df_frame[column_name + '_re'].dtype)
-    #print('real_imag ',df_frame[column_name + '_im'].dtype)
-    #print('real_imag ',df_frame[column_name + '_mag'].dtype)
-    #print('real_imag ',df_frame[column_name + '_ang'].dtype)
     return df
 
 @error_handling
-def audio_frequency(df, f_index=None, parameters=None, *args, **kwargs):
+def audio_frequency(df, *args, f_index=None, parameters=None, **kwargs):
     """
     Decodes the audio frequency in our videos. We use this to 
     encode information about the acceleration being applied to a video
@@ -763,19 +747,26 @@ def audio_frequency(df, f_index=None, parameters=None, *args, **kwargs):
 
     Returns
     -------
-        [type]: [description]
-"""
+        pd.DataFrame: tracking dataframe with data added
+""" 
+    #Audio encoding frequency
+    bitrate=48000
+
     filename = parameters['experiment']['video_filename']
-    command = f"ffmpeg -i {filename} -ar 48000 -ss {0.02*f_index} -to {0.02*(f_index+1)} -vn out.wav"
+    
+    #Get audio from video for one frame
     if os.path.exists("out.wav"):
         os.remove("out.wav")
+        command = f"ffmpeg -i {filename} -ar 48000 -ss {0.02*f_index} -to {0.02*(f_index+1)} -vn out.wav"
     subprocess.call(command, shell=True, stderr=subprocess.DEVNULL)
-    audio_arr = AudioFileClip("out.wav").to_soundarray(fps=48000, nbytes=2)[:, 0]
-    ft = np.abs(np.fft.fft(audio_arr, n=len(audio_arr)))
-    freq = np.fft.fftfreq(len(audio_arr), 1/48000)
-    peak = int(abs(freq[np.argmax(ft)]))
+
+    #convert to array
+    audio_arr = audio.extract_wav("out.wav")[:,0]
+    peak = audio.fourier_transform_peak(audio_arr,1/bitrate)
+    
     if 'audio_frequency' not in df.columns:
         df['audio_frequency'] = -1.0
+
     df_frame = df.loc[[f_index]]
     df_frame['audio_frequency'] = peak
     df.loc[f_index] = df_frame

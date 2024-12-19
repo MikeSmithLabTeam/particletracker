@@ -10,6 +10,7 @@ from ..general.dataframes import data_filename_create
 from ..customexceptions import BaseError, flash_error_msg, CsvError
 
 
+
 class PTWorkflow:
     '''
     PTWorkflow is a parent class that handles the workflow of a particle tracking project. If you don't worry about 
