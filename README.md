@@ -13,14 +13,11 @@ ParticleTracker is a gui based particle tracking software that brings together a
 ## Installation from github
 Full details in documentation but in brief:
 
-Create fresh Conda environment (Currently seem to be some issues with python3.11 and pytables. Use python 3.10 like this: conda create -n <ENVNAME> python=3.10)
-
-    conda install git
-
-    conda install pyqt
+Create fresh Conda environment (Currently seem to be some issues with pytables not being compatible with all minor versions of python. Create a new Conda environment: conda create -n pt and then install these packages in this order. Doing this makes sure you get a python version compatible with pytables.
 
     conda install pytables
-
+    conda install pyqt
+    conda install git  
     pip install git+https://github.com/MikeSmithLabTeam/particletracker
     
 ## Updating if already installed
