@@ -4,9 +4,6 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.packages]
-find = {include=["particletracker"], exclude = ["testdata"]}
-
 [project]
 name = "particletracker"
 version = "2.1.2"
@@ -33,3 +30,9 @@ dependencies = [
 
 [tool.pytest.ini_options]
 filterwarnings = ["ignore:your performance may suffer as PyTables will pickle object types that it cannot map directly to c-types:tables.PerformanceWarning"]
+
+[tool.setuptools.packages]
+find = {include=["particletracker", "particletracker.*"], exclude=["testdata"]}
+
+[tool.setuptools.package-data]
+"particletracker" = ["data/*", "config/*"]
