@@ -425,7 +425,7 @@ def subtract_bkg(img, *args, parameters=None, call_num=None, **kwargs):
             subtract_img = bkg_img[:, :, 1]
         elif bkgtype == 'blue':
             subtract_img = bkg_img[:, :, 0]
-
+        
         subtract_img = crop(subtract_img, parameters['crop'])
         img2 = blur(img, temp_params, call_num=None)
         img2 = img2.astype(np.uint8)

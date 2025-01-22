@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 
 particletracker/testdata/
-test.py
 
 # C extensions
 *.so
