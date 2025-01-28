@@ -1,2 +1,15 @@
 sphinx>=4.2.0
+sphinx-rtd-theme>=1.2.0
 PyQt5
+opencv-python
+numpy
+matplotlib
+qimage2ndarray
+tqdm
+pandas
+trackpy
+tables
+pillow
+scipy
+moviepy>=2.0
+slicerator
