@@ -593,7 +593,7 @@ def _get_class_subset(df, f, parameters, method=None):
 
 @error_handling
 @param_parse
-def hexatic_order(df, *args, f_index=None, parameters=None, **kwargs):
+def hexatic_order(df, *args, f_index=None, parameters=None, call_num=None, **kwargs):
     """
     Calculates the hexatic order parameter of each particle. Neighbours are 
     calculated using the Delaunay network with a cutoff distance defined by "cutoff"
