@@ -19,9 +19,10 @@ import pandas as pd
 import os
 import sys
 
+print('cwd', os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
-import particletracker as pt
+from particletracker import suppress_warnings
+from particletracker import batchprocess
 import pandas as pd
 
 """---------------------------------------------------------------------------------------------------------
@@ -40,7 +41,7 @@ def test_eyes():
     Postprocessing: mean,
     Annotation: Circle,
     """
-    pt.batchprocess("testdata/eyes.mp4", "testdata/test_eyes.param")
+    batchprocess("testdata/eyes.mp4", "testdata/test_eyes.param")
     
     output_video = "testdata/eyes_annotate.mp4"
     output_df = "testdata/eyes.hdf5"
@@ -64,7 +65,7 @@ def test_colloids():
     Postprocessing: add_frame_data
     Annotation: circles, particle_labels, trajectories, text_label, var_label
     """
-    pt.batchprocess("testdata/colloids.mp4", "testdata/test_colloids.param")
+    batchprocess("testdata/colloids.mp4", "testdata/test_colloids.param")
     output_video = "testdata/colloids_annotate.mp4"
     output_df = "testdata/colloids.hdf5"
     df = pd.read_hdf(output_df)
@@ -85,7 +86,7 @@ def test_hydrogel():
     Postprocessing:voronoi,
     Annotation: Circle,
     """
-    pt.batchprocess("testdata/hydrogel.mp4", "testdata/test_hydrogel.param")
+    batchprocess("testdata/hydrogel.mp4", "testdata/test_hydrogel.param")
     output_video = "testdata/hydrogel_annotate.mp4"
     output_df = "testdata/hydrogel.hdf5"
     df = pd.read_hdf(output_df)
@@ -106,7 +107,7 @@ def test_bacteria():
     Postprocessing: contour_boxes, classify
     Annotation: boxes,
     """
-    pt.batchprocess("testdata/bacteria.mp4", "testdata/test_bacteria.param")
+    batchprocess("testdata/bacteria.mp4", "testdata/test_bacteria.param")
     output_video = "testdata/bacteria_annotate.mp4"
     output_df = "testdata/bacteria.hdf5"
     df = pd.read_hdf(output_df)
@@ -127,7 +128,7 @@ def test_discs():
     Postprocessing: neighbours,
     Annotation: circles, networks, particle_labels,
     """
-    pt.batchprocess("testdata/discs.mp4",
+    batchprocess("testdata/discs.mp4",
                     "testdata/test_discs.param")
     output_video = "testdata/discs_annotate.mp4"
     output_df = "testdata/discs.hdf5"
@@ -160,7 +161,7 @@ def test_preprocess():
     erode, dilate, absolute_diff, subtract_bkg, gamma, brightness_contrast, distance, invert
     """
 
-    pt.batchprocess("testdata/colloids.mp4", "testdata/test_preprocess.param")
+    batchprocess("testdata/colloids.mp4", "testdata/test_preprocess.param")
     output_video = "testdata/colloids_annotate.mp4"
     output_df = "testdata/colloids.hdf5"
     df = pd.read_hdf(output_df)
@@ -188,7 +189,7 @@ def test_postprocess():
     Passing tests implies the code produces the same result as before!!
 
     """
-    pt.batchprocess("testdata/hydrogel.mp4", "testdata/test_postprocess.param")
+    batchprocess("testdata/hydrogel.mp4", "testdata/test_postprocess.param")
     output_video = "testdata/hydrogel_annotate.mp4"
     output_df = "testdata/hydrogel.hdf5"
     df = pd.read_hdf(output_df)

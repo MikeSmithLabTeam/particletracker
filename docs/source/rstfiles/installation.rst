@@ -31,6 +31,7 @@ On Linux and Mac open a terminal.
 - conda install git
 - conda install pyqt
 - pip install git+https://github.com/MikeSmithLabTeam/particletracker
+- pip install legacy-cgi
 
 On Windows we sometimes ran into an error at this point concerning the hdflib that 
 can be resolved by installing the Microsoft Visual Studio Build tools. Once you've

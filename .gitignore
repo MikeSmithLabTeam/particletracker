@@ -37,6 +37,8 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.vscode/
+.pytest_cache/
 MANIFEST
 
 # PyInstaller
@@ -146,11 +148,3 @@ particle.code-workspace
 .vscode/settings.json
 .gitignore
 
-
-<<<<<<< HEAD
-run_script.py
-testscript.py
-bkg_img.py
-=======
-testscript.py
->>>>>>> 4bb1c5a3156a103714679636aeccf86d7b6cfba9

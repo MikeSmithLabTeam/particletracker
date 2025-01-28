@@ -52,7 +52,6 @@ def adaptive_threshold(img, parameters=None, *args, **kwargs):
     return bw_img
 
 @error_handling
-#@param_parse
 def blur(img, parameters=None, **kwargs):
     '''
     Performs a gaussian blur on the image
@@ -79,8 +78,7 @@ def blur(img, parameters=None, **kwargs):
     '''
     method_key = get_method_key('blur', call_num=kwargs['call_num'])
     params = get_param_val(parameters['preprocess'][method_key]['kernel'])
-    kernel = (params, params)
-    gray_img = blurs.gaussian_blur(img, kernel=kernel)
+    gray_img = blurs.gaussian_blur(img, kernel=(params, params))
     return gray_img
 
 
@@ -352,7 +350,7 @@ def medianblur(img, parameters=None, *args, **kwargs):
 
 
 @error_handling
-def subtract_bkg(img, parameters=None, call_num=None,*args, **kwargs):
+def subtract_bkg(img, *args, parameters=None, call_num=None, **kwargs):
     '''
     Subtract a background
 
@@ -415,10 +413,8 @@ def subtract_bkg(img, parameters=None, call_num=None,*args, **kwargs):
         # Load bkg img
         if params['subtract_bkg_filename'] is None:
             name = parameters['experiment']['video_filename']
-            # ,cv2.IMREAD_GRAYSCALE)
             bkg_img = cv2.imread(name[:-4] + '_bkgimg.png')
         else:
-            # ,cv2.IMREAD_GRAYSCALE)
             bkg_img = cv2.imread(params['subtract_bkg_filename'])
 
         if bkgtype == 'grayscale':
@@ -429,7 +425,7 @@ def subtract_bkg(img, parameters=None, call_num=None,*args, **kwargs):
             subtract_img = bkg_img[:, :, 1]
         elif bkgtype == 'blue':
             subtract_img = bkg_img[:, :, 0]
-
+        
         subtract_img = crop(subtract_img, parameters['crop'])
         img2 = blur(img, temp_params, call_num=None)
         img2 = img2.astype(np.uint8)
@@ -440,10 +436,11 @@ def subtract_bkg(img, parameters=None, call_num=None,*args, **kwargs):
         img2 = cv2.subtract(subtract_img, img2)
     else:
         img2 = cv2.subtract(img2, subtract_img)
+
     if np.max(img) == 0:
         img2 = img
 
-    if get_param_val(params['subtract_bkg_norm']) == True:
+    if get_param_val(params['subtract_bkg_norm']):
         img2 = cv2.normalize(img2, None, alpha=0, beta=255,
                                norm_type=cv2.NORM_MINMAX)
 

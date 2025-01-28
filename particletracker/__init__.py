@@ -3,9 +3,10 @@ from PyQt5.QtCore import *
 import sys, os
 
 from filehandling import BatchProcess
-
-from .project import PTWorkflow
+from particletracker.suppress_warnings import *
+from particletracker.project import PTWorkflow
 from particletracker.gui.main_gui import MainWindow
+
 
 
 
