@@ -45,7 +45,7 @@ class PTWorkflow:
         self.parameters['postprocess']['add_frame_data']['data_path'] = datapath
         self._create_processes()
 
-    def _create_processes(self, n=0):
+    def _create_processes(self):
         """A particle tracking project needs:
         1. A video reading object
         2. Something that handles preprocessing of the images
@@ -57,7 +57,7 @@ class PTWorkflow:
         """
         self.cap = ReadCropVideo(parameters=self.parameters,
                                  filename=self.video_filename, error_reporting=self.error_reporting)
-        self.frame = self.cap.read_frame(n)
+        self.frame = self.cap.read_frame(n=0)
 
         self.ip = preprocess.Preprocessor(self.parameters)
         
@@ -78,7 +78,7 @@ class PTWorkflow:
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
                                              data_filename=self.data_filename,
                                              parameters=self.parameters,
-                                             frame=self.cap.read_frame(n=n))
+                                             frame=self.cap.read_frame(n=0))
 
     def reset_annotator(self):
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
@@ -86,8 +86,17 @@ class PTWorkflow:
                                              parameters=self.parameters,
                                              frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
 
-    def process(self, use_part=False):
+    def process(self, use_part=None, f_index=None):
         """Process an entire video
+
+        Idea here is to call process with use_part = None to indicate all steps of the process and then
+        1 = just_track
+        2 = just_link
+        3 = just_postprocess
+        4 = just_annotate
+
+        setting movie=True specifies whole range of movie
+        movie=False specifies single frame - This is used by the gui.
 
         Process is called on the main instance using the command
         particle_tracking_instance.process(). One call results in the entire
@@ -96,6 +105,7 @@ class PTWorkflow:
         One potentially confusing thing is that if you process a single frame then you move sequentially
         through preprocessor, tracker, linker, postprocessor and annotator. However, if you process the whole
         then the preprocessor is called from within tracker. All frames are tracked and then all frames are linked etc.
+
 
         i.e track = True
             link = True etc
@@ -108,15 +118,18 @@ class PTWorkflow:
         """
 
         try:
-            if not use_part:
+            if (use_part is None) or (use_part == 1):
                 if self.track_select:
                     self.pt.track()
+            if (use_part is None) or (use_part == 2):
                 if self.link_select:
                     self.link.link_trajectories()
-            if self.postprocess_select:
-                self.pp.process(use_part=use_part)
-            if self.annotate_select:
-                self.an.annotate(use_part=use_part)
+            if (use_part is None) or (use_part == 3):
+                if self.postprocess_select:
+                    self.pp.process(use_part=use_part)
+            if (use_part is None) or (use_part == 4):
+                if self.annotate_select:
+                    self.an.annotate(use_part=use_part)
 
             if self.parameters['config']['csv_export']:
                 try:
@@ -127,6 +140,11 @@ class PTWorkflow:
         except BaseError as e:
             if self.error_reporting is not None:
                 flash_error_msg(e, self.error_reporting)
+
+    def get_frame(self):
+        if self.preprocess_select:
+                    proc_frame = self.ip.process(proc_frame)
+                    proc_frame = self.cap.apply_mask(proc_frame)
 
     def process_frame(self, frame_num, use_part=False):
         """Process a single frame

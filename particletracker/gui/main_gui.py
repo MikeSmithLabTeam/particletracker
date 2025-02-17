@@ -76,12 +76,13 @@ class MainWindow(QMainWindow):
         self.setup_pandas_viewer()   
 
     def init_ui(self):#, view_layout, settings_layout, reboot=True):
-        if not hasattr(self, 'file_menu'):
-            self.setup_menus_toolbar()
-        else:
-            #This solves a bug which occurs when you have use_part_button checked
-            #and open a new video which has no .hdf5 file.
-            self.use_part_button.setChecked(False)
+        #if not hasattr(self, 'file_menu'):
+        self.setup_menus_toolbar()
+        #else:
+        #    #This solves a bug which occurs when you have use_part_button checked
+        #    #and open a new video which has no .hdf5 file.
+        #    #self.use_part_button.setChecked(False)
+
 
         self.setup_viewer(self.view_layout)# Contains image window, frame slider and spinbox.
         self.setup_settings_panel(self.settings_layout)# Contains all widgets on rhs of gui.
@@ -133,6 +134,10 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.autosave_on_process)
 
         self.toolbar.addSeparator()
+        spacer = QWidget()
+        spacer.setFixedWidth(20)  # Set desired width in pixels
+        self.toolbar.addWidget(spacer)
+        self.toolbar.addSeparator()
 
         self.live_update_button = QAction(QIcon(os.path.join(resources_dir,"arrow-circle.png")), "Live Updates", self)
         self.live_update_button.setCheckable(True)
@@ -154,27 +159,48 @@ class MainWindow(QMainWindow):
         self.snapshot_button.triggered.connect(self.snapshot_button_click)
         self.toolbar.addAction(self.snapshot_button)
 
-        self.toolbar.addSeparator()
-
         self.export_to_csv = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to csv', self)
         self.export_to_csv.setCheckable(True)
         self.export_to_csv.setChecked(self.tracker.parameters['config']['csv_export'])
         self.export_to_csv.triggered.connect(self.export_to_csv_click)
         self.toolbar.addAction(self.export_to_csv)
 
-        process_part_button = QAction(QIcon(os.path.join(resources_dir,"clapperboard--minus.png")), "Process part", self)
-        process_part_button.triggered.connect(self.process_part_button_click)
-        self.toolbar.addAction(process_part_button)
+        self.toolbar.addSeparator()
+        spacer = QWidget()
+        spacer.setFixedWidth(20)  # Set desired width in pixels
+        self.toolbar.addWidget(spacer)
+        self.toolbar.addSeparator()        
 
-        self.use_part_button = QAction(QIcon(os.path.join(resources_dir,"fire--exclamation.png")), "Use part processed", self)
-        self.use_part_button.setCheckable(True)
-        self.use_part_button.triggered.connect(self.use_part_button_click)
-        self.toolbar.addAction(self.use_part_button)
+        just_track_button = QAction(QIcon(os.path.join(resources_dir,"track.png")), "Just Track", self)
+        just_track_button.triggered.connect(self.just_track_button_click)
+        self.toolbar.addAction(just_track_button)
+
+        just_link_button = QAction(QIcon(os.path.join(resources_dir,"link.png")), "Just Link", self)
+        just_link_button.triggered.connect(self.just_link_button_click)
+        self.toolbar.addAction(just_link_button)
+
+        just_postprocess_button = QAction(QIcon(os.path.join(resources_dir,"postprocess.png")), "Just Postprocess", self)
+        just_postprocess_button.triggered.connect(self.just_postprocess_button_click)
+        self.toolbar.addAction(just_postprocess_button)
+
+        just_annotate_button = QAction(QIcon(os.path.join(resources_dir,"clapperboard--minus.png")), "Just Annotate", self)
+        just_annotate_button.triggered.connect(self.just_annotate_button_click)
+        self.toolbar.addAction(just_annotate_button)
+
+        self.toolbar.addSeparator()
+        spacer = QWidget()
+        spacer.setFixedWidth(20)  # Set desired width in pixels
+        self.toolbar.addWidget(spacer)
+        self.toolbar.addSeparator()
 
         process_button = QAction(QIcon(os.path.join(resources_dir,"clapperboard--arrow.png")), "Process", self)
         process_button.triggered.connect(self.process_button_click)
         self.toolbar.addAction(process_button)
 
+        self.toolbar.addSeparator()
+        spacer = QWidget()
+        spacer.setFixedWidth(20)  # Set desired width in pixels
+        self.toolbar.addWidget(spacer)
         self.toolbar.addSeparator()
 
         close_button = QAction(QIcon(os.path.join(resources_dir,"cross-button.png")), "Close", self)
@@ -216,8 +242,13 @@ class MainWindow(QMainWindow):
 
         self.process_menu.addAction(self.autosave_on_process)
         self.process_menu.addAction(self.export_to_csv)
-        self.process_menu.addAction(process_part_button)
-        self.process_menu.addAction(self.use_part_button)
+        #self.process_menu.addAction(process_part_button)
+        #self.process_menu.addAction(self.use_part_button)
+        self.process_menu.addAction(just_track_button)
+        self.process_menu.addAction(just_link_button)
+        self.process_menu.addAction(just_postprocess_button)
+        self.process_menu.addAction(just_annotate_button)        
+        
         self.process_menu.addAction(process_button)
 
 
@@ -494,10 +525,10 @@ class MainWindow(QMainWindow):
     def update_viewer(self):
         if self.live_update_button.isChecked():
             frame_number = self.frame_selector.value()
-            if self.use_part_button.isChecked():
-                annotated_img, proc_img = self.tracker.process_frame(frame_number, use_part=True)
-            else:
-                annotated_img, proc_img = self.tracker.process_frame(frame_number)
+            #if self.use_part_button.isChecked():
+            #    annotated_img, proc_img = self.tracker.process_frame(frame_number, use_part=True)
+            #else:
+            annotated_img, proc_img = self.tracker.process_frame(frame_number)
 
             toggle = self.toggle_img.isChecked()
             if toggle:
@@ -564,8 +595,8 @@ class MainWindow(QMainWindow):
 
     def update_pandas_view(self):
         fname = self.tracker.data_filename
-        if not self.use_part_button.isChecked():
-            fname = fname[:-5] +'_temp.hdf5'
+        #if not self.use_part_button.isChecked():
+        fname = fname[:-5] +'_temp.hdf5'
         self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
       
     def snapshot_button_click(self):
@@ -592,7 +623,19 @@ class MainWindow(QMainWindow):
             self.update_viewer()
         self.tracker.parameters['config']['live_updates'] = self.live_update_button.isChecked()
 
-    def process_part_button_click(self):
+    def just_track_button_click(self):
+        print('track not implemented')
+
+    def just_link_button_click(self):
+        print('link not implemented')
+
+    def just_postprocess_button_click(self):
+        print('postprocess not implemented')
+
+    def just_annotate_button_click(self):
+        print('annotate not implemented')
+    
+    """def process_part_button_click(self):
         '''
         This button processes the movie but it skips the postprocess and annotation steps
         It is designed as a first step to experiment with different postprocessing and
@@ -627,7 +670,7 @@ class MainWindow(QMainWindow):
         else:
             self.use_part_button.setChecked(False)
             QMessageBox.about(self, "", "You must run 'Process Part' before you can use this")
-
+    """
     def process_button_click(self): 
         self.status_bar.setStyleSheet("background-color : lightBlue")
         self.status_bar.showMessage("Depending on the size of your movie etc this could take awhile. You can track progress in the command window.")    
@@ -637,13 +680,13 @@ class MainWindow(QMainWindow):
         if self.autosave_on_process.isChecked():
             write_paramdict_file(self.tracker.parameters, self.settings_filename)
 
-        if self.use_part_button.isChecked():
-            #This starts from original datafile of tracked data and then performs
-            # postprocessing and annotation steps only.
-            self.tracker.process(use_part=True)
-        else:
-            #Normal processing of entire movie. Either process_button_click or process_part_button_click
-            self.tracker.process()
+        #if self.use_part_button.isChecked():
+        #    #This starts from original datafile of tracked data and then performs
+        #    # postprocessing and annotation steps only.
+        #    self.tracker.process(use_part=True)
+        #else:
+        #    #Normal processing of entire movie. Either process_button_click or process_part_button_click
+        self.tracker.process()
 
         write_paramdict_file(self.tracker.parameters, self.tracker.data_filename[:-5] + '_expt.param')
         
