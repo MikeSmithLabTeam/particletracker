@@ -90,10 +90,11 @@ class PTWorkflow:
         """Process an entire video
 
         Idea here is to call process with use_part = None to indicate all steps of the process and then
-        1 = just_track
-        2 = just_link
-        3 = just_postprocess
-        4 = just_annotate
+        0 = just_track
+        1 = just_link
+        2 = just_postprocess
+        3 = just_annotate
+        4 = complete --> Creates the final file.
 
         setting movie=True specifies whole range of movie
         movie=False specifies single frame - This is used by the gui.
@@ -118,18 +119,26 @@ class PTWorkflow:
         """
 
         try:
-            if (use_part is None) or (use_part == 1):
-                if self.track_select:
-                    self.pt.track()
-            if (use_part is None) or (use_part == 2):
-                if self.link_select:
-                    self.link.link_trajectories()
-            if (use_part is None) or (use_part == 3):
-                if self.postprocess_select:
-                    self.pp.process(use_part=use_part)
-            if (use_part is None) or (use_part == 4):
-                if self.annotate_select:
-                    self.an.annotate(use_part=use_part)
+            #just one frame
+            if f_index is not None:
+                proc_frame = self.cap.read_frame(f_index)
+                #This will be overwritten below if annotation is required
+                annotatedframe = proc_frame
+                if self.preprocess_select:
+                    proc_frame = self.ip.process(proc_frame)
+                    proc_frame = self.cap.apply_mask(proc_frame)
+                
+
+            #use_part is None --> process whole movie or a number just one bit.
+            #self.track_select == True means process this bit.
+            if self.track_select and ((use_part is None) or (use_part == 1)):
+                self.pt.track(f_index=f_index)
+            if self.link_select and ((use_part is None) or (use_part == 2)):
+                self.link.link_trajectories(f_index=f_index)
+            if self.postprocess_select and ((use_part is None) or (use_part == 3)):
+                self.pp.process(f_index=f_index)
+            if self.annotate_select and ((use_part is None) or (use_part == 4)):
+                annotatedframe = self.an.annotate(f_index=f_index)
 
             if self.parameters['config']['csv_export']:
                 try:
@@ -137,73 +146,14 @@ class PTWorkflow:
                     df.to_csv(self.data_filename[:-5] + '.csv')
                 except Exception as e:
                     CsvError(e)
-        except BaseError as e:
-            if self.error_reporting is not None:
-                flash_error_msg(e, self.error_reporting)
 
-    def get_frame(self):
-        if self.preprocess_select:
-                    proc_frame = self.ip.process(proc_frame)
-                    proc_frame = self.cap.apply_mask(proc_frame)
-
-    def process_frame(self, frame_num, use_part=False):
-        """Process a single frame
-
-        process_frame() is for use with the tracking guis when
-        optimising parameters. It takes the frame indicated by
-        frame_num and processes it according to the selected actions.
-        ie. track=True, link=True
-
-        One potentially confusing thing is that if you process a single frame then you move sequentially
-        through preprocessor, tracker, linker, postprocessor and annotator. However, if you process the whole
-        then the preprocessor is called from within tracker. All frames are tracked and then all frames are linked etc.
-
-        Notes
-        -----
-
-        Some combinations of actions are not possible. e.g you can't link trajectories
-        that haven't been tracked! The software will however allow you to do things progressively
-        so that if you have previously tracked a video and it has sucessfully written to a dataframe
-        then it will subsequently link that data without needing to retrack the video.
-        The same logic applies to annotation etc. It is worth however making backups at various points.
-        When processing individual frames the data is temporarily stored in videoname_temp.hdf5 However, during
-        process_part or process the data is stored in videoname.hdf5
-
-        The software assumes the datastore is in the same folder as the video being processed.
-
-        If use_part = True the data for first 5 stages is read from file videoname.hdf5 and only postprocess and annotate are
-        being run.
-
-        """
-        proc_frame = self.cap.read_frame(frame_num)
-
-        try:
-            #If using part then the first 5 stages are read from .hdf5 file
-            if not use_part:
-                if self.preprocess_select:
-                    proc_frame = self.ip.process(proc_frame)
-                    proc_frame = self.cap.apply_mask(proc_frame)
-                if self.track_select:
-                    self.pt.track(f_index=frame_num)
-                if self.link_select:
-                    self.link.link_trajectories(f_index=frame_num)
-
-            # Postprocess the frame                
-            if self.postprocess_select:
-                self.pp.process(f_index=frame_num, use_part=use_part)
-            
-            #Either annotate or return a blank frame
-            if self.annotate_select:
-                annotatedframe = self.an.annotate(
-                        f_index=frame_num, use_part=use_part)
-            else:
-                annotatedframe = self.cap.read_frame(frame_num)
-        except BaseError as e:
+        except BaseError as e:           
             if self.error_reporting is not None:
                 print(e)
                 flash_error_msg(e, self.error_reporting)
-            annotatedframe = self.cap.read_frame(frame_num)
+            annotatedframe = self.cap.read_frame(f_index)
             self.error_reporting.toggle_img.setChecked(False)
             self.error_reporting.toggle_img.setText("Captured Image")
-
+        
         return annotatedframe, proc_frame
+

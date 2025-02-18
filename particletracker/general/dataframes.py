@@ -11,6 +11,8 @@ def data_filename_create(movie_filename):
     vid001.mp4 --> vid001.hdf5
     """
     path, filename = os.path.split(movie_filename)
+    if not os.path.exists(path + '/_temp'):
+        os.mkdir(path + '/_temp')
     filename_stub, ext = os.path.splitext(filename)
     if os.path.splitext(movie_filename)[1] in ['.png','.jpg','.tiff','.JPG']:   
         data_filename = os.path.join(path, ''.join([letter for letter in filename_stub if letter.isalpha()]) + '.hdf5')

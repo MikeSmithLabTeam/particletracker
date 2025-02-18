@@ -1,4 +1,5 @@
 from tqdm import tqdm
+import os
 
 from labvision.video import WriteVideo
 
@@ -13,7 +14,8 @@ class TrackingAnnotator:
     def __init__(self, parameters=None, vidobject=None, data_filename=None, bitrate='HIGH1080',frame=None, framerate=50):
         self.parameters = parameters
         self.cap = vidobject
-        self.data_filename=data_filename
+        path, filename = os.path.split(data_filename)
+        self.data_filename = path + '/_temp/' + filename
         self.output_filename = self.cap.filename[:-4] + '_annotate.mp4'
 
     def annotate(self, f_index=None, use_part=False):   
@@ -21,15 +23,11 @@ class TrackingAnnotator:
         if f_index is None:
             frame = self.cap.read_frame(n=self.cap.frame_range[0])
             self.out = WriteVideo(filename=self.output_filename, frame=frame)
-            data_filename = self.data_filename
-        # whole movie but previous processing of data
-        elif use_part:
-            data_filename = self.data_filename
-        # single frame
+            input_filename = self.data_filename[:-5] + '_postprocess.hdf5'
         else:
-            data_filename = self.data_filename[:-5] + '_temp.hdf5'
+            input_filename = self.data_filename[:-5] + '_temp.hdf5'
 
-        with dataframes.DataStore(data_filename, load=True) as data:
+        with dataframes.DataStore(input_filename, load=True) as data:
             #whole movie
             if f_index is None:
                 start = self.cap.frame_range[0]

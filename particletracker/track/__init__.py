@@ -46,7 +46,9 @@ class ParticleTracker(QObject):
         self.parameters = parameters
         self.ip = preprocessor
         self.cap = vidobject
-        self.data_filename = data_filename
+        path, filename = os.path.split(data_filename)
+        self.data_filename = path + '/_temp/' + filename
+        
 
     def track(self, f_index=None):
         """
@@ -65,12 +67,12 @@ class ParticleTracker(QObject):
         """
         if f_index is None:
             'When processing whole video store in file with same name as movie'
-            data_filename = self.data_filename
+            output_filename = self.data_filename[:-5] + '_track.hdf5'
         else:
             'store temporarily'
-            data_filename = self.data_filename[:-5] + '_temp.hdf5'
+            output_filename = self.data_filename[:-5] + '_temp.hdf5'
 
-        with dataframes.DataStore(data_filename) as data:
+        with dataframes.DataStore(output_filename) as data:
             if f_index is None:
                 start = self.cap.frame_range[0]
                 stop = self.cap.frame_range[1]
@@ -91,7 +93,7 @@ class ParticleTracker(QObject):
                 except:
                     print('tracking failed')
             
-            data.save(filename=data_filename)
+            data.save(filename=output_filename)
 
     def analyse_frame(self):
         """Analyses a single frame using a track method specified in PARAMETERS

@@ -15,6 +15,7 @@ import copy
 from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
 from labvision.images import write_img
+from .menubar import CustomButton, CustomMenuBar, CustomToolBar
 
 #This project
 from .custom_tab_widget import CheckableTabWidget
@@ -40,7 +41,6 @@ class MainWindow(QMainWindow):
         if 'default.param' in self.settings_filename:
             create_param_file(self.settings_filename)
         self.reboot()
-
 
     def reboot(self, open_settings=True):
         
@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
         #Use these lines when using pyinstaller.
         #dir , _= os.path.split(sys.argv[0])#os.path.abspath(__file__)
         #resources_dir = os.path.join(dir,'gui','icons','icons')
-        self.toolbar = QToolBar('Toolbar')
+        self.toolbar = CustomToolBar('Toolbar')
         self.toolbar.setIconSize(QSize(16,16))
         self.addToolBar(self.toolbar)
 
@@ -171,21 +171,22 @@ class MainWindow(QMainWindow):
         self.toolbar.addWidget(spacer)
         self.toolbar.addSeparator()        
 
-        just_track_button = QAction(QIcon(os.path.join(resources_dir,"track.png")), "Just Track", self)
-        just_track_button.triggered.connect(self.just_track_button_click)
-        self.toolbar.addAction(just_track_button)
+        self.just_track_button = CustomButton(resources_dir, "track.png", 0)
+        self.toolbar.addWidget(self.just_track_button)
 
-        just_link_button = QAction(QIcon(os.path.join(resources_dir,"link.png")), "Just Link", self)
-        just_link_button.triggered.connect(self.just_link_button_click)
-        self.toolbar.addAction(just_link_button)
+        self.just_link_button = CustomButton(resources_dir, "link.png", 1)
+        self.toolbar.addWidget(self.just_link_button)
 
-        just_postprocess_button = QAction(QIcon(os.path.join(resources_dir,"postprocess.png")), "Just Postprocess", self)
-        just_postprocess_button.triggered.connect(self.just_postprocess_button_click)
-        self.toolbar.addAction(just_postprocess_button)
+        self.just_postprocess_button = CustomButton(resources_dir, "postprocess.png", 2)
+        self.toolbar.addWidget(self.just_postprocess_button)
 
-        just_annotate_button = QAction(QIcon(os.path.join(resources_dir,"clapperboard--minus.png")), "Just Annotate", self)
-        just_annotate_button.triggered.connect(self.just_annotate_button_click)
-        self.toolbar.addAction(just_annotate_button)
+        self.just_annotate_button = CustomButton(resources_dir, "annotate.png", 3)
+        self.toolbar.addWidget(self.just_annotate_button)
+
+        self.just_complete_button = CustomButton(resources_dir, "complete.png", 4)
+        self.toolbar.addWidget(self.just_complete_button)
+
+
 
         self.toolbar.addSeparator()
         spacer = QWidget()
@@ -208,6 +209,8 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(close_button)
 
         menu = self.menuBar()
+        menu.setContextMenuPolicy(Qt.PreventContextMenu)  # Prevent context menu
+        self.toolbar.setContextMenuPolicy(Qt.PreventContextMenu)  # Prevent 
 
         self.status_bar = QStatusBar(self)
         font = QFont()
@@ -221,6 +224,7 @@ class MainWindow(QMainWindow):
         File menu items
         ---------------------------------------------------------------------------------------------
         '''
+
         self.file_menu = menu.addMenu("&File")
         self.tool_menu = menu.addMenu("Tools")
         self.process_menu = menu.addMenu("Process options")
@@ -244,10 +248,11 @@ class MainWindow(QMainWindow):
         self.process_menu.addAction(self.export_to_csv)
         #self.process_menu.addAction(process_part_button)
         #self.process_menu.addAction(self.use_part_button)
-        self.process_menu.addAction(just_track_button)
-        self.process_menu.addAction(just_link_button)
-        self.process_menu.addAction(just_postprocess_button)
-        self.process_menu.addAction(just_annotate_button)        
+        #self.process_menu.addAction(just_track_button)
+        #self.process_menu.addAction(just_link_button)
+        #self.process_menu.addAction(just_postprocess_button)
+        #self.process_menu.addAction(just_annotate_button)   
+        #self.process_menu.addAction(just_complete_button)       
         
         self.process_menu.addAction(process_button)
 
@@ -338,7 +343,6 @@ class MainWindow(QMainWindow):
         
         self.update_viewer()
         
-
     '''---------------------------------------------------------------
     -------------------------------------------------------------------
     SETUP SETTINGS PANEL
@@ -347,11 +351,11 @@ class MainWindow(QMainWindow):
     -------------------------------------------------------------------
     --------------------------------------------------------------------
     '''
+
     def setup_settings_panel(self, settings_layout):
         self.toplevel_settings = CheckableTabWidget(self.tracker, self.viewer, self.param_change, self.method_change, reboot=self.reboot, parent=self)
         self.toplevel_settings.checkBoxChanged.connect(self.frame_selector_slot)
         settings_layout.addWidget(self.toplevel_settings)
-
 
     """
     ---------------------------------------------------------------         
@@ -367,8 +371,6 @@ class MainWindow(QMainWindow):
         self.tracker = PTWorkflow(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
-
-
 
     @pyqtSlot(float, float)
     def coords_clicked(self, x, y):
@@ -463,7 +465,6 @@ class MainWindow(QMainWindow):
         self.update_viewer()
         self.update_pandas_view()
 
-
     @pyqtSlot(tuple)
     def method_change(self, value):
         """
@@ -525,10 +526,7 @@ class MainWindow(QMainWindow):
     def update_viewer(self):
         if self.live_update_button.isChecked():
             frame_number = self.frame_selector.value()
-            #if self.use_part_button.isChecked():
-            #    annotated_img, proc_img = self.tracker.process_frame(frame_number, use_part=True)
-            #else:
-            annotated_img, proc_img = self.tracker.process_frame(frame_number)
+            annotated_img, proc_img = self.tracker.process(f_index=frame_number)
 
             toggle = self.toggle_img.isChecked()
             if toggle:
@@ -537,8 +535,7 @@ class MainWindow(QMainWindow):
                 self.viewer.setImage(bgr_to_rgb(annotated_img))
             if hasattr(MainWindow, 'pandas_viewer'):
                 self.update_pandas_view()
-            
-        
+                    
     def reset_viewer(self):
         self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],
                                            max_=self.tracker.cap.frame_range[1] - 1,
@@ -560,7 +557,6 @@ class MainWindow(QMainWindow):
                 self.toggle_img.setText("Captured Image")
             self.update_viewer()
     
-
     def open_movie_click(self):
         self.movie_filename = open_movie_dialog(self, self.movie_filename)
         self.reboot()
@@ -615,6 +611,7 @@ class MainWindow(QMainWindow):
         """------------------------------------------------------------
         Functions that control the processing
         --------------------------------------------------------------"""
+
     def autosave_button_click(self):
         self.tracker.parameters['config']['autosave_settings'] = self.autosave_on_process.isChecked()
 
@@ -623,17 +620,12 @@ class MainWindow(QMainWindow):
             self.update_viewer()
         self.tracker.parameters['config']['live_updates'] = self.live_update_button.isChecked()
 
-    def just_track_button_click(self):
-        print('track not implemented')
+    
+                
 
-    def just_link_button_click(self):
-        print('link not implemented')
 
-    def just_postprocess_button_click(self):
-        print('postprocess not implemented')
 
-    def just_annotate_button_click(self):
-        print('annotate not implemented')
+        
     
     """def process_part_button_click(self):
         '''
@@ -671,6 +663,7 @@ class MainWindow(QMainWindow):
             self.use_part_button.setChecked(False)
             QMessageBox.about(self, "", "You must run 'Process Part' before you can use this")
     """
+
     def process_button_click(self): 
         self.status_bar.setStyleSheet("background-color : lightBlue")
         self.status_bar.showMessage("Depending on the size of your movie etc this could take awhile. You can track progress in the command window.")    
