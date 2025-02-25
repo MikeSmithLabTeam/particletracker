@@ -1,11 +1,13 @@
 import numpy as np
-import trackpy
 import os
+from tqdm import tqdm
+import pandas as pd
 
 from ..general import dataframes
 from ..general.parameters import  get_param_val
 from ..customexceptions import *
 from ..user_methods import *
+from .link_methods import default, no_linking
 
 class LinkTrajectory:
     def __init__(self, data_filename=None, parameters=None):
@@ -14,36 +16,53 @@ class LinkTrajectory:
         self.parameters=parameters
 
     @error_handling
-    def link_trajectories(self, f_index=None):
+    def link_trajectories(self, f_index=None, lock_part=-1):
         """Implements the trackpy functions link_df and filter_stubs"""
-        # Reload DataStore
+        if lock_part < 1:
+            input_filename, output_filename = self.io_filenames(f_index, lock_part)
+
+            with dataframes.DataStore(input_filename) as data:
+                if (f_index is None) and ('default' in self.parameters['link']['link_method']):
+                    #Default trackpy linking methods
+                    df = default(data.df, self.parameters['link']['default'], f_index=None)
+                else:
+                    #No_linking
+                    if f_index is None:
+                        frame_range = self.parameters['config']['frame_range']
+                        start=frame_range[0]
+                        stop=frame_range[1]
+                        if stop is None:
+                            stop = data.df.index.max() + 1
+                        step=frame_range[2]
+                    #single frame
+                    else:
+                        start=f_index
+                        stop=f_index+1
+                        step=1
+
+                    frames=[]
+                    for f in tqdm(range(start, stop, step), 'Linking'):
+                        frames.append(no_linking(data.get_frame(f), f_index=f))
+                    
+                    if frames:
+                        df=pd.concat(frames)
+                df.to_hdf(output_filename, 'data')
+    
+    def io_filenames(self,f_index, lock_part):
         if f_index is None:
-            #When processing whole video store in file with same name as movie'
+            # Either clicking on link button or processing whole thing
             output_filename = self.data_filename[:-5] + '_link.hdf5'
             input_filename = self.data_filename[:-5] + '_track.hdf5'
         else:
-            #individual frame, store temporarily'
+            #process single frame
             output_filename = self.data_filename[:-5] + '_temp.hdf5'
-            input_filename = self.data_filename[:-5] + '_temp.hdf5'
-        
-
-        with dataframes.DataStore(input_filename, load=True) as data:
-            if f_index is None:
-                # Trackpy methods
-                data.reset_index()
-                data.df = trackpy.link_df(data.df, 
-                                          get_param_val(self.parameters['default']['max_frame_displacement']),
-                                          memory=get_param_val(self.parameters['default']['memory']), 
-                                          link_strategy='auto', 
-                                          adaptive_step=0.75)
-                data.df = trackpy.filter_stubs(data.df, 
-                                               get_param_val(self.parameters['default']['min_frame_life']))
-            else:
-                #Adds a particle id to single temporary dataframes for convenience
-                #These are made up and no relation to the particle ids in the fully #processed video.
-                num_particles = np.shape(data.df)[0]
-                pids = np.linspace(0,num_particles-1, num=num_particles).astype(int)
-                data.df['particle'] = pids
             
-        data.save(filename=output_filename)
-    
+            if lock_part == -1:
+                #single frame when tracking not locked
+                input_filename = self.data_filename[:-5] + '_temp.hdf5'
+            else:
+                #single frame when tracking is locked
+                input_filename = self.data_filename[:-5] + '_track.hdf5'
+        
+        return input_filename, output_filename
+        

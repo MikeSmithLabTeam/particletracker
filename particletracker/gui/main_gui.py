@@ -15,14 +15,15 @@ import copy
 from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
 from labvision.images import write_img
-from .menubar import CustomButton, CustomMenuBar, CustomToolBar
+from .menubar import CustomButton, CustomToolBar
 
 #This project
-from .custom_tab_widget import CheckableTabWidget
+from .custom_tab_widget import CustomTabWidget
 from ..project import PTWorkflow
 from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.param_file_creator import create_param_file
+from ..customexceptions import flash_error_msg
 
 from ..general.imageformat import bgr_to_rgb
 from .pandas_view import PandasWidget
@@ -43,8 +44,10 @@ class MainWindow(QMainWindow):
         self.reboot()
 
     def reboot(self, open_settings=True):
+        """The reboot method is used to reload the gui when opening a new video or settings file."""
         
         if hasattr(self, 'main_panel'):
+            self.toolbar.clear()
             self.main_panel.deleteLater()
             self.main_panel.setParent(None)
             if not open_settings:
@@ -54,55 +57,34 @@ class MainWindow(QMainWindow):
                 except:
                     print('tried to load current params - falling back on initial settings file')
         
+        #Create the key behind the scenes object
         self.open_tracker()
         
+        #Basic structural organising elements
         self.setWindowTitle("Particle Tracker")
-
         self.main_panel = QWidget()
         self.main_layout = QHBoxLayout()  # Contains view and settings layout
         self.view_layout = QVBoxLayout()  # Contains image, image toggle button and frame slider
         self.settings_layout = QVBoxLayout()  # Contains tab widget with all tracking controls
 
-        self.init_ui()
+        #Create the gui
+        self.setup_menus_toolbar()
+        self.setup_viewer(self.view_layout)# Contains image window, frame slider and spinbox.
+        self.setup_settings_panel(self.settings_layout)# Contains all widgets on rhs of gui.
+        self.setup_pandas_viewer()
 
+        #Add filled components to the main layout
         self.main_layout.addLayout(self.view_layout,3)
         self.main_layout.addLayout(self.settings_layout,2)
         self.main_panel.setLayout(self.main_layout)
         self.setCentralWidget(self.main_panel)
-        #self.showFullScreen()
         
         self.setMaximumSize(self.screen_size.width()-30, self.screen_size.height()-30)
         self.showMaximized()
-        self.setup_pandas_viewer()   
-
-    def init_ui(self):#, view_layout, settings_layout, reboot=True):
-        #if not hasattr(self, 'file_menu'):
-        self.setup_menus_toolbar()
-        #else:
-        #    #This solves a bug which occurs when you have use_part_button checked
-        #    #and open a new video which has no .hdf5 file.
-        #    #self.use_part_button.setChecked(False)
-
-
-        self.setup_viewer(self.view_layout)# Contains image window, frame slider and spinbox.
-        self.setup_settings_panel(self.settings_layout)# Contains all widgets on rhs of gui.
-      
-
-        """------------------------------------------------------------------------------
-        ------------------------------------------------------------------------------
-        SETUP MENUS AND TOOLBAR
-        
-        Setup of all the menus and toolbars at the bottom. The statusbar at the bottom
-        is also initialised here.
-        ---------------------------------------------------------------------------------
-        ---------------------------------------------------------------------------------"""
-
+           
     def setup_menus_toolbar(self):
         dir,_ =os.path.split(os.path.abspath(__file__))
         resources_dir = os.path.join(dir,'icons','icons')
-        #Use these lines when using pyinstaller.
-        #dir , _= os.path.split(sys.argv[0])#os.path.abspath(__file__)
-        #resources_dir = os.path.join(dir,'gui','icons','icons')
         self.toolbar = CustomToolBar('Toolbar')
         self.toolbar.setIconSize(QSize(16,16))
         self.addToolBar(self.toolbar)
@@ -145,6 +127,7 @@ class MainWindow(QMainWindow):
         self.live_update_button.triggered.connect(self.live_update_button_click)
         self.toolbar.addAction(self.live_update_button)
 
+
         self.pandas_button = QAction(
             QIcon(os.path.join(resources_dir, "view_pandas.png")),
             "Show Dataframe View", self)
@@ -171,22 +154,20 @@ class MainWindow(QMainWindow):
         self.toolbar.addWidget(spacer)
         self.toolbar.addSeparator()        
 
-        self.just_track_button = CustomButton(resources_dir, "track.png", 0)
+        self.just_track_button = CustomButton(resources_dir, "track.png", vid_filename=self.movie_filename, part=0)
         self.toolbar.addWidget(self.just_track_button)
 
-        self.just_link_button = CustomButton(resources_dir, "link.png", 1)
+        self.just_link_button = CustomButton(resources_dir, "link.png",  vid_filename=self.movie_filename, part=1)
         self.toolbar.addWidget(self.just_link_button)
 
-        self.just_postprocess_button = CustomButton(resources_dir, "postprocess.png", 2)
+        self.just_postprocess_button = CustomButton(resources_dir, "postprocess.png",  vid_filename=self.movie_filename, part=2)
         self.toolbar.addWidget(self.just_postprocess_button)
 
-        self.just_annotate_button = CustomButton(resources_dir, "annotate.png", 3)
+        self.just_annotate_button = CustomButton(resources_dir, "annotate.png",  vid_filename=self.movie_filename, part=3)
         self.toolbar.addWidget(self.just_annotate_button)
 
-        self.just_complete_button = CustomButton(resources_dir, "complete.png", 4)
+        self.just_complete_button = CustomButton(resources_dir, "complete.png",  vid_filename=self.movie_filename, part=4)
         self.toolbar.addWidget(self.just_complete_button)
-
-
 
         self.toolbar.addSeparator()
         spacer = QWidget()
@@ -245,19 +226,10 @@ class MainWindow(QMainWindow):
         self.tool_menu.addAction(self.snapshot_button)
 
         self.process_menu.addAction(self.autosave_on_process)
-        self.process_menu.addAction(self.export_to_csv)
-        #self.process_menu.addAction(process_part_button)
-        #self.process_menu.addAction(self.use_part_button)
-        #self.process_menu.addAction(just_track_button)
-        #self.process_menu.addAction(just_link_button)
-        #self.process_menu.addAction(just_postprocess_button)
-        #self.process_menu.addAction(just_annotate_button)   
-        #self.process_menu.addAction(just_complete_button)       
+        self.process_menu.addAction(self.export_to_csv)     
         
         self.process_menu.addAction(process_button)
 
-
-        
         docs = QAction('help', self)
         docs.triggered.connect(self.open_docs)
         about = QAction('about', self)
@@ -353,9 +325,15 @@ class MainWindow(QMainWindow):
     '''
 
     def setup_settings_panel(self, settings_layout):
-        self.toplevel_settings = CheckableTabWidget(self.tracker, self.viewer, self.param_change, self.method_change, reboot=self.reboot, parent=self)
-        self.toplevel_settings.checkBoxChanged.connect(self.frame_selector_slot)
+        self.toplevel_settings = CustomTabWidget(self.tracker, self.viewer, self.param_change, self.method_change, reboot=self.reboot)
         settings_layout.addWidget(self.toplevel_settings)
+
+        #Connect up the locking of buttons to the deactivation / activation of panels
+        self.just_track_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
+        self.just_link_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
+        self.just_postprocess_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
+        self.just_annotate_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
+        self.just_complete_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
 
     """
     ---------------------------------------------------------------         
@@ -371,6 +349,15 @@ class MainWindow(QMainWindow):
         self.tracker = PTWorkflow(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
+
+
+    """
+    -------------------------------------------------------------
+    -------------------------------------------------------------
+    Slots
+    --------------------------------------------------------------
+    --------------------------------------------------------------
+    """
 
     @pyqtSlot(float, float)
     def coords_clicked(self, x, y):
@@ -404,7 +391,7 @@ class MainWindow(QMainWindow):
     def reset_statusbar(self):
         self.status_bar.setStyleSheet("background-color : lightGray")
         self.status_bar.clearMessage()
-        
+
     @pyqtSlot(int)
     def frame_selector_slot(self, value): 
         try:
@@ -479,10 +466,13 @@ class MainWindow(QMainWindow):
         self.update_viewer()
         self.update_pandas_view()
 
+    @pyqtSlot(Exception)
+    def handle_error(self, error):
+        flash_error_msg(error, self)
 
-        """------------------------------------------------------
-        Various methods to update sections of the program.
-        -------------------------------------------------------"""
+    """------------------------------------------------------
+    Various methods to update sections of the program.
+    -------------------------------------------------------"""
 
     def update_dictionary_params(self, location, value, widget_type):
         if len(location) == 2:
@@ -526,7 +516,7 @@ class MainWindow(QMainWindow):
     def update_viewer(self):
         if self.live_update_button.isChecked():
             frame_number = self.frame_selector.value()
-            annotated_img, proc_img = self.tracker.process(f_index=frame_number)
+            annotated_img, proc_img = self.tracker.process(f_index=frame_number, lock_part=CustomButton.locked_part)
 
             toggle = self.toggle_img.isChecked()
             if toggle:
@@ -591,7 +581,6 @@ class MainWindow(QMainWindow):
 
     def update_pandas_view(self):
         fname = self.tracker.data_filename
-        #if not self.use_part_button.isChecked():
         fname = fname[:-5] +'_temp.hdf5'
         self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
       
@@ -620,66 +609,16 @@ class MainWindow(QMainWindow):
             self.update_viewer()
         self.tracker.parameters['config']['live_updates'] = self.live_update_button.isChecked()
 
-    
-                
-
-
-
-        
-    
-    """def process_part_button_click(self):
-        '''
-        This button processes the movie but it skips the postprocess and annotation steps
-        It is designed as a first step to experiment with different postprocessing and
-        and annotation steps. Some of these require data from other frames which is not
-        possible if you just process a single frame. To then process that data you need
-        to check the use_part_button.
-        '''
-        postprocess_init_state = self.tracker.postprocess_select
-        annotate_init_state = self.tracker.postprocess_select
-        self.tracker.postprocess_select = False
-        self.tracker.annotate_select = False
-        self.process_button_click()
-        self.tracker.postprocess_select = postprocess_init_state
-        self.tracker.annotate_select = annotate_init_state
-
-    def use_part_button_click(self):
-        '''This code only changes appearance of gui and checks
-        to see if .hdf5 data file exists. The commands tracker.process
-        and tracker.process_frame take a keyword use_part which
-        is set by checking toggle status of this button.
-        '''
-        if isfile(self.tracker.data_filename):
-            for i in range(5):#index cycles through different tabs from experiment to link
-                if self.use_part_button.isChecked():
-                    self.toplevel_settings.disable_tabs(i,enable=False)
-                    self.toggle_img.setChecked(False)
-                    self.select_img_view()
-                    self.toggle_img.setCheckable(False)
-                else:
-                    self.toplevel_settings.disable_tabs(i, enable=True)
-                    self.toggle_img.setCheckable(True)
-        else:
-            self.use_part_button.setChecked(False)
-            QMessageBox.about(self, "", "You must run 'Process Part' before you can use this")
-    """
-
     def process_button_click(self): 
         self.status_bar.setStyleSheet("background-color : lightBlue")
         self.status_bar.showMessage("Depending on the size of your movie etc this could take awhile. You can track progress in the command window.")    
-        self.show()
 
         self.tracker.reset_annotator()
         if self.autosave_on_process.isChecked():
             write_paramdict_file(self.tracker.parameters, self.settings_filename)
 
-        #if self.use_part_button.isChecked():
-        #    #This starts from original datafile of tracked data and then performs
-        #    # postprocessing and annotation steps only.
-        #    self.tracker.process(use_part=True)
-        #else:
-        #    #Normal processing of entire movie. Either process_button_click or process_part_button_click
-        self.tracker.process()
+        #This is accessing a class variable of CustomButton
+        self.tracker.process(lock_part=CustomButton.locked_part)
 
         write_paramdict_file(self.tracker.parameters, self.tracker.data_filename[:-5] + '_expt.param')
         

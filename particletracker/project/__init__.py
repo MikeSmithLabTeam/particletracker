@@ -21,9 +21,11 @@ class PTWorkflow:
         self.video_filename = video_filename
         self.error_reporting = error_reporting
         self.data_filename = data_filename_create(self.video_filename)
+        path, file = os.path.split(self.data_filename)
+        self.temp_folder = path + '/_temp'
         self.param_filename = param_filename
         self.parameters = read_paramdict_file(self.param_filename)
-        self.select_tabs()
+        #self.select_tabs()
         self._setup()
 
     def select_tabs(self):
@@ -69,7 +71,7 @@ class PTWorkflow:
         
         self.link = link.LinkTrajectory(
                             data_filename=self.data_filename,
-                            parameters=self.parameters['link'])
+                            parameters=self.parameters)
         
         self.pp = postprocess.PostProcessor(
                     data_filename=self.data_filename,
@@ -86,7 +88,7 @@ class PTWorkflow:
                                              parameters=self.parameters,
                                              frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
 
-    def process(self, use_part=None, f_index=None):
+    def process(self, lock_part=-1, f_index=None):
         """Process an entire video
 
         Idea here is to call process with use_part = None to indicate all steps of the process and then
@@ -117,28 +119,29 @@ class PTWorkflow:
 
         :return:
         """
+        if not os.path.exists(self.temp_folder):
+            os.mkdir(self.temp_folder)
 
         try:
-            #just one frame
-            if f_index is not None:
+            # Whole movie or one frame
+            if f_index is None:
+                proc_frame = self.frame
+            else:
                 proc_frame = self.cap.read_frame(f_index)
                 #This will be overwritten below if annotation is required
-                annotatedframe = proc_frame
-                if self.preprocess_select:
-                    proc_frame = self.ip.process(proc_frame)
-                    proc_frame = self.cap.apply_mask(proc_frame)
-                
+                proc_frame = self.ip.process(proc_frame)
+                proc_frame = self.cap.apply_mask(proc_frame)
 
-            #use_part is None --> process whole movie or a number just one bit.
-            #self.track_select == True means process this bit.
-            if self.track_select and ((use_part is None) or (use_part == 1)):
+            if lock_part < 0:
                 self.pt.track(f_index=f_index)
-            if self.link_select and ((use_part is None) or (use_part == 2)):
-                self.link.link_trajectories(f_index=f_index)
-            if self.postprocess_select and ((use_part is None) or (use_part == 3)):
-                self.pp.process(f_index=f_index)
-            if self.annotate_select and ((use_part is None) or (use_part == 4)):
-                annotatedframe = self.an.annotate(f_index=f_index)
+            if lock_part < 1:
+                self.link.link_trajectories(f_index=f_index, lock_part=lock_part)
+            if lock_part < 2:
+                self.pp.process(f_index=f_index, lock_part=lock_part)
+            if lock_part < 3:
+                annotated_frame = self.an.annotate(f_index=f_index, lock_part=lock_part)
+            else:
+                annotated_frame = self.frame
 
             if self.parameters['config']['csv_export']:
                 try:
@@ -151,9 +154,10 @@ class PTWorkflow:
             if self.error_reporting is not None:
                 print(e)
                 flash_error_msg(e, self.error_reporting)
-            annotatedframe = self.cap.read_frame(f_index)
             self.error_reporting.toggle_img.setChecked(False)
             self.error_reporting.toggle_img.setText("Captured Image")
+            proc_frame = self.frame
+            annotated_frame = self.frame
         
-        return annotatedframe, proc_frame
+        return annotated_frame, proc_frame
 

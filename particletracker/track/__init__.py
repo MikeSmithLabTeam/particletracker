@@ -2,6 +2,7 @@ import os
 from PyQt5.QtCore import pyqtSignal, QObject
 from tqdm import tqdm
 import numpy as np
+import pandas as pd
 
 from ..general import dataframes
 from ..track import tracking_methods as tm
@@ -50,7 +51,7 @@ class ParticleTracker(QObject):
         self.data_filename = path + '/_temp/' + filename
         
 
-    def track(self, f_index=None):
+    def track(self, f_index=None, lock_part=-1):
         """
         Method called by track.process() and track.process_frame()
 
@@ -65,44 +66,50 @@ class ParticleTracker(QObject):
         ---------
         f_index: int or None
         """
-        if f_index is None:
-            'When processing whole video store in file with same name as movie'
-            output_filename = self.data_filename[:-5] + '_track.hdf5'
-        else:
-            'store temporarily'
-            output_filename = self.data_filename[:-5] + '_temp.hdf5'
-
-        with dataframes.DataStore(output_filename) as data:
+        if lock_part == -1:
             if f_index is None:
-                start = self.cap.frame_range[0]
-                stop = self.cap.frame_range[1]
-                step = self.cap.frame_range[2]
+                'When processing whole video store in file with same name as movie'
+                output_filename = self.data_filename[:-5] + '_track.hdf5'
             else:
-                start = f_index
-                stop = f_index + 1
-                step=1
+                'store temporarily'
+                output_filename = self.data_filename[:-5] + '_temp.hdf5'
 
-            self.cap.set_frame(start)
-            
-            for f in tqdm(range(start, stop, step), 'Tracking'):
-                try:
-                    df_frame = self.analyse_frame()
-                    data.add_tracking_data(f, df_frame)
-                    #Signal to indicate how many frames tracked
-                    self.track_progress.emit(f, start, stop, step)               
-                except:
-                    print('tracking failed')
-            
-            data.save(filename=output_filename)
+            with dataframes.DataStore(output_filename) as data:
+                if f_index is None:
+                    start = self.cap.frame_range[0]
+                    stop = self.cap.frame_range[1]
+                    step = self.cap.frame_range[2]
+                else:
+                    start = f_index
+                    stop = f_index + 1
+                    step=1
 
-    def analyse_frame(self):
+                self.cap.set_frame(start)
+                
+                frames=[]
+                for f in tqdm(range(start, stop, step), 'Tracking'):
+                    try:
+                        df_frame = self.analyse_frame(n=f)
+                        df_frame.index = pd.Index([f] * len(df_frame), name='frame')
+                        frames.append(df_frame)
+                        #Signal to indicate how many frames tracked
+                        self.track_progress.emit(f, start, stop, step)               
+                    except:
+                        print('tracking failed')
+
+            if frames:   
+                df = pd.concat(frames)
+                df.to_hdf(output_filename, 'data')
+
+    def analyse_frame(self, n=None):
         """Analyses a single frame using a track method specified in PARAMETERS
         Returns
         -------
         Pandas dataframe with tracked data.
         """
-        frame = self.cap.read_frame()
+        frame = self.cap.read_frame(n=n)
         method = self.parameters['track']['track_method'][0]
+        
         if self.ip is None:
             preprocessed_frame = frame
         else:

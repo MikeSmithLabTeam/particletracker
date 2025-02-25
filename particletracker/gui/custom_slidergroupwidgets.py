@@ -123,10 +123,9 @@ class CropMask(QWidget):
     """
     valueChanged = pyqtSignal(str)
 
-    def __init__(self, title, param_dict, param_change, img_viewer, parent=None, *args, **kwargs):
+    def __init__(self, title, param_dict, param_change, img_viewer, *args, **kwargs):
         super(CropMask, self).__init__(*args, **kwargs)
-        if parent is not None:
-            self.parent=parent
+
         self.img_viewer=img_viewer
         self.title = title
         self.param_change=param_change
@@ -140,7 +139,7 @@ class CropMask(QWidget):
         self.active_methods = list(self.param_dict['crop_method'])
 
         for method in param_dict[title + '_method']:
-            textbox = QModCustomTextBox(self.img_viewer, parent=self.parent, title=method, value_=str(self.param_dict[method]), checkbox=True)
+            textbox = QModCustomTextBox(self.img_viewer, title=method, value_=str(self.param_dict[method]), checkbox=True)
             textbox.meta = [title, method]
             textbox.widget='textbox'
             textbox.returnPressed.connect(lambda x=textbox.value(): self.param_change(x))

@@ -384,7 +384,7 @@ def circles(frame, data, f, parameters=None, *args, **kwargs):
         circles = subset_df[[x_col_name, y_col_name, r_col_name]].values
         
     else:
-        data.add_particle_property('user_rad', parameters['user_rad'])
+        data.df['user_rad'] = parameters['user_rad']
         subset_df = _get_class_subset(data, f, parameters)
         circles = subset_df[[x_col_name, y_col_name, 'user_rad']].values
 

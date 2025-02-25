@@ -141,26 +141,6 @@ class ReadCropVideo(ReadVideo):
         frame=super().read_frame(n=n)
         cropped_frame=self.apply_crop(frame)
         return cropped_frame
-
-"""
-    def apply_mask(self,frame):
-        #mask = crop(self.mask, self.parameters)
-        return cv2.bitwise_and(frame, self.mask)        
-    except Exception as e:
-            error = CropMaskError(e)
-            flash_error_msg(error, self.error)
-            return frame
-
-            
-def apply_crop(self, frame):
-    try:
-        return crop(frame, self.parameters)
-    except Exception as e:
-        error = CropMaskError(e)
-        flash_error_msg(error, self.error)
-        return frame
-"""
-        
     
 
 def crop(frame, parameters):
