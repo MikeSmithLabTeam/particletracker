@@ -10,6 +10,18 @@ from ..customexceptions import *
 from ..user_methods import *
 
 warnings.simplefilter('ignore')
+
+@error_handling
+@param_parse
+def output_video(frame, data, f, parameters=None, *args, **kwargs):
+    """output video
+    
+    This must be present as the first item otherwise no video will be output.
+    Allows you to specify output params such as resizing, fps etc.
+    """
+    return frame
+
+
 """
 --------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------
@@ -195,11 +207,11 @@ def particle_labels(frame, data, f, parameters=None, *args, **kwargs):
     
 
     """
-    x = data.get_info(f, 'x')
-    y = data.get_info(f, 'y')
+    x = data.get_data(f_index=f)['x']
+    y = data.get_data(f_index=f)['y']
 
 
-    particle_values = data.get_info(f, parameters['values_column'])#.astype(int)     
+    particle_values = data.get_data(f_index=f)[parameters['values_column']]
 
     df_empty = np.isnan(particle_values[0])
     if np.all(df_empty):
@@ -223,17 +235,17 @@ Particle annotation
 --------------------------------------------------------------------------------------
 """
 @error_handling
-def _get_class_subset(data, f, parameters):
+def _get_class_subset(df_frame, parameters):
     """
     Internal function to get subset of particles
     """    
       
     classifier_column= parameters['classifier_column']
     if classifier_column is None:
-        subset_df = data.df.loc[f]
+        subset_df = df_frame
     else:
         classifier = parameters['classifier']
-        temp = data.df.loc[f]
+        temp = df_frame
         subset_df = temp[temp[classifier_column] == classifier]
     return subset_df
 
@@ -291,7 +303,7 @@ def boxes(frame, data, f, parameters=None, *args, **kwargs):
     
 
     """
-    subset_df = _get_class_subset(data, f, parameters)
+    subset_df = _get_class_subset(data.get_data(f_index=f), parameters)
     box_pts = subset_df[['box_pts']].values
     
     if np.shape(box_pts)[0] == 1:
@@ -379,13 +391,12 @@ def circles(frame, data, f, parameters=None, *args, **kwargs):
     y_col_name = parameters['ydata_column']
     r_col_name = parameters['rdata_column']
     
+    subset_df = _get_class_subset(data.get_data(f_index=f), parameters)
+
     if get_param_val(parameters['rad_from_data']):
-        subset_df = _get_class_subset(data, f, parameters)
         circles = subset_df[[x_col_name, y_col_name, r_col_name]].values
-        
     else:
-        data.df['user_rad'] = parameters['user_rad']
-        subset_df = _get_class_subset(data, f, parameters)
+        subset_df['user_rad'] = parameters['user_rad']
         circles = subset_df[[x_col_name, y_col_name, 'user_rad']].values
 
     thickness = parameters['thickness']
@@ -405,17 +416,6 @@ def circles(frame, data, f, parameters=None, *args, **kwargs):
     
     if colourbar is not None:
         frame = place_colourbar_in_image(frame, colourbar, parameters) 
-    return frame
-    
-@error_handling
-def external_circles(frame, data, f, parameters=None, call_num=None):
-
-    method_key = get_method_key('external_circles', call_num=call_num)
-    data_name = get_param_val(parameters[method_key]['filename'])
-    data = pd.read_hdf(data_name)
-    circles = data.loc[0, ['x`` ', 'y']].values
-    for i, circle in enumerate(circles):
-        frame = cv2.circle(frame, (int(circle[0]), int(circle[1])), 2, (0, 255, 255), 2)
     return frame
 
 @error_handling
@@ -472,7 +472,7 @@ def contours(frame, data, f, parameters=None, *args, **kwargs):
     """    
     thickness = parameters['thickness']
     
-    subset_df = _get_class_subset(data, f, parameters)
+    subset_df = _get_class_subset(data.get_data(f_index=f), parameters)
     contour_pts = subset_df[['contours']].values
     (colours, colourbar) = colour_array(subset_df, f, parameters)
     if np.shape(contour_pts)[0] == 1:
@@ -550,7 +550,7 @@ def networks(frame, data, f, parameters=None, *args, **kwargs):
         annotated frame : np.ndarray
     
     """
-    df = _get_class_subset(data, f, parameters)
+    df = _get_class_subset(data.get_data(f_index=f), parameters)
     df = df.set_index('particle')
     particle_ids = df.index.values
     (colours, colourbar) = colour_array(df, f, parameters)
@@ -624,7 +624,7 @@ def voronoi(frame, data, f, parameters=None, *args, **kwargs):
     """
     thickness = parameters['thickness']
 
-    subset_df = _get_class_subset(data, f, parameters)
+    subset_df = _get_class_subset(data.get_data(f_index=f), parameters)
     contour_pts = subset_df[['voronoi']].values
     (colours, colourbar) = colour_array(subset_df, f, parameters)
 
@@ -723,14 +723,14 @@ def vectors(frame, data, f, parameters=None, *args, **kwargs):
     """
     dx = parameters['dx_column']
     dy = parameters['dy_column']
-    vectors = data.get_info(f, ['x', 'y',dx, dy])
+    vectors = data.get_data(f_index=f)[['x', 'y',dx, dy]]
 
     thickness = parameters['thickness']
     line_type = parameters['line_type']
     tip_length = 0.01*parameters['tip_length']
     vector_scale = 0.01*parameters['vector_scale']
 
-    (colours, colourbar) = colour_array(data.df, f, parameters)
+    (colours, colourbar) = colour_array(data.get_data(f_index=f), f, parameters)
 
     for i, vector in enumerate(vectors):
         frame = cv2.arrowedLine(frame, (int(vector[0]), int(vector[1])),
@@ -808,7 +808,7 @@ def trajectories(frame, data, f, parameters=None, *args, **kwargs):
     y_col_name = parameters['y_column']
 
     #In this case subset_df is only used to get the particle_ids and colours of trajectories.
-    subset_df = _get_class_subset(data, f, parameters)
+    subset_df = _get_class_subset(data.get_data(f_index=f), parameters)
     particle_ids = subset_df['particle'].values
 
     (colours, colourbar) = colour_array(subset_df, f, parameters)
@@ -819,7 +819,7 @@ def trajectories(frame, data, f, parameters=None, *args, **kwargs):
         traj_length = f
 
     #tests showed mucking about with the index was faster than selecting on particle column
-    df = data.df
+    df = data.get_data(f_index=f)
     df.index.name='frame'
     df2 = df.loc[f-traj_length:f]     
     df3 = df2.set_index(['particle'], append=True).swaplevel(i=0,j=1).sort_index(level='particle')

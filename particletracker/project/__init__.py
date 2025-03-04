@@ -1,4 +1,4 @@
-import os.path
+import os
 import numpy as np
 import pandas as pd
 
@@ -6,9 +6,8 @@ from ..crop import ReadCropVideo
 from .. import preprocess, track, link, postprocess, \
     annotate
 from ..general.writeread_param_dict import read_paramdict_file
-from ..general.dataframes import data_filename_create
+from ..general.dataframes import DataManager
 from ..customexceptions import BaseError, flash_error_msg, CsvError
-
 
 
 class PTWorkflow:
@@ -20,23 +19,12 @@ class PTWorkflow:
     def __init__(self, video_filename=None, param_filename=None, error_reporting=None):
         self.video_filename = video_filename
         self.error_reporting = error_reporting
-        self.data_filename = data_filename_create(self.video_filename)
-        path, file = os.path.split(self.data_filename)
-        self.temp_folder = path + '/_temp'
+        self.base_filename = os.path.splitext(self.video_filename)[0]
+        path, file = os.path.split(self.base_filename)
+        self.temp_folder = path + '/_temp/'
         self.param_filename = param_filename
         self.parameters = read_paramdict_file(self.param_filename)
-        #self.select_tabs()
         self._setup()
-
-    def select_tabs(self):
-        """Boolean values that determine which parts of the tracking process run"""
-        self.experiment_select = self.parameters['selected']['experiment']
-        self.crop_select = self.parameters['selected']['crop']
-        self.preprocess_select = self.parameters['selected']['preprocess']
-        self.track_select = self.parameters['selected']['track']
-        self.link_select = self.parameters['selected']['link']
-        self.postprocess_select = self.parameters['selected']['postprocess']
-        self.annotate_select = self.parameters['selected']['annotate']
 
     def _setup(self):
         ''' Setup is an internal class method it instantiates the video reader object.
@@ -62,29 +50,27 @@ class PTWorkflow:
         self.frame = self.cap.read_frame(n=0)
 
         self.ip = preprocess.Preprocessor(self.parameters)
-        
+
+        self.data = DataManager(base_filename=self.base_filename)
+
         self.pt = track.ParticleTracker(
-                            parameters=self.parameters, 
-                            preprocessor=self.ip,
-                            vidobject=self.cap, 
-                            data_filename=self.data_filename)
-        
+            parameters=self.parameters,
+            preprocessor=self.ip,
+            vidobject=self.cap)
+
         self.link = link.LinkTrajectory(
-                            data_filename=self.data_filename,
-                            parameters=self.parameters)
-        
+            data=self.data,
+            parameters=self.parameters)
+
         self.pp = postprocess.PostProcessor(
-                    data_filename=self.data_filename,
-                    parameters=self.parameters)
-        
-        self.an = annotate.TrackingAnnotator(vidobject=self.cap,
-                                             data_filename=self.data_filename,
-                                             parameters=self.parameters,
-                                             frame=self.cap.read_frame(n=0))
+            data=self.data,
+            parameters=self.parameters)
+
+        self.reset_annotator()
 
     def reset_annotator(self):
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
-                                             data_filename=self.data_filename,
+                                             data=self.data,
                                              parameters=self.parameters,
                                              frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
 
@@ -128,29 +114,34 @@ class PTWorkflow:
                 proc_frame = self.frame
             else:
                 proc_frame = self.cap.read_frame(f_index)
-                #This will be overwritten below if annotation is required
+                # This will be overwritten below if annotation is required
                 proc_frame = self.ip.process(proc_frame)
                 proc_frame = self.cap.apply_mask(proc_frame)
 
             if lock_part < 0:
                 self.pt.track(f_index=f_index)
+                #print(self.data.track_store.get_data(f_index=f_index).head())
             if lock_part < 1:
-                self.link.link_trajectories(f_index=f_index, lock_part=lock_part)
+                self.link.link_trajectories(
+                    f_index=f_index, lock_part=lock_part)
+                #print(self.data.link_store.get_data(f_index=f_index).head())
             if lock_part < 2:
                 self.pp.process(f_index=f_index, lock_part=lock_part)
+                #print(self.data.post_store.get_data(f_index=f_index).head())
             if lock_part < 3:
-                annotated_frame = self.an.annotate(f_index=f_index, lock_part=lock_part)
+                annotated_frame = self.an.annotate(
+                    f_index=f_index, lock_part=lock_part)
             else:
                 annotated_frame = self.frame
 
-            if self.parameters['config']['csv_export']:
+            """if self.parameters['config']['csv_export']:
                 try:
                     df = pd.read_hdf(self.data_filename)
-                    df.to_csv(self.data_filename[:-5] + '.csv')
+                    df.to_csv(self.base_filename + '.csv')
                 except Exception as e:
                     CsvError(e)
-
-        except BaseError as e:           
+            """
+        except BaseError as e:
             if self.error_reporting is not None:
                 print(e)
                 flash_error_msg(e, self.error_reporting)
@@ -158,6 +149,5 @@ class PTWorkflow:
             self.error_reporting.toggle_img.setText("Captured Image")
             proc_frame = self.frame
             annotated_frame = self.frame
-        
-        return annotated_frame, proc_frame
 
+        return annotated_frame, proc_frame

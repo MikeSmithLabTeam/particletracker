@@ -6,7 +6,9 @@ def create_param_file(filename):
     config = {'csv_export': True,
               'live_updates': True,
               'autosave_settings': True,
-              'frame_range': (0, None, 1)
+              'frame_range': (0, None, 1),
+              'auto_cleanup': True,
+              'lock_state' : -1
               }
 
     experiment = {'experiment_method': ('video_filename', 'sample', 'fps'),

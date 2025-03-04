@@ -6,6 +6,8 @@ import os
 from os.path import isfile
 from pathlib import Path
 import sys
+import subprocess
+import shutil
 import qimage2ndarray
 import webbrowser
 from scipy import spatial
@@ -148,6 +150,12 @@ class MainWindow(QMainWindow):
         self.export_to_csv.triggered.connect(self.export_to_csv_click)
         self.toolbar.addAction(self.export_to_csv)
 
+        self.auto_cleanup = QAction(QIcon(os.path.join(resources_dir,"cleanup.png")), "Auto Cleanup", self)
+        self.auto_cleanup.setCheckable(True)
+        self.auto_cleanup.setChecked(self.tracker.parameters['config']['auto_cleanup'])
+        self.toolbar.addAction(self.auto_cleanup)
+        self.auto_cleanup.triggered.connect(self.update_lock)
+
         self.toolbar.addSeparator()
         spacer = QWidget()
         spacer.setFixedWidth(20)  # Set desired width in pixels
@@ -156,18 +164,16 @@ class MainWindow(QMainWindow):
 
         self.just_track_button = CustomButton(resources_dir, "track.png", vid_filename=self.movie_filename, part=0)
         self.toolbar.addWidget(self.just_track_button)
+        self.just_track_button.triggered.connect(self.update_lock)
 
         self.just_link_button = CustomButton(resources_dir, "link.png",  vid_filename=self.movie_filename, part=1)
         self.toolbar.addWidget(self.just_link_button)
+        self.just_link_button.triggered.connect(self.update_lock)
 
         self.just_postprocess_button = CustomButton(resources_dir, "postprocess.png",  vid_filename=self.movie_filename, part=2)
         self.toolbar.addWidget(self.just_postprocess_button)
-
-        self.just_annotate_button = CustomButton(resources_dir, "annotate.png",  vid_filename=self.movie_filename, part=3)
-        self.toolbar.addWidget(self.just_annotate_button)
-
-        self.just_complete_button = CustomButton(resources_dir, "complete.png",  vid_filename=self.movie_filename, part=4)
-        self.toolbar.addWidget(self.just_complete_button)
+        self.just_postprocess_button.triggered.connect(self.update_lock)
+        
 
         self.toolbar.addSeparator()
         spacer = QWidget()
@@ -227,7 +233,7 @@ class MainWindow(QMainWindow):
 
         self.process_menu.addAction(self.autosave_on_process)
         self.process_menu.addAction(self.export_to_csv)     
-        
+        self.process_menu.addAction(self.auto_cleanup)     
         self.process_menu.addAction(process_button)
 
         docs = QAction('help', self)
@@ -332,8 +338,6 @@ class MainWindow(QMainWindow):
         self.just_track_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
         self.just_link_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
         self.just_postprocess_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
-        self.just_annotate_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
-        self.just_complete_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
 
     """
     ---------------------------------------------------------------         
@@ -388,10 +392,6 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage("Coords (x,y): ("+str(x)+','+str(y) +') \t Intensities [r,g,b]:'+str(output[int(y),int(x),:]))    
         self.show()
 
-    def reset_statusbar(self):
-        self.status_bar.setStyleSheet("background-color : lightGray")
-        self.status_bar.clearMessage()
-
     @pyqtSlot(int)
     def frame_selector_slot(self, value): 
         try:
@@ -406,7 +406,6 @@ class MainWindow(QMainWindow):
             msg.show()
             self.reset_frame_range()
         
-
     @pyqtSlot()
     def param_change(self, value):
         """
@@ -474,6 +473,10 @@ class MainWindow(QMainWindow):
     Various methods to update sections of the program.
     -------------------------------------------------------"""
 
+    def reset_statusbar(self):
+        self.status_bar.setStyleSheet("background-color : lightGray")
+        self.status_bar.clearMessage()
+
     def update_dictionary_params(self, location, value, widget_type):
         if len(location) == 2:
             '''Sometimes a duplicate method is added to method list which is not
@@ -506,7 +509,6 @@ class MainWindow(QMainWindow):
             else:
                 self.tracker.parameters[location[0]][location[1]][location[2]] = value 
                 
-
     def update_param_widgets(self, title):
         for param_adjustor in self.toplevel_settings.list_param_adjustors:
             if param_adjustor.title == title:  
@@ -559,19 +561,44 @@ class MainWindow(QMainWindow):
         settings_filename = save_settings_dialog(self, self.settings_filename)
         write_paramdict_file(self.tracker.parameters, settings_filename)
 
-    def export_to_csv_click(self):
+    def export_to_csv_click(self): 
         self.tracker.parameters['config']['csv_export'] = self.export_to_csv.isChecked()
+    
+    def clean_up(self):
+        """clean_up
+
+        This will copy final files (an hdf5 of tracking data and an annotated video) to folder containing video. It will then delete the _temp folder
+        """
+        try:
+            self.tracker.parameters['config']['autocleanup'] = self.autosave_on_process.isChecked()
+            if self.autosave_on_process.isChecked():
+                path, filename = os.path.split(self.movie_filename)
+                postprocess_datafile = path + '/_temp/' + filename[:-4] + CustomButton.extension[2]
+                output_datafile = path + filename[:-4] + '.hdf5'
+                temp_folder = path + '/_temp'
+
+                if os.path.exists(postprocess_datafile):
+                    shutil.move(postprocess_datafile, output_datafile)
+                remove_temp_folder(temp_folder)
+
+                CustomButton.reset_lock()
+
+        except Exception as e:
+            print(f"Error during file cleanup: {str(e)}")
+
+    
+        
 
     """-------------------------------------------------------------
     Functions relevant to the tools section
     --------------------------------------------------------------"""
-
+    
     def setup_pandas_viewer(self):
         if hasattr(self, 'pandas_viewer'):
             self.pandas_viewer.close()
             self.pandas_viewer.deleteLater()
         self.pandas_viewer = PandasWidget(parent=self)
-        self.update_pandas_view()
+        #self.update_pandas_view()
 
     def pandas_button_click(self):
         if self.pandas_button.isChecked():
@@ -580,8 +607,8 @@ class MainWindow(QMainWindow):
             self.pandas_viewer.hide()
 
     def update_pandas_view(self):
-        fname = self.tracker.data_filename
-        fname = fname[:-5] +'_temp.hdf5'
+        path, fname = os.path.split(self.tracker.base_filename)
+        fname = path + '/_temp/' + fname +'_temp.hdf5'
         self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
       
     def snapshot_button_click(self):
@@ -609,6 +636,10 @@ class MainWindow(QMainWindow):
             self.update_viewer()
         self.tracker.parameters['config']['live_updates'] = self.live_update_button.isChecked()
 
+    def update_lock(self):
+        self.tracker.parameters['config']['auto_cleanup'] = self.auto_cleanup.isChecked()
+        self.tracker.parameters['config']['lock_part'] = CustomButton.locked_part
+
     def process_button_click(self): 
         self.status_bar.setStyleSheet("background-color : lightBlue")
         self.status_bar.showMessage("Depending on the size of your movie etc this could take awhile. You can track progress in the command window.")    
@@ -620,8 +651,12 @@ class MainWindow(QMainWindow):
         #This is accessing a class variable of CustomButton
         self.tracker.process(lock_part=CustomButton.locked_part)
 
-        write_paramdict_file(self.tracker.parameters, self.tracker.data_filename[:-5] + '_expt.param')
-        
+        write_paramdict_file(self.tracker.parameters, self.tracker.base_filename + '_expt.param')
+    
+        if self.auto_cleanup.isChecked():
+            print('Cleaning up temporary files')
+            self.clean_up()
+
         self.reset_statusbar()
         QMessageBox.about(self, "", "Processing Finished")
         self.reboot(open_settings=False)
@@ -632,5 +667,17 @@ class MainWindow(QMainWindow):
 
 
 
+def remove_temp_folder(folder_path):
+    
+    try:               
+        shutil.rmtree(temp_folder)
+    except:
+        """Remove folder using elevated privileges"""
+        if sys.platform == 'win32':
+            cmd = f'powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList \'/c rd /s /q \"{folder_path}\"\'\"'
+            subprocess.run(cmd, shell=True, check=True)
+        else:
+            print('Error removing _temp folder')
+    
 
 

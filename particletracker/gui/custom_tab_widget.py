@@ -98,7 +98,7 @@ class CustomTabWidget(QTabWidget):
 
     @pyqtSlot(int)
     def update_lock_state(self, max_locked_index):
-        """When an icon on the menu is locked by right clicking
+        """When an icon on the menu is locked by left clicking
         a signal is sent from the CustomButton in menubar.py to this
         slot. The slot locks the tabs associated with the parameters on 
         RH side of page."""
@@ -106,7 +106,7 @@ class CustomTabWidget(QTabWidget):
             if max_locked_index == -1:
                 #Unlock everything
                 self.setTabEnabled(index, True)
-            elif index < (max_locked_index + 3):
+            elif index < (max_locked_index + 4):
                 #Lock tabs clicked on and earlier
                 self.setTabEnabled(index, False)
             else:
