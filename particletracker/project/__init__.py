@@ -74,7 +74,7 @@ class PTWorkflow:
                                              parameters=self.parameters,
                                              frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
 
-    def process(self, lock_part=-1, f_index=None):
+    def process(self, f_index=None, lock_part=-1):
         """Process an entire video
 
         Idea here is to call process with use_part = None to indicate all steps of the process and then
@@ -120,27 +120,17 @@ class PTWorkflow:
 
             if lock_part < 0:
                 self.pt.track(f_index=f_index)
-                #print(self.data.track_store.get_data(f_index=f_index).head())
             if lock_part < 1:
                 self.link.link_trajectories(
                     f_index=f_index, lock_part=lock_part)
-                #print(self.data.link_store.get_data(f_index=f_index).head())
             if lock_part < 2:
                 self.pp.process(f_index=f_index, lock_part=lock_part)
-                #print(self.data.post_store.get_data(f_index=f_index).head())
             if lock_part < 3:
                 annotated_frame = self.an.annotate(
                     f_index=f_index, lock_part=lock_part)
             else:
                 annotated_frame = self.frame
-
-            """if self.parameters['config']['csv_export']:
-                try:
-                    df = pd.read_hdf(self.data_filename)
-                    df.to_csv(self.base_filename + '.csv')
-                except Exception as e:
-                    CsvError(e)
-            """
+            
         except BaseError as e:
             if self.error_reporting is not None:
                 print(e)

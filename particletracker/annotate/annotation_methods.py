@@ -8,17 +8,21 @@ from ..general.parameters import get_param_val, get_method_key, param_parse
 from .cmap import colour_array, place_colourbar_in_image
 from ..customexceptions import *
 from ..user_methods import *
+from ..general.dataframes import df_single, df_range
 
 warnings.simplefilter('ignore')
 
 @error_handling
 @param_parse
-def output_video(frame, data, f, parameters=None, *args, **kwargs):
+@df_single
+def video(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     """output video
     
     This must be present as the first item otherwise no video will be output.
     Allows you to specify output params such as resizing, fps etc.
     """
+    print('Not yet implemented')
+    'Whether or not a video is produced is handled in caller. Otherwise this is a stub method. Implement ability to resize output using labvision function. Bit fiddly since WriteVideo will want to know frame dimensions. Might be worth adding internally to writevideo with keyword arg.'
     return frame
 
 
@@ -31,7 +35,7 @@ Text annotation
 """
 @error_handling
 @param_parse
-def text_label(frame, data, f, parameters=None, *args, **kwargs):
+def text_label(_, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Text labels place a static label on an image at specific location.
 
@@ -62,7 +66,7 @@ def text_label(frame, data, f, parameters=None, *args, **kwargs):
         This is the unmodified frame of the input movie
     data
         This is the dataframe that stores all the tracked data
-    f
+    f_index
         frame index
     parameters
         Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
@@ -88,7 +92,8 @@ def text_label(frame, data, f, parameters=None, *args, **kwargs):
 
 @error_handling
 @param_parse
-def var_label(frame, data, f, parameters=None, *args, **kwargs):
+@df_single
+def var_label(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Var labels puts text on an image at specific location for each frame. The value
     displayed in that frame is mapped to a column in the dataframe. The values next 
@@ -124,7 +129,7 @@ def var_label(frame, data, f, parameters=None, *args, **kwargs):
         This is the unmodified frame of the input movie
     data
         This is the dataframe that stores all the tracked data
-    f
+    f_index
         frame index
     parameters
         Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
@@ -140,10 +145,9 @@ def var_label(frame, data, f, parameters=None, *args, **kwargs):
     """
     var_column=parameters['var_column']
     if var_column == 'index':
-        text = str(f)
+        text = str(f_index)
     else:
-        print('test')
-        info = np.unique(data.df.loc[f, var_column])[0]
+        info = np.unique(df_single.loc[f_index, var_column])[0]
         text = str(info)
     position = parameters['position']        
 
@@ -157,7 +161,8 @@ def var_label(frame, data, f, parameters=None, *args, **kwargs):
 
 @error_handling
 @param_parse
-def particle_labels(frame, data, f, parameters=None, *args, **kwargs):
+@df_single
+def particle_labels(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Annotates image with particle info from one column. The most common use
     is to indicate the particle index but any column of data could be used.
@@ -204,14 +209,12 @@ def particle_labels(frame, data, f, parameters=None, *args, **kwargs):
     Returns
     -----------
         annotated frame : np.ndarray
-    
 
     """
-    x = data.get_data(f_index=f)['x']
-    y = data.get_data(f_index=f)['y']
+    x = df_single['x']
+    y = df_single['y']
 
-
-    particle_values = data.get_data(f_index=f)[parameters['values_column']]
+    particle_values = df_single[parameters['values_column']]
 
     df_empty = np.isnan(particle_values[0])
     if np.all(df_empty):
@@ -251,7 +254,8 @@ def _get_class_subset(df_frame, parameters):
 
 @error_handling
 @param_parse
-def boxes(frame, data, f, parameters=None, *args, **kwargs):
+@df_single
+def boxes(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Boxes places a rotated rectangle on the image that encloses the contours of specified particles.
 
@@ -303,7 +307,7 @@ def boxes(frame, data, f, parameters=None, *args, **kwargs):
     
 
     """
-    subset_df = _get_class_subset(data.get_data(f_index=f), parameters)
+    subset_df = _get_class_subset(df_single, parameters)
     box_pts = subset_df[['box_pts']].values
     
     if np.shape(box_pts)[0] == 1:
@@ -312,7 +316,7 @@ def boxes(frame, data, f, parameters=None, *args, **kwargs):
             #0 boxes
             return frame
 
-    (colours, colourbar) = colour_array(subset_df, f, parameters)
+    (colours, colourbar) = colour_array(subset_df, f_index, parameters)
 
     for index, box in enumerate(box_pts):
         frame = _draw_contours(frame, box, col=colours[index],
@@ -333,7 +337,8 @@ def _contour_inside_img(sz, contour):
     
 @error_handling
 @param_parse
-def circles(frame, data, f, parameters=None, *args, **kwargs):
+@df_single
+def circles(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Circles places a ring on every specified particle
     
@@ -391,7 +396,7 @@ def circles(frame, data, f, parameters=None, *args, **kwargs):
     y_col_name = parameters['ydata_column']
     r_col_name = parameters['rdata_column']
     
-    subset_df = _get_class_subset(data.get_data(f_index=f), parameters)
+    subset_df = _get_class_subset(df_single, parameters)
 
     if get_param_val(parameters['rad_from_data']):
         circles = subset_df[[x_col_name, y_col_name, r_col_name]].values
@@ -406,7 +411,7 @@ def circles(frame, data, f, parameters=None, *args, **kwargs):
     if np.all(df_empty):
         return frame
     
-    (colours, colourbar) = colour_array(subset_df, f, parameters)
+    (colours, colourbar) = colour_array(subset_df, f_index, parameters)
     
     if np.shape(circles) == (3,):#One object
         frame = cv2.circle(frame, (int(circles[0]), int(circles[1])), int(circles[2]), colours[0], int(thickness))
@@ -420,7 +425,8 @@ def circles(frame, data, f, parameters=None, *args, **kwargs):
 
 @error_handling
 @param_parse
-def contours(frame, data, f, parameters=None, *args, **kwargs):
+@df_single
+def contours(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Contours draws the tracked contour returned from Contours tracking
     method onto the image.
@@ -472,9 +478,9 @@ def contours(frame, data, f, parameters=None, *args, **kwargs):
     """    
     thickness = parameters['thickness']
     
-    subset_df = _get_class_subset(data.get_data(f_index=f), parameters)
+    subset_df = _get_class_subset(df_single, parameters)
     contour_pts = subset_df[['contours']].values
-    (colours, colourbar) = colour_array(subset_df, f, parameters)
+    (colours, colourbar) = colour_array(subset_df, f_index, parameters)
     if np.shape(contour_pts)[0] == 1:
         df_empty = np.isnan(contour_pts[0])
         if np.all(df_empty):
@@ -500,7 +506,8 @@ def _draw_contours(img, contours, col=(0,0,255), thickness=1):
 
 @error_handling
 @param_parse
-def networks(frame, data, f, parameters=None, *args, **kwargs):
+@df_single
+def networks(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Networks draws a network of lines between particles
 
@@ -550,17 +557,17 @@ def networks(frame, data, f, parameters=None, *args, **kwargs):
         annotated frame : np.ndarray
     
     """
-    df = _get_class_subset(data.get_data(f_index=f), parameters)
-    df = df.set_index('particle')
+    df = _get_class_subset(df_single, parameters)
+    df=df.set_index('particle')
     particle_ids = df.index.values
-    (colours, colourbar) = colour_array(df, f, parameters)
+    (colours, colourbar) = colour_array(df, f_index, parameters)
     thickness = parameters['thickness']
 
     for index, particle in enumerate(particle_ids):
         pt = df.loc[particle, ['x', 'y']].values
         pt1 = (int(pt[0]), int(pt[1]))
         neighbour_ids = df.loc[particle, 'neighbours']
-        for index2, neighbour in enumerate(neighbour_ids):
+        for neighbour in neighbour_ids:
             pt = df.loc[neighbour, ['x','y']].values
             pt2 = (int(pt[0]), int(pt[1]))
             frame = cv2.line(frame,pt1, pt2, colours[index], int(thickness), lineType=cv2.LINE_AA)
@@ -661,7 +668,8 @@ Particle motion annotation
 """
 @error_handling
 @param_parse
-def vectors(frame, data, f, parameters=None, *args, **kwargs):
+@df_single
+def vectors(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Vectors draw info onto images in the form of arrows. 
 
@@ -747,7 +755,8 @@ These methods require more than one frames data to be analysed so you'll need to
 """
 @error_handling
 @param_parse
-def trajectories(frame, data, f, parameters=None, *args, **kwargs):
+@df_range
+def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Trajectories draws the historical track of each particle onto an image. 
 
@@ -808,20 +817,19 @@ def trajectories(frame, data, f, parameters=None, *args, **kwargs):
     y_col_name = parameters['y_column']
 
     #In this case subset_df is only used to get the particle_ids and colours of trajectories.
-    subset_df = _get_class_subset(data.get_data(f_index=f), parameters)
+    subset_df = _get_class_subset(df_range.loc[f_index], parameters)
     particle_ids = subset_df['particle'].values
 
-    (colours, colourbar) = colour_array(subset_df, f, parameters)
+    (colours, colourbar) = colour_array(subset_df, f_index, parameters)
     thickness = parameters['thickness']
     traj_length = parameters['traj_length']
 
-    if (f-traj_length) < 0:
-        traj_length = f
+    if (f_index-traj_length) < 0:
+        traj_length = f_index
 
     #tests showed mucking about with the index was faster than selecting on particle column
-    df = data.get_data(f_index=f)
-    df.index.name='frame'
-    df2 = df.loc[f-traj_length:f]     
+    df_range.index.name='frame'
+    df2 = df_range.loc[f_index-traj_length:f_index]     
     df3 = df2.set_index(['particle'], append=True).swaplevel(i=0,j=1).sort_index(level='particle')
     for index, particle in enumerate(particle_ids):
         traj_pts = df3[[x_col_name,y_col_name]].loc[particle]

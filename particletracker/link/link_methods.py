@@ -6,20 +6,15 @@ from ..general.parameters import  get_param_val
 from ..customexceptions import *
 from ..user_methods import *
 
-def default(df_store, parameters):
+def default(df_full, parameters):
     # Trackpy methods for default processing of entire movie / range
-    print('linking....')
-    df=df_store.get_data()
-    df.reset_index(inplace=True)
-    print(df.head())
-    print(parameters)
-    df = trackpy.link_df(df, get_param_val(parameters['max_frame_displacement']),
+    df_full.reset_index(inplace=True)
+    df_full = trackpy.link_df(df_full, get_param_val(parameters['max_frame_displacement']),
                             memory=get_param_val(parameters['memory']), 
                             link_strategy='auto', 
                             adaptive_step=0.75)
-    df = trackpy.filter_stubs(df, get_param_val(parameters['min_frame_life']))
-    print(df.head())
-    return df
+    df_full = trackpy.filter_stubs(df_full, get_param_val(parameters['min_frame_life']))
+    return df_full
 
 
 def no_linking(df):

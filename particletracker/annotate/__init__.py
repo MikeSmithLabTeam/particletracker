@@ -4,8 +4,7 @@ import os
 from labvision.video import WriteVideo
 
 from ..annotate import annotation_methods as am
-from ..general import dataframes
-from ..general.parameters import get_method_name
+from ..general.parameters import get_method_name, get_param_val, get_method_key
 
 
 
@@ -18,20 +17,30 @@ class TrackingAnnotator:
         self.output_filename = self.cap.filename[:-4] + '_annotate.mp4'
 
     def annotate(self, f_index=None, lock_part=-1):   
-        if f_index is None:
-            output_vid=WriteVideo(self.output_filename, self.cap.frame_size)
+        video_output = get_param_val(self.parameters['annotate']['video']['output'])
 
-        print(self.pp_store.get_data(f_index=1).head())
+        #If no movie is requested then return nothing
+        if f_index is None and not video_output:
+            return None
+        
+        if f_index is None and video_output:
+            output_vid=WriteVideo(self.output_filename, self.cap.frame_size)
+            self.pp_store.reload()
 
         #whole movie
         if f_index is None:
             start = self.cap.frame_range[0]
             stop = self.cap.frame_range[1]
             step = self.cap.frame_range[2]
+            full=True # need whole dataframe loaded.
         else:
             start=f_index
             stop=f_index+1
             step=1
+            #If postprocessing is locked read the full dataframe _postprocess.hdf5 otherwise use _temp.hdf5
+            full=lock_part==2
+            # When lock_part is changed the full dataframe associated with the link data is reloaded.
+
         self.cap.set_frame(start)
         
         #Do the annotation
@@ -40,15 +49,15 @@ class TrackingAnnotator:
             try:
                 for method in self.parameters['annotate']['annotate_method']:
                     method_name, call_num = get_method_name(method)
-                    frame = getattr(am, method_name)(frame, self.pp_store, f, parameters=self.parameters, call_num=call_num, section='annotate')
+                    frame = getattr(am, method_name)(self.pp_store, frame, f_index=f, full=full, parameters=self.parameters, call_num=call_num, section='annotate')
             except:
                 print('No data to annotate')
 
-            if f_index is None:
+            if f_index is None and video_output:
                 output_vid.add_frame(frame)
         
         # close movie or return annotated frame
-        if f_index is None:
+        if f_index is None and video_output:
             output_vid.close()
             print('Annotation finished')
         else:

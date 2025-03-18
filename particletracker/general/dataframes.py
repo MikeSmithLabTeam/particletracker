@@ -76,24 +76,24 @@ class DataRead:
         self.read_filename = read_filename
         self.temp_filename = temp_filename
         self.store_index = store_index
+        self._df=None
         self._clear_cache()
 
     def _load(self):
         """Lazy load DataFrame from read_filename"""
         try:
-            # If this store is locked or before lock point, use read_filename
-            if self.store_index <= DataStore.lock_part:
+            if self._df is None:
                 self._df = pd.read_hdf(self.read_filename, key='data')
-                if not self._df.index.is_monotonic_increasing:
-                    self._df.sort_index(inplace=True)
-            # Otherwise use temp_filename
-            else:
-                self._df = pd.read_hdf(self.temp_filename, key='data')
-            self._is_sorted = True
+            if not self._df.index.is_monotonic_increasing:
+                self._df.sort_index(inplace=True)
         except Exception as e:
             print(f'Error loading read file: {e}')
 
-    def get_data(self, f_index=None):
+    def reload(self):
+        self._clear_cache()
+        self._load()
+
+    def get_data(self, f_index=None, full=True):
         """
         Get data from the dataset with caching for single frames and lazy loading.
 
@@ -108,21 +108,25 @@ class DataRead:
         pd.DataFrame
             Requested data
         """
-        # If not locked, reload temp file on every call
-        if self.store_index > DataRead.lock_part:
-            self._df = pd.read_hdf(self.temp_filename, key='data')
-            self._is_sorted = True
-            self._get_frame.cache_clear()  # Clear frame cache as data has changed
-        # If locked or before lock point, use lazy loading
-        elif self._df is None:
-            self._load()
-
         if f_index is None:
+            #Read back whole dataframe
             self._load()
             return self._df
-        return self._get_frame(f_index)
-
-    @lru_cache(maxsize=8)
+        else:
+            if full or self.store_index == DataRead.lock_part:
+                #Want to read from the full file either because you want to process one frame at a time
+                # or because the previous stage is locked and you want to benefit from caching
+                #Important that you call reload() before starting a full dataframe analysis. Or if you update
+                #the data.
+                if self._df is None:
+                    self._load()
+                return self._get_frame(f_index)
+            else:
+                #This should be when you want to read from the temporary file
+                return pd.read_hdf(self.temp_filename, key='data')
+                
+            
+    @lru_cache(maxsize=4)
     def _get_frame(self, f_index):
         """
         Cached access for single frame retrieval
@@ -137,42 +141,37 @@ class DataRead:
         pd.DataFrame
             Single frame data
         """
-        if self._is_sorted:
-            try:
-                start_idx = self._df.index.get_loc(f_index)
-                if isinstance(start_idx, slice):
-                    frame_data = self._df.iloc[start_idx]
-                else:
-                    frame_data = self._df.iloc[start_idx:start_idx+1]
-            except KeyError:
-                frame_data = self._df.iloc[0:0]
-                print('Error accessing single frame data')
-        else:
-            frame_data = self._df[self._df.index == f_index]
+        try:
+            frame_data = self._df.loc[f_index]
+            if isinstance(frame_data, pd.Series):
+                # If only one row, convert to DataFrame
+                frame_data = frame_data.to_frame().T
+        except KeyError:
+            frame_data = self._df.iloc[0:0]
+            print(f'Frame {f_index} not found in data')
         return frame_data.copy()
 
     def _clear_cache(self):
         """Clear the frame reading cache"""
         self._get_frame.cache_clear()
-        self._df = None
-        self._is_sorted = False
-        self._output_file = None
-        self._output_frames = []
-        self._output_df = None
+        self._df=None
+
 
 def df_single(func):
+    """df_single decorator is designed to send a single frame of the data to a function"""
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         store = args[0]
-        df = store.get_data(f_index=kwargs['f_index'])
-        return func(df, *args, **kwargs)
+        new_args = (store.get_data(f_index=kwargs['f_index'], full=kwargs['full']),) + args[1:]
+        return func(*new_args, **kwargs)
     return wrapper_param_format
 
 def df_range(func):
+    """df_range decorator is designed to send a range of frames of the data to a function"""
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         store = args[0]
-        df = store.get_data(f_index=None)
+        df = store.get_data(f_index=None, full=True)
         f_index=kwargs['f_index']
         parameters = kwargs['parameters']
         column = parameters['column_name']
@@ -190,16 +189,8 @@ def df_range(func):
         if finish > df.index.max():
             finish = df.index.max()
 
-        df_range = df.loc[start:finish,[column,'particle']]
-        return func(df_range, *args, **kwargs)
-    return wrapper_param_format
-
-def df_full(func):
-    @functools.wraps(func)
-    def wrapper_param_format(*args, **kwargs):
-        store = args[0]
-        df = store.get_data(f_index=None)
-        return func(df, *args, **kwargs)
+        new_args = (df.loc[start:finish,[column,'particle']],) + args[1:]
+        return func(*new_args, **kwargs)
     return wrapper_param_format
 
 class DataWrite:
@@ -240,8 +231,6 @@ class DataWrite:
             elif self._output_frames:
                 # Concatenate and write collected frames
                 final_df = pd.concat(self._output_frames)
-                print('write', final_df.tail())
-                print(self._output_file)
                 final_df.to_hdf(self._output_file, 'data')
         except Exception as e:
             print(f'Error in writing data: {e}')

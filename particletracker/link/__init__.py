@@ -23,18 +23,24 @@ class LinkTrajectory:
                 output_filename = self.track_store.temp_filename[:-10] + '_link.hdf5'
             else:
                 #process single frame
-                output_filename = self.track_store.temp_filename
-    
+                output_filename = self.track_store.temp_filename   
+            
             with DataWrite(output_filename) as store:
                 if (f_index is None) and ('default' in self.parameters['link']['link_method']):
-                    #Default trackpy linking method
-                    print('tail', self.track_store._df.tail())
-                    df = default(self.track_store, self.parameters['link']['default'])
-                    store.write_data(df)
-                    print('default')
+                    #Default trackpy linking method only used when processing whole movie.
+                    df = default(self.track_store.get_data(), self.parameters['link']['default'])
                 else:
                     #no linking
-                    store.write_data(no_linking(self.track_store.get_data(f_index=f_index)))
+                    if (f_index is not None) and (lock_part == -1):
+                        #This reads the tracking from _temp.hdf5, created when the gui processes a single frame
+                        full=False
+                    else:
+                        #f_index is None or lock_part == 0 and f_index is an integer value of the frame.
+                        #If you process the whole movie or you read a single frame with the tracking stage locked, tracking 
+                        #data is read from the _track.hdf5 file
+                        full=True
+                    df = self.track_store.get_data(f_index=f_index, full=full)
+                store.write_data(df)
                     
  
 

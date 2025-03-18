@@ -93,8 +93,7 @@ def create_param_file(filename):
         'default': {'max_frame_displacement': [10, 1, 50, 1],
                     'memory': [3, 0, 30, 1],
                     'min_frame_life': [10, 1, 100, 1]
-                    },
-        'no_linking': {}
+                    }
     }
 
     postprocess = {
@@ -161,7 +160,7 @@ def create_param_file(filename):
     }
 
     annotate = {
-        'annotate_method': ('circles',),
+        'annotate_method': ('circles','video',),
         'text_label': {'text': 'BP1',
                        'position': (100, 100),
                        'font_colour': (255, 0, 0),
@@ -275,6 +274,8 @@ def create_param_file(filename):
             'colour': (0, 255, 0),  # For static
             'thickness': 2
         },
+        'video':{'output':[True, ('True','False')]
+                 }
 
     }
 

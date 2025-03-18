@@ -10,8 +10,8 @@ import scipy.optimize as opt
 
 from labvision import audio, video
 from moviepy.audio.io.AudioFileClip import AudioFileClip
-from ..general.parameters import get_method_key, get_param_val, param_parse
-from ..general.dataframes import df_single, df_range, df_full
+from ..general.parameters import param_parse
+from ..general.dataframes import df_single, df_range
 from ..customexceptions import *
 from ..user_methods import *
 '''
@@ -701,6 +701,7 @@ def audio_frequency(df_frame, *args, f_index=None, parameters=None, **kwargs):
 
 @error_handling
 @param_parse
+@df_single
 def duty_to_acceleration(df_frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Calculates dimensionless acceleration values of the system. Takes audio frequency 
@@ -747,7 +748,7 @@ def duty_to_acceleration(df_frame, f_index=None, parameters=None, *args, **kwarg
     
     df_frame['duty_cycle'] = duty
     df_frame['acceleration'] = acceleration
-    return df
+    return df_frame
 
 '''
 ---------------------------------------------------------------------------------------------
@@ -803,7 +804,7 @@ def difference(df_range, f_index=None, parameters=None, *args, **kwargs):
 @error_handling
 @param_parse
 @df_range
-def mean(df, f_index=None, parameters=None, *args, **kwargs):
+def mean(df_range, f_index=None, parameters=None, *args, **kwargs):
     '''
     Rolling mean of a particles values. 
 

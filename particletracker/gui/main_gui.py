@@ -47,11 +47,30 @@ class MainWindow(QMainWindow):
 
     def reboot(self, open_settings=True):
         """The reboot method is used to reload the gui when opening a new video or settings file."""
-        
+        # Clean up existing GUI elements
         if hasattr(self, 'main_panel'):
-            self.toolbar.clear()
+            # Clear and remove toolbar
+            if hasattr(self, 'toolbar'):
+                self.removeToolBar(self.toolbar)
+                self.toolbar.deleteLater()
+            
+            # Clear and remove menu bar
+            if hasattr(self, 'menuBar'):
+                menuBar = self.menuBar()
+                menuBar.clear()
+                menuBar.deleteLater()
+                self.setMenuBar(QMenuBar(self))
+                
+            # Clean up main panel and its layouts
+            self.main_layout.removeWidget(self.main_panel)
             self.main_panel.deleteLater()
-            self.main_panel.setParent(None)
+            self.main_panel = None
+            
+            # Clean up status bar
+            if hasattr(self, 'status_bar'):
+                self.setStatusBar(None)
+                self.status_bar.deleteLater()
+
             if not open_settings:
                 try:
                     #This allows for continuity of parameters after processing.
@@ -144,12 +163,6 @@ class MainWindow(QMainWindow):
         self.snapshot_button.triggered.connect(self.snapshot_button_click)
         self.toolbar.addAction(self.snapshot_button)
 
-        self.export_to_csv = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to csv', self)
-        self.export_to_csv.setCheckable(True)
-        self.export_to_csv.setChecked(self.tracker.parameters['config']['csv_export'])
-        self.export_to_csv.triggered.connect(self.export_to_csv_click)
-        self.toolbar.addAction(self.export_to_csv)
-
         self.auto_cleanup = QAction(QIcon(os.path.join(resources_dir,"cleanup.png")), "Auto Cleanup", self)
         self.auto_cleanup.setCheckable(True)
         self.auto_cleanup.setChecked(self.tracker.parameters['config']['auto_cleanup'])
@@ -164,15 +177,15 @@ class MainWindow(QMainWindow):
 
         self.just_track_button = CustomButton(resources_dir, "track.png", vid_filename=self.movie_filename, part=0)
         self.toolbar.addWidget(self.just_track_button)
-        self.just_track_button.triggered.connect(self.update_lock)
+        self.just_track_button.lockButtons.connect(self.update_lock)
 
         self.just_link_button = CustomButton(resources_dir, "link.png",  vid_filename=self.movie_filename, part=1)
         self.toolbar.addWidget(self.just_link_button)
-        self.just_link_button.triggered.connect(self.update_lock)
+        self.just_link_button.lockButtons.connect(self.update_lock)
 
         self.just_postprocess_button = CustomButton(resources_dir, "postprocess.png",  vid_filename=self.movie_filename, part=2)
         self.toolbar.addWidget(self.just_postprocess_button)
-        self.just_postprocess_button.triggered.connect(self.update_lock)
+        self.just_postprocess_button.lockButtons.connect(self.update_lock)
         
 
         self.toolbar.addSeparator()
@@ -231,8 +244,7 @@ class MainWindow(QMainWindow):
         self.tool_menu.addAction(self.pandas_button)
         self.tool_menu.addAction(self.snapshot_button)
 
-        self.process_menu.addAction(self.autosave_on_process)
-        self.process_menu.addAction(self.export_to_csv)     
+        self.process_menu.addAction(self.autosave_on_process)  
         self.process_menu.addAction(self.auto_cleanup)     
         self.process_menu.addAction(process_button)
 
@@ -560,9 +572,6 @@ class MainWindow(QMainWindow):
     def save_settings_button_click(self):
         settings_filename = save_settings_dialog(self, self.settings_filename)
         write_paramdict_file(self.tracker.parameters, settings_filename)
-
-    def export_to_csv_click(self): 
-        self.tracker.parameters['config']['csv_export'] = self.export_to_csv.isChecked()
     
     def clean_up(self):
         """clean_up
@@ -578,7 +587,7 @@ class MainWindow(QMainWindow):
                 temp_folder = path + '/_temp'
 
                 if os.path.exists(postprocess_datafile):
-                    shutil.move(postprocess_datafile, output_datafile)
+                    shutil.copy(postprocess_datafile, output_datafile)
                 remove_temp_folder(temp_folder)
 
                 CustomButton.reset_lock()
@@ -639,6 +648,8 @@ class MainWindow(QMainWindow):
     def update_lock(self):
         self.tracker.parameters['config']['auto_cleanup'] = self.auto_cleanup.isChecked()
         self.tracker.parameters['config']['lock_part'] = CustomButton.locked_part
+        self.tracker.data.clear_caches()
+        self.update_viewer()
 
     def process_button_click(self): 
         self.status_bar.setStyleSheet("background-color : lightBlue")
@@ -670,7 +681,7 @@ class MainWindow(QMainWindow):
 def remove_temp_folder(folder_path):
     
     try:               
-        shutil.rmtree(temp_folder)
+        shutil.rmtree(folder_path)
     except:
         """Remove folder using elevated privileges"""
         if sys.platform == 'win32':
