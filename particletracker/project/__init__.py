@@ -20,7 +20,7 @@ class PTWorkflow:
         self.video_filename = video_filename
         self.error_reporting = error_reporting
         self.base_filename = os.path.splitext(self.video_filename)[0]
-        path, file = os.path.split(self.base_filename)
+        path, _ = os.path.split(self.base_filename)
         self.temp_folder = path + '/_temp/'
         self.param_filename = param_filename
         self.parameters = read_paramdict_file(self.param_filename)
@@ -31,7 +31,7 @@ class PTWorkflow:
         Depending on the settings in PARAMETERS this may also crop the video frames
         as they are requested.'''
         datapath = os.path.dirname(self.video_filename)
-        self.parameters['experiment']['video_filename'] = self.video_filename
+        self.parameters['config']['_video_filename'] = self.video_filename
         self.parameters['postprocess']['add_frame_data']['data_path'] = datapath
         self._create_processes()
 
@@ -72,20 +72,20 @@ class PTWorkflow:
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
                                              data=self.data,
                                              parameters=self.parameters,
-                                             frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
+                                             frame=self.cap.read_frame(self.parameters['config']['_frame_range'][0]))
 
     def process(self, f_index=None, lock_part=-1):
         """Process an entire video
 
-        Idea here is to call process with use_part = None to indicate all steps of the process and then
-        0 = just_track
-        1 = just_link
-        2 = just_postprocess
-        3 = just_annotate
-        4 = complete --> Creates the final file.
+        Idea here is to call process with lock_part = -1 to indicate all steps of the process and then
+        0 = track
+        1 = link
+        2 = postprocess  --> Creates the final file.
+        annotation optional
 
-        setting movie=True specifies whole range of movie
-        movie=False specifies single frame - This is used by the gui.
+        - If you just process a single frame then you read a temp.hdf5 datafile from the _temp folder which contains the current frame=f_index data.
+        - If you process everything with f_index=None then each stage creates its own file containing data for all frames in _temp folder. The subsequent stage reads from this datafile and saves to a new file. At the end this is copied to the directory containing the video and represents the processed data. An annotated video is optionall produced
+        - Once a datafile has been completely processed if the _temp file is not cleaned up you can go back and edit things. Locking a particular stage results in data being drawn from a full datafile of previous stage containing complete data. Subsequent stages are either stored in a temporary file for single image processing or in new versions of the datafiles for the later stages if processing everything.
 
         Process is called on the main instance using the command
         particle_tracking_instance.process(). One call results in the entire
@@ -94,16 +94,6 @@ class PTWorkflow:
         One potentially confusing thing is that if you process a single frame then you move sequentially
         through preprocessor, tracker, linker, postprocessor and annotator. However, if you process the whole
         then the preprocessor is called from within tracker. All frames are tracked and then all frames are linked etc.
-
-
-        i.e track = True
-            link = True etc
-
-        if use_part == True the processing perorms the postprocessing and annotation steps only. 
-
-        if csv == True this will export the data as an csv file with the name videoname.xlsx
-
-        :return:
         """
         if not os.path.exists(self.temp_folder):
             os.mkdir(self.temp_folder)

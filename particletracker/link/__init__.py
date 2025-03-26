@@ -14,7 +14,7 @@ class LinkTrajectory:
         self.track_store = data.track_store
         self.parameters=parameters
 
-    @error_handling
+    #@error_handling
     def link_trajectories(self, f_index=None, lock_part=-1):
         """Implements the trackpy functions link_df and filter_stubs"""
         if lock_part < 1:
@@ -25,21 +25,26 @@ class LinkTrajectory:
                 #process single frame
                 output_filename = self.track_store.temp_filename   
             
+            if (f_index is not None) and (lock_part == -1):
+                #This reads the tracking from _temp.hdf5, created when the gui processes a single frame
+                full=False
+            else:
+                #Processing whole movie or having lock_part==0
+                full=True
+
+            df = self.track_store.get_data(full=full)
+
+            if df is not None and df.isna().all().all():
+                #If it is an empty dataframe copy to _link.hdf5 file
+                df=df
+            elif (f_index is None) and ('default' in self.parameters['link']['link_method']):
+                #Default trackpy linking method only used when processing whole movie.
+                df = default(df, self.parameters['link']['default'])
+            else:
+                #no linking
+                df = no_linking(self.track_store.get_data(f_index=f_index, full=full))
+
             with DataWrite(output_filename) as store:
-                if (f_index is None) and ('default' in self.parameters['link']['link_method']):
-                    #Default trackpy linking method only used when processing whole movie.
-                    df = default(self.track_store.get_data(), self.parameters['link']['default'])
-                else:
-                    #no linking
-                    if (f_index is not None) and (lock_part == -1):
-                        #This reads the tracking from _temp.hdf5, created when the gui processes a single frame
-                        full=False
-                    else:
-                        #f_index is None or lock_part == 0 and f_index is an integer value of the frame.
-                        #If you process the whole movie or you read a single frame with the tracking stage locked, tracking 
-                        #data is read from the _track.hdf5 file
-                        full=True
-                    df = self.track_store.get_data(f_index=f_index, full=full)
                 store.write_data(df)
                     
  

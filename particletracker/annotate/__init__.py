@@ -10,21 +10,23 @@ from ..general.parameters import get_method_name, get_param_val, get_method_key
 
 class TrackingAnnotator:
 
-    def __init__(self, parameters=None, vidobject=None, data=None, bitrate='HIGH1080',frame=None, framerate=50):
+    def __init__(self, parameters=None, vidobject=None, data=None,frame=None, framerate=50):
         self.parameters = parameters
         self.cap = vidobject
         self.pp_store = data.post_store
         self.output_filename = self.cap.filename[:-4] + '_annotate.mp4'
 
     def annotate(self, f_index=None, lock_part=-1):   
-        video_output = get_param_val(self.parameters['annotate']['video']['output'])
-
-        #If no movie is requested then return nothing
+        video_output = get_param_val(self.parameters['config']['video_output']['output'])
+        
+        #If no movie is requested and processing whole then return nothing
         if f_index is None and not video_output:
             return None
         
+        #If whole movie and want video
         if f_index is None and video_output:
-            output_vid=WriteVideo(self.output_filename, self.cap.frame_size)
+            scale= get_param_val(self.parameters['config']['video_output']['scale'])
+            output_vid=WriteVideo(self.output_filename, frame=self.cap.read_frame(n=0), scale=scale)
             self.pp_store.reload()
 
         #whole movie
@@ -42,7 +44,7 @@ class TrackingAnnotator:
             # When lock_part is changed the full dataframe associated with the link data is reloaded.
 
         self.cap.set_frame(start)
-        
+
         #Do the annotation
         for f in tqdm(range(start, stop, step), 'Annotating'):
             frame = self.cap.read_frame()

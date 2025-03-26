@@ -108,8 +108,8 @@ class DataRead:
         pd.DataFrame
             Requested data
         """
+
         if f_index is None:
-            #Read back whole dataframe
             self._load()
             return self._df
         else:
@@ -231,7 +231,7 @@ class DataWrite:
             elif self._output_frames:
                 # Concatenate and write collected frames
                 final_df = pd.concat(self._output_frames)
-                final_df.to_hdf(self._output_file, 'data')
+                final_df.to_hdf(self._output_file, key='data')
         except Exception as e:
             print(f'Error in writing data: {e}')
             raise  # Re-raise the exception after cleanup

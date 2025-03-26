@@ -43,7 +43,6 @@ def colour_array(subset_df, f, parameters):
         else:
             _,_,w,h= parameters['colour_bar']
             colourbar = create_colourbar(int(w),int(h), cmap_name, cmap_min, cmap_max)  
-            print('finish')
                         
     return (colours, colourbar)
     

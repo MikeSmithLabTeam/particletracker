@@ -412,7 +412,7 @@ def subtract_bkg(img, *args, parameters=None, call_num=None, **kwargs):
             'blur': {'kernel': get_param_val(params['subtract_bkg_blur_kernel'])}}
         # Load bkg img
         if params['subtract_bkg_filename'] is None:
-            name = parameters['experiment']['video_filename']
+            name = parameters['config']['_video_filename']
             bkg_img = cv2.imread(name[:-4] + '_bkgimg.png')
         else:
             bkg_img = cv2.imread(params['subtract_bkg_filename'])

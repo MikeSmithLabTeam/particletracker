@@ -30,7 +30,7 @@ class CustomTabWidget(QTabWidget):
         self.list_param_adjustor_layouts = []
 
         #ignore config and don't make a tab for it
-        tab_list = list(self.param_dict.keys()).copy()[1:]
+        tab_list = list(self.param_dict.keys()).copy()
         
         if 'selected' in tab_list: 
             tab_list.remove('selected')
@@ -103,7 +103,10 @@ class CustomTabWidget(QTabWidget):
         slot. The slot locks the tabs associated with the parameters on 
         RH side of page."""
         for index in range(self.count()):
-            if max_locked_index == -1:
+            if index == 0:
+                #Unlock later tabs
+                self.setTabEnabled(index, True)
+            elif max_locked_index == -1:
                 #Unlock everything
                 self.setTabEnabled(index, True)
             elif index < (max_locked_index + 4):

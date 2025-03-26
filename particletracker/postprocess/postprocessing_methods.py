@@ -681,7 +681,7 @@ def audio_frequency(df_frame, *args, f_index=None, parameters=None, **kwargs):
     #Audio encoding frequency
     bitrate=48000
 
-    filename = parameters['experiment']['video_filename']
+    filename = parameters['config']['_video_filename']
     
     #Get audio from video for one frame
     if os.path.exists("out.wav"):

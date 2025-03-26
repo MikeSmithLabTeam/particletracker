@@ -3,20 +3,18 @@ from .writeread_param_dict import write_paramdict_file
 
 def create_param_file(filename):
     # Config does not result in any gui elements being created
-    config = {'csv_export': True,
-              'live_updates': True,
-              'autosave_settings': True,
-              'frame_range': (0, None, 1),
-              'auto_cleanup': True,
-              'lock_state' : -1
+    config = {'config_method': ('video_output',),
+              '_live_updates': True,
+              '_autosave_settings': True,
+              '_frame_range': (0, None, 1),
+              '_auto_cleanup': True,
+              '_lock_state' : -1,
+              '_video_filename':None,
+              'video_output': {'output':[True, ('True','False')], 
+                         'fps': [30, 5, 60, 1], 
+                         'scale':[100, 5, 100, 1]
+                          }
               }
-
-    experiment = {'experiment_method': ('video_filename', 'sample', 'fps'),
-                  'video_filename': None,
-                  'sample': 'Sample',
-                  'fps': 30,
-                  'metadata': None,
-                  }
 
     crop = {'crop_method': ('crop_box',),
             'crop_box': None,
@@ -160,7 +158,7 @@ def create_param_file(filename):
     }
 
     annotate = {
-        'annotate_method': ('circles','video',),
+        'annotate_method': ('circles',),
         'text_label': {'text': 'BP1',
                        'position': (100, 100),
                        'font_colour': (255, 0, 0),
@@ -273,32 +271,17 @@ def create_param_file(filename):
             'classifier': [True, ('True', 'False')],
             'colour': (0, 255, 0),  # For static
             'thickness': 2
-        },
-        'video':{'output':[True, ('True','False')]
-                 }
-
-    }
-
-    selected = {
-        'experiment': True,
-        'crop': True,
-        'preprocess': True,
-        'track': True,
-        'link': True,
-        'postprocess': False,
-        'annotate': False
+        }
     }
 
     PARAMETERS = {
         'config': config,
-        'experiment': experiment,
         'crop': crop,
         'preprocess': preprocess,
         'track': track,
         'link': link,
         'postprocess': postprocess,
         'annotate': annotate,
-        'selected': selected
     }
 
     write_paramdict_file(PARAMETERS, filename)

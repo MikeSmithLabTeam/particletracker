@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
 
         self.autosave_on_process = QAction(QIcon(os.path.join(resources_dir,"autosave.png")), 'Autosave settings on process', self)
         self.autosave_on_process.setCheckable(True)
-        self.autosave_on_process.setChecked(self.tracker.parameters['config']['autosave_settings'])
+        self.autosave_on_process.setChecked(self.tracker.parameters['config']['_autosave_settings'])
         self.autosave_on_process.triggered.connect(self.autosave_button_click)
         self.toolbar.addAction(self.autosave_on_process)
 
@@ -144,7 +144,7 @@ class MainWindow(QMainWindow):
 
         self.live_update_button = QAction(QIcon(os.path.join(resources_dir,"arrow-circle.png")), "Live Updates", self)
         self.live_update_button.setCheckable(True)
-        self.live_update_button.setChecked(self.tracker.parameters['config']['live_updates'])
+        self.live_update_button.setChecked(self.tracker.parameters['config']['_live_updates'])
         self.live_update_button.triggered.connect(self.live_update_button_click)
         self.toolbar.addAction(self.live_update_button)
 
@@ -165,7 +165,7 @@ class MainWindow(QMainWindow):
 
         self.auto_cleanup = QAction(QIcon(os.path.join(resources_dir,"cleanup.png")), "Auto Cleanup", self)
         self.auto_cleanup.setCheckable(True)
-        self.auto_cleanup.setChecked(self.tracker.parameters['config']['auto_cleanup'])
+        self.auto_cleanup.setChecked(self.tracker.parameters['config']['_auto_cleanup'])
         self.toolbar.addAction(self.auto_cleanup)
         self.auto_cleanup.triggered.connect(self.update_lock)
 
@@ -304,14 +304,14 @@ class MainWindow(QMainWindow):
         
         frame_selector_layout = QHBoxLayout()
 
-        if self.tracker.parameters['config']['frame_range'][1] is None:
+        if self.tracker.parameters['config']['_frame_range'][1] is None:
             max_val = self.tracker.cap.num_frames - 1
         else:
-            max_val=self.tracker.parameters['config']['frame_range'][1] - 1
+            max_val=self.tracker.parameters['config']['_frame_range'][1] - 1
         self.frame_selector = QCustomSlider(title='Frame',
-                                            min_=self.tracker.parameters['config']['frame_range'][0],
+                                            min_=self.tracker.parameters['config']['_frame_range'][0],
                                             max_=max_val,
-                                            step_=self.tracker.parameters['config']['frame_range'][2],
+                                            step_=self.tracker.parameters['config']['_frame_range'][2],
                                             value_=self.tracker.cap.frame_range[0],
                                             spinbox=True,
                                             )
@@ -434,12 +434,12 @@ class MainWindow(QMainWindow):
         paramdict_location=sender.meta
         
         if sender.meta == 'ResetFrameRange':
-            self.update_dictionary_params(['config','frame_range'],(0,self.tracker.cap.num_frames-1,1), 'button')
+            self.update_dictionary_params(['config','_frame_range'],(0,self.tracker.cap.num_frames-1,1), 'button')
             self.tracker.cap.set_frame_range((0,self.tracker.cap.num_frames,1))
         elif ('frame' in paramdict_location[1]) and (type(value) == tuple):
             frame_range = (self.frame_selector.slider._min,self.frame_selector.slider._max+1,self.frame_selector.slider._step)
             if (frame_range[1] <= self.tracker.cap.num_frames) | (frame_range[1] is None):
-                self.update_dictionary_params(['config','frame_range'],frame_range, 'slider')
+                self.update_dictionary_params(['config','_frame_range'],frame_range, 'slider')
                 self.tracker.cap.set_frame_range(frame_range)
             else:
                 self.reset_frame_range_click()
@@ -579,7 +579,7 @@ class MainWindow(QMainWindow):
         This will copy final files (an hdf5 of tracking data and an annotated video) to folder containing video. It will then delete the _temp folder
         """
         try:
-            self.tracker.parameters['config']['autocleanup'] = self.autosave_on_process.isChecked()
+            self.tracker.parameters['config']['_autocleanup'] = self.autosave_on_process.isChecked()
             if self.autosave_on_process.isChecked():
                 path, filename = os.path.split(self.movie_filename)
                 postprocess_datafile = path + '/_temp/' + filename[:-4] + CustomButton.extension[2]
@@ -638,16 +638,16 @@ class MainWindow(QMainWindow):
         --------------------------------------------------------------"""
 
     def autosave_button_click(self):
-        self.tracker.parameters['config']['autosave_settings'] = self.autosave_on_process.isChecked()
+        self.tracker.parameters['config']['_autosave_settings'] = self.autosave_on_process.isChecked()
 
     def live_update_button_click(self):
         if self.live_update_button.isChecked():
             self.update_viewer()
-        self.tracker.parameters['config']['live_updates'] = self.live_update_button.isChecked()
+        self.tracker.parameters['config']['_live_updates'] = self.live_update_button.isChecked()
 
     def update_lock(self):
-        self.tracker.parameters['config']['auto_cleanup'] = self.auto_cleanup.isChecked()
-        self.tracker.parameters['config']['lock_part'] = CustomButton.locked_part
+        self.tracker.parameters['config']['_auto_cleanup'] = self.auto_cleanup.isChecked()
+        self.tracker.parameters['config']['_lock_part'] = CustomButton.locked_part
         self.tracker.data.clear_caches()
         self.update_viewer()
 

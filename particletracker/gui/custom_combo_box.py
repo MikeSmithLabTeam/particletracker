@@ -14,7 +14,8 @@ class ComboBoxAndButton(QWidget):
         super(ComboBoxAndButton, self).__init__(*args, **kwargs)
         self.title=title
         self.parent = parent
-        self.param_dict = parent.param_dict
+        #filter any dictionary entry that starts with a _. We don't want the user to interact with these
+        self.param_dict = {key:value for key,value in parent.param_dict.items() if key[0] != '_'}
         self.combo_button_layout = QVBoxLayout()
         # Combobox holds names of blueprints for parameters
         self.construct_method_combo_box(title)
@@ -25,7 +26,8 @@ class ComboBoxAndButton(QWidget):
         self.combo_box = QComboBox()
         self.combo_box.setFont(self.font)
         for key in list(self.param_dict[title].keys()):
-            if key != title + '_method':
+            #Exclude hidden values in config
+            if key != title + '_method' and key[0] != '_':
                 self.combo_box.addItem(key)
         self.combo_button_layout.addWidget(self.combo_box)
 
