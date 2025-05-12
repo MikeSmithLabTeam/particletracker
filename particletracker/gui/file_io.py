@@ -1,9 +1,9 @@
 import os
 from pathlib import Path
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import Qt, QDir
+from PyQt6.QtGui import *
 
 IMG_FILE_EXT = ('.png','.jpg','.tiff','.JPG')
 
@@ -37,12 +37,14 @@ def check_filenames(self, movie_filename, settings_filename):
 
 def open_movie_dialog(self, movie_filename=None):
     """Called on start up if no movie filename supplied. Also called when open movie button is clicked."""
-    options = QFileDialog.Options()
-    #options |= QFileDialog.DontUseNativeDialog
-
+    options = QFileDialog.Option.DontUseNativeDialog
+    
     if movie_filename is None:
         filename, _ = QFileDialog.getOpenFileName(self, 
-                                                         "Open Movie", QDir.homePath(),"All files (*.*);; mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v);;png (*.png);;jpg (*.jpg);;tiff (*.tiff)", options=options)
+                                              "Open Movie", 
+                                              QDir.home().path(),
+                                              "All files (*.*);; mp4 (*.mp4);;avi (*.avi);;m4v (*.m4v);;png (*.png);;jpg (*.jpg);;tiff (*.tiff)", 
+                                              options=options)
     else:
         filename, _ = QFileDialog.getOpenFileName(self, 
                                                          "Open Movie",
@@ -71,7 +73,7 @@ def _create_wildcard_filename_img_seq(movie_filename):
     return movie_filename
 
 def open_settings_dialog(self, settings_filename=None):
-    options = QFileDialog.Options()
+    options = QFileDialog.Option.DontUseNativeDialog
     #options |= QFileDialog.DontUseNativeDialog
     if settings_filename is None:
         filename, _ = QFileDialog.getOpenFileName(self, "Open Settings File", '',
@@ -95,12 +97,12 @@ def _create_default_settings_filepath(movie_filename):
     return settings_filename
 
 def save_settings_dialog(self, settings_filename):
-    options = QFileDialog.Options()
-    #options |= QFileDialog.DontUseNativeDialog
+    options = QFileDialog.Option.DontUseNativeDialog
+    
     filename, _ = QFileDialog.getSaveFileName(self, "Save Settings File", 
-                                                       self.settings_filename.split('.')[0],
-                                                        "settings (*.param)", 
-                                                        options=options)
+                                            self.settings_filename.split('.')[0],
+                                            "settings (*.param)", 
+                                            options=options)
     
     if filename:
         settings_filename = filename
@@ -114,8 +116,8 @@ File input and output
 -------------------------------------------------------------------"""
 
 
-          
 
 
-    
+
+
 

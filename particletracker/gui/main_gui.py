@@ -1,7 +1,12 @@
 #Packages
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt6.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
+    QLabel, QPushButton, QMessageBox,
+    QStatusBar, QMenuBar, QFileDialog
+)
+from PyQt6.QtCore import Qt, QTimer, pyqtSlot, QSize
+from PyQt6.QtGui import QIcon, QFont, QAction
+
 import os
 from os.path import isfile
 from pathlib import Path
@@ -209,8 +214,8 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(close_button)
 
         menu = self.menuBar()
-        menu.setContextMenuPolicy(Qt.PreventContextMenu)  # Prevent context menu
-        self.toolbar.setContextMenuPolicy(Qt.PreventContextMenu)  # Prevent 
+        menu.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)  # Prevent context menu
+        self.toolbar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)  # Prevent 
 
         self.status_bar = QStatusBar(self)
         font = QFont()
@@ -689,6 +694,6 @@ def remove_temp_folder(folder_path):
             subprocess.run(cmd, shell=True, check=True)
         else:
             print('Error removing _temp folder')
-    
+
 
 

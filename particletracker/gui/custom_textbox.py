@@ -1,6 +1,6 @@
-from PyQt5.QtCore import Qt, pyqtSignal, QRectF
-from PyQt5.QtGui import QPixmap, QImage, QPainterPath, QCloseEvent, QWheelEvent, QColor
-from PyQt5.QtWidgets import (QWidget, QSlider, QCheckBox, QHBoxLayout,
+from PyQt6.QtCore import Qt, pyqtSignal, QRectF
+from PyQt6.QtGui import QPixmap, QImage, QPainterPath, QCloseEvent, QWheelEvent, QColor
+from PyQt6.QtWidgets import (QWidget, QSlider, QCheckBox, QHBoxLayout,
                              QLabel, QComboBox, QSizePolicy, QVBoxLayout,
                              QApplication, QGraphicsView, QGraphicsScene,
                              QLineEdit

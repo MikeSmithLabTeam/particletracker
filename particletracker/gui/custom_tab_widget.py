@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
 
 from qtwidgets.draggable_list import MyListWidget
 from ..gui.custom_combo_box import ComboBoxAndButton
@@ -41,8 +41,8 @@ class CustomTabWidget(QTabWidget):
     def add_tab(self, widget, title, index):
         #Setup tab
         QTabWidget.addTab(self, widget, title)
-        self.tabBar().setTabButton(self.tabBar().count()-1, QTabBar.LeftSide, QLabel())
-        self.setTabPosition(QTabWidget.West)
+        self.tabBar().setTabButton(self.tabBar().count()-1, QTabBar.ButtonPosition.LeftSide, QLabel())
+        self.setTabPosition(QTabWidget.TabPosition.West)
         self.tab_widget_layout = QVBoxLayout()
         
         #Top RH widgets
@@ -116,4 +116,3 @@ class CustomTabWidget(QTabWidget):
                 #Unlock later tabs
                 self.setTabEnabled(index, True)
 
-        

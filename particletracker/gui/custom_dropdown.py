@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
 
 
 class QCustomDropdown(QWidget):
@@ -43,11 +43,10 @@ class QCustomDropdown(QWidget):
     def add_options(self, title):
         for item in self.options:
             self.dropdown.addItem(item)
-        self.dropdown.activated[str].connect(lambda x:self.onValueChanged(x))
+        self.dropdown.activated.connect(lambda x: self.onValueChanged(self.dropdown.itemText(x)))
     
     def onValueChanged(self, get_value):
         text = self.dropdown.currentText()
         self.value_ = text
         self.returnPressed.emit()
-        
-        
+

@@ -1,5 +1,5 @@
 import os
-from PyQt5.QtCore import pyqtSignal, QObject
+from PyQt6.QtCore import pyqtSignal, QObject
 from tqdm import tqdm
 import numpy as np
 import pandas as pd

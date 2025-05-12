@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
 import sys, os
 
 from filehandling import BatchProcess
@@ -42,7 +42,7 @@ def track_gui(movie_filename=None, settings_filename=None):
         settings_filename=settings_filename, screen_size=screen_size)
     window.show()
     #Start event loop
-    app.exec_()
+    app.exec()
 
 
 

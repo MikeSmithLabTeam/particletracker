@@ -1,8 +1,8 @@
 import os
 import shutil
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
 
 
 
@@ -22,7 +22,7 @@ class CustomButton(QToolButton):
     extension=('_track.hdf5',
                '_link.hdf5',
                '_postprocess.hdf5')
-    locked_part=-1# This is the highest button number index that is locked. -1 means nothing locked.
+    locked_part=-1
     # A signal that indicates the new value. It is fed the CustomButton.locked_part
     lockButtons = pyqtSignal(int) 
 
@@ -30,18 +30,20 @@ class CustomButton(QToolButton):
         super().__init__(parent=None)
         self.part=part
         self.path, self.filename = os.path.split(vid_filename)
-        self.lock=False    # Is the button currently locked    
+        self.lock=False    
         self.normal_icon = QPixmap(os.path.join(resources_dir, icon_filename))
         self.lock_icon = QPixmap(os.path.join(resources_dir, "locked.png"))       
         self.update_icons()
         CustomButton.buttons[part]=self
         CustomButton.buttons[part].setCheckable(True)
+        # Add context menu policy setting
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
     
     def update_icons(self):
         self.icon=QIcon()
-        self.icon.addPixmap(self.normal_icon, QIcon.Normal, QIcon.Off)       
-        self.icon.addPixmap(self.normal_icon, QIcon.Active, QIcon.Off)     
-        self.icon.addPixmap(self.lock_icon, QIcon.Normal, QIcon.On)     
+        self.icon.addPixmap(self.normal_icon, QIcon.Mode.Normal, QIcon.State.Off)       
+        self.icon.addPixmap(self.normal_icon, QIcon.Mode.Active, QIcon.State.Off)     
+        self.icon.addPixmap(self.lock_icon, QIcon.Mode.Normal, QIcon.State.On)     
         self.setIcon(self.icon)
     
     def unlock_part(self, part):
@@ -60,7 +62,7 @@ class CustomButton(QToolButton):
         sender = self 
         if self.check_files_exist(sender.part):
             #Prevents you from trying to run something that requires files from previous stage.
-            if event.button() == Qt.LeftButton:
+            if event.button() == Qt.MouseButton.LeftButton:
                 #LH button is used to lock stages up to and including current one.
                 if sender.isChecked():
                     for i in range(sender.part,len(CustomButton.buttons)):
@@ -74,8 +76,8 @@ class CustomButton(QToolButton):
         else:
             msg=QMessageBox()
             msg.setText("You haven't run the previous stages so this is not yet allowed.")
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.exec_()
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg.exec()
 
 
     def check_files_exist(self, part):
@@ -102,7 +104,7 @@ class CustomButton(QToolButton):
             button.unlock_part(idx)
         CustomButton.locked_part = -1
 
-            
-        
 
-                
+
+
+
