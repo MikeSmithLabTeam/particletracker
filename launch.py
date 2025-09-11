@@ -7,5 +7,6 @@ if __name__ == '__main__':
     userprofile = os.environ['USERPROFILE']
     path = userprofile + \
         "\\OneDrive - The University of Nottingham\\Documents\\Programming\\particletracker\\testdata\\"
-    track_gui(path + "Hydrogel.mp4", settings_filename=path + "test.param")
+    # , settings_filename=path + "test.param")
+    track_gui(path + "hydrogel.mp4")
     # test_eyes()

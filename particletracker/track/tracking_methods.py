@@ -132,7 +132,7 @@ def trackpy(ppframe, frame, params=None, *args, **kwargs):
 
     return df
 
-# @error_handling
+
 
 
 def hough(ppframe, frame, params=None, *args, **kwargs):

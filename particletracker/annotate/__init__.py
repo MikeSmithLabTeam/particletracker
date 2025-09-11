@@ -16,7 +16,8 @@ class TrackingAnnotator:
         self.pp_store = data.post_store
         self.output_filename = self.cap.filename[:-4] + '_annotate.mp4'
 
-    def annotate(self, f_index=None, lock_part=-1):   
+    def annotate(self, f_index=None, lock_part=-1):  
+        print("Annotating") 
         video_output = get_param_val(self.parameters['config']['video_output']['output'])
         
         #If no movie is requested and processing whole then return nothing

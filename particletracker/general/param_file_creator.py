@@ -27,7 +27,7 @@ def create_param_file(filename):
     preprocess = {
         'preprocess_method': ('grayscale', 'medianblur',),
         'grayscale': {},  # 'load_bkg_img':False,
-        'threshold': {'threshold': [1, 0, 255, 1],
+        'threshold': {'threshold': [60, 0, 255, 1],
                       'invert': [True, ('True', 'False')]},
         'adaptive_threshold': {'block_size': [29, 1, 300, 2],
                                'C': [-23, -30, 30, 1],
@@ -205,7 +205,6 @@ def create_param_file(filename):
                     'classifier': [True, ('True', 'False')],
                     'thickness': 2
                     },
-        'external_circles': {'filename': ''},
         'contours': {'cmap_type': ['static', ('dynamic', 'static')],
                      'cmap_column': 'x',  # For dynamic
                      'cmap_max': [100.0, 0, 1000.0, 0.1],  # For dynamic
@@ -219,7 +218,7 @@ def create_param_file(filename):
                      },
         'trajectories': {'x_column': 'x',
                          'y_column': 'y',
-                         'traj_length': [1000, 0, 1000, 1],
+                         'span': [1000, 0, 1000, 1],
                          'cmap_type': ['static', ('dynamic', 'static')],
                          'cmap_column': 'x',  # For dynamic
                          'cmap_max': [100.0, 0, 1000.0, 0.1],  # For dynamic

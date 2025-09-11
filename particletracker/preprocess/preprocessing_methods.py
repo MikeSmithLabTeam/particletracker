@@ -44,14 +44,16 @@ def adaptive_threshold(img, parameters=None, *args, **kwargs):
         This is must be a grayscale / single colour channel image
     parameters
         dictionary like object corresponding to specific method. See param_parse for details.
-    
+
 
     Returns
     -------
         binary image with 255 above threshold else 0.
     '''
-    bw_img = thresholds.adaptive_threshold(img, block_size=parameters['block_size'], constant=parameters['C'], invert=parameters['invert'])
+    bw_img = thresholds.adaptive_threshold(
+        img, block_size=parameters['block_size'], constant=parameters['C'], invert=parameters['invert'])
     return bw_img
+
 
 @error_handling
 def blur(img, parameters=None, **kwargs):
@@ -72,7 +74,7 @@ def blur(img, parameters=None, **kwargs):
         This must be a grayscale / single colour channel image
     parameters
         dictionary like object corresponding to specific method. See param_parse for details.
-    
+
     Returns
     -------
         single colour channel image.
@@ -92,14 +94,14 @@ def brightness_contrast(img, parameters=None, *args, **kwargs):
     This is implemented as g(x) = contrast * f(x) + brightness
 
     but with checks to make sure the values don't fall outside 0-255
-    
+
     Args
     ----
     img
         This must be a grayscale / single colour channel image
     parameters
         dictionary like object corresponding to specific method. See param_parse for details.
-    
+
     Returns
     -------
         single colour channel image.
@@ -173,7 +175,7 @@ def dilation(img, parameters=None, *args, **kwargs):
         binary image 
 
     '''
-    return morphological.dilate(img,kernel=parameters['kernel'], iterations=parameters['iterations'])
+    return morphological.dilate(img, kernel=parameters['kernel'], iterations=parameters['iterations'])
 
 
 @error_handling
@@ -197,14 +199,15 @@ def distance(img, parameters=None, *args, **kwargs):
     ----
     img
         This must be a binary image (8 bit)
-    
+
 
     Returns
     -------
         Grayscale image
 
     '''
-    img = transforms.distance(img, normalise=parameters['normalise']).astype(np.uint8)
+    img = transforms.distance(
+        img, normalise=parameters['normalise']).astype(np.uint8)
     return img
 
 
@@ -243,8 +246,8 @@ def erosion(img, parameters=None, *args, **kwargs):
     '''
 
     kernel = parameters['kernel']
+    print(parameters['iterations'])
     return morphological.erode(img, kernel=kernel, iterations=parameters['iterations'])
-
 
 
 @error_handling
@@ -286,13 +289,13 @@ def grayscale(img, *args, **kwargs):
     ----
     img
         This should be a colour image though won't error if given grayscale
-    
+
     Returns
     -------
         grayscale image
 
     '''
-    img=colours.bgr_to_gray(img)
+    img = colours.bgr_to_gray(img)
     return img
 
 
@@ -312,7 +315,7 @@ def invert(img, *args, **kwargs):
     ----
     img
         will receive any type of image
-    
+
     Returns
     -------
         same as input image
@@ -363,9 +366,8 @@ def subtract_bkg(img, *args, parameters=None, call_num=None, **kwargs):
     Notes
     -----
     This function will subtract a background from the image. It has several 
-    options: mean will subtract the average value from the image. img will subtract a preprepared
-    background img from the img. Before subtracting the background image it is blurred according to
-    the settings. 
+    options: mean / median will subtract the mean / median value from the image. 
+    img will subtract a preprepared background img from the img. Before subtracting the background image it is blurred according to the settings. 
 
     N.B. You must apply either a grayscale or color_channel method before the subtract_bkg method. 
     The software subtracts the mean image value, grayscale or color_channel version of the background image which you select from the current image.
@@ -416,10 +418,12 @@ def subtract_bkg(img, *args, parameters=None, call_num=None, **kwargs):
         name = parameters['config']['_video_filename']
         if params['subtract_bkg_filename'] is None:
             path, filename_stub, _ = img_name_wrangle(name)
-            bkg_img = cv2.imread(os.path.join(path, filename_stub + '_bkgimg.png'))
+            bkg_img = cv2.imread(os.path.join(
+                path, filename_stub + '_bkgimg.png'))
         else:
             path, _ = os.path.split(name)
-            bkg_img = cv2.imread(os.path.join(path, params['subtract_bkg_filename']))
+            bkg_img = cv2.imread(os.path.join(
+                path, params['subtract_bkg_filename']))
 
         if bkgtype == 'grayscale':
             subtract_img = colours.bgr_to_gray(bkg_img)
@@ -429,7 +433,7 @@ def subtract_bkg(img, *args, parameters=None, call_num=None, **kwargs):
             subtract_img = bkg_img[:, :, 1]
         elif bkgtype == 'blue':
             subtract_img = bkg_img[:, :, 0]
-        
+
         subtract_img = crop(subtract_img, parameters['crop'])
         img2 = blur(img, temp_params, call_num=None)
         img2 = img2.astype(np.uint8)
@@ -446,7 +450,7 @@ def subtract_bkg(img, *args, parameters=None, call_num=None, **kwargs):
 
     if get_param_val(params['subtract_bkg_norm']):
         img2 = cv2.normalize(img2, None, alpha=0, beta=255,
-                               norm_type=cv2.NORM_MINMAX)
+                             norm_type=cv2.NORM_MINMAX)
 
     return img2
 
@@ -478,7 +482,8 @@ def threshold(img, parameters=None, *args, **kwargs):
         binary image
 
     '''
-    bw_img = thresholds.threshold(img, value=parameters['threshold'], invert=parameters['invert'])
+    bw_img = thresholds.threshold(
+        img, value=parameters['threshold'], invert=parameters['invert'])
     return bw_img
 
 
@@ -537,6 +542,7 @@ def absolute_diff(gray_img, parameters=None, *args, **kwargs):
     -------
         grayscale image
     '''
-    
-    gray_img = transforms.absolute_diff(gray_img, value=parameters['value'], normalise=parameters['normalise'])
+
+    gray_img = transforms.absolute_diff(
+        gray_img, value=parameters['value'], normalise=parameters['normalise'])
     return gray_img

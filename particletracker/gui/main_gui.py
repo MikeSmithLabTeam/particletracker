@@ -360,7 +360,7 @@ class MainWindow(QMainWindow):
     ---------------------------------------------------------------         
     ------------------------------------------------------------------
     Callback functions
-    ------------------------------------------------------------------
+    ----------------------------------b--------------------------------
     ----------------------------------------------------------------
     """
     def open_tracker(self):
@@ -611,7 +611,7 @@ class MainWindow(QMainWindow):
         img = qimage2ndarray.byte_view(self.viewer.image())
         n=0
         while n < 1000:
-            img_name = self.tracker.data_filename[:-5] + '_frame' + str(self.frame_selector.value()) + '_' + str(n) +'.png'
+            img_name = self.tracker.base_filename + '_frame' + str(self.frame_selector.value()) + '_' + str(n) +'.png'
             if Path(img_name).is_file():
                 n = n+1
             else:

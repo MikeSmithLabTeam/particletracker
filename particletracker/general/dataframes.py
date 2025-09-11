@@ -9,8 +9,9 @@ class DataManager:
     """Manages data files and caching for particle tracking workflow"""
 
     def __init__(self, base_filename=None, lock_part=-1):
-        #If this is an image sequence base_filename will terminate in an astrix which we remove.
-        base_path, base_filename = os.path.split(base_filename.replace('*',''))
+        # If this is an image sequence base_filename will terminate in an astrix which we remove.
+        base_path, base_filename = os.path.split(
+            base_filename.replace('*', ''))
         self.base_filename = base_path + '/_temp/' + base_filename
         self.temp_filename = self.base_filename + '_temp.hdf5'
         self._stores = [None, None, None]  # _track, _link, _postprocess
@@ -30,7 +31,7 @@ class DataManager:
                 output_filename=f"{self.base_filename}_link.hdf5",
                 store_index=0)
         self._stores[0]
-            
+
         return self._stores[0]
 
     @property
@@ -87,11 +88,11 @@ class DataRead:
         self.temp_filename = temp_filename
         self.output_filename = output_filename
         self.store_index = store_index
-        self._df=None
-        self._temp_df=None
-        self._use_full = False 
+        self._df = None
+        self._temp_df = None
+        self._use_full = False
         self._clear_cache()
-    
+
     @property
     def full(self):
         """Whether to use full dataset or temporary data"""
@@ -100,12 +101,12 @@ class DataRead:
     @full.setter
     def full(self, value):
         """Set whether to use full dataset
-        
+
         Value : bool indicates whether to use full or temp dataset
         """
         self._use_full = value
         self._clear_cache()  # Clear cache when switching modes
-    
+
     @property
     def _active_df(self):
         """Returns reference to active dataframe based on full property"""
@@ -127,7 +128,8 @@ class DataRead:
                 self._df.sort_index(inplace=True)
         except Exception as e:
             print(f'Error loading read file: {e}')
-    
+            self._df = pd.DataFrame()  # Create empty DataFrame on error
+
     def _load_temp(self):
         """Load data from temporary file"""
         try:
@@ -136,9 +138,10 @@ class DataRead:
                 self._temp_df.sort_index(inplace=True)
         except Exception as e:
             print(f'Error loading temp file: {e}')
+            self._temp_df = pd.DataFrame()  # Create empty DataFrame on error
 
     def reload(self):
-        #Data is lazy loaded this is just setting the _df and _temp_df back to None
+        # Data is lazy loaded this is just setting the _df and _temp_df back to None
         self._clear_cache()
 
     def get_data(self, f_index=None):
@@ -150,7 +153,7 @@ class DataRead:
         f_index : int, optional
             If provided, returns single frame data (using cache)
             If None, returns entire DataFrame
-        
+
 
         Returns
         -------
@@ -161,21 +164,21 @@ class DataRead:
         if f_index is None:
             return self._active_df
         return self._get_frame(f_index)
-    
+
     def combine_data(self, modified_df=None):
         if modified_df is None:
             return
-        
+
         # Get frame index from modified data
         frame_idx = modified_df.index[0]
-        
+
         df = self._active_df
-        
+
         # Add new columns with NaN values
         new_cols = modified_df.columns.difference(df.columns)
         for col in new_cols:
             df[col] = np.nan
-            
+
         # Update the specific frame with new values
         mask = df.index == frame_idx
         for col in modified_df.columns:
@@ -213,8 +216,8 @@ class DataRead:
     def _clear_cache(self):
         """Clear the frame reading cache"""
         self._get_frame.cache_clear()
-        self._df=None
-        self._temp_df=None
+        self._df = None
+        self._temp_df = None
 
 
 def df_single(func):
@@ -226,20 +229,28 @@ def df_single(func):
         return func(*new_args, **kwargs)
     return wrapper_param_format
 
+
 def df_range(func):
     """df_range decorator is designed to send a range of frames of the data to a function"""
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         store = args[0]
-        df = store.get_data(f_index=None)
-        f_index=kwargs['f_index']
-        parameters = kwargs['parameters']
-        column = parameters['column_name']
-        output_name = parameters['output_name']
-        span = parameters['span']
 
-        if output_name not in df.columns:
-            df[output_name] = np.nan
+        # Force the retrieval of full dataframe.
+        _original_full = store.full
+        store.full = True
+        df = store.get_data(f_index=None)
+        store.full = _original_full
+
+        f_index = kwargs['f_index']
+        parameters = kwargs['parameters']
+
+        if 'output_name' in parameters.keys():
+            output_name = parameters['output_name']
+            if output_name not in df.columns:
+                df[output_name] = np.nan
+
+        span = parameters['span']
 
         if f_index is not None:
             # Calculate minimum required frame range for rolling operations
@@ -251,15 +262,22 @@ def df_range(func):
             start = df.index.min()
             finish = df.index.max()
 
-        new_args = (df.loc[start:finish,[column,'particle']],) + args[1:]
+        if 'column_name' in parameters.keys():
+            #Used in postprocessing for rolling averages etc
+            column = parameters['column_name']
+            new_args = (df.loc[start:finish, [column,'particle']],) + args[1:]  # column
+        else:
+            #Used in annotation for trajectories
+            new_args = (df.loc[start:finish, [parameters['x_column'], parameters['y_column'],'particle']],) + args[1:]  # column
         return func(*new_args, **kwargs)
     return wrapper_param_format
+
 
 class DataWrite:
 
     def __init__(self, output_filename):
         """Initialize output file for writing"""
-        self._output_file = output_filename.replace('*','')
+        self._output_file = output_filename.replace('*', '')
         self._output_frames = []
         self._output_df = None
 
@@ -281,21 +299,22 @@ class DataWrite:
             self._output_df = df
         else:
             merged_df = df.copy()
-        
+
             if len(self._output_frames) > 0:
                 # Get existing columns and data from previous frames
                 existing_frame = self._output_frames[-1]
                 missing_cols = existing_frame.columns.difference(df.columns)
-                
+
                 # Add missing columns from existing frame, preserving data
                 for col in missing_cols:
                     if col in existing_frame:
                         merged_df[col] = existing_frame[col].values
                     else:
                         merged_df[col] = np.nan
-            
+
             # Set frame index and append
-            merged_df.index = pd.Index([f_index] * len(merged_df), name='frame')
+            merged_df.index = pd.Index(
+                [f_index] * len(merged_df), name='frame')
             self._output_frames.append(merged_df)
             self._output_df = None
 
@@ -324,4 +343,3 @@ class DataWrite:
     def __exit__(self, exc_type, exc_value, traceback):
         self.close_output()
         return None
-

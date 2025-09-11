@@ -12,20 +12,6 @@ from ..general.dataframes import df_single, df_range
 
 warnings.simplefilter('ignore')
 
-@error_handling
-@param_parse
-@df_single
-def video(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
-    """output video
-    
-    This must be present as the first item otherwise no video will be output.
-    Allows you to specify output params such as resizing, fps etc.
-    """
-    print('Not yet implemented')
-    'Whether or not a video is produced is handled in caller. Otherwise this is a stub method. Implement ability to resize output using labvision function. Bit fiddly since WriteVideo will want to know frame dimensions. Might be worth adding internally to writevideo with keyword arg.'
-    return frame
-
-
 """
 --------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------
@@ -252,19 +238,17 @@ def _get_class_subset(df_frame, parameters):
         subset_df = temp[temp[classifier_column] == classifier]
     return subset_df
 
-@error_handling
+@error_with_hint(additional_message="Annotating boxes requires you to run contour_boxes in postprocessing. Did you forget?")
 @param_parse
 @df_single
 def boxes(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Boxes places a rotated rectangle on the image that encloses the contours of specified particles.
 
-
     Notes
     -----
-    This method requires you to have used contours for the tracking and run boxes 
+    This method requires you to have used contours for the tracking and run contour_boxes 
     in postprocessing. 
-
 
     Parameters
     ----------
@@ -305,7 +289,6 @@ def boxes(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     -----------
         annotated frame : np.ndarray
     
-
     """
     subset_df = _get_class_subset(df_single, parameters)
     box_pts = subset_df[['box_pts']].values
@@ -504,7 +487,7 @@ def _draw_contours(img, contours, col=(0,0,255), thickness=1):
             img = cv2.drawContours(img, contour, -1, col[i], int(thickness))
     return img        
 
-@error_handling
+@error_with_hint(additional_message="To run networks you must have selected neighbours in postprocessing")
 @param_parse
 @df_single
 def networks(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
@@ -575,7 +558,7 @@ def networks(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
         frame = place_colourbar_in_image(frame, colourbar, parameters) 
     return frame
 
-@error_handling
+@error_with_hint(additional_message="To run Voronoi Annotation you must have selected Voronoi in the postprocessing section")
 @param_parse
 def voronoi(data,frame, f_index=None, parameters=None, *args, **kwargs):
     """
@@ -732,19 +715,25 @@ def vectors(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     """
     dx = parameters['dx_column']
     dy = parameters['dy_column']
-    vectors = data.get_data(f_index=f)[['x', 'y',dx, dy]]
+    vectors = df_single[['x', 'y',dx, dy]].to_numpy()
+    print(vectors)
 
     thickness = parameters['thickness']
+    print('default line_type', parameters['line_type'])
     line_type = parameters['line_type']
     tip_length = 0.01*parameters['tip_length']
     vector_scale = 0.01*parameters['vector_scale']
+    print('vector scale')
 
-    (colours, colourbar) = colour_array(data.get_data(f_index=f), f, parameters)
-
+    (colours, colourbar) = colour_array(df_single, f_index, parameters)
+    print('colours')
+    
     for i, vector in enumerate(vectors):
+        print(i, vector)
         frame = cv2.arrowedLine(frame, (int(vector[0]), int(vector[1])),
                                 (int(vector[0]+vector[2]*vector_scale),int(vector[1]+vector[3]*vector_scale)),
-                                color=colours[i], thickness=int(thickness),line_type=line_type,shift=0,tipLength=tip_length)
+                                color=colours[i], thickness=int(thickness),line_type=int(line_type),shift=0,tipLength=tip_length)
+        
     if colourbar is not None:
         frame = place_colourbar_in_image(frame, colourbar, parameters) 
     return frame
@@ -754,7 +743,7 @@ def vectors(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
 These methods require more than one frames data to be analysed so you'll need to run use part first.
 
 """
-@error_handling
+@error_with_hint(additional_message="To visualise annotate trajectories in the gui you must have linked particles and have already completed the processing. You can process and the video will include these first time round.")
 @param_parse
 @df_range
 def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs):
@@ -764,7 +753,7 @@ def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs
     Notes
     -----
     Requires data from other frames hence you must have previously processed
-    the video and then toggled use_part_processed button.
+    the video.
 
 
     Parameters
@@ -813,6 +802,9 @@ def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs
         annotated frame : np.ndarray
     
     """
+    print(df_range)
+    print(np.shape(frame))
+    print(parameters)
     #This can only be run on a linked trajectory
     x_col_name = parameters['x_column']
     y_col_name = parameters['y_column']
