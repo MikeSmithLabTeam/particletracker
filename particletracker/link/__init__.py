@@ -20,29 +20,29 @@ class LinkTrajectory:
         if lock_part < 1:
             if f_index is None:
                 # processing whole thing
-                output_filename = self.track_store.temp_filename[:-10] + '_link.hdf5'
+                output_filename = self.track_store.output_filename
+                self.track_store.full = True
             else:
                 #process single frame
                 output_filename = self.track_store.temp_filename   
-            
-            if (f_index is not None) and (lock_part == -1):
-                #This reads the tracking from _temp.hdf5, created when the gui processes a single frame
-                full=False
-            else:
-                #Processing whole movie or having lock_part==0
-                full=True
+                if lock_part == -1:
+                    #This reads the tracking from _temp.hdf5, created when the gui processes a single frame
+                    self.track_store.full=False
+                else:
+                    #Processing whole movie or having lock_part==0
+                    self.track_store.full=True
 
-            df = self.track_store.get_data(full=full)
+            df = self.track_store.get_data(f_index=f_index)
 
             if df is not None and df.isna().all().all():
                 #If it is an empty dataframe copy to _link.hdf5 file
                 df=df
-            elif (f_index is None) and ('default' in self.parameters['link']['link_method']):
+            elif (f_index is None) and ('default' in self.parameters['link']['link_method']):#
                 #Default trackpy linking method only used when processing whole movie.
                 df = default(df, self.parameters['link']['default'])
             else:
-                #no linking
-                df = no_linking(self.track_store.get_data(f_index=f_index, full=full))
+                #no linking - this takes place when analysing temp single frames or as an option on the whole movie.
+                df = no_linking(self.track_store.get_data(f_index=f_index))
 
             with DataWrite(output_filename) as store:
                 store.write_data(df)

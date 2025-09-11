@@ -44,6 +44,7 @@ class ReadCropVideo(ReadVideo):
         self.parameters['crop_box']=None
         self.reset_mask()
         
+        
     def reset_mask(self):
         #None for a mask means same size as crop.
         self.mask = self._create_ones_mask()
@@ -123,8 +124,10 @@ class ReadCropVideo(ReadVideo):
         if pts is None:
             mask = img
         else:            
-            radius = ((pts[1][1]-pts[0][1])**2+(pts[1][0]-pts[0][0])**2)**0.5
-            mask = cv2.circle(img,pts[0],int(radius),255,thickness=-1)
+            radius = int(((pts[1][1]-pts[0][1])**2+(pts[1][0]-pts[0][0])**2)**0.5)
+            # Convert center point coordinates to integers
+            center = (int(pts[0][0]), int(pts[0][1]))
+            mask = cv2.circle(img, center, int(radius), 255, thickness=-1)
         return mask
 
     def mask_rect(self, pts):

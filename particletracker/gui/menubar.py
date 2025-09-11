@@ -64,20 +64,25 @@ class CustomButton(QToolButton):
             #Prevents you from trying to run something that requires files from previous stage.
             if event.button() == Qt.MouseButton.LeftButton:
                 #LH button is used to lock stages up to and including current one.
-                if sender.isChecked():
-                    for i in range(sender.part,len(CustomButton.buttons)):
-                        self.unlock_part(i)
-                    CustomButton.locked_part = sender.part - 1
-                else:
-                    for i in range(0,sender.part+1):
-                        self.lock_part(i)
-                    CustomButton.locked_part = sender.part
-                self.lockButtons.emit(CustomButton.locked_part)
+                self.update_lock_buttons(sender.part, checked=sender.isChecked())
         else:
             msg=QMessageBox()
             msg.setText("You haven't run the previous stages so this is not yet allowed.")
             msg.setStandardButtons(QMessageBox.StandardButton.Ok)
             msg.exec()
+    
+    def update_lock_buttons(self, part, checked=True):
+        #LH button is used to lock stages up to and including current one.
+        #if button is already checked invert state to unlock that part.
+        if checked:
+            for i in range(part,len(CustomButton.buttons)):
+                self.unlock_part(i)
+            CustomButton.locked_part = part - 1
+        else:
+            for i in range(0,part+1):
+                self.lock_part(i)
+            CustomButton.locked_part = part
+        self.lockButtons.emit(CustomButton.locked_part)
 
 
     def check_files_exist(self, part):
@@ -88,14 +93,14 @@ class CustomButton(QToolButton):
         """
         prerequisite_files_ok=True
         #Trying to track requires no prerequisites
-        if part == 0:
-            return True
+        if part >= 0:
+            prerequisite_files_ok = prerequisite_files_ok and os.path.exists(self.path + '/_temp/' + self.filename[:-4] + CustomButton.extension[0])
         #Trying to link requires _track.hdf5
         if part >= 1:
-            prerequisite_files_ok = prerequisite_files_ok and os.path.exists(self.path + '/_temp/' + self.filename[:-4] + CustomButton.extension[0])
+            prerequisite_files_ok = prerequisite_files_ok and os.path.exists(self.path + '/_temp/' + self.filename[:-4] + CustomButton.extension[1])
         #Trying to postprocess requires _link.hdf5
         if part >=2: 
-            prerequisite_files_ok = prerequisite_files_ok and os.path.exists(self.path + '/_temp/' + self.filename[:-4] + CustomButton.extension[1])
+            prerequisite_files_ok = prerequisite_files_ok and os.path.exists(self.path + '/_temp/' + self.filename[:-4] + CustomButton.extension[2])
         return prerequisite_files_ok
     
     @classmethod

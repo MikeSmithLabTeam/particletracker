@@ -1,6 +1,7 @@
 from cgi import parse_multipart
 import cv2
 import numpy as np
+import os
 
 
 import labvision.images.transforms as transforms
@@ -14,6 +15,7 @@ from ..general.parameters import param_parse, get_param_val, get_method_key
 from ..crop import crop
 from ..customexceptions import error_handling
 from ..user_methods import *
+from ..gui.file_io import img_name_wrangle
 
 
 @error_handling
@@ -411,11 +413,13 @@ def subtract_bkg(img, *args, parameters=None, call_num=None, **kwargs):
         temp_params['preprocess'] = {
             'blur': {'kernel': get_param_val(params['subtract_bkg_blur_kernel'])}}
         # Load bkg img
+        name = parameters['config']['_video_filename']
         if params['subtract_bkg_filename'] is None:
-            name = parameters['config']['_video_filename']
-            bkg_img = cv2.imread(name[:-4] + '_bkgimg.png')
+            path, filename_stub, _ = img_name_wrangle(name)
+            bkg_img = cv2.imread(os.path.join(path, filename_stub + '_bkgimg.png'))
         else:
-            bkg_img = cv2.imread(params['subtract_bkg_filename'])
+            path, _ = os.path.split(name)
+            bkg_img = cv2.imread(os.path.join(path, params['subtract_bkg_filename']))
 
         if bkgtype == 'grayscale':
             subtract_img = colours.bgr_to_gray(bkg_img)

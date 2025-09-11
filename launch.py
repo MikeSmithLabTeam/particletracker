@@ -1,7 +1,11 @@
-#import particletracker as pt
+# import particletracker as pt
 from particletracker import track_gui
+import os
 
 
 if __name__ == '__main__':
-    track_gui(f"C:/Users/ppzmis/OneDrive - The University of Nottingham/Videos/22520003.mp4")
-    #test_eyes()
+    userprofile = os.environ['USERPROFILE']
+    path = userprofile + \
+        "\\OneDrive - The University of Nottingham\\Documents\\Programming\\particletracker\\testdata\\"
+    track_gui(path + "Hydrogel.mp4", settings_filename=path + "test.param")
+    # test_eyes()

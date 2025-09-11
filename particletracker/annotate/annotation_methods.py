@@ -211,17 +211,17 @@ def particle_labels(df_single, frame, f_index=None, parameters=None, *args, **kw
         annotated frame : np.ndarray
 
     """
-    x = df_single['x']
-    y = df_single['y']
+    x = df_single['x'].values
+    y = df_single['y'].values
 
-    particle_values = df_single[parameters['values_column']]
+    particle_values = df_single[parameters['values_column']].values
 
     df_empty = np.isnan(particle_values[0])
     if np.all(df_empty):
         return frame
 
     for index, particle_val in enumerate(particle_values):
-        frame = cv2.putText(frame, str(particle_val), (int(x[index]), int(y[index])),
+        frame = cv2.putText(frame, str(particle_val), (int(float(x[index])), int(float(y[index]))),
                             cv2.FONT_HERSHEY_COMPLEX_SMALL,
                             int(parameters['font_size']),
                             parameters['font_colour'],
@@ -577,7 +577,7 @@ def networks(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
 
 @error_handling
 @param_parse
-def voronoi(frame, data, f, parameters=None, *args, **kwargs):
+def voronoi(data,frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Voronoi draws the voronoi network that surrounds each particle
 
@@ -629,11 +629,12 @@ def voronoi(frame, data, f, parameters=None, *args, **kwargs):
         annotated frame : np.ndarray
     
     """
+
     thickness = parameters['thickness']
 
-    subset_df = _get_class_subset(data.get_data(f_index=f), parameters)
+    subset_df = _get_class_subset(data.get_data(f_index=f_index), parameters)
     contour_pts = subset_df[['voronoi']].values
-    (colours, colourbar) = colour_array(subset_df, f, parameters)
+    (colours, colourbar) = colour_array(subset_df, f_index, parameters)
 
     if np.shape(contour_pts)[0] == 1:
         df_empty = np.isnan(contour_pts[0])

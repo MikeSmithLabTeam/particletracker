@@ -51,6 +51,7 @@ class PTWorkflow:
 
         self.ip = preprocess.Preprocessor(self.parameters)
 
+        #Handles storage, access to and caching of data at each stage of process
         self.data = DataManager(base_filename=self.base_filename)
 
         self.pt = track.ParticleTracker(
@@ -78,14 +79,14 @@ class PTWorkflow:
         """Process an entire video
 
         Idea here is to call process with lock_part = -1 to indicate all steps of the process and then
-        0 = track
-        1 = link
-        2 = postprocess  --> Creates the final file.
+        0 = track locked
+        1 = link locked
+        2 = postprocess locked  --> Creates the final file.
         annotation optional
 
         - If you just process a single frame then you read a temp.hdf5 datafile from the _temp folder which contains the current frame=f_index data.
-        - If you process everything with f_index=None then each stage creates its own file containing data for all frames in _temp folder. The subsequent stage reads from this datafile and saves to a new file. At the end this is copied to the directory containing the video and represents the processed data. An annotated video is optionall produced
-        - Once a datafile has been completely processed if the _temp file is not cleaned up you can go back and edit things. Locking a particular stage results in data being drawn from a full datafile of previous stage containing complete data. Subsequent stages are either stored in a temporary file for single image processing or in new versions of the datafiles for the later stages if processing everything.
+        - If you process everything with f_index=None then each stage creates its own file containing data for all frames in _temp folder. The subsequent stage reads from this datafile and saves to a new file. At the end this is copied to the directory containing the video and represents the processed data. An annotated video is optionally produced
+        - Once a datafile has been completely processed if the _temp file folder is not cleaned up you can go back and edit things. Locking a particular stage results in data being drawn from a full datafile of previous stage containing complete data. Subsequent stages are either stored in a temporary file for single image processing or in new versions of the datafiles for the later stages if processing everything.
 
         Process is called on the main instance using the command
         particle_tracking_instance.process(). One call results in the entire

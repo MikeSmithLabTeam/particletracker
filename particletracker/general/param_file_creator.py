@@ -7,8 +7,8 @@ def create_param_file(filename):
               '_live_updates': True,
               '_autosave_settings': True,
               '_frame_range': (0, None, 1),
-              '_auto_cleanup': True,
-              '_lock_state' : -1,
+              '_cleanup': True,
+              '_locked_part' : -1,
               '_video_filename':None,
               'video_output': {'output':[True, ('True','False')], 
                          'fps': [30, 5, 60, 1], 
@@ -91,7 +91,8 @@ def create_param_file(filename):
         'default': {'max_frame_displacement': [10, 1, 50, 1],
                     'memory': [3, 0, 30, 1],
                     'min_frame_life': [10, 1, 100, 1]
-                    }
+                    },
+        'no_linking':{}
     }
 
     postprocess = {

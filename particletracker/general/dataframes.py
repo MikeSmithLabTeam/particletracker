@@ -9,7 +9,8 @@ class DataManager:
     """Manages data files and caching for particle tracking workflow"""
 
     def __init__(self, base_filename=None, lock_part=-1):
-        base_path, base_filename = os.path.split(base_filename)
+        #If this is an image sequence base_filename will terminate in an astrix which we remove.
+        base_path, base_filename = os.path.split(base_filename.replace('*',''))
         self.base_filename = base_path + '/_temp/' + base_filename
         self.temp_filename = self.base_filename + '_temp.hdf5'
         self._stores = [None, None, None]  # _track, _link, _postprocess
@@ -26,7 +27,10 @@ class DataManager:
             self._stores[0] = DataRead(
                 f"{self.base_filename}_track.hdf5",
                 self.temp_filename,
+                output_filename=f"{self.base_filename}_link.hdf5",
                 store_index=0)
+        self._stores[0]
+            
         return self._stores[0]
 
     @property
@@ -36,6 +40,7 @@ class DataManager:
             self._stores[1] = DataRead(
                 f"{self.base_filename}_link.hdf5",
                 self.temp_filename,
+                output_filename=f"{self.base_filename}_postprocess.hdf5",
                 store_index=1)
         return self._stores[1]
 
@@ -46,6 +51,7 @@ class DataManager:
             self._stores[2] = DataRead(
                 f"{self.base_filename}_postprocess.hdf5",
                 self.temp_filename,
+                output_filename=None,
                 store_index=2)
         return self._stores[2]
 
@@ -62,9 +68,9 @@ class DataRead:
     """Enhanced DataStore with caching"""
     lock_part = -1
 
-    def __init__(self, read_filename, temp_filename, store_index=0):
+    def __init__(self, read_filename, temp_filename, output_filename=None, store_index=0):
         """
-        Initialize DataStore with separate input and output files
+        Initialize DataStore for reading and combining dataframes to be outputted and written to a different DataStore.
 
         Parameters
         ----------
@@ -72,12 +78,45 @@ class DataRead:
             Path to full input HDF5 file
         temp_filename : str
             Path to temporary HDF5 file
+        output_filename : str
+            Path to output_filename
+        store_index : str
+            index indicating whether this is for tracking (0), linking (1) or postprocessing (2)
         """
         self.read_filename = read_filename
         self.temp_filename = temp_filename
+        self.output_filename = output_filename
         self.store_index = store_index
         self._df=None
+        self._temp_df=None
+        self._use_full = False 
         self._clear_cache()
+    
+    @property
+    def full(self):
+        """Whether to use full dataset or temporary data"""
+        return self._use_full or self.store_index == DataRead.lock_part
+
+    @full.setter
+    def full(self, value):
+        """Set whether to use full dataset
+        
+        Value : bool indicates whether to use full or temp dataset
+        """
+        self._use_full = value
+        self._clear_cache()  # Clear cache when switching modes
+    
+    @property
+    def _active_df(self):
+        """Returns reference to active dataframe based on full property"""
+        if self.full:
+            if self._df is None:
+                self._load()
+            return self._df
+        else:
+            if self._temp_df is None:
+                self._load_temp()
+            return self._temp_df
 
     def _load(self):
         """Lazy load DataFrame from read_filename"""
@@ -88,12 +127,21 @@ class DataRead:
                 self._df.sort_index(inplace=True)
         except Exception as e:
             print(f'Error loading read file: {e}')
+    
+    def _load_temp(self):
+        """Load data from temporary file"""
+        try:
+            self._temp_df = pd.read_hdf(self.temp_filename, key='data')
+            if not self._temp_df.index.is_monotonic_increasing:
+                self._temp_df.sort_index(inplace=True)
+        except Exception as e:
+            print(f'Error loading temp file: {e}')
 
     def reload(self):
+        #Data is lazy loaded this is just setting the _df and _temp_df back to None
         self._clear_cache()
-        self._load()
 
-    def get_data(self, f_index=None, full=True):
+    def get_data(self, f_index=None):
         """
         Get data from the dataset with caching for single frames and lazy loading.
 
@@ -102,6 +150,7 @@ class DataRead:
         f_index : int, optional
             If provided, returns single frame data (using cache)
             If None, returns entire DataFrame
+        
 
         Returns
         -------
@@ -110,22 +159,28 @@ class DataRead:
         """
 
         if f_index is None:
-            self._load()
-            return self._df
-        else:
-            if full or self.store_index == DataRead.lock_part:
-                #Want to read from the full file either because you want to process one frame at a time
-                # or because the previous stage is locked and you want to benefit from caching
-                #Important that you call reload() before starting a full dataframe analysis. Or if you update
-                #the data.
-                if self._df is None:
-                    self._load()
-                return self._get_frame(f_index)
-            else:
-                #This should be when you want to read from the temporary file
-                return pd.read_hdf(self.temp_filename, key='data')
-                
+            return self._active_df
+        return self._get_frame(f_index)
+    
+    def combine_data(self, modified_df=None):
+        if modified_df is None:
+            return
+        
+        # Get frame index from modified data
+        frame_idx = modified_df.index[0]
+        
+        df = self._active_df
+        
+        # Add new columns with NaN values
+        new_cols = modified_df.columns.difference(df.columns)
+        for col in new_cols:
+            df[col] = np.nan
             
+        # Update the specific frame with new values
+        mask = df.index == frame_idx
+        for col in modified_df.columns:
+            df.loc[mask, col] = modified_df[col].values.squeeze()
+
     @lru_cache(maxsize=4)
     def _get_frame(self, f_index):
         """
@@ -141,13 +196,17 @@ class DataRead:
         pd.DataFrame
             Single frame data
         """
+        active_df = self._active_df
+        if active_df is None:
+            return pd.DataFrame()
+
         try:
-            frame_data = self._df.loc[f_index]
+            frame_data = self._active_df.loc[f_index]
             if isinstance(frame_data, pd.Series):
                 # If only one row, convert to DataFrame
                 frame_data = frame_data.to_frame().T
         except KeyError:
-            frame_data = self._df.iloc[0:0]
+            frame_data = self._active_df.iloc[0:0]
             print(f'Frame {f_index} not found in data')
         return frame_data.copy()
 
@@ -155,6 +214,7 @@ class DataRead:
         """Clear the frame reading cache"""
         self._get_frame.cache_clear()
         self._df=None
+        self._temp_df=None
 
 
 def df_single(func):
@@ -162,7 +222,7 @@ def df_single(func):
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         store = args[0]
-        new_args = (store.get_data(f_index=kwargs['f_index'], full=kwargs['full']),) + args[1:]
+        new_args = (store.get_data(f_index=kwargs['f_index']),) + args[1:]
         return func(*new_args, **kwargs)
     return wrapper_param_format
 
@@ -171,7 +231,7 @@ def df_range(func):
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         store = args[0]
-        df = store.get_data(f_index=None, full=True)
+        df = store.get_data(f_index=None)
         f_index=kwargs['f_index']
         parameters = kwargs['parameters']
         column = parameters['column_name']
@@ -181,12 +241,14 @@ def df_range(func):
         if output_name not in df.columns:
             df[output_name] = np.nan
 
-        start=f_index-span + 1
-        if start < 0:
-            start = 0
-
-        finish=f_index + span + 1
-        if finish > df.index.max():
+        if f_index is not None:
+            # Calculate minimum required frame range for rolling operations
+            half_span = span // 2
+            start = max(f_index - half_span, df.index.min())
+            finish = min(f_index + half_span, df.index.max())
+        else:
+            # For full dataset processing, use all frames
+            start = df.index.min()
             finish = df.index.max()
 
         new_args = (df.loc[start:finish,[column,'particle']],) + args[1:]
@@ -197,13 +259,14 @@ class DataWrite:
 
     def __init__(self, output_filename):
         """Initialize output file for writing"""
-        self._output_file = output_filename
+        self._output_file = output_filename.replace('*','')
         self._output_frames = []
         self._output_df = None
 
     def write_data(self, df, f_index=None):
         """
-        Write data to output file
+        Write data to output buffer. close_output will actually write to file. close_output is called
+        automatically if context manager used.
 
         Parameters
         ----------
@@ -217,9 +280,23 @@ class DataWrite:
             # Store whole DataFrame
             self._output_df = df
         else:
-            # Collect frame for later concatenation
-            df.index = pd.Index([f_index] * len(df), name='frame')
-            self._output_frames.append(df)
+            merged_df = df.copy()
+        
+            if len(self._output_frames) > 0:
+                # Get existing columns and data from previous frames
+                existing_frame = self._output_frames[-1]
+                missing_cols = existing_frame.columns.difference(df.columns)
+                
+                # Add missing columns from existing frame, preserving data
+                for col in missing_cols:
+                    if col in existing_frame:
+                        merged_df[col] = existing_frame[col].values
+                    else:
+                        merged_df[col] = np.nan
+            
+            # Set frame index and append
+            merged_df.index = pd.Index([f_index] * len(merged_df), name='frame')
+            self._output_frames.append(merged_df)
             self._output_df = None
 
     def close_output(self):

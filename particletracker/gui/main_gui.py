@@ -45,12 +45,18 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, movie_filename=None, settings_filename=None, screen_size=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
         self.screen_size = screen_size
+        # Calculate window size to leave room for status bar
+        target_width = int(self.screen_size.width() * 0.99) 
+        target_height = int(self.screen_size.height() * 0.92) 
+        self.setMinimumSize(800, 600)
+        self.resize(target_width, target_height)
+        
         self.movie_filename, self.settings_filename = check_filenames(self, movie_filename, settings_filename)
         if 'default.param' in self.settings_filename:
             create_param_file(self.settings_filename)
         self.reboot()
 
-    def reboot(self, open_settings=True):
+    def reboot(self):
         """The reboot method is used to reload the gui when opening a new video or settings file."""
         # Clean up existing GUI elements
         if hasattr(self, 'main_panel'):
@@ -76,13 +82,7 @@ class MainWindow(QMainWindow):
                 self.setStatusBar(None)
                 self.status_bar.deleteLater()
 
-            if not open_settings:
-                try:
-                    #This allows for continuity of parameters after processing.
-                    self.settings_filename = self.movie_filename.replace('*','')[:-4] + '_expt.param'
-                except:
-                    print('tried to load current params - falling back on initial settings file')
-        
+      
         #Create the key behind the scenes object
         self.open_tracker()
         
@@ -105,8 +105,17 @@ class MainWindow(QMainWindow):
         self.main_panel.setLayout(self.main_layout)
         self.setCentralWidget(self.main_panel)
         
-        self.setMaximumSize(self.screen_size.width()-30, self.screen_size.height()-30)
-        self.showMaximized()
+        # Center the window on screen
+        frame_geometry = self.frameGeometry()
+        screen_center = self.screen().availableGeometry().center()
+        frame_geometry.moveCenter(screen_center)
+        self.move(frame_geometry.topLeft())
+
+        #Set the lock state
+        self.just_track_button.update_lock_buttons(self.tracker.parameters['config']['_locked_part'], checked=False)
+        
+        # Show window but don't maximize
+        self.show()
            
     def setup_menus_toolbar(self):
         dir,_ =os.path.split(os.path.abspath(__file__))
@@ -135,12 +144,6 @@ class MainWindow(QMainWindow):
         save_settings_button.triggered.connect(self.save_settings_button_click)
         self.toolbar.addAction(save_settings_button)
 
-        self.autosave_on_process = QAction(QIcon(os.path.join(resources_dir,"autosave.png")), 'Autosave settings on process', self)
-        self.autosave_on_process.setCheckable(True)
-        self.autosave_on_process.setChecked(self.tracker.parameters['config']['_autosave_settings'])
-        self.autosave_on_process.triggered.connect(self.autosave_button_click)
-        self.toolbar.addAction(self.autosave_on_process)
-
         self.toolbar.addSeparator()
         spacer = QWidget()
         spacer.setFixedWidth(20)  # Set desired width in pixels
@@ -168,11 +171,9 @@ class MainWindow(QMainWindow):
         self.snapshot_button.triggered.connect(self.snapshot_button_click)
         self.toolbar.addAction(self.snapshot_button)
 
-        self.auto_cleanup = QAction(QIcon(os.path.join(resources_dir,"cleanup.png")), "Auto Cleanup", self)
-        self.auto_cleanup.setCheckable(True)
-        self.auto_cleanup.setChecked(self.tracker.parameters['config']['_auto_cleanup'])
-        self.toolbar.addAction(self.auto_cleanup)
-        self.auto_cleanup.triggered.connect(self.update_lock)
+        self.cleanup = QAction(QIcon(os.path.join(resources_dir,"cleanup.png")), "Auto Cleanup", self)
+        self.toolbar.addAction(self.cleanup)
+        self.cleanup.triggered.connect(self.clean_up)
 
         self.toolbar.addSeparator()
         spacer = QWidget()
@@ -192,7 +193,6 @@ class MainWindow(QMainWindow):
         self.toolbar.addWidget(self.just_postprocess_button)
         self.just_postprocess_button.lockButtons.connect(self.update_lock)
         
-
         self.toolbar.addSeparator()
         spacer = QWidget()
         spacer.setFixedWidth(20)  # Set desired width in pixels
@@ -249,8 +249,7 @@ class MainWindow(QMainWindow):
         self.tool_menu.addAction(self.pandas_button)
         self.tool_menu.addAction(self.snapshot_button)
 
-        self.process_menu.addAction(self.autosave_on_process)  
-        self.process_menu.addAction(self.auto_cleanup)     
+        self.process_menu.addAction(self.cleanup)     
         self.process_menu.addAction(process_button)
 
         docs = QAction('help', self)
@@ -355,6 +354,7 @@ class MainWindow(QMainWindow):
         self.just_track_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
         self.just_link_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
         self.just_postprocess_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
+        
 
     """
     ---------------------------------------------------------------         
@@ -451,7 +451,9 @@ class MainWindow(QMainWindow):
         elif sender.meta == 'ResetMask':
             self.tracker.cap.reset()
             self.update_param_widgets('crop')
+
             self.viewer.clearImage()
+
         else:
             parsed_value = parse_values(sender, value)
             self.update_dictionary_params(paramdict_location, parsed_value, sender.widget)
@@ -567,6 +569,8 @@ class MainWindow(QMainWindow):
             self.update_viewer()
     
     def open_movie_click(self):
+        self.settings_filename = self.tracker.base_filename + '_expt.param'
+        write_paramdict_file(self.tracker.parameters, self.settings_filename)
         self.movie_filename = open_movie_dialog(self, self.movie_filename)
         self.reboot()
         
@@ -578,30 +582,7 @@ class MainWindow(QMainWindow):
         settings_filename = save_settings_dialog(self, self.settings_filename)
         write_paramdict_file(self.tracker.parameters, settings_filename)
     
-    def clean_up(self):
-        """clean_up
-
-        This will copy final files (an hdf5 of tracking data and an annotated video) to folder containing video. It will then delete the _temp folder
-        """
-        try:
-            self.tracker.parameters['config']['_autocleanup'] = self.autosave_on_process.isChecked()
-            if self.autosave_on_process.isChecked():
-                path, filename = os.path.split(self.movie_filename)
-                postprocess_datafile = path + '/_temp/' + filename[:-4] + CustomButton.extension[2]
-                output_datafile = path + filename[:-4] + '.hdf5'
-                temp_folder = path + '/_temp'
-
-                if os.path.exists(postprocess_datafile):
-                    shutil.copy(postprocess_datafile, output_datafile)
-                remove_temp_folder(temp_folder)
-
-                CustomButton.reset_lock()
-
-        except Exception as e:
-            print(f"Error during file cleanup: {str(e)}")
-
     
-        
 
     """-------------------------------------------------------------
     Functions relevant to the tools section
@@ -626,7 +607,7 @@ class MainWindow(QMainWindow):
         self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
       
     def snapshot_button_click(self):
-        print('Saving current image to movie file directorty...')
+        print('Saving current image to movie file directory...')
         img = qimage2ndarray.byte_view(self.viewer.image())
         n=0
         while n < 1000:
@@ -642,40 +623,59 @@ class MainWindow(QMainWindow):
         Functions that control the processing
         --------------------------------------------------------------"""
 
-    def autosave_button_click(self):
-        self.tracker.parameters['config']['_autosave_settings'] = self.autosave_on_process.isChecked()
-
     def live_update_button_click(self):
         if self.live_update_button.isChecked():
             self.update_viewer()
         self.tracker.parameters['config']['_live_updates'] = self.live_update_button.isChecked()
 
     def update_lock(self):
-        self.tracker.parameters['config']['_auto_cleanup'] = self.auto_cleanup.isChecked()
-        self.tracker.parameters['config']['_lock_part'] = CustomButton.locked_part
+        self.tracker.parameters['config']['_locked_part'] = CustomButton.locked_part
         self.tracker.data.clear_caches()
         self.update_viewer()
+        self.update_pandas_view()
 
     def process_button_click(self): 
         self.status_bar.setStyleSheet("background-color : lightBlue")
         self.status_bar.showMessage("Depending on the size of your movie etc this could take awhile. You can track progress in the command window.")    
 
-        self.tracker.reset_annotator()
-        if self.autosave_on_process.isChecked():
-            write_paramdict_file(self.tracker.parameters, self.settings_filename)
+        self.tracker.reset_annotator()            
 
         #This is accessing a class variable of CustomButton
         self.tracker.process(lock_part=CustomButton.locked_part)
 
-        write_paramdict_file(self.tracker.parameters, self.tracker.base_filename + '_expt.param')
-    
-        if self.auto_cleanup.isChecked():
-            print('Cleaning up temporary files')
-            self.clean_up()
+        self.settings_filename = self.tracker.base_filename + '_expt.param'
+        write_paramdict_file(self.tracker.parameters, self.settings_filename)
+        
+        self.move_final_data()
 
         self.reset_statusbar()
         QMessageBox.about(self, "", "Processing Finished")
-        self.reboot(open_settings=False)
+        self.reboot()
+
+    def clean_up(self):
+        path, _ = os.path.split(self.movie_filename)
+        temp_folder = path + '/_temp'
+        CustomButton.reset_lock()
+        try:               
+            shutil.rmtree(temp_folder)
+        except:
+            """Remove folder using elevated privileges"""
+            if sys.platform == 'win32':
+                cmd = f'powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList \'/c rd /s /q \"{folder_path}\"\'\"'
+                subprocess.run(cmd, shell=True, check=True)
+            else:
+                print('Error removing _temp folder')
+
+    def move_final_data(self):
+        print('Creating final datafile')
+        path, filename = os.path.split(self.movie_filename)
+        postprocess_datafile = path + '/_temp/' + filename[:-4] + CustomButton.extension[2]
+        output_datafile = path + '/' + filename[:-4] + '.hdf5'
+
+        if os.path.exists(postprocess_datafile):
+            shutil.copy(postprocess_datafile, output_datafile)
+    
+
 
     def close_button_click(self):
         sys.exit()
@@ -683,17 +683,10 @@ class MainWindow(QMainWindow):
 
 
 
-def remove_temp_folder(folder_path):
-    
-    try:               
-        shutil.rmtree(folder_path)
-    except:
-        """Remove folder using elevated privileges"""
-        if sys.platform == 'win32':
-            cmd = f'powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList \'/c rd /s /q \"{folder_path}\"\'\"'
-            subprocess.run(cmd, shell=True, check=True)
-        else:
-            print('Error removing _temp folder')
+  
+        
+
+        
 
 
 

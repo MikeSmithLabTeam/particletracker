@@ -69,7 +69,7 @@ class CustomTabWidget(QTabWidget):
         The bottom half the slidergroups etc to adjust the individual parameters.
         '''
         method_list = list(self.param_dict[title][title + '_method'])
-        if ('track' in title):
+        if ('track' in title or 'link' in title):
             self.draggable_list = MyListWidget(method_list, title=title, dynamic=False)
         else:
             self.draggable_list = MyListWidget(method_list, title=title, dynamic=True)

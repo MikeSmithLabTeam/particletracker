@@ -34,13 +34,13 @@ class TrackingAnnotator:
             start = self.cap.frame_range[0]
             stop = self.cap.frame_range[1]
             step = self.cap.frame_range[2]
-            full=True # need whole dataframe loaded.
+            self.pp_store.full=True # need whole dataframe loaded.
         else:
             start=f_index
             stop=f_index+1
             step=1
             #If postprocessing is locked read the full dataframe _postprocess.hdf5 otherwise use _temp.hdf5
-            full=lock_part==2
+            self.pp_store.full= (lock_part==2)
             # When lock_part is changed the full dataframe associated with the link data is reloaded.
 
         self.cap.set_frame(start)
@@ -51,7 +51,7 @@ class TrackingAnnotator:
             try:
                 for method in self.parameters['annotate']['annotate_method']:
                     method_name, call_num = get_method_name(method)
-                    frame = getattr(am, method_name)(self.pp_store, frame, f_index=f, full=full, parameters=self.parameters, call_num=call_num, section='annotate')
+                    frame = getattr(am, method_name)(self.pp_store, frame, f_index=f, parameters=self.parameters, call_num=call_num, section='annotate')
             except:
                 print('No data to annotate')
 

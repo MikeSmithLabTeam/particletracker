@@ -89,7 +89,7 @@ class PandasWidget(QtWidgets.QDialog):
     def update_file(self, filename, frame):
         self.filename = filename
         try:
-            df = pd.read_hdf(filename)            
+            df = pd.read_hdf(filename.replace('*',''))            
             if 'frame' in df.columns:
                 df2 = df[df.index == frame]    
             else:

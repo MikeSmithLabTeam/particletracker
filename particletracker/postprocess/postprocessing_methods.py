@@ -1,3 +1,4 @@
+from math import nan
 import numpy as np
 from pytest import param
 import scipy.spatial as sp
@@ -14,6 +15,19 @@ from ..general.parameters import param_parse
 from ..general.dataframes import df_single, df_range
 from ..customexceptions import *
 from ..user_methods import *
+
+"""
+Postprocessing methods can have a number of decorators.
+   
+1) @error_handling:
+Handles errors produced by each function
+2)@param_parse:
+The decorator @param_parse reduces params dictionary to the appropriate bit. If you need access to 
+other section of params outside those relevant to function do not use and implement yourself.
+3)df_single or df_range:
+Some postprocessing methods need range of dataframe and some just need one frame.  In postprocessing you don't need logic specifying whether to read the full or partial dataframe as this is handled by the decorator on the postprocessing_methods. The decorator @df_single or @df_multiple chop down the dataframes passed to the methods."""
+
+
 '''
 -----------------------------------------------------------------------------------------------------
 All these methods operate on single frames
@@ -445,11 +459,27 @@ def _find_kdtree(df_frame, parameters=None):
     points = df_frame[['x', 'y']].values
     particle_ids = df_frame[['particle']].values.flatten()
     tree = sp.KDTree(points)
-    _, indices = tree.query(points, k=num_neighbours+1, distance_upper_bound=cutoff)
+    distances, indices = tree.query(points, k=num_neighbours+1, distance_upper_bound=cutoff)
+
     neighbour_ids = []
+    neighbour_dists = []
     fill_val = np.size(particle_ids)
-    for _, row in enumerate(indices):
-        neighbour_ids.append([particle_ids[row[i+1]] for i in range(num_neighbours) if row[i+1] != fill_val]) 
+
+    for i, row in enumerate(indices):
+        # Get indices and distances for valid neighbors
+        valid_neighbors = [j for j in range(num_neighbours) if row[j+1] != fill_val]
+        
+        # Store neighbor IDs
+        ids = [int(particle_ids[row[j+1]]) for j in valid_neighbors]
+        neighbour_ids.append(ids)
+        
+        # Store corresponding distances
+        dists = [float(distances[i][j+1]) for j in valid_neighbors]
+        neighbour_dists.append(dists)
+
+    # Store results in DataFrame
+    df_frame['neighbours'] = neighbour_ids
+    df_frame['neighbour_dists'] = neighbour_dists
     return df_frame
 
 @error_handling
@@ -463,12 +493,18 @@ def _find_delaunay(df_frame, parameters=None):
     neighbour_ids = [point_indices[a:b].tolist() for a, b in zip(list_indices[:-1], list_indices[1:])]
     dist = sp.distance.squareform(sp.distance.pdist(points))
 
-    neighbour_dists = [(dist[i, row]<cutoff).tolist() for i, row in enumerate(neighbour_ids)]
+    neighbours = [(dist[i, row]<cutoff).tolist() for i, row in enumerate(neighbour_ids)]
+    dists = [(dist[i, row]).tolist() for i, row in enumerate(neighbour_ids)]
+    
     indices = []
+    distances = []
     for index, row in enumerate(neighbour_ids):
-        indices.append([particle_ids[neighbour_ids[index][j]] for j,dummy in enumerate(row) if neighbour_dists[index][j]])
+        indices.append([int(particle_ids[neighbour_ids[index][j]]) for j,dummy in enumerate(row) if neighbours[index][j]])
+        distances.append([float(dists[index][j]) for j,dummy in enumerate(row) if neighbours[index][j]])
     
     df_frame['neighbours']=indices
+    df_frame['neighbour_dists']=distances
+    
     return df_frame
 
 @error_handling
@@ -844,8 +880,10 @@ def mean(df_range, f_index=None, parameters=None, *args, **kwargs):
     output_name = parameters['output_name']
     span = parameters['span']
 
-    return df_range.groupby('particle')[column].rolling(span, center=True).mean().transform(lambda x:x).to_frame(name=output_name)
-    
+    mean_values= df_range.groupby('particle')[column].rolling(span, center=True).mean().transform(lambda x:x)
+    df_range[output_name] = mean_values
+    return df_range
+
 @error_handling
 @param_parse
 @df_range
