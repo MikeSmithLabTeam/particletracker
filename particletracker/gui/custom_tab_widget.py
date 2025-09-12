@@ -24,8 +24,6 @@ class CustomTabWidget(QTabWidget):
 
         #Methods added to top rh box
         self.list_draggable_lists = []
-
-        #
         self.list_param_adjustors = []
         self.list_param_adjustor_layouts = []
 

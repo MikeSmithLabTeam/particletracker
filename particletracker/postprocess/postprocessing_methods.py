@@ -33,6 +33,90 @@ Some postprocessing methods need range of dataframe and some just need one frame
 All these methods operate on single frames
 -------------------------------------------------------------------------------------------------------
 '''
+
+@error_handling
+@param_parse
+@df_single
+def absolute(df_frame, *args, f_index=None, parameters=None, **kwargs):
+    """Returns new column with absolute value of input column
+
+    Parameters
+    ----------
+    column_name : name of column containing input values
+
+    Args
+    ----
+    df_frame
+        The dataframe for all data
+    f_index
+        Integer for the frame in twhich calculations need to be made
+    parameters
+        Nested dict object
+    call_num
+
+    Returns
+    -------
+    df with additional column containing absolute value of input_column.
+    New column is named "column_name" + "_abs"
+
+"""
+    column_name = parameters['column_name']
+    
+    df_frame[column_name + '_abs'] = np.abs(df_frame[column_name]) 
+    return df_frame
+
+'''
+------------------------------------------------------------------------------------------------
+This function allows you to load data into a column opposite each frame number
+-------------------------------------------------------------------------------------------------
+'''
+@error_handling
+@param_parse
+@df_single
+def add_frame_data(df_frame, f_index=None, parameters=None, *args, **kwargs):
+    '''
+    Add frame data allows you to manually add a new column of df to the dfframe. 
+    
+    Notes
+    -----
+    This is done by creating a .csv file and reading it in within the gui. 
+    The file should have one column with the data for 
+    each frame listed on the correct line. 
+
+    Parameters
+    ----------
+    new_column_name
+        Name for column to which data is to be imported.    
+    data_filename
+        filename with extension for the df to be loaded. 
+    data_path
+        folder where the file is located
+    
+    
+    Args
+    ----
+
+    df_full
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+    call_num
+        Usually None but if multiple calls are made modifies method name with get_method_key
+
+    Returns
+    -------
+        updated dataframe including new column
+    '''
+    datapath = parameters['data_path']
+    filename = os.path.join(datapath,parameters['data_filename'])
+    if '.csv' not in filename:
+        filename = filename + '.csv'
+    new_df = pd.read_csv(filename, header=None).squeeze("columns")
+    df_frame[parameters['new_column_name']] = new_df[new_df.index == f_index]
+    return df_frame
+
 @error_handling
 @param_parse
 @df_single
@@ -241,6 +325,84 @@ def _rotated_bounding_rectangle(contour):
     #[centrex, centrey, angle, length, width, box_corners]
     info = [rect[0][0], rect[0][1], rect[2], dim[0], dim[1], box]
     return info
+
+
+@error_handling
+@param_parse
+@df_single
+def hexatic_order(df_frame, *args, f_index=None, parameters=None, **kwargs):
+    """
+    Calculates the hexatic order parameter of each particle.
+    """
+    method = parameters.get('method', 'delaunay')  # Default to Delaunay
+    cutoff = parameters['cutoff']
+    points = df_frame[['x', 'y']].values
+    
+    # Use the appropriate method to find neighbors
+    if method == 'delaunay':
+        neighbors_data = _find_delaunay_for_hexatic(points, cutoff)
+    elif method == 'kdtree':
+        num_neighbors = int(parameters['neighbours'])
+        neighbors_data = _find_kdtree_for_hexatic(points, cutoff, num_neighbors)
+    else:
+        raise ValueError(f"Unknown method '{method}' for hexatic order calculation.")
+    
+    sum_exp_6j, num_neighbors = neighbors_data
+
+    # Calculate the complex hexatic order parameter
+    psi_6 = np.zeros(len(points), dtype=complex)
+    valid_indices = num_neighbors > 0
+    psi_6[valid_indices] = sum_exp_6j[valid_indices] / num_neighbors[valid_indices]
+    
+    # Add the results to the DataFrame
+    df_frame['hexatic_order_complex'] = psi_6
+    df_frame['hexatic_order_magnitude'] = np.abs(psi_6)
+    df_frame['hexatic_order_phase'] = np.angle(psi_6)
+    df_frame['number_of_neighbours'] = num_neighbors
+    
+    return df_frame
+
+def _find_delaunay_for_hexatic(points, cutoff):
+    tri = sp.Delaunay(points)
+    sum_exp_6j = np.zeros(len(points), dtype=complex)
+    num_neighbors = np.zeros(len(points), dtype=int)
+
+    for i in range(len(points)):
+        p = points[i]
+        neighbors_indices = tri.vertex_neighbor_vertices[1][tri.vertex_neighbor_vertices[0][i]:tri.vertex_neighbor_vertices[0][i+1]]
+        
+        for neighbor_idx in neighbors_indices:
+            neighbor_p = points[neighbor_idx]
+            distance = np.linalg.norm(p - neighbor_p)
+            
+            if distance < cutoff:
+                angle = np.arctan2(neighbor_p[1] - p[1], neighbor_p[0] - p[0])
+                sum_exp_6j[i] += np.exp(6j * angle)
+                num_neighbors[i] += 1
+    
+    return sum_exp_6j, num_neighbors
+
+def _find_kdtree_for_hexatic(points, cutoff, num_neighbors):
+    tree = sp.KDTree(points)
+    distances, indices = tree.query(points, k=num_neighbors + 1, distance_upper_bound=cutoff)
+    
+    sum_exp_6j = np.zeros(len(points), dtype=complex)
+    num_neighbors = np.zeros(len(points), dtype=int)
+
+    for i in range(len(points)):
+        p = points[i]
+        for j in range(1, len(indices[i])): # Skip the first element which is the particle itself
+            neighbor_idx = indices[i][j]
+            distance = distances[i][j]
+            
+            # KDTree query returns a fill value for points beyond the cutoff, so we check for that
+            if distance < cutoff and neighbor_idx < len(points):
+                neighbor_p = points[neighbor_idx]
+                angle = np.arctan2(neighbor_p[1] - p[1], neighbor_p[0] - p[0])
+                sum_exp_6j[i] += np.exp(6j * angle)
+                num_neighbors[i] += 1
+                
+    return sum_exp_6j, num_neighbors
 
 @error_handling
 @param_parse
@@ -459,25 +621,26 @@ def _find_kdtree(df_frame, parameters=None):
     points = df_frame[['x', 'y']].values
     particle_ids = df_frame[['particle']].values.flatten()
     tree = sp.KDTree(points)
-    distances, indices = tree.query(points, k=num_neighbours+1, distance_upper_bound=cutoff)
-
+    
+    # Query for the `num_neighbours` nearest particles, with the specified cutoff
+    # The first neighbor is always the particle itself, so we query k+1.
+    distances, indices = tree.query(points, k=num_neighbours + 1, distance_upper_bound=cutoff)
+    
     neighbour_ids = []
     neighbour_dists = []
-    fill_val = np.size(particle_ids)
 
-    for i, row in enumerate(indices):
-        # Get indices and distances for valid neighbors
-        valid_neighbors = [j for j in range(num_neighbours) if row[j+1] != fill_val]
+    for i in range(len(points)):
+        # Filter out invalid neighbors (fill value) and the particle itself (index 0)
+        valid_mask = indices[i, 1:] < len(points)
         
-        # Store neighbor IDs
-        ids = [int(particle_ids[row[j+1]]) for j in valid_neighbors]
-        neighbour_ids.append(ids)
+        # Get neighbor IDs using advanced indexing
+        current_neighbor_ids = particle_ids[indices[i, 1:][valid_mask]].tolist()
+        neighbour_ids.append(current_neighbor_ids)
         
-        # Store corresponding distances
-        dists = [float(distances[i][j+1]) for j in valid_neighbors]
-        neighbour_dists.append(dists)
+        # Get corresponding distances
+        current_neighbor_dists = distances[i, 1:][valid_mask].tolist()
+        neighbour_dists.append(current_neighbor_dists)
 
-    # Store results in DataFrame
     df_frame['neighbours'] = neighbour_ids
     df_frame['neighbour_dists'] = neighbour_dists
     return df_frame
@@ -490,22 +653,36 @@ def _find_delaunay(df_frame, parameters=None):
     tess = sp.Delaunay(points)
     list_indices, point_indices = tess.vertex_neighbor_vertices
 
-    neighbour_ids = [point_indices[a:b].tolist() for a, b in zip(list_indices[:-1], list_indices[1:])]
-    dist = sp.distance.squareform(sp.distance.pdist(points))
+    neighbour_ids_list = []
+    neighbour_dists_list = []
+    
+    for i in range(len(points)):
+        p1 = points[i]
+        
+        # Get the neighbor indices for particle i from the Delaunay output
+        delaunay_neighbors = point_indices[list_indices[i]:list_indices[i+1]]
+        
+        current_neighbor_ids = []
+        current_neighbor_dists = []
+        
+        # Iterate over the Delaunay neighbors and apply the cutoff
+        for neighbor_idx in delaunay_neighbors:
+            p2 = points[neighbor_idx]
+            dist = np.linalg.norm(p1 - p2)
+            
+            if dist < cutoff:
+                current_neighbor_ids.append(int(particle_ids[neighbor_idx]))
+                current_neighbor_dists.append(float(dist))
 
-    neighbours = [(dist[i, row]<cutoff).tolist() for i, row in enumerate(neighbour_ids)]
-    dists = [(dist[i, row]).tolist() for i, row in enumerate(neighbour_ids)]
+        neighbour_ids_list.append(current_neighbor_ids)
+        neighbour_dists_list.append(current_neighbor_dists)
     
-    indices = []
-    distances = []
-    for index, row in enumerate(neighbour_ids):
-        indices.append([int(particle_ids[neighbour_ids[index][j]]) for j,dummy in enumerate(row) if neighbours[index][j]])
-        distances.append([float(dists[index][j]) for j,dummy in enumerate(row) if neighbours[index][j]])
-    
-    df_frame['neighbours']=indices
-    df_frame['neighbour_dists']=distances
+    df_frame['neighbours'] = neighbour_ids_list
+    df_frame['neighbour_dists'] = neighbour_dists_list
     
     return df_frame
+
+
 
 @error_handling
 @param_parse
@@ -576,88 +753,6 @@ def _voronoi_props(vor):
     return area
 
 
-@error_handling
-@param_parse
-@df_single
-def hexatic_order(df_frame, *args, f_index=None, parameters=None, **kwargs):
-    """
-    Calculates the hexatic order parameter of each particle. Neighbours are 
-    calculated using the Delaunay network with a cutoff distance defined by "cutoff"
-    parameter.
-
-    Parameters
-    ----------
-    cutoff
-        Distance threshold for calculation of neighbors
-
-    Args
-    ----
-    df_frame
-        The dataframe for all data
-    f_index
-        Integer for the frame in twhich calculations need to be made
-    parameters
-        Nested dict object
-    call_num
-
-    Returns
-    -------
-    df with additional column
-    """
-    threshold = parameters['cutoff']
-
-    points = df_frame[['x', 'y']].values
-    list_indices, point_indices = sp.Delaunay(points).vertex_neighbor_vertices
-    repeat = list_indices[1:] - list_indices[:-1]
-    vectors = points[point_indices] - np.repeat(points, repeat, axis=0)
-    angles = np.angle(vectors[:, 0] + 1j*vectors[:, 1])
-    length_filters = np.linalg.norm(vectors, axis=1) < threshold
-    summands = np.exp(6j*angles)
-    summands *= length_filters
-    list_indices -= 1
-
-    # sum the angles and count neighbours for each particle
-    stacked = np.cumsum((summands, length_filters), axis=1)[:, list_indices[1:]]
-    stacked[:, 1:] = np.diff(stacked, axis=1)
-    neighbors = stacked[1, :]
-    indxs = neighbors != 0
-    orders = np.zeros_like(neighbors)
-    orders[indxs] = stacked[0, indxs] / neighbors[indxs]
-    
-    df_frame['hexatic_order'] = orders
-    df_frame['number_of_neighbours'] = np.real(neighbors)   
-    return df_frame
-
-@error_handling
-@param_parse
-@df_single
-def absolute(df_frame, *args, f_index=None, parameters=None, **kwargs):
-    """Returns new column with absolute value of input column
-
-    Parameters
-    ----------
-    column_name : name of column containing input values
-
-    Args
-    ----
-    df_frame
-        The dataframe for all data
-    f_index
-        Integer for the frame in twhich calculations need to be made
-    parameters
-        Nested dict object
-    call_num
-
-    Returns
-    -------
-    df with additional column containing absolute value of input_column.
-    New column is named "column_name" + "_abs"
-
-"""
-    column_name = parameters['column_name']
-    
-    df_frame[column_name + '_abs'] = np.abs(df_frame[column_name]) 
-    return df_frame
 
 @error_handling
 @param_parse
@@ -793,7 +888,7 @@ multiple frames have been processed and you are using part.
 ---------------------------------------------------------------------------------------------
 '''
 
-@error_handling
+@error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")
 @param_parse
 @df_range
 def difference(df_range, f_index=None, parameters=None, *args, **kwargs):
@@ -829,12 +924,17 @@ def difference(df_range, f_index=None, parameters=None, *args, **kwargs):
     -------
         updated dataframe including new column
 
-    '''
+    '''   
     column = parameters['column_name']
     output_name = parameters['output_name']
     span = parameters['span']
 
-    return df_range.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+    df_range_diffs = df_range.groupby('particle')[column].diff(periods=span)
+    df_diffs = df_range_diffs[df_range_diffs.index == f_index]
+    df_frame=df_range[df_range.index == f_index]
+    df_frame[output_name] = df_diffs
+    
+    return df_frame
     
 
 @error_handling
@@ -980,55 +1080,7 @@ def rate(df_range, f_index=None, parameters=None, *args, **kwargs):
     return df_range.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
     
 
-'''
-------------------------------------------------------------------------------------------------
-This function allows you to load data into a column opposite each frame number
--------------------------------------------------------------------------------------------------
-'''
-@error_handling
-@param_parse
-@df_single
-def add_frame_data(df_frame, f_index=None, parameters=None, *args, **kwargs):
-    '''
-    Add frame data allows you to manually add a new column of df to the dfframe. 
-    
-    Notes
-    -----
-    This is done by creating a .csv file and reading it in within the gui. 
-    The file should have one column with the data for 
-    each frame listed on the correct line. 
 
-    Parameters
-    ----------
-    data_filename
-        filename with extension for the df to be loaded. Assumes file is in same directory as video
-    new_column_name
-        Name for column to which data is to be imported.    
-
-    
-    Args
-    ----
-
-    df_full
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-    '''
-    datapath = parameters['data_path']
-    filename = os.path.join(datapath,parameters['data_filename'])
-    if '.csv' not in filename:
-        filename = filename + '.csv'
-    new_df = pd.read_csv(filename, header=None).squeeze("columns")
-    df_frame[parameters['new_column_name']] = new_df[new_df.index == f_index]
-    return df_frame
 
 def get_duty_cycle():
     """The shaker amplitude in our experiments is encoded into the audio of our video frames. We

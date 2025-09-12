@@ -126,8 +126,8 @@ class PTWorkflow:
             if self.error_reporting is not None:
                 print(e)
                 flash_error_msg(e, self.error_reporting)
-            self.error_reporting.toggle_img.setChecked(False)
-            self.error_reporting.toggle_img.setText("Captured Image")
+                self.error_reporting.toggle_img.setChecked(False)#Moved these two lines in if statement
+                self.error_reporting.toggle_img.setText("Captured Image")
             proc_frame = self.frame
             annotated_frame = self.frame
 

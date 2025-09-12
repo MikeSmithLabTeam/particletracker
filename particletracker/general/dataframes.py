@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import os
 
+from particletracker.customexceptions import error_with_hint
+
 
 class DataManager:
     """Manages data files and caching for particle tracking workflow"""
@@ -160,11 +162,11 @@ class DataRead:
         pd.DataFrame
             Requested data
         """
-
         if f_index is None:
             return self._active_df
         return self._get_frame(f_index)
 
+    @error_with_hint("HINT: this often happens if you try to use a method in gui that requires previous stage to be locked. You can still process the entire movie.")
     def combine_data(self, modified_df=None):
         if modified_df is None:
             return
@@ -178,11 +180,11 @@ class DataRead:
         new_cols = modified_df.columns.difference(df.columns)
         for col in new_cols:
             df[col] = np.nan
-
         # Update the specific frame with new values
         mask = df.index == frame_idx
         for col in modified_df.columns:
             df.loc[mask, col] = modified_df[col].values.squeeze()
+        
 
     @lru_cache(maxsize=4)
     def _get_frame(self, f_index):
@@ -235,13 +237,12 @@ def df_range(func):
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         store = args[0]
-
+        temp_df = store.get_data(f_index=None)
         # Force the retrieval of full dataframe.
         _original_full = store.full
         store.full = True
         df = store.get_data(f_index=None)
         store.full = _original_full
-
         f_index = kwargs['f_index']
         parameters = kwargs['parameters']
 
@@ -254,14 +255,14 @@ def df_range(func):
 
         if f_index is not None:
             # Calculate minimum required frame range for rolling operations
-            half_span = span // 2
+            half_span = np.floor(span / 2)
             start = max(f_index - half_span, df.index.min())
             finish = min(f_index + half_span, df.index.max())
         else:
             # For full dataset processing, use all frames
             start = df.index.min()
             finish = df.index.max()
-
+        
         if 'column_name' in parameters.keys():
             #Used in postprocessing for rolling averages etc
             column = parameters['column_name']

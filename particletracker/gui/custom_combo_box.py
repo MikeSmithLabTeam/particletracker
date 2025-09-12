@@ -25,7 +25,14 @@ class ComboBoxAndButton(QWidget):
     def construct_method_combo_box(self, title):
         self.combo_box = QComboBox()
         self.combo_box.setFont(self.font)
-        for key in list(self.param_dict[title].keys()):
+
+        # Get the keys, sort them alphabetically, and then iterate
+        sorted_keys = sorted([
+            key for key in self.param_dict[title].keys() 
+            if key != title + '_method' and key[0] != '_'
+        ])
+
+        for key in sorted_keys:
             #Exclude hidden values in config
             if key != title + '_method' and key[0] != '_':
                 self.combo_box.addItem(key)
@@ -39,8 +46,6 @@ class ComboBoxAndButton(QWidget):
         self.combo_button_layout.addWidget(add_method_button)
 
     def add_method_button_click(self):
-        #Logic here is not good. Should have a signal that indicates button clicked and sends name of method (String)
-        #Slot on Custom_tab_widget should then call another method on this class  with currentIndex, dynamic(bool) and method string. At moment parent and child too entangled but have bigger fish to fry.
         tab_index = self.parent.tabBar().currentIndex()
         dynamic = self.parent.list_draggable_lists[tab_index].dynamic
         method = self.combo_box.currentText()

@@ -238,7 +238,7 @@ def _get_class_subset(df_frame, parameters):
         subset_df = temp[temp[classifier_column] == classifier]
     return subset_df
 
-@error_with_hint(additional_message="Annotating boxes requires you to run contour_boxes in postprocessing. Did you forget?")
+@error_with_hint(additional_message="HINT: Annotating boxes requires you to run contour_boxes in postprocessing. Did you forget?")
 @param_parse
 @df_single
 def boxes(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
@@ -487,7 +487,7 @@ def _draw_contours(img, contours, col=(0,0,255), thickness=1):
             img = cv2.drawContours(img, contour, -1, col[i], int(thickness))
     return img        
 
-@error_with_hint(additional_message="To run networks you must have selected neighbours in postprocessing")
+@error_with_hint(additional_message="HINT: To run networks you must have selected neighbours in postprocessing")
 @param_parse
 @df_single
 def networks(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
@@ -558,7 +558,7 @@ def networks(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
         frame = place_colourbar_in_image(frame, colourbar, parameters) 
     return frame
 
-@error_with_hint(additional_message="To run Voronoi Annotation you must have selected Voronoi in the postprocessing section")
+@error_with_hint(additional_message="HINT: To run Voronoi Annotation you must have selected Voronoi in the postprocessing section")
 @param_parse
 def voronoi(data,frame, f_index=None, parameters=None, *args, **kwargs):
     """
@@ -743,7 +743,7 @@ def vectors(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
 These methods require more than one frames data to be analysed so you'll need to run use part first.
 
 """
-@error_with_hint(additional_message="To visualise annotate trajectories in the gui you must have already run a complete processing routine. This must have used linking. This is because this relies on data from other frames. You can of course process the movie and include trajectories.")
+@error_with_hint(additional_message="HINT: To visualise annotate trajectories in the gui you must have already run a complete processing routine. This must have used linking. This is because this relies on data from other frames. You can of course process the movie and include trajectories.")
 @param_parse
 @df_range
 def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs):

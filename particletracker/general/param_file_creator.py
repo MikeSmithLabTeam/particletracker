@@ -109,17 +109,17 @@ def create_param_file(filename):
                      'upper_threshold': [100.00, 1.00, 2000.00, 0.01]
                      },
         'contour_boxes': {},
-        'logic_AND': {'column_name': 'classifier1',
-                      'column_name2': 'classifier2',
-                      'output_name': 'classifier'},
-        'logic_OR': {'column_name': 'classifier1',
-                     'column_name2': 'classifier2',
-                     'output_name': 'classifier'},
+        'logic_AND': {'column_name': 'classifier',
+                      'column_name2': 'classifier*1',
+                      'output_name': 'default'},
+        'logic_OR': {'column_name': 'classifier',
+                     'column_name2': 'classifier*1',
+                     'output_name': 'default'},
         'logic_NOT': {'column_name': 'classifier',
-                      'output_name': 'classifier1'},
-        'magnitude': {'column_name': 'x_diff',
-                      'column_name2': 'y_diff',
-                      'output_name': 'r_diff'},
+                      'output_name': 'default'},
+        'magnitude': {'column_name': 'x',
+                      'column_name2': 'y',
+                      'output_name': 'r'},
         'neighbours': {'method': ['delaunay', ('delaunay', 'kdtree')],
                        'neighbours': 6,
                        'cutoff': [50, 1, 200, 1],
@@ -127,11 +127,11 @@ def create_param_file(filename):
         'voronoi': {},
         'difference': {'column_name': 'x',
                        'output_name': 'x_diff',
-                       'span': [10, 1, 50, 1]
+                       'span': [1, 1, 50, 1]
                        },
 
-        'median': {'column_name': 'r_diff',
-                   'output_name': 'median_r',
+        'median': {'column_name': 'x',
+                   'output_name': 'median',
                    'span': [5, 1, 20, 1]},
         'mean': {'column_name': 'x',
                  'output_name': 'x_mean',
@@ -147,7 +147,7 @@ def create_param_file(filename):
             'data_filename': None
         },
         'hexatic_order': {
-            'cutoff': [10, 1, 100, 1]
+            'cutoff': [10, 1, 100, 1],
         },
         'real_imag': {
             'column_name': 'hexatic_order'

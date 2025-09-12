@@ -46,10 +46,11 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__(*args, **kwargs)
         self.screen_size = screen_size
         # Calculate window size to leave room for status bar
-        target_width = int(self.screen_size.width() * 0.99) 
-        target_height = int(self.screen_size.height() * 0.92) 
+        self.target_width = int(self.screen_size.width()) 
+        self.target_height = int(self.screen_size.height() * 0.91) 
         self.setMinimumSize(800, 600)
-        self.resize(target_width, target_height)
+        self.resize(self.target_width, self.target_height)
+        
         
         self.movie_filename, self.settings_filename = check_filenames(self, movie_filename, settings_filename)
         if 'default.param' in self.settings_filename:
@@ -116,6 +117,9 @@ class MainWindow(QMainWindow):
         
         # Show window but don't maximize
         self.show()
+        adjust_y = int((self.target_height-self.screen_size.height())/10)
+        print(adjust_y)
+        self.move(0, int((self.target_height-self.screen_size.height())/10)) # This will set the position
            
     def setup_menus_toolbar(self):
         dir,_ =os.path.split(os.path.abspath(__file__))
@@ -497,6 +501,7 @@ class MainWindow(QMainWindow):
         self.status_bar.clearMessage()
 
     def update_dictionary_params(self, location, value, widget_type):
+        print(location, value, widget_type)
         if len(location) == 2:
             '''Sometimes a duplicate method is added to method list which is not
             in the dictionary. These duplicates are named method*1 etc. There will
@@ -513,8 +518,14 @@ class MainWindow(QMainWindow):
                         else:
                             assert '*' in item, "Key not in dict and doesn't contain *"
                             if type(self.tracker.parameters[location[0]][item.split('*')[0]]) is dict:
-                                    self.tracker.parameters[location[0]][item] = copy.deepcopy(self.tracker.parameters[location[0]][item.split('*')[0]])
-                            
+                                self.tracker.parameters[location[0]][item] = copy.deepcopy(self.tracker.parameters[location[0]][item.split('*')[0]])
+                                key_values = list(self.tracker.parameters[location[0]][item].keys())
+                                for key in key_values:
+                                    if key == 'output_name':
+                                        num=item.split('*')[1]
+                                        self.tracker.parameters[location[0]][item]['output_name'] = 'classifier*' + num
+                                        self.tracker.parameters[location[0]][item]
+                        
                             else:
                                 self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]]
             else:
@@ -526,6 +537,7 @@ class MainWindow(QMainWindow):
             if widget_type == 'dropdown':
                 self.tracker.parameters[location[0]][location[1]][location[2]][0] = value 
             else:
+                print(self.tracker.parameters[location[0]][location[1]])
                 self.tracker.parameters[location[0]][location[1]][location[2]] = value 
                 
     def update_param_widgets(self, title):
