@@ -63,10 +63,28 @@ class PostProcessor:
                 store.write_data(self.link_store.get_data(f_index=f_index))
             else:
                 for f in tqdm(range(start, stop, step), 'Postprocessing'):
+                    combined_modified_df = None
+                    for method in self.parameters['postprocess']['postprocess_method']:
+                        method_name, call_num = get_method_name(method)
+                        modified_df = getattr(pm, method_name)(self.link_store, f_index=f,      parameters=self.parameters, call_num=call_num, section='postprocess')
+                        if modified_df is not None:
+                            #This handles multiple methods
+                            if combined_modified_df is None:
+                                combined_modified_df = modified_df
+                            else:
+                                # For subsequent methods, merge their output 
+                                combined_modified_df = combined_modified_df.merge(modified_df, on=['particle', 'frame'], how='outer')
+                                        
+                    
+                    
+                    
+                    
+                    """
+                    
                     for method in self.parameters['postprocess']['postprocess_method']:
                         method_name, call_num = get_method_name(method)
                         modified_df=getattr(pm, method_name)(self.link_store, f_index=f, parameters=self.parameters, call_num=call_num, section='postprocess')
                         self.link_store.combine_data(modified_df)
                     store.write_data(self.link_store.get_data(f_index=f), f_index=f)
 
-
+                    """

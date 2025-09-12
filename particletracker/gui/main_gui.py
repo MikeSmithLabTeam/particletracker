@@ -314,7 +314,7 @@ class MainWindow(QMainWindow):
         self.settings_label = QLabel('Current Settings :  ' + self.settings_filename)
         self.viewer = QImageViewer()
         self.viewer.leftMouseButtonDoubleClicked.connect(self.coords_clicked)
-        self.toggle_img = QPushButton("Captured Image")
+        self.toggle_img = QPushButton("Pre-processed Image")
         self.toggle_img.setCheckable(True)
         self.toggle_img.clicked.connect(self.select_img_view)
         self.toggle_img.setChecked(False)
@@ -570,6 +570,7 @@ class MainWindow(QMainWindow):
                 self.viewer.setImage(bgr_to_rgb(proc_img))
             else:
                 self.viewer.setImage(bgr_to_rgb(annotated_img))
+
             if hasattr(MainWindow, 'pandas_viewer'):
                 self.update_pandas_view()
 
@@ -592,9 +593,9 @@ class MainWindow(QMainWindow):
     def select_img_view(self):
         if self.live_update_button.isChecked():
             if self.toggle_img.isChecked():
-                self.toggle_img.setText("Preprocessed Image")
-            else:
                 self.toggle_img.setText("Captured Image")
+            else:
+                self.toggle_img.setText("Pre-processed Image")
             self.update_viewer()
     
     def open_movie_click(self):
@@ -652,7 +653,10 @@ class MainWindow(QMainWindow):
         path, fname = os.path.split(self.tracker.base_filename)
         locked_id = CustomButton.locked_part
         fname = path + '/_temp/' + fname + CustomButton.extension[locked_id]
-        self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
+        try:
+            self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
+        except:
+            print('Files not ready yet')
       
     def snapshot_button_click(self):
         print('Saving current image to movie file directory...')

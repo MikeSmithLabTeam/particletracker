@@ -3,11 +3,7 @@
 Tutorial 1 - Eye tracking
 =========================
 
-In this first example we are going to do some eye tracking using the hough tracking method. This is probably
-not the most common particle tracking case but it makes a good introduction to the software since the number
-of particles is small and it is easy to see what is happening. We will describe 
-this simple example in quite a lot of detail. Later examples will build on each other so 
-it may be worth doing this even if you think you are unlikely to want to track eyes or even use the Hough Circles algorithm. 
+In this first example we are going to do some eye tracking using the hough tracking method. This is probably not the most common particle tracking case but it makes a good introduction to the software since the number of particles is small and it is easy to see what is happening. We will describe this simple example in quite a lot of detail. Later examples will build on each other so it may be worth doing this even if you think you are unlikely to want to track eyes or even use the Hough Circles algorithm. 
 
 Watch the video
 

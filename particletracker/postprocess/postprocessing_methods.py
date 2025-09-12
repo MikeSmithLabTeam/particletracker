@@ -980,9 +980,11 @@ def mean(df_range, f_index=None, parameters=None, *args, **kwargs):
     output_name = parameters['output_name']
     span = parameters['span']
 
-    mean_values= df_range.groupby('particle')[column].rolling(span, center=True).mean().transform(lambda x:x)
-    df_range[output_name] = mean_values
-    return df_range
+    df_range_mean = df_range.groupby('particle')[column].diff(periods=span)
+    df_mean = df_range_mean[df_range_mean.index == f_index]
+    df_frame=df_range[df_range.index == f_index]
+    df_frame[output_name] = df_mean
+    return df_frame
 
 @error_handling
 @param_parse
@@ -1027,7 +1029,11 @@ def median(df_range, f_index=None, parameters=None, *args, **kwargs):
     output_name = parameters['output_name']
     span = parameters['span']
 
-    return df_range.groupby('particle')[column].rolling(span, center=True).median().transform(lambda x:x).to_frame(name=output_name)
+    df_range_median = df_range.groupby('particle')[column].diff(periods=span)
+    df_median = df_range_median[df_range_median.index == f_index]
+    df_frame=df_range[df_range.index == f_index]
+    df_frame[output_name] = df_median
+    return df_frame
 
 
 @error_handling
@@ -1077,7 +1083,11 @@ def rate(df_range, f_index=None, parameters=None, *args, **kwargs):
     span = parameters['span']
     fps= parameters['fps']
 
-    return df_range.groupby('particle')[column].diff(periods=span).transform(lambda x:x).to_frame(name=output_name)
+    df_range_rate = df_range.groupby('particle')[column].diff(periods=span)
+    df_rate = df_range_rate[df_range_rate.index == f_index]
+    df_frame=df_range[df_range.index == f_index]
+    df_frame[output_name] = df_rate
+    return df_frame
     
 
 
