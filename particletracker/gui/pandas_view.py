@@ -31,7 +31,7 @@ class pandasModel(QtCore.QAbstractTableModel):
         return None
 
 class PandasWidget(QtWidgets.QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, edit=False):
         QtWidgets.QWidget.__init__(self, parent)
         self.parent = parent
         self.view = QtWidgets.QTableView()

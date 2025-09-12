@@ -99,6 +99,7 @@ class MainWindow(QMainWindow):
         self.setup_viewer(self.view_layout)# Contains image window, frame slider and spinbox.
         self.setup_settings_panel(self.settings_layout)# Contains all widgets on rhs of gui.
         self.setup_pandas_viewer()
+        self.setup_edit_pandas_viewer()
 
         #Add filled components to the main layout
         self.main_layout.addLayout(self.view_layout,3)
@@ -118,7 +119,6 @@ class MainWindow(QMainWindow):
         # Show window but don't maximize
         self.show()
         adjust_y = int((self.target_height-self.screen_size.height())/10)
-        print(adjust_y)
         self.move(0, int((self.target_height-self.screen_size.height())/10)) # This will set the position
            
     def setup_menus_toolbar(self):
@@ -168,6 +168,14 @@ class MainWindow(QMainWindow):
         self.pandas_button.setCheckable(True)
         self.pandas_button.setChecked(False)
         self.toolbar.addAction(self.pandas_button)
+
+        self.edit_pandas_button = QAction(
+            QIcon(os.path.join(resources_dir, "edit_pandas.png")),
+            "Show Dataframe View", self)
+        self.edit_pandas_button.triggered.connect(self.edit_pandas_button_click)
+        self.edit_pandas_button.setCheckable(True)
+        self.edit_pandas_button.setChecked(False)
+        self.toolbar.addAction(self.edit_pandas_button)
 
         self.snapshot_button = QAction(
             QIcon(os.path.join(resources_dir, "camera.png")),
@@ -251,6 +259,7 @@ class MainWindow(QMainWindow):
 
         self.tool_menu.addAction(self.live_update_button)
         self.tool_menu.addAction(self.pandas_button)
+        self.tool_menu.addAction(self.edit_pandas_button)
         self.tool_menu.addAction(self.snapshot_button)
 
         self.process_menu.addAction(self.cleanup)     
@@ -404,6 +413,12 @@ class MainWindow(QMainWindow):
             tree = spatial.KDTree(points)
             dist, idx = tree.query((x, y))
             self.pandas_viewer.view.selectRow(idx)
+        
+        if self.edit_pandas_viewer.isVisible():
+            points = self.edit_pandas_viewer.df[['x', 'y']].values
+            tree = spatial.KDTree(points)
+            dist, idx = tree.query((x, y))
+            self.edit_pandas_viewer.view.selectRow(idx)
 
 
         self.timer = QTimer(self)
@@ -501,7 +516,7 @@ class MainWindow(QMainWindow):
         self.status_bar.clearMessage()
 
     def update_dictionary_params(self, location, value, widget_type):
-        print(location, value, widget_type)
+
         if len(location) == 2:
             '''Sometimes a duplicate method is added to method list which is not
             in the dictionary. These duplicates are named method*1 etc. There will
@@ -537,7 +552,6 @@ class MainWindow(QMainWindow):
             if widget_type == 'dropdown':
                 self.tracker.parameters[location[0]][location[1]][location[2]][0] = value 
             else:
-                print(self.tracker.parameters[location[0]][location[1]])
                 self.tracker.parameters[location[0]][location[1]][location[2]] = value 
                 
     def update_param_widgets(self, title):
@@ -558,6 +572,7 @@ class MainWindow(QMainWindow):
                 self.viewer.setImage(bgr_to_rgb(annotated_img))
             if hasattr(MainWindow, 'pandas_viewer'):
                 self.update_pandas_view()
+
                     
     def reset_viewer(self):
         self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],
@@ -566,7 +581,9 @@ class MainWindow(QMainWindow):
                                            )
         self.movie_label.setText(self.movie_filename)
         if hasattr(MainWindow, 'pandas_viewer'):
-                self.update_pandas_view()
+            self.update_pandas_view()
+        if hasattr(MainWindow, 'edit_pandas_viewer'):
+            self.update_edit_pandas_view()
 
     def reset_frame_range_click(self):
         self.tracker.cap.set_frame_range((0,None,1))
@@ -617,6 +634,25 @@ class MainWindow(QMainWindow):
         path, fname = os.path.split(self.tracker.base_filename)
         fname = path + '/_temp/' + fname +'_temp.hdf5'
         self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
+    
+    def setup_edit_pandas_viewer(self):
+        if hasattr(self, 'edit_pandas_viewer'):
+            self.edit_pandas_viewer.close()
+            self.edit_pandas_viewer.deleteLater()
+        self.edit_pandas_viewer = PandasWidget(parent=self, edit=True)
+    
+    def edit_pandas_button_click(self):
+        if self.edit_pandas_button.isChecked():
+            self.edit_pandas_viewer.show()
+        else:
+            self.edit_pandas_viewer.hide()
+    
+    def update_edit_pandas_view(self):
+        print('update_edit_pandas_view not yet implemented')
+        path, fname = os.path.split(self.tracker.base_filename)
+        locked_id = CustomButton.locked_part
+        fname = path + '/_temp/' + fname + CustomButton.extension[locked_id]
+        self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
       
     def snapshot_button_click(self):
         print('Saving current image to movie file directory...')
@@ -645,6 +681,7 @@ class MainWindow(QMainWindow):
         self.tracker.data.clear_caches()
         self.update_viewer()
         self.update_pandas_view()
+        self.update_edit_pandas_view()
 
     def process_button_click(self): 
         self.status_bar.setStyleSheet("background-color : lightBlue")
