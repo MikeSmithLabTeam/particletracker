@@ -2,11 +2,13 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib as mpl
 import numpy as np
+import io
+from PIL import Image
 
 from ..general.parameters import get_param_val
 from ..customexceptions import *
 
-@error_handling
+@error_with_hint("If you were trying to create a colour bar supply x,y,w,h where x,y is top left corner.")
 def colour_array(subset_df, f, parameters):
     cmap_type = parameters['cmap_type']
     sz = np.shape(subset_df.index.values)
@@ -29,7 +31,7 @@ def colour_array(subset_df, f, parameters):
                 # print('reached this point')
                 # raise CmapError(e)
                 print("Cmap set to jet")
-            
+
         norm = colors.Normalize(vmin=cmap_min, vmax=cmap_max, clip=True)
         colour_obj = plt.get_cmap(cmap_name, np.size(colour_data))
         colour_vals = 255 * colour_obj(norm(colour_data))
@@ -37,15 +39,14 @@ def colour_array(subset_df, f, parameters):
         for colour in colour_vals:
             colours.append((colour[0,2], colour[0,1], colour[0,0]))
         colours = np.array(colours)
-        
         if parameters['colour_bar'] is None:
             colourbar = None
         else:
             _,_,w,h= parameters['colour_bar']
             colourbar = create_colourbar(int(w),int(h), cmap_name, cmap_min, cmap_max)  
-                        
     return (colours, colourbar)
-    
+
+
 def create_colourbar(w,h, cmap, cmap_min, cmap_max):
     """
     Create a colorbar as a NumPy array with specified dimensions and colormap.
@@ -60,6 +61,7 @@ def create_colourbar(w,h, cmap, cmap_min, cmap_max):
     Returns:
     - colorbar_image: NumPy array representing the colorbar with white rectangle and black edge.
     """
+
     dpi=100
     figsize = (w/dpi, h/dpi)
 
@@ -67,26 +69,41 @@ def create_colourbar(w,h, cmap, cmap_min, cmap_max):
         orientation = 'vertical'
     else:
         orientation = 'horizontal'
-
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi, layout='constrained')
 
+    # Set the figure and axes background to be transparent
+    fig.patch.set_facecolor('none')
+    fig.patch.set_alpha(0.0)
+    ax.patch.set_facecolor('none')
+    ax.patch.set_alpha(0.0)
+ 
     # Set the figure and axes background to be transparent
     fig.patch.set_facecolor('none')
     ax.patch.set_facecolor('none')
 
     norm = mpl.colors.Normalize(vmin=cmap_min, vmax=cmap_max)
-
     cbar=fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
              cax=ax, orientation=orientation)
     cbar.ax.tick_params(labelsize=14)
 
+
     # Remove padding and margins
     plt.subplots_adjust(left=0, right=0, top=0, bottom=0)
-
     # Convert the figure to a NumPy array
+
     fig.canvas.draw()
-    colorbar_image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-    colorbar_image = colorbar_image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    # Save figure to bytes buffer
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', dpi=dpi, bbox_inches='tight', 
+                pad_inches=0, facecolor='none', edgecolor='none')
+    buf.seek(0)
+    
+    # Load with PIL and convert to numpy
+    img = Image.open(buf)
+    colorbar_image = np.array(img)
+    
+    #convert rgba to rgb
+    colorbar_image = colorbar_image[:, :, :3]
     
     plt.close(fig)
     

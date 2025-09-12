@@ -743,7 +743,7 @@ def vectors(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
 These methods require more than one frames data to be analysed so you'll need to run use part first.
 
 """
-@error_with_hint(additional_message="To visualise annotate trajectories in the gui you must have linked particles and have already completed the processing. You can process and the video will include these first time round.")
+@error_with_hint(additional_message="To visualise annotate trajectories in the gui you must have already run a complete processing routine. This must have used linking. This is because this relies on data from other frames. You can of course process the movie and include trajectories.")
 @param_parse
 @df_range
 def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs):
@@ -781,7 +781,6 @@ def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs
     thickness
         Thickness of line. 
     
-
     Args
     ----
     frame : np.ndarray
@@ -796,15 +795,11 @@ def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs
         Usually None but if multiple calls are made modifies
         method name with get_method_key
 
-
     Returns
     -----------
         annotated frame : np.ndarray
     
     """
-    print(df_range)
-    print(np.shape(frame))
-    print(parameters)
     #This can only be run on a linked trajectory
     x_col_name = parameters['x_column']
     y_col_name = parameters['y_column']
@@ -815,7 +810,7 @@ def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs
 
     (colours, colourbar) = colour_array(subset_df, f_index, parameters)
     thickness = parameters['thickness']
-    traj_length = parameters['traj_length']
+    traj_length = parameters['span']
 
     if (f_index-traj_length) < 0:
         traj_length = f_index
@@ -824,11 +819,13 @@ def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs
     df_range.index.name='frame'
     df2 = df_range.loc[f_index-traj_length:f_index]     
     df3 = df2.set_index(['particle'], append=True).swaplevel(i=0,j=1).sort_index(level='particle')
+
     for index, particle in enumerate(particle_ids):
         traj_pts = df3[[x_col_name,y_col_name]].loc[particle]
         traj_pts = np.array(traj_pts.values, np.int32).reshape((-1,1,2))
         frame = cv2.polylines(frame,[traj_pts],False,colours[index],int(thickness))
-    
+
+    print(colourbar)
     if colourbar is not None:
         frame = place_colourbar_in_image(frame, colourbar, parameters)     
     return frame
