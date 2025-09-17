@@ -88,16 +88,15 @@ class PandasWidget(QtWidgets.QDialog):
 
     def update_file(self, filename, frame):
         self.filename = filename
+        
         try:
             df = pd.read_hdf(filename.replace('*',''))            
-            if 'frame' in df.columns:
-                df2 = df[df.index == frame]    
-            else:
-                df2 = df.reset_index()
+            df2 = df[df.index == frame]  
+            df3 = df2.reset_index()
         except Exception as e:
             self.df = pd.DataFrame()
             raise PandasViewError(e)
-        self.df=df2
-        model = pandasModel(df2)
+        self.df=df3
+        model = pandasModel(df3)
         self.view.setModel(model)
 

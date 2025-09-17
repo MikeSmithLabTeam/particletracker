@@ -65,6 +65,7 @@ class ParticleTracker(QObject):
         ---------
         f_index: int or None
         """
+        print('Tracking...')
         if lock_part == -1:
             if f_index is None:
                 'When processing whole video store in file with same name as movie'
@@ -89,7 +90,8 @@ class ParticleTracker(QObject):
                     df_frame = self.analyse_frame(n=f)
                     store.write_data(df_frame, f_index=f)
                     #Signal to indicate how many frames tracked
-                    self.track_progress.emit(f, start, stop, step)               
+                    self.track_progress.emit(f, start, stop, step)  
+        print('Tracking complete')             
 
     def analyse_frame(self, n=None):
         """Analyses a single frame using a track method specified in PARAMETERS

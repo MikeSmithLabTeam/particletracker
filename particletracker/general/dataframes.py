@@ -117,8 +117,7 @@ class DataRead:
                 self._load()
             return self._df
         else:
-            if self._temp_df is None:
-                self._load_temp()
+            self._load_temp()
             return self._temp_df
 
     def _load(self):
@@ -186,7 +185,7 @@ class DataRead:
             df.loc[mask, col] = modified_df[col].values.squeeze()
         
 
-    @lru_cache(maxsize=4)
+    @lru_cache(maxsize=1)
     def _get_frame(self, f_index):
         """
         Cached access for single frame retrieval
@@ -237,14 +236,10 @@ def df_range(func):
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         store = args[0]
-        temp_df = store.get_data(f_index=None)
-        # Force the retrieval of full dataframe.
-        _original_full = store.full
-        store.full = True
-        df = store.get_data(f_index=None)
-        store.full = _original_full
         f_index = kwargs['f_index']
         parameters = kwargs['parameters']
+
+        df = store.get_data(f_index=None)
 
         if 'output_name' in parameters.keys():
             output_name = parameters['output_name']
@@ -265,8 +260,7 @@ def df_range(func):
         
         if 'column_name' in parameters.keys():
             #Used in postprocessing for rolling averages etc
-            column = parameters['column_name']
-            new_args = (df.loc[start:finish, [column,'particle']],) + args[1:]  # column
+            new_args = (df.loc[start:finish],) + args[1:]  # column
         else:
             #Used in annotation for trajectories
             new_args = (df.loc[start:finish, [parameters['x_column'], parameters['y_column'],'particle']],) + args[1:]  # column

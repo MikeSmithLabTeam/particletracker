@@ -127,7 +127,7 @@ def create_param_file(filename):
         'voronoi': {},
         'difference': {'column_name': 'x',
                        'output_name': 'x_diff',
-                       'span': [1, 1, 50, 1]
+                       'span': [1, 1, 51, 2]
                        },
 
         'median': {'column_name': 'x',
@@ -140,7 +140,7 @@ def create_param_file(filename):
         'rate': {'column_name': 'x',
                  'output_name': 'vx',
                  'fps': 50.0,
-                 'span': [5, 1, 20, 1]
+                 'span': [5, 1, 20, 2]
                  },
         'add_frame_data': {
             'new_column_name': 'data',

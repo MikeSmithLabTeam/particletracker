@@ -16,6 +16,7 @@ class LinkTrajectory:
 
     #@error_handling
     def link_trajectories(self, f_index=None, lock_part=-1):
+        print('Linking...')
         """Implements the trackpy functions link_df and filter_stubs"""
         if lock_part < 1:
             if f_index is None:
@@ -46,6 +47,7 @@ class LinkTrajectory:
 
             with DataWrite(output_filename) as store:
                 store.write_data(df)
-                    
+        
+        print('Linking Complete')
  
 

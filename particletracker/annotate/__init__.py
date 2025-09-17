@@ -17,7 +17,7 @@ class TrackingAnnotator:
         self.output_filename = self.cap.filename[:-4] + '_annotate.mp4'
 
     def annotate(self, f_index=None, lock_part=-1):  
-        print("Annotating") 
+        print("Annotating...") 
         video_output = get_param_val(self.parameters['config']['video_output']['output'])
         
         #If no movie is requested and processing whole then return nothing
@@ -42,6 +42,10 @@ class TrackingAnnotator:
             step=1
             #If postprocessing is locked read the full dataframe _postprocess.hdf5 otherwise use _temp.hdf5
             self.pp_store.full= (lock_part==2)
+            if lock_part==2:
+                create_temp_hdf(self.pp_store, f_index)
+
+
             # When lock_part is changed the full dataframe associated with the link data is reloaded.
 
         self.cap.set_frame(start)
@@ -62,9 +66,12 @@ class TrackingAnnotator:
         # close movie or return annotated frame
         if f_index is None and video_output:
             output_vid.close()
-            print('Annotation finished')
+            print('Annotation complete')
         else:
             return frame
 
 
 
+def create_temp_hdf(pp_store, f_index):
+    df = pp_store.get_data(f_index=f_index)
+    df.to_hdf(pp_store.temp_filename, key='data')

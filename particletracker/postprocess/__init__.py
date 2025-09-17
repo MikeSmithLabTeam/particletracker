@@ -23,6 +23,7 @@ class PostProcessor:
         4) Processing the entire movie or range of frames with or without locking of linking stage. Data output to _postprocess.hdf5     
         """
         #Set output_filename
+        print('Postprocessing...')
         if f_index is None:
             output_filename = self.link_store.output_filename
         else:
@@ -66,7 +67,9 @@ class PostProcessor:
                     combined_modified_df = None
                     for method in self.parameters['postprocess']['postprocess_method']:
                         method_name, call_num = get_method_name(method)
-                        modified_df = getattr(pm, method_name)(self.link_store, f_index=f,      parameters=self.parameters, call_num=call_num, section='postprocess')
+                        
+                        modified_df = getattr(pm, method_name)(self.link_store,f_index=f,parameters=self.parameters, call_num=call_num, section='postprocess')
+
                         if modified_df is not None:
                             #This handles multiple methods
                             if combined_modified_df is None:
@@ -74,17 +77,15 @@ class PostProcessor:
                             else:
                                 # For subsequent methods, merge their output 
                                 combined_modified_df = combined_modified_df.merge(modified_df, on=['particle', 'frame'], how='outer')
+
+                    if combined_modified_df is not None:
+                        self.link_store.combine_data(combined_modified_df)
+
+                    # Finally, write the data for the current frame
+                    store.write_data(self.link_store.get_data(f_index=f), f_index=f)
+        print('Postprocessing complete')
+
                                         
                     
                     
-                    
-                    
-                    """
-                    
-                    for method in self.parameters['postprocess']['postprocess_method']:
-                        method_name, call_num = get_method_name(method)
-                        modified_df=getattr(pm, method_name)(self.link_store, f_index=f, parameters=self.parameters, call_num=call_num, section='postprocess')
-                        self.link_store.combine_data(modified_df)
-                    store.write_data(self.link_store.get_data(f_index=f), f_index=f)
-
-                    """
+          

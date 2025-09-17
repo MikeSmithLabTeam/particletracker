@@ -114,7 +114,11 @@ class MainWindow(QMainWindow):
         self.move(frame_geometry.topLeft())
 
         #Set the lock state
-        self.just_track_button.update_lock_buttons(self.tracker.parameters['config']['_locked_part'], checked=False)
+        try:
+            self.just_track_button.update_lock_buttons(self.tracker.parameters['config']['_locked_part'], checked=False)
+        except:
+            self.just_track_button.update_lock_buttons(-1, checked=False)
+
         
         # Show window but don't maximize
         self.show()
@@ -563,6 +567,7 @@ class MainWindow(QMainWindow):
     def update_viewer(self):
         if self.live_update_button.isChecked():
             frame_number = self.frame_selector.value()
+            
             annotated_img, proc_img = self.tracker.process(f_index=frame_number, lock_part=CustomButton.locked_part)
 
             toggle = self.toggle_img.isChecked()
@@ -602,11 +607,14 @@ class MainWindow(QMainWindow):
         self.settings_filename = self.tracker.base_filename + '_expt.param'
         write_paramdict_file(self.tracker.parameters, self.settings_filename)
         self.movie_filename = open_movie_dialog(self, self.movie_filename)
+        CustomButton.reset_lock()
         self.reboot()
         
     def open_settings_button_click(self):
         self.settings_filename = open_settings_dialog(self, self.settings_filename)
+        CustomButton.reset_lock()
         self.reboot()    
+        
 
     def save_settings_button_click(self):
         settings_filename = save_settings_dialog(self, self.settings_filename)
@@ -623,7 +631,7 @@ class MainWindow(QMainWindow):
             self.pandas_viewer.close()
             self.pandas_viewer.deleteLater()
         self.pandas_viewer = PandasWidget(parent=self)
-        #self.update_pandas_view()
+        self.update_pandas_view()
 
     def pandas_button_click(self):
         if self.pandas_button.isChecked():
@@ -634,7 +642,7 @@ class MainWindow(QMainWindow):
     def update_pandas_view(self):
         path, fname = os.path.split(self.tracker.base_filename)
         fname = path + '/_temp/' + fname +'_temp.hdf5'
-        self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
+        self.pandas_viewer.update_file(fname, self.frame_selector.value())
     
     def setup_edit_pandas_viewer(self):
         if hasattr(self, 'edit_pandas_viewer'):
@@ -654,7 +662,7 @@ class MainWindow(QMainWindow):
         locked_id = CustomButton.locked_part
         fname = path + '/_temp/' + fname + CustomButton.extension[locked_id]
         try:
-            self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
+            self.pandas_viewer.update_file(fname, self.frame_selector.value())
         except:
             print('Files not ready yet')
       
@@ -698,8 +706,6 @@ class MainWindow(QMainWindow):
 
         self.settings_filename = self.tracker.base_filename + '_expt.param'
         write_paramdict_file(self.tracker.parameters, self.settings_filename)
-        
-        self.move_final_data()
 
         self.reset_statusbar()
         QMessageBox.about(self, "", "Processing Finished")
@@ -719,14 +725,7 @@ class MainWindow(QMainWindow):
             else:
                 print('Error removing _temp folder')
 
-    def move_final_data(self):
-        print('Creating final datafile')
-        path, filename = os.path.split(self.movie_filename)
-        postprocess_datafile = path + '/_temp/' + filename[:-4] + CustomButton.extension[2]
-        output_datafile = path + '/' + filename[:-4] + '.hdf5'
-
-        if os.path.exists(postprocess_datafile):
-            shutil.copy(postprocess_datafile, output_datafile)
+    
     
 
 

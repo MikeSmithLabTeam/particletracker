@@ -888,207 +888,138 @@ multiple frames have been processed and you are using part.
 ---------------------------------------------------------------------------------------------
 '''
 
-@error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")
+@error_with_hint("HINT: this func only works in the gui when locked. Span must be an odd value.")
 @param_parse
 @df_range
 def difference(df_range, f_index=None, parameters=None, *args, **kwargs):
     '''
-    Difference of a particles values on user selected column. 
-
-    Notes
-    -----
-    Returns the difference of a particle's values on a particular column at span separation in frames to a new column. Please be aware
-    this is the difference between current frame and frame - span for each particle.
-    
-    Parameters
-    ----------
-    column_name
-        Input column name
-    output_name
-        Column name for median data
-    span
-        number of frames over which to calculate rolling median
-    
-    Args
-    ----
-    df_range
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
-    '''   
+    Calculates the centered finite difference of a particle's values and
+    returns the result for a specific frame index.
+    '''
     column = parameters['column_name']
     output_name = parameters['output_name']
     span = parameters['span']
-
-    df_range_diffs = df_range.groupby('particle')[column].diff(periods=span)
-    df_diffs = df_range_diffs[df_range_diffs.index == f_index]
-    df_frame=df_range[df_range.index == f_index]
-    df_frame[output_name] = df_diffs
     
-    return df_frame
+    # Create a MultiIndex for proper grouping and sorting
+    df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
+
+    # Ensure span is an odd number for a centered difference
+    if span % 2 == 0:
+        raise ValueError("Span for centered difference must be odd.")
+    half_span = span // 2
+
+    # Calculate the centered finite difference
+    shifted_forward = df_temp.groupby(level='particle')[column].shift(-half_span)
+    shifted_backward = df_temp.groupby(level='particle')[column].shift(half_span)
+    
+    # Store the calculated difference in a new column
+    df_temp[output_name] = shifted_forward - shifted_backward
+
+    # Extract the data for the specified frame index and ensure it's a DataFrame
+    df_frame = df_temp.loc[(slice(None), f_index), :].copy()
+
+    # Convert the 'particle' index level back into a column and filter
+    final_df = df_frame.reset_index(level='particle').filter(items=['particle', 'frame', output_name])
+    
+    return final_df
     
 
-@error_handling
+@error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")
 @param_parse
 @df_range
 def mean(df_range, f_index=None, parameters=None, *args, **kwargs):
     '''
-    Rolling mean of a particles values. 
-
-    Notes
-    -----
-    Returns the rolling mean of a particle's values to a new column. Useful
-    to reduce fluctuations or tracking inaccuracies. The value of the mean is
-    placed at the centre of the rolling window. i.e [2,4,6,8,4] with window 3 would result
-    in [NaN, 4, 6, 6, Nan].
-    
-    Parameters
-    ----------
-    column_name
-        Input column name
-    output_name
-        Column name for mean data
-    span
-        number of frames over which to calculate rolling mean
-    
-    Args
-    ----
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
+    Calculates the rolling mean of a particle's values and returns the result
+    for a specific frame index.
     '''
     column = parameters['column_name']
     output_name = parameters['output_name']
     span = parameters['span']
 
-    df_range_mean = df_range.groupby('particle')[column].diff(periods=span)
-    df_mean = df_range_mean[df_range_mean.index == f_index]
-    df_frame=df_range[df_range.index == f_index]
-    df_frame[output_name] = df_mean
+    # Create a MultiIndex for proper grouping and sorting 
+    df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
+    # Calculate the rolling mean and store it in a temporary Series
+    rolling_mean_series = df_temp.groupby(level='particle')[column].rolling(
+        window=span, center=True).mean().reset_index(level=0, drop=True)
+    # Re-index the series to match the original DataFrame and add it
+    df_temp[output_name] = rolling_mean_series
+
+    # Extract the data for the specified frame index and ensure it's a DataFrame
+    df_frame = df_temp.loc[(slice(None), f_index), :].copy()
+
+    # Remove the particle index level so the output is clean
+     # Convert the 'particle' index level back into a column
+    df_frame = df_frame.reset_index(level='particle').filter(items=['particle', output_name])
     return df_frame
 
-@error_handling
+@error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")
 @param_parse
 @df_range
 def median(df_range, f_index=None, parameters=None, *args, **kwargs):
     '''
-    Median of a particles values. 
-
-    Notes
-    -----
-    Returns the median of a particle's values to a new column. Useful 
-    before classification to answer to which group a particle's properties
-    usually belong. The value of the median is
-    placed at the centre of the rolling window. i.e [2,4,4,8,4] with window 3 would result
-    in [NaN, 4, 4, 4, Nan].
-    
-    Parameters
-    ----------
-    column_name
-        Input column name
-    output_name
-        Column name for median data
-    span
-        number of frames over which to calculate rolling median
-    
-    Args
-    ----
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
+    Calculates the rolling mean of a particle's values and returns the result
+    for a specific frame index.
     '''
     column = parameters['column_name']
     output_name = parameters['output_name']
     span = parameters['span']
 
-    df_range_median = df_range.groupby('particle')[column].diff(periods=span)
-    df_median = df_range_median[df_range_median.index == f_index]
-    df_frame=df_range[df_range.index == f_index]
-    df_frame[output_name] = df_median
+    # Create a MultiIndex for proper grouping and sorting 
+    df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
+
+    # Calculate the rolling mean and store it in a temporary Series
+    rolling_mean_series = df_temp.groupby(level='particle')[column].rolling(
+        window=span, center=True).median().reset_index(level=0, drop=True)
+    # Re-index the series to match the original DataFrame and add it
+    df_temp[output_name] = rolling_mean_series
+
+    # Extract the data for the specified frame index and ensure it's a DataFrame
+    df_frame = df_temp.loc[(slice(None), f_index), :].copy()
+
+    # Remove the particle index level so the output is clean
+     # Convert the 'particle' index level back into a column
+    df_frame = df_frame.reset_index(level='particle').filter(items=['particle', output_name])
+      
     return df_frame
 
 
-@error_handling
+@error_with_hint("HINT: this func only works in the gui when locked. Span must be an odd value.")
 @param_parse
 @df_range
 def rate(df_range, f_index=None, parameters=None, *args, **kwargs):
     '''
-    Rate of change of a particle property with frame
-    
-    Notes
-    -----
-    Rate function takes an input column and calculates the
-    rate of change of the quantity. Nans are inserted at end and 
-    beginning of particle trajectories where calc is not possible. The 
-    rate is calculated from diff between current frame and frame - span.
-    
-    Parameters
-    ----------
-    column_name
-        Input column names
-    output_name
-        Output column name
-    fps
-        numerical value indicating the number of frames per second
-    span
-        number of frames over which to calculate rolling difference
-    
-    
-    Args
-    ----
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
+    Rate of change of a particle property with frame.
     '''
+    # Create a deep copy to prevent side-effects in the calling code
+    df_range = df_range.copy()
+
     column = parameters['column_name']
     output_name = parameters['output_name']
     span = parameters['span']
-    fps= parameters['fps']
+    fps = parameters['fps']
 
-    df_range_rate = df_range.groupby('particle')[column].diff(periods=span)
-    df_rate = df_range_rate[df_range_rate.index == f_index]
-    df_frame=df_range[df_range.index == f_index]
-    df_frame[output_name] = df_rate
-    return df_frame
-    
+    # Create a MultiIndex for proper grouping and sorting
+    df_temp = df_range.set_index(['particle', 'frame']).sort_index()
+
+    # Calculate the difference in the column's value
+    diff_values = df_temp.groupby(level='particle')[column].diff(periods=span)
+
+    # Calculate the time difference (span / fps)
+    time_diff = span / fps
+
+    # Calculate the rate of change
+    rate_of_change = diff_values / time_diff
+
+    # Add the rate to a new column
+    df_temp[output_name] = rate_of_change
+
+    # Extract the data for the specified frame index and ensure it's a DataFrame
+    df_frame = df_temp.loc[(slice(None), f_index), :].copy()
+
+    # Convert the 'particle' index level back to a column
+    final_df = df_frame.reset_index(level='particle').filter(items=['particle', 'frame', output_name])
+
+    return final_df
 
 
 

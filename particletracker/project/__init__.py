@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+import shutil
 
 from ..crop import ReadCropVideo
 from .. import preprocess, track, link, postprocess, \
@@ -8,6 +9,7 @@ from .. import preprocess, track, link, postprocess, \
 from ..general.writeread_param_dict import read_paramdict_file
 from ..general.dataframes import DataManager
 from ..customexceptions import BaseError, flash_error_msg, CsvError
+from ..gui.menubar import CustomButton
 
 
 class PTWorkflow:
@@ -121,6 +123,9 @@ class PTWorkflow:
                     f_index=f_index, lock_part=lock_part)
             else:
                 annotated_frame = self.frame
+            if f_index is None:
+                move_final_data(self.video_filename)
+
             
         except BaseError as e:
             if self.error_reporting is not None:
@@ -132,3 +137,11 @@ class PTWorkflow:
             annotated_frame = self.frame
 
         return annotated_frame, proc_frame
+
+def move_final_data(movie_filename):
+    path, filename = os.path.split(movie_filename)
+    postprocess_datafile = path + '/_temp/' + filename[:-4] + CustomButton.extension[2]
+    output_datafile = path + '/' + filename[:-4] + '.hdf5'
+
+    if os.path.exists(postprocess_datafile):
+        shutil.copy(postprocess_datafile, output_datafile)

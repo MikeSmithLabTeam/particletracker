@@ -15,6 +15,8 @@ def default(df_full, parameters):
                             link_strategy='auto', 
                             adaptive_step=0.75)
     df_full = trackpy.filter_stubs(df_full, get_param_val(parameters['min_frame_life']))
+    if 'frame' in df_full.columns:
+        df_full.drop('frame', axis=1, inplace=True)
     return df_full
 
 @error_handling
