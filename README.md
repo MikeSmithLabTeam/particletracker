@@ -13,17 +13,18 @@ ParticleTracker is a gui based particle tracking software that brings together a
 ## Installation from github
 Full details in documentation but in brief:
 
-Create a new Conda environment: conda create -n pt and then install these packages in this order. 
+Download the particletracker.yaml file and then use it to create a new conda environment:
 
-    conda install pytables
-    conda install pyqt
-    conda install git  
-    pip install git+https://github.com/MikeSmithLabTeam/particletracker
-    pip install legacy-cgi
-    
-## Updating if already installed
-    pip install --upgrade git+https://github.com/MikeSmithLabTeam/particletracker
-    
+    conda env create -f particletracker.yaml
+
+Alternatively you can install the conda dependencies and then pip install:
+
+    pip install git+https://github.com/mikesmithlabteam/particletracker
+
+Finally, for development purposes, you can also create a new conda environment:
+
+    conda env create -f particlertracker_development.yaml
+
 ## To add as a dependency to another pip repository
 Add the following argument to setup.py setuptools.setup()
 
@@ -37,7 +38,6 @@ M.I. Smith, J.G. Downs, J. Open Source Software 6, 3611 (2021)
 Markdown:
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.03611/status.svg)](https://doi.org/10.21105/joss.03611)
     
-
    
 ## Contributions
 Details about contributing to the ParticleTracker project can be found [here](https://github.com/MikeSmithLabTeam/particletracker/blob/master/CONTRIBUTING.md)

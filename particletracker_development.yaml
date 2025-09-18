@@ -1,4 +1,4 @@
-name: particle
+name: ptdev
 channels:
   - conda-forge
   - defaults
@@ -12,6 +12,8 @@ dependencies:
   - pytest
   - tqdm
   - pillow
+  - jupyterlab
+  - openpyxl
   - slicerator
   - pip
   - pip:

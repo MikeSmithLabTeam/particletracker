@@ -20,18 +20,16 @@ case you are coming to this new to python or new to programming we provide the s
 If you are comfortable in python skip through! 
 
 - Download and install miniconda (https://docs.conda.io/en/latest/miniconda.html)
+- Go to "https://github.com/MikeSmithLabTeam/particletracker/blob/master/particletracker.yaml"
+- Download this file (its an icon on top righ with a downwards arrow) and save to your project directory
 - Open a conda terminal:
 
 On Windows type Anaconda at the windows search and then select "Anaconda Prompt"
 On Linux and Mac open a terminal. 
 
-- Create a conda environment by typing "conda create -n particle" where particle here is the name of an `environment`.
-- Type `conda activate particle`
-- conda install pytables
-- conda install git
-- conda install pyqt
-- pip install git+https://github.com/MikeSmithLabTeam/particletracker
-- pip install legacy-cgi
+- Navigate to your project directory: type "cd path\to\project\directory"
+- Type conda env create -f particletracker.yaml
+- Go make a cup of coffee.
 
 On Windows we sometimes ran into an error at this point concerning the hdflib that 
 can be resolved by installing the Microsoft Visual Studio Build tools. Once you've
@@ -39,15 +37,6 @@ installed them restart computer, open anaconda terminal, activate environment (s
 Rerun the final command above. The build tools can be installed from here:
 
 https://visualstudio.microsoft.com/visual-cpp-build-tools/ 
-
-(Optional - nice way to work with the final data in a jupyter notebook) 
-
-- conda install jupyterlab 
-- conda install openpyxl
-
-to upgrade use:
-
-- pip install --upgrade git+https://github.com/MikeSmithLabTeam/particletracker
 
 Once installed you will need some way to write simple code and execute it. The bare bones 
 approach is to use notepad and write the few lines of code as detailed in "Getting started". Save 
@@ -63,6 +52,8 @@ Instructions abound on Google.
 
 Verifying the installation
 --------------------------
+
+
 
 To verify that the installation is working correctly you should read the getting started section which 
 explains how to launch the software. Once you have done 
