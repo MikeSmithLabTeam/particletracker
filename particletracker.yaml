@@ -19,5 +19,5 @@ dependencies:
   - jupyterlab
   - openpyxl
   - pip:
-    -git+https://github.com/mikesmithlabteam/particletracker
+    - git+https://github.com/mikesmithlabteam/particletracker
   
