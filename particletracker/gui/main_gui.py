@@ -352,8 +352,6 @@ class MainWindow(QMainWindow):
         frame_selector_layout.addWidget(self.reset_frame_range)
         view_layout.addLayout(frame_selector_layout)
         
-        self.update_viewer()
-        
     '''---------------------------------------------------------------
     -------------------------------------------------------------------
     SETUP SETTINGS PANEL
@@ -631,7 +629,7 @@ class MainWindow(QMainWindow):
             self.pandas_viewer.close()
             self.pandas_viewer.deleteLater()
         self.pandas_viewer = PandasWidget(parent=self)
-        self.update_pandas_view()
+        #self.update_pandas_view()
 
     def pandas_button_click(self):
         if self.pandas_button.isChecked():
@@ -649,6 +647,7 @@ class MainWindow(QMainWindow):
             self.edit_pandas_viewer.close()
             self.edit_pandas_viewer.deleteLater()
         self.edit_pandas_viewer = PandasWidget(parent=self, edit=True)
+        
     
     def edit_pandas_button_click(self):
         if self.edit_pandas_button.isChecked():
@@ -661,10 +660,6 @@ class MainWindow(QMainWindow):
         path, fname = os.path.split(self.tracker.base_filename)
         locked_id = CustomButton.locked_part
         fname = path + '/_temp/' + fname + CustomButton.extension[locked_id]
-        try:
-            self.pandas_viewer.update_file(fname, self.frame_selector.value())
-        except:
-            print('Files not ready yet')
       
     def snapshot_button_click(self):
         print('Saving current image to movie file directory...')

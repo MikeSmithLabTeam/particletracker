@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 import os
 import sys  # import os
-import sys
+
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -42,3 +42,24 @@ def test_subtract_bkg_img():
     
     assert new_img[0, 0] == 0, "img bkg subtraction fails"
     assert new_img[198, 403] == 243, "img bkg subtraction fails"
+
+
+def test_preprocess():
+    """Testing the preprocessing methods
+
+    This test loads up all the preprocessing methods and crudely tests that they work.
+    colour_channel, grayscale, blur, median_blur, threshold, adaptive_threshold, fill_holes, 
+    erode, dilate, absolute_diff, subtract_bkg, gamma, brightness_contrast, distance, invert
+    """
+
+    batchprocess("testdata/colloids.mp4", "testdata/test_preprocess.param")
+    output_video = "testdata/colloids_annotate.mp4"
+    output_df = "testdata/colloids.hdf5"
+    df = pd.read_hdf(output_df)
+    assert os.path.exists(output_video), 'Preprocessing steps errored'
+    assert int(df.loc[5, ['x']].to_numpy()[0][0]) == int(
+        33.94708869287488), df.loc[5, ['x']].to_numpy()[0][0]
+    os.remove(output_video)
+    os.remove(output_df)
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)

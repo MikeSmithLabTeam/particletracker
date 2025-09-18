@@ -177,8 +177,10 @@ class DataRead:
 
         # Add new columns with NaN values
         new_cols = modified_df.columns.difference(df.columns)
+        #for col in new_cols:
+        #    df[col] = np.nan
         for col in new_cols:
-            df[col] = np.nan
+            df[col] = pd.Series(dtype=modified_df[col].dtype)
         # Update the specific frame with new values
         mask = df.index == frame_idx
         for col in modified_df.columns:
@@ -318,7 +320,7 @@ class DataWrite:
         try:
             if self._output_df is not None:
                 # Write full dataframe
-                self._output_df.to_hdf(self._output_file, 'data')
+                self._output_df.to_hdf(self._output_file, key='data')
             elif self._output_frames:
                 # Concatenate and write collected frames
                 final_df = pd.concat(self._output_frames)

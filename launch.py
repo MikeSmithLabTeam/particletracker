@@ -8,6 +8,6 @@ if __name__ == '__main__':
     path = userprofile + \
         "\\OneDrive - The University of Nottingham\\Documents\\Programming\\particletracker\\testdata\\"
     
-    track_gui(path + "bacteria.mp4",settings_filename=path +"bacteria.param")
+    track_gui(path + "hydrogel.mp4",settings_filename=path +"hydrogel.param")
     
     # test_eyes()
