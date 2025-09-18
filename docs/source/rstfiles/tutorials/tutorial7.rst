@@ -27,13 +27,6 @@ The Dataviewer
 
    <iframe width="560" height="315" src="https://www.youtube.com/embed/R_HBTAx1NeI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
     
-Understanding "use_part"
-------------------------
-
-.. raw:: html
-
-   <iframe width="560" height="315" src="https://www.youtube.com/embed/I60HKOYk9zM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
-
 Working with big files
 ----------------------
 
@@ -41,9 +34,3 @@ Working with big files
 
    <iframe width="560" height="315" src="https://www.youtube.com/embed/8yIEVzrLCLQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
 
-How can I use images rather than a video?
------------------------------------------
-
-.. raw:: html
-
-   <iframe width="560" height="315" src="https://youtube.com/embed/N3ylBfGPwsY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;      encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 

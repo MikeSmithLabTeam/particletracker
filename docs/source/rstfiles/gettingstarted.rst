@@ -5,7 +5,7 @@ How do you start?
 
 Every time you want to run the software you should
 open the anaconda command prompt with your conda environment activated. On Windows type Anaconda at the windows search and then select "Anaconda Prompt".
-On Linux and Mac open a terminal. Then type "conda activate particle" (assuming you followed our installation steps). Finally, navigate
+On Linux and Mac open a terminal. Then type "conda activate particle". Finally, navigate
 to the folder where you will store your python scripts: "cd path\to\folder".
 
 You could also do this within an IDE just make sure your python interpreter is running from the conda environment.
@@ -27,8 +27,6 @@ the code above to include a video filename and a settings filename. You need to 
 
    from particletracker import track_gui
    track_gui(movie_filename="FullPathToMovie.mp4", settings_filename="FullPathToSettings.param")
-
-If you have images instead of videos watch the "How can I use images rather than video?" tutorial (:ref:`Tutorial7 - Tips and Tricks <Tutorial7>`).
 
 
 Building a tracking project

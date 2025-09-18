@@ -1,14 +1,15 @@
 Data flow map
 =============
 
+Inside the _temp folder created in your data folder you will find the following files:
+
 _temp.hdf5 is always data from a single frame and is overwritten at each stage
 _track.hdf5, _link.hdf5, _postprocess.hdf5 contain data up to the current stage of processing that concerns the whole movie.
 
-
 live processing is triggered by self.update_viewer in main_gui
-This in turn is triggered when parameters, frames, buttons etc are changed. Most of these are linked to slots in the MainWindow which in turn call self.update_viewer
-update_viewer calls self.tracker.process. If f_index=None you are asking to process the whole movie. If f_index=frame_number you are asking to process single frame. lock_part
-is the option that tells you to draw from a preprocessed stage of the whole movie rather than the temporary file.
+This in turn is triggered when parameters, frames, buttons etc are changed. Most of these are linked to slots in the MainWindow which in turn call self.update_viewer.
+
+update_viewer calls self.tracker.process. If f_index=None you are asking to process the whole movie. If f_index=frame_number you are asking to process single frame. locked_part is the option that tells you to draw from a preprocessed stage of the whole movie rather than the temporary file.
 
 
 Initial start up:
