@@ -13,6 +13,8 @@ dependencies:
   - tqdm
   - pillow
   - slicerator
+  - jupyterlab
+  - openpyxl
   - pip
   - jupyterlab
   - openpyxl
