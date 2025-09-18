@@ -95,5 +95,3 @@ def param_parse(func):
         kwargs['parameters'] = params
         return func(*args, **kwargs)
     return wrapper_param_format
-
-

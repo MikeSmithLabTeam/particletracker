@@ -132,7 +132,7 @@ def trackpy(ppframe, frame, params=None, *args, **kwargs):
 
     return df
 
-# @error_handling
+
 
 
 def hough(ppframe, frame, params=None, *args, **kwargs):
@@ -366,11 +366,12 @@ def _find_contours(img, hierarchy=False):
     # work for any version of opencv
 
     try:
-        im, contours, hier = cv2.findContours(
-            img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    except:
         contours, hier = cv2.findContours(
             img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    except:
+        im, contours, hier = cv2.findContours(
+            img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        
     if hierarchy:
         return contours, hier
     else:

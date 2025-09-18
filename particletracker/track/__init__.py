@@ -1,9 +1,10 @@
 import os
-from PyQt5.QtCore import pyqtSignal, QObject
+from PyQt6.QtCore import pyqtSignal, QObject
 from tqdm import tqdm
 import numpy as np
+import pandas as pd
 
-from ..general import dataframes
+from ..general.dataframes import DataWrite
 from ..track import tracking_methods as tm
 
 
@@ -24,7 +25,7 @@ class ParticleTracker(QObject):
 
     """
 
-    def __init__(self, parameters=None, preprocessor=None, vidobject=None, data_filename=None, *args, **kwargs):
+    def __init__(self, parameters=None, preprocessor=None, vidobject=None, *args, **kwargs):
         """
 
         Parameters
@@ -46,9 +47,10 @@ class ParticleTracker(QObject):
         self.parameters = parameters
         self.ip = preprocessor
         self.cap = vidobject
-        self.data_filename = data_filename
-
-    def track(self, f_index=None):
+        path, filename = os.path.split(os.path.splitext(vidobject.filename)[0])
+        self.base_filename = path + '/_temp/' + filename
+        
+    def track(self, f_index=None, lock_part=-1):
         """
         Method called by track.process() and track.process_frame()
 
@@ -63,14 +65,15 @@ class ParticleTracker(QObject):
         ---------
         f_index: int or None
         """
-        if f_index is None:
-            'When processing whole video store in file with same name as movie'
-            data_filename = self.data_filename
-        else:
-            'store temporarily'
-            data_filename = self.data_filename[:-5] + '_temp.hdf5'
+        print('Tracking...')
+        if lock_part == -1:
+            if f_index is None:
+                'When processing whole video store in file with same name as movie'
+                output_filename = f"{self.base_filename}_track.hdf5"
+            else:
+                'store temporarily'
+                output_filename = f"{self.base_filename}_temp.hdf5"
 
-        with dataframes.DataStore(data_filename) as data:
             if f_index is None:
                 start = self.cap.frame_range[0]
                 stop = self.cap.frame_range[1]
@@ -81,26 +84,24 @@ class ParticleTracker(QObject):
                 step=1
 
             self.cap.set_frame(start)
-            
-            for f in tqdm(range(start, stop, step), 'Tracking'):
-                try:
-                    df_frame = self.analyse_frame()
-                    data.add_tracking_data(f, df_frame)
-                    #Signal to indicate how many frames tracked
-                    self.track_progress.emit(f, start, stop, step)               
-                except:
-                    print('tracking failed')
-            
-            data.save(filename=data_filename)
 
-    def analyse_frame(self):
+            with DataWrite(output_filename) as store:    
+                for f in tqdm(range(start, stop, step), 'Tracking'):
+                    df_frame = self.analyse_frame(n=f)
+                    store.write_data(df_frame, f_index=f)
+                    #Signal to indicate how many frames tracked
+                    self.track_progress.emit(f, start, stop, step)  
+        print('Tracking complete')             
+
+    def analyse_frame(self, n=None):
         """Analyses a single frame using a track method specified in PARAMETERS
         Returns
         -------
         Pandas dataframe with tracked data.
         """
-        frame = self.cap.read_frame()
+        frame = self.cap.read_frame(n=n)
         method = self.parameters['track']['track_method'][0]
+        
         if self.ip is None:
             preprocessed_frame = frame
         else:

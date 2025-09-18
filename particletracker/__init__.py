@@ -42,7 +42,7 @@ def track_gui(movie_filename=None, settings_filename=None):
         settings_filename=settings_filename, screen_size=screen_size)
     window.show()
     #Start event loop
-    app.exec_()
+    app.exec()
 
 
 

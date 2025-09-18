@@ -1,8 +1,8 @@
 import os
 
 import pandas as pd
-from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtCore import Qt
+from PyQt6 import QtCore, QtWidgets, QtGui
+from PyQt6.QtCore import Qt
 
 from ..customexceptions import *
 
@@ -16,22 +16,22 @@ class pandasModel(QtCore.QAbstractTableModel):
     def rowCount(self, parent=None):
         return self._data.shape[0]
 
-    def columnCount(self, parnet=None):
+    def columnCount(self, parent=None):
         return self._data.shape[1]
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if index.isValid():
-            if role == Qt.DisplayRole:
+            if role == Qt.ItemDataRole.DisplayRole:
                 return str(self._data.iloc[index.row(), index.column()])
         return None
 
     def headerData(self, col, orientation, role):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self._data.columns[col]
         return None
 
 class PandasWidget(QtWidgets.QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, edit=False):
         QtWidgets.QWidget.__init__(self, parent)
         self.parent = parent
         self.view = QtWidgets.QTableView()
@@ -51,11 +51,15 @@ class PandasWidget(QtWidgets.QDialog):
         self.setLayout(lay)
         self.view.show()
         self.setWindowTitle('df')
-        w = int(self.parent.screen_size.width() / 2)
-        h = int(self.parent.screen_size.height() / 1.5)
-        self.resize(w, h)
-        self.move(int(0.975*w),int(h/5))
-        
+
+        # Get screen size using QScreen
+        screen = self.screen()
+        if screen:
+            screen_size = screen.size()
+            w = int(screen_size.width() / 2)
+            h = int(screen_size.height() / 1.5)
+            self.resize(w, h)
+            self.move(int(0.975*w), int(h/5))
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.parent.pandas_button.setChecked(False)
@@ -66,9 +70,13 @@ class PandasWidget(QtWidgets.QDialog):
         self.parent.pandas_button.setChecked(False)
         
     def save_button_clicked(self):
-        options = QtWidgets.QFileDialog.Options()
         directory = os.path.split(self.filename)[0]
-        name, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save to csv", directory, "csv (*.csv)")
+        name, _ = QtWidgets.QFileDialog.getSaveFileName(
+        self, 
+        "Save to csv", 
+        directory, 
+        "csv (*.csv)", 
+        options=QtWidgets.QFileDialog.Option.DontUseNativeDialog)
         name = name.split('.')[0]+'.csv'
         self.df.to_csv(name)
 
@@ -80,16 +88,15 @@ class PandasWidget(QtWidgets.QDialog):
 
     def update_file(self, filename, frame):
         self.filename = filename
+        
         try:
-            df = pd.read_hdf(filename)            
-            if 'frame' in df.columns:
-                df2 = df[df.index == frame]    
-            else:
-                df2 = df.reset_index()
+            df = pd.read_hdf(filename.replace('*',''))            
+            df2 = df[df.index == frame]  
+            df3 = df2.reset_index()
         except Exception as e:
             self.df = pd.DataFrame()
             raise PandasViewError(e)
-        self.df=df2
-        model = pandasModel(df2)
+        self.df=df3
+        model = pandasModel(df3)
         self.view.setModel(model)
 

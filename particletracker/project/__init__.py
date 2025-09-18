@@ -1,14 +1,15 @@
-import os.path
+import os
 import numpy as np
 import pandas as pd
+import shutil
 
 from ..crop import ReadCropVideo
 from .. import preprocess, track, link, postprocess, \
     annotate
 from ..general.writeread_param_dict import read_paramdict_file
-from ..general.dataframes import data_filename_create
+from ..general.dataframes import DataManager
 from ..customexceptions import BaseError, flash_error_msg, CsvError
-
+from ..gui.menubar import CustomButton
 
 
 class PTWorkflow:
@@ -20,32 +21,23 @@ class PTWorkflow:
     def __init__(self, video_filename=None, param_filename=None, error_reporting=None):
         self.video_filename = video_filename
         self.error_reporting = error_reporting
-        self.data_filename = data_filename_create(self.video_filename)
+        self.base_filename = os.path.splitext(self.video_filename)[0]
+        path, _ = os.path.split(self.base_filename)
+        self.temp_folder = path + '/_temp/'
         self.param_filename = param_filename
         self.parameters = read_paramdict_file(self.param_filename)
-        self.select_tabs()
         self._setup()
-
-    def select_tabs(self):
-        """Boolean values that determine which parts of the tracking process run"""
-        self.experiment_select = self.parameters['selected']['experiment']
-        self.crop_select = self.parameters['selected']['crop']
-        self.preprocess_select = self.parameters['selected']['preprocess']
-        self.track_select = self.parameters['selected']['track']
-        self.link_select = self.parameters['selected']['link']
-        self.postprocess_select = self.parameters['selected']['postprocess']
-        self.annotate_select = self.parameters['selected']['annotate']
 
     def _setup(self):
         ''' Setup is an internal class method it instantiates the video reader object.
         Depending on the settings in PARAMETERS this may also crop the video frames
         as they are requested.'''
         datapath = os.path.dirname(self.video_filename)
-        self.parameters['experiment']['video_filename'] = self.video_filename
+        self.parameters['config']['_video_filename'] = self.video_filename
         self.parameters['postprocess']['add_frame_data']['data_path'] = datapath
         self._create_processes()
 
-    def _create_processes(self, n=0):
+    def _create_processes(self):
         """A particle tracking project needs:
         1. A video reading object
         2. Something that handles preprocessing of the images
@@ -57,37 +49,46 @@ class PTWorkflow:
         """
         self.cap = ReadCropVideo(parameters=self.parameters,
                                  filename=self.video_filename, error_reporting=self.error_reporting)
-        self.frame = self.cap.read_frame(n)
+        self.frame = self.cap.read_frame(n=0)
 
         self.ip = preprocess.Preprocessor(self.parameters)
-        
+
+        #Handles storage, access to and caching of data at each stage of process
+        self.data = DataManager(base_filename=self.base_filename)
+
         self.pt = track.ParticleTracker(
-                            parameters=self.parameters, 
-                            preprocessor=self.ip,
-                            vidobject=self.cap, 
-                            data_filename=self.data_filename)
-        
+            parameters=self.parameters,
+            preprocessor=self.ip,
+            vidobject=self.cap)
+
         self.link = link.LinkTrajectory(
-                            data_filename=self.data_filename,
-                            parameters=self.parameters['link'])
-        
+            data=self.data,
+            parameters=self.parameters)
+
         self.pp = postprocess.PostProcessor(
-                    data_filename=self.data_filename,
-                    parameters=self.parameters)
-        
-        self.an = annotate.TrackingAnnotator(vidobject=self.cap,
-                                             data_filename=self.data_filename,
-                                             parameters=self.parameters,
-                                             frame=self.cap.read_frame(n=n))
+            data=self.data,
+            parameters=self.parameters)
+
+        self.reset_annotator()
 
     def reset_annotator(self):
         self.an = annotate.TrackingAnnotator(vidobject=self.cap,
-                                             data_filename=self.data_filename,
+                                             data=self.data,
                                              parameters=self.parameters,
-                                             frame=self.cap.read_frame(self.parameters['config']['frame_range'][0]))
+                                             frame=self.cap.read_frame(self.parameters['config']['_frame_range'][0]))
 
-    def process(self, use_part=False):
+    def process(self, f_index=None, lock_part=-1):
         """Process an entire video
+
+        Idea here is to call process with lock_part = -1 to indicate all steps of the process and then
+        0 = track locked
+        1 = link locked
+        2 = postprocess locked  --> Creates the final file.
+        annotation optional
+
+        - If you just process a single frame then you read a temp.hdf5 datafile from the _temp folder which contains the current frame=f_index data.
+        - If you process everything with f_index=None then each stage creates its own file containing data for all frames in _temp folder. The subsequent stage reads from this datafile and saves to a new file. At the end this is copied to the directory containing the video and represents the processed data. An annotated video is optionally produced
+        - Once a datafile has been completely processed if the _temp file folder is not cleaned up you can go back and edit things. Locking a particular stage results in data being drawn from a full datafile of previous stage containing complete data. Subsequent stages are either stored in a temporary file for single image processing or in new versions of the datafiles for the later stages if processing everything.
 
         Process is called on the main instance using the command
         particle_tracking_instance.process(). One call results in the entire
@@ -96,96 +97,51 @@ class PTWorkflow:
         One potentially confusing thing is that if you process a single frame then you move sequentially
         through preprocessor, tracker, linker, postprocessor and annotator. However, if you process the whole
         then the preprocessor is called from within tracker. All frames are tracked and then all frames are linked etc.
-
-        i.e track = True
-            link = True etc
-
-        if use_part == True the processing perorms the postprocessing and annotation steps only. 
-
-        if csv == True this will export the data as an csv file with the name videoname.xlsx
-
-        :return:
         """
+        if not os.path.exists(self.temp_folder):
+            os.mkdir(self.temp_folder)
 
         try:
-            if not use_part:
-                if self.track_select:
-                    self.pt.track()
-                if self.link_select:
-                    self.link.link_trajectories()
-            if self.postprocess_select:
-                self.pp.process(use_part=use_part)
-            if self.annotate_select:
-                self.an.annotate(use_part=use_part)
-
-            if self.parameters['config']['csv_export']:
-                try:
-                    df = pd.read_hdf(self.data_filename)
-                    df.to_csv(self.data_filename[:-5] + '.csv')
-                except Exception as e:
-                    CsvError(e)
-        except BaseError as e:
-            if self.error_reporting is not None:
-                flash_error_msg(e, self.error_reporting)
-
-    def process_frame(self, frame_num, use_part=False):
-        """Process a single frame
-
-        process_frame() is for use with the tracking guis when
-        optimising parameters. It takes the frame indicated by
-        frame_num and processes it according to the selected actions.
-        ie. track=True, link=True
-
-        One potentially confusing thing is that if you process a single frame then you move sequentially
-        through preprocessor, tracker, linker, postprocessor and annotator. However, if you process the whole
-        then the preprocessor is called from within tracker. All frames are tracked and then all frames are linked etc.
-
-        Notes
-        -----
-
-        Some combinations of actions are not possible. e.g you can't link trajectories
-        that haven't been tracked! The software will however allow you to do things progressively
-        so that if you have previously tracked a video and it has sucessfully written to a dataframe
-        then it will subsequently link that data without needing to retrack the video.
-        The same logic applies to annotation etc. It is worth however making backups at various points.
-        When processing individual frames the data is temporarily stored in videoname_temp.hdf5 However, during
-        process_part or process the data is stored in videoname.hdf5
-
-        The software assumes the datastore is in the same folder as the video being processed.
-
-        If use_part = True the data for first 5 stages is read from file videoname.hdf5 and only postprocess and annotate are
-        being run.
-
-        """
-        proc_frame = self.cap.read_frame(frame_num)
-
-        try:
-            #If using part then the first 5 stages are read from .hdf5 file
-            if not use_part:
-                if self.preprocess_select:
-                    proc_frame = self.ip.process(proc_frame)
-                    proc_frame = self.cap.apply_mask(proc_frame)
-                if self.track_select:
-                    self.pt.track(f_index=frame_num)
-                if self.link_select:
-                    self.link.link_trajectories(f_index=frame_num)
-
-            # Postprocess the frame                
-            if self.postprocess_select:
-                self.pp.process(f_index=frame_num, use_part=use_part)
-            
-            #Either annotate or return a blank frame
-            if self.annotate_select:
-                annotatedframe = self.an.annotate(
-                        f_index=frame_num, use_part=use_part)
+            # Whole movie or one frame
+            if f_index is None:
+                proc_frame = self.frame
             else:
-                annotatedframe = self.cap.read_frame(frame_num)
+                proc_frame = self.cap.read_frame(f_index)
+                # This will be overwritten below if annotation is required
+                proc_frame = self.ip.process(proc_frame)
+                proc_frame = self.cap.apply_mask(proc_frame)
+
+            if lock_part < 0:
+                self.pt.track(f_index=f_index)
+            if lock_part < 1:
+                self.link.link_trajectories(
+                    f_index=f_index, lock_part=lock_part)
+            if lock_part < 2:
+                self.pp.process(f_index=f_index, lock_part=lock_part)
+            if lock_part < 3:
+                annotated_frame = self.an.annotate(
+                    f_index=f_index, lock_part=lock_part)
+            else:
+                annotated_frame = self.frame
+            if f_index is None:
+                move_final_data(self.video_filename)
+
+            
         except BaseError as e:
             if self.error_reporting is not None:
                 print(e)
                 flash_error_msg(e, self.error_reporting)
-            annotatedframe = self.cap.read_frame(frame_num)
-            self.error_reporting.toggle_img.setChecked(False)
-            self.error_reporting.toggle_img.setText("Captured Image")
+                self.error_reporting.toggle_img.setChecked(False)#Moved these two lines in if statement
+                self.error_reporting.toggle_img.setText("Captured Image")
+            proc_frame = self.frame
+            annotated_frame = self.frame
 
-        return annotatedframe, proc_frame
+        return annotated_frame, proc_frame
+
+def move_final_data(movie_filename):
+    path, filename = os.path.split(movie_filename)
+    postprocess_datafile = path + '/_temp/' + filename[:-4] + CustomButton.extension[2]
+    output_datafile = path + '/' + filename[:-4] + '.hdf5'
+
+    if os.path.exists(postprocess_datafile):
+        shutil.copy(postprocess_datafile, output_datafile)

@@ -1,11 +1,18 @@
 #Packages
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt6.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
+    QLabel, QPushButton, QMessageBox,
+    QStatusBar, QMenuBar, QFileDialog
+)
+from PyQt6.QtCore import Qt, QTimer, pyqtSlot, QSize
+from PyQt6.QtGui import QIcon, QFont, QAction
+
 import os
 from os.path import isfile
 from pathlib import Path
 import sys
+import subprocess
+import shutil
 import qimage2ndarray
 import webbrowser
 from scipy import spatial
@@ -15,13 +22,15 @@ import copy
 from qtwidgets.sliders import QCustomSlider
 from qtwidgets.images import QImageViewer
 from labvision.images import write_img
+from .menubar import CustomButton, CustomToolBar
 
 #This project
-from .custom_tab_widget import CheckableTabWidget
+from .custom_tab_widget import CustomTabWidget
 from ..project import PTWorkflow
 from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.param_file_creator import create_param_file
+from ..customexceptions import flash_error_msg
 
 from ..general.imageformat import bgr_to_rgb
 from .pandas_view import PandasWidget
@@ -36,73 +45,90 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, movie_filename=None, settings_filename=None, screen_size=None, **kwargs):
         super(MainWindow,self).__init__(*args, **kwargs)
         self.screen_size = screen_size
+        # Calculate window size to leave room for status bar
+        self.target_width = int(self.screen_size.width()) 
+        self.target_height = int(self.screen_size.height() * 0.91) 
+        self.setMinimumSize(800, 600)
+        self.resize(self.target_width, self.target_height)
+        
+        
         self.movie_filename, self.settings_filename = check_filenames(self, movie_filename, settings_filename)
         if 'default.param' in self.settings_filename:
             create_param_file(self.settings_filename)
         self.reboot()
 
-
-    def reboot(self, open_settings=True):
-        
+    def reboot(self):
+        """The reboot method is used to reload the gui when opening a new video or settings file."""
+        # Clean up existing GUI elements
         if hasattr(self, 'main_panel'):
+            # Clear and remove toolbar
+            if hasattr(self, 'toolbar'):
+                self.removeToolBar(self.toolbar)
+                self.toolbar.deleteLater()
+            
+            # Clear and remove menu bar
+            if hasattr(self, 'menuBar'):
+                menuBar = self.menuBar()
+                menuBar.clear()
+                menuBar.deleteLater()
+                self.setMenuBar(QMenuBar(self))
+                
+            # Clean up main panel and its layouts
+            self.main_layout.removeWidget(self.main_panel)
             self.main_panel.deleteLater()
-            self.main_panel.setParent(None)
-            if not open_settings:
-                try:
-                    #This allows for continuity of parameters after processing.
-                    self.settings_filename = self.movie_filename.replace('*','')[:-4] + '_expt.param'
-                except:
-                    print('tried to load current params - falling back on initial settings file')
-        
+            self.main_panel = None
+            
+            # Clean up status bar
+            if hasattr(self, 'status_bar'):
+                self.setStatusBar(None)
+                self.status_bar.deleteLater()
+
+      
+        #Create the key behind the scenes object
         self.open_tracker()
         
+        #Basic structural organising elements
         self.setWindowTitle("Particle Tracker")
-
         self.main_panel = QWidget()
         self.main_layout = QHBoxLayout()  # Contains view and settings layout
         self.view_layout = QVBoxLayout()  # Contains image, image toggle button and frame slider
         self.settings_layout = QVBoxLayout()  # Contains tab widget with all tracking controls
 
-        self.init_ui()
+        #Create the gui
+        self.setup_menus_toolbar()
+        self.setup_viewer(self.view_layout)# Contains image window, frame slider and spinbox.
+        self.setup_settings_panel(self.settings_layout)# Contains all widgets on rhs of gui.
+        self.setup_pandas_viewer()
+        self.setup_edit_pandas_viewer()
 
+        #Add filled components to the main layout
         self.main_layout.addLayout(self.view_layout,3)
         self.main_layout.addLayout(self.settings_layout,2)
         self.main_panel.setLayout(self.main_layout)
         self.setCentralWidget(self.main_panel)
-        #self.showFullScreen()
         
-        self.setMaximumSize(self.screen_size.width()-30, self.screen_size.height()-30)
-        self.showMaximized()
-        self.setup_pandas_viewer()   
+        # Center the window on screen
+        frame_geometry = self.frameGeometry()
+        screen_center = self.screen().availableGeometry().center()
+        frame_geometry.moveCenter(screen_center)
+        self.move(frame_geometry.topLeft())
 
-    def init_ui(self):#, view_layout, settings_layout, reboot=True):
-        if not hasattr(self, 'file_menu'):
-            self.setup_menus_toolbar()
-        else:
-            #This solves a bug which occurs when you have use_part_button checked
-            #and open a new video which has no .hdf5 file.
-            self.use_part_button.setChecked(False)
+        #Set the lock state
+        try:
+            self.just_track_button.update_lock_buttons(self.tracker.parameters['config']['_locked_part'], checked=False)
+        except:
+            self.just_track_button.update_lock_buttons(-1, checked=False)
 
-        self.setup_viewer(self.view_layout)# Contains image window, frame slider and spinbox.
-        self.setup_settings_panel(self.settings_layout)# Contains all widgets on rhs of gui.
-      
-
-        """------------------------------------------------------------------------------
-        ------------------------------------------------------------------------------
-        SETUP MENUS AND TOOLBAR
         
-        Setup of all the menus and toolbars at the bottom. The statusbar at the bottom
-        is also initialised here.
-        ---------------------------------------------------------------------------------
-        ---------------------------------------------------------------------------------"""
-
+        # Show window but don't maximize
+        self.show()
+        adjust_y = int((self.target_height-self.screen_size.height())/10)
+        self.move(0, int((self.target_height-self.screen_size.height())/10)) # This will set the position
+           
     def setup_menus_toolbar(self):
         dir,_ =os.path.split(os.path.abspath(__file__))
         resources_dir = os.path.join(dir,'icons','icons')
-        #Use these lines when using pyinstaller.
-        #dir , _= os.path.split(sys.argv[0])#os.path.abspath(__file__)
-        #resources_dir = os.path.join(dir,'gui','icons','icons')
-        self.toolbar = QToolBar('Toolbar')
+        self.toolbar = CustomToolBar('Toolbar')
         self.toolbar.setIconSize(QSize(16,16))
         self.addToolBar(self.toolbar)
 
@@ -126,19 +152,18 @@ class MainWindow(QMainWindow):
         save_settings_button.triggered.connect(self.save_settings_button_click)
         self.toolbar.addAction(save_settings_button)
 
-        self.autosave_on_process = QAction(QIcon(os.path.join(resources_dir,"autosave.png")), 'Autosave settings on process', self)
-        self.autosave_on_process.setCheckable(True)
-        self.autosave_on_process.setChecked(self.tracker.parameters['config']['autosave_settings'])
-        self.autosave_on_process.triggered.connect(self.autosave_button_click)
-        self.toolbar.addAction(self.autosave_on_process)
-
+        self.toolbar.addSeparator()
+        spacer = QWidget()
+        spacer.setFixedWidth(20)  # Set desired width in pixels
+        self.toolbar.addWidget(spacer)
         self.toolbar.addSeparator()
 
         self.live_update_button = QAction(QIcon(os.path.join(resources_dir,"arrow-circle.png")), "Live Updates", self)
         self.live_update_button.setCheckable(True)
-        self.live_update_button.setChecked(self.tracker.parameters['config']['live_updates'])
+        self.live_update_button.setChecked(self.tracker.parameters['config']['_live_updates'])
         self.live_update_button.triggered.connect(self.live_update_button_click)
         self.toolbar.addAction(self.live_update_button)
+
 
         self.pandas_button = QAction(
             QIcon(os.path.join(resources_dir, "view_pandas.png")),
@@ -148,33 +173,56 @@ class MainWindow(QMainWindow):
         self.pandas_button.setChecked(False)
         self.toolbar.addAction(self.pandas_button)
 
+        self.edit_pandas_button = QAction(
+            QIcon(os.path.join(resources_dir, "edit_pandas.png")),
+            "Show Dataframe View", self)
+        self.edit_pandas_button.triggered.connect(self.edit_pandas_button_click)
+        self.edit_pandas_button.setCheckable(True)
+        self.edit_pandas_button.setChecked(False)
+        self.toolbar.addAction(self.edit_pandas_button)
+
         self.snapshot_button = QAction(
             QIcon(os.path.join(resources_dir, "camera.png")),
             "Take snapshot", self)
         self.snapshot_button.triggered.connect(self.snapshot_button_click)
         self.toolbar.addAction(self.snapshot_button)
 
+        self.cleanup = QAction(QIcon(os.path.join(resources_dir,"cleanup.png")), "Auto Cleanup", self)
+        self.toolbar.addAction(self.cleanup)
+        self.cleanup.triggered.connect(self.clean_up)
+
         self.toolbar.addSeparator()
+        spacer = QWidget()
+        spacer.setFixedWidth(20)  # Set desired width in pixels
+        self.toolbar.addWidget(spacer)
+        self.toolbar.addSeparator()        
 
-        self.export_to_csv = QAction(QIcon(os.path.join(resources_dir,"excel.png")),'Export to csv', self)
-        self.export_to_csv.setCheckable(True)
-        self.export_to_csv.setChecked(self.tracker.parameters['config']['csv_export'])
-        self.export_to_csv.triggered.connect(self.export_to_csv_click)
-        self.toolbar.addAction(self.export_to_csv)
+        self.just_track_button = CustomButton(resources_dir, "track.png", vid_filename=self.movie_filename, part=0)
+        self.toolbar.addWidget(self.just_track_button)
+        self.just_track_button.lockButtons.connect(self.update_lock)
 
-        process_part_button = QAction(QIcon(os.path.join(resources_dir,"clapperboard--minus.png")), "Process part", self)
-        process_part_button.triggered.connect(self.process_part_button_click)
-        self.toolbar.addAction(process_part_button)
+        self.just_link_button = CustomButton(resources_dir, "link.png",  vid_filename=self.movie_filename, part=1)
+        self.toolbar.addWidget(self.just_link_button)
+        self.just_link_button.lockButtons.connect(self.update_lock)
 
-        self.use_part_button = QAction(QIcon(os.path.join(resources_dir,"fire--exclamation.png")), "Use part processed", self)
-        self.use_part_button.setCheckable(True)
-        self.use_part_button.triggered.connect(self.use_part_button_click)
-        self.toolbar.addAction(self.use_part_button)
+        self.just_postprocess_button = CustomButton(resources_dir, "postprocess.png",  vid_filename=self.movie_filename, part=2)
+        self.toolbar.addWidget(self.just_postprocess_button)
+        self.just_postprocess_button.lockButtons.connect(self.update_lock)
+        
+        self.toolbar.addSeparator()
+        spacer = QWidget()
+        spacer.setFixedWidth(20)  # Set desired width in pixels
+        self.toolbar.addWidget(spacer)
+        self.toolbar.addSeparator()
 
         process_button = QAction(QIcon(os.path.join(resources_dir,"clapperboard--arrow.png")), "Process", self)
         process_button.triggered.connect(self.process_button_click)
         self.toolbar.addAction(process_button)
 
+        self.toolbar.addSeparator()
+        spacer = QWidget()
+        spacer.setFixedWidth(20)  # Set desired width in pixels
+        self.toolbar.addWidget(spacer)
         self.toolbar.addSeparator()
 
         close_button = QAction(QIcon(os.path.join(resources_dir,"cross-button.png")), "Close", self)
@@ -182,6 +230,8 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(close_button)
 
         menu = self.menuBar()
+        menu.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)  # Prevent context menu
+        self.toolbar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)  # Prevent 
 
         self.status_bar = QStatusBar(self)
         font = QFont()
@@ -195,6 +245,7 @@ class MainWindow(QMainWindow):
         File menu items
         ---------------------------------------------------------------------------------------------
         '''
+
         self.file_menu = menu.addMenu("&File")
         self.tool_menu = menu.addMenu("Tools")
         self.process_menu = menu.addMenu("Process options")
@@ -212,16 +263,12 @@ class MainWindow(QMainWindow):
 
         self.tool_menu.addAction(self.live_update_button)
         self.tool_menu.addAction(self.pandas_button)
+        self.tool_menu.addAction(self.edit_pandas_button)
         self.tool_menu.addAction(self.snapshot_button)
 
-        self.process_menu.addAction(self.autosave_on_process)
-        self.process_menu.addAction(self.export_to_csv)
-        self.process_menu.addAction(process_part_button)
-        self.process_menu.addAction(self.use_part_button)
+        self.process_menu.addAction(self.cleanup)     
         self.process_menu.addAction(process_button)
 
-
-        
         docs = QAction('help', self)
         docs.triggered.connect(self.open_docs)
         about = QAction('about', self)
@@ -271,21 +318,21 @@ class MainWindow(QMainWindow):
         self.settings_label = QLabel('Current Settings :  ' + self.settings_filename)
         self.viewer = QImageViewer()
         self.viewer.leftMouseButtonDoubleClicked.connect(self.coords_clicked)
-        self.toggle_img = QPushButton("Captured Image")
+        self.toggle_img = QPushButton("Pre-processed Image")
         self.toggle_img.setCheckable(True)
         self.toggle_img.clicked.connect(self.select_img_view)
         self.toggle_img.setChecked(False)
         
         frame_selector_layout = QHBoxLayout()
 
-        if self.tracker.parameters['config']['frame_range'][1] is None:
+        if self.tracker.parameters['config']['_frame_range'][1] is None:
             max_val = self.tracker.cap.num_frames - 1
         else:
-            max_val=self.tracker.parameters['config']['frame_range'][1] - 1
+            max_val=self.tracker.parameters['config']['_frame_range'][1] - 1
         self.frame_selector = QCustomSlider(title='Frame',
-                                            min_=self.tracker.parameters['config']['frame_range'][0],
+                                            min_=self.tracker.parameters['config']['_frame_range'][0],
                                             max_=max_val,
-                                            step_=self.tracker.parameters['config']['frame_range'][2],
+                                            step_=self.tracker.parameters['config']['_frame_range'][2],
                                             value_=self.tracker.cap.frame_range[0],
                                             spinbox=True,
                                             )
@@ -305,9 +352,6 @@ class MainWindow(QMainWindow):
         frame_selector_layout.addWidget(self.reset_frame_range)
         view_layout.addLayout(frame_selector_layout)
         
-        self.update_viewer()
-        
-
     '''---------------------------------------------------------------
     -------------------------------------------------------------------
     SETUP SETTINGS PANEL
@@ -316,17 +360,22 @@ class MainWindow(QMainWindow):
     -------------------------------------------------------------------
     --------------------------------------------------------------------
     '''
+
     def setup_settings_panel(self, settings_layout):
-        self.toplevel_settings = CheckableTabWidget(self.tracker, self.viewer, self.param_change, self.method_change, reboot=self.reboot, parent=self)
-        self.toplevel_settings.checkBoxChanged.connect(self.frame_selector_slot)
+        self.toplevel_settings = CustomTabWidget(self.tracker, self.viewer, self.param_change, self.method_change, reboot=self.reboot)
         settings_layout.addWidget(self.toplevel_settings)
 
+        #Connect up the locking of buttons to the deactivation / activation of panels
+        self.just_track_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
+        self.just_link_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
+        self.just_postprocess_button.lockButtons.connect(self.toplevel_settings.update_lock_state)
+        
 
     """
     ---------------------------------------------------------------         
     ------------------------------------------------------------------
     Callback functions
-    ------------------------------------------------------------------
+    ----------------------------------b--------------------------------
     ----------------------------------------------------------------
     """
     def open_tracker(self):
@@ -338,6 +387,13 @@ class MainWindow(QMainWindow):
             self.reset_viewer()
 
 
+    """
+    -------------------------------------------------------------
+    -------------------------------------------------------------
+    Slots
+    --------------------------------------------------------------
+    --------------------------------------------------------------
+    """
 
     @pyqtSlot(float, float)
     def coords_clicked(self, x, y):
@@ -359,6 +415,12 @@ class MainWindow(QMainWindow):
             tree = spatial.KDTree(points)
             dist, idx = tree.query((x, y))
             self.pandas_viewer.view.selectRow(idx)
+        
+        if self.edit_pandas_viewer.isVisible():
+            points = self.edit_pandas_viewer.df[['x', 'y']].values
+            tree = spatial.KDTree(points)
+            dist, idx = tree.query((x, y))
+            self.edit_pandas_viewer.view.selectRow(idx)
 
 
         self.timer = QTimer(self)
@@ -368,10 +430,6 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage("Coords (x,y): ("+str(x)+','+str(y) +') \t Intensities [r,g,b]:'+str(output[int(y),int(x),:]))    
         self.show()
 
-    def reset_statusbar(self):
-        self.status_bar.setStyleSheet("background-color : lightGray")
-        self.status_bar.clearMessage()
-        
     @pyqtSlot(int)
     def frame_selector_slot(self, value): 
         try:
@@ -386,7 +444,6 @@ class MainWindow(QMainWindow):
             msg.show()
             self.reset_frame_range()
         
-
     @pyqtSlot()
     def param_change(self, value):
         """
@@ -403,19 +460,21 @@ class MainWindow(QMainWindow):
         paramdict_location=sender.meta
         
         if sender.meta == 'ResetFrameRange':
-            self.update_dictionary_params(['config','frame_range'],(0,self.tracker.cap.num_frames-1,1), 'button')
+            self.update_dictionary_params(['config','_frame_range'],(0,self.tracker.cap.num_frames-1,1), 'button')
             self.tracker.cap.set_frame_range((0,self.tracker.cap.num_frames,1))
         elif ('frame' in paramdict_location[1]) and (type(value) == tuple):
             frame_range = (self.frame_selector.slider._min,self.frame_selector.slider._max+1,self.frame_selector.slider._step)
             if (frame_range[1] <= self.tracker.cap.num_frames) | (frame_range[1] is None):
-                self.update_dictionary_params(['config','frame_range'],frame_range, 'slider')
+                self.update_dictionary_params(['config','_frame_range'],frame_range, 'slider')
                 self.tracker.cap.set_frame_range(frame_range)
             else:
                 self.reset_frame_range_click()
         elif sender.meta == 'ResetMask':
             self.tracker.cap.reset()
             self.update_param_widgets('crop')
+
             self.viewer.clearImage()
+
         else:
             parsed_value = parse_values(sender, value)
             self.update_dictionary_params(paramdict_location, parsed_value, sender.widget)
@@ -432,7 +491,6 @@ class MainWindow(QMainWindow):
         self.update_viewer()
         self.update_pandas_view()
 
-
     @pyqtSlot(tuple)
     def method_change(self, value):
         """
@@ -447,12 +505,20 @@ class MainWindow(QMainWindow):
         self.update_viewer()
         self.update_pandas_view()
 
+    @pyqtSlot(Exception)
+    def handle_error(self, error):
+        flash_error_msg(error, self)
 
-        """------------------------------------------------------
-        Various methods to update sections of the program.
-        -------------------------------------------------------"""
+    """------------------------------------------------------
+    Various methods to update sections of the program.
+    -------------------------------------------------------"""
+
+    def reset_statusbar(self):
+        self.status_bar.setStyleSheet("background-color : lightGray")
+        self.status_bar.clearMessage()
 
     def update_dictionary_params(self, location, value, widget_type):
+
         if len(location) == 2:
             '''Sometimes a duplicate method is added to method list which is not
             in the dictionary. These duplicates are named method*1 etc. There will
@@ -469,8 +535,14 @@ class MainWindow(QMainWindow):
                         else:
                             assert '*' in item, "Key not in dict and doesn't contain *"
                             if type(self.tracker.parameters[location[0]][item.split('*')[0]]) is dict:
-                                    self.tracker.parameters[location[0]][item] = copy.deepcopy(self.tracker.parameters[location[0]][item.split('*')[0]])
-                            
+                                self.tracker.parameters[location[0]][item] = copy.deepcopy(self.tracker.parameters[location[0]][item.split('*')[0]])
+                                key_values = list(self.tracker.parameters[location[0]][item].keys())
+                                for key in key_values:
+                                    if key == 'output_name':
+                                        num=item.split('*')[1]
+                                        self.tracker.parameters[location[0]][item]['output_name'] = 'classifier*' + num
+                                        self.tracker.parameters[location[0]][item]
+                        
                             else:
                                 self.tracker.parameters[location[0]][item] = self.tracker.parameters[location[0]][item.split('*')[0]]
             else:
@@ -484,7 +556,6 @@ class MainWindow(QMainWindow):
             else:
                 self.tracker.parameters[location[0]][location[1]][location[2]] = value 
                 
-
     def update_param_widgets(self, title):
         for param_adjustor in self.toplevel_settings.list_param_adjustors:
             if param_adjustor.title == title:  
@@ -494,20 +565,19 @@ class MainWindow(QMainWindow):
     def update_viewer(self):
         if self.live_update_button.isChecked():
             frame_number = self.frame_selector.value()
-            if self.use_part_button.isChecked():
-                annotated_img, proc_img = self.tracker.process_frame(frame_number, use_part=True)
-            else:
-                annotated_img, proc_img = self.tracker.process_frame(frame_number)
+            
+            annotated_img, proc_img = self.tracker.process(f_index=frame_number, lock_part=CustomButton.locked_part)
 
             toggle = self.toggle_img.isChecked()
             if toggle:
                 self.viewer.setImage(bgr_to_rgb(proc_img))
             else:
                 self.viewer.setImage(bgr_to_rgb(annotated_img))
+
             if hasattr(MainWindow, 'pandas_viewer'):
                 self.update_pandas_view()
-            
-        
+
+                    
     def reset_viewer(self):
         self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],
                                            max_=self.tracker.cap.frame_range[1] - 1,
@@ -515,7 +585,9 @@ class MainWindow(QMainWindow):
                                            )
         self.movie_label.setText(self.movie_filename)
         if hasattr(MainWindow, 'pandas_viewer'):
-                self.update_pandas_view()
+            self.update_pandas_view()
+        if hasattr(MainWindow, 'edit_pandas_viewer'):
+            self.update_edit_pandas_view()
 
     def reset_frame_range_click(self):
         self.tracker.cap.set_frame_range((0,None,1))
@@ -524,37 +596,40 @@ class MainWindow(QMainWindow):
     def select_img_view(self):
         if self.live_update_button.isChecked():
             if self.toggle_img.isChecked():
-                self.toggle_img.setText("Preprocessed Image")
-            else:
                 self.toggle_img.setText("Captured Image")
+            else:
+                self.toggle_img.setText("Pre-processed Image")
             self.update_viewer()
     
-
     def open_movie_click(self):
+        self.settings_filename = self.tracker.base_filename + '_expt.param'
+        write_paramdict_file(self.tracker.parameters, self.settings_filename)
         self.movie_filename = open_movie_dialog(self, self.movie_filename)
+        CustomButton.reset_lock()
         self.reboot()
         
     def open_settings_button_click(self):
         self.settings_filename = open_settings_dialog(self, self.settings_filename)
+        CustomButton.reset_lock()
         self.reboot()    
+        
 
     def save_settings_button_click(self):
         settings_filename = save_settings_dialog(self, self.settings_filename)
         write_paramdict_file(self.tracker.parameters, settings_filename)
-
-    def export_to_csv_click(self):
-        self.tracker.parameters['config']['csv_export'] = self.export_to_csv.isChecked()
+    
+    
 
     """-------------------------------------------------------------
     Functions relevant to the tools section
     --------------------------------------------------------------"""
-
+    
     def setup_pandas_viewer(self):
         if hasattr(self, 'pandas_viewer'):
             self.pandas_viewer.close()
             self.pandas_viewer.deleteLater()
         self.pandas_viewer = PandasWidget(parent=self)
-        self.update_pandas_view()
+        #self.update_pandas_view()
 
     def pandas_button_click(self):
         if self.pandas_button.isChecked():
@@ -563,17 +638,35 @@ class MainWindow(QMainWindow):
             self.pandas_viewer.hide()
 
     def update_pandas_view(self):
-        fname = self.tracker.data_filename
-        if not self.use_part_button.isChecked():
-            fname = fname[:-5] +'_temp.hdf5'
-        self.pandas_viewer.update_file(fname, self.tracker.cap.frame_num)
+        path, fname = os.path.split(self.tracker.base_filename)
+        fname = path + '/_temp/' + fname +'_temp.hdf5'
+        self.pandas_viewer.update_file(fname, self.frame_selector.value())
+    
+    def setup_edit_pandas_viewer(self):
+        if hasattr(self, 'edit_pandas_viewer'):
+            self.edit_pandas_viewer.close()
+            self.edit_pandas_viewer.deleteLater()
+        self.edit_pandas_viewer = PandasWidget(parent=self, edit=True)
+        
+    
+    def edit_pandas_button_click(self):
+        if self.edit_pandas_button.isChecked():
+            self.edit_pandas_viewer.show()
+        else:
+            self.edit_pandas_viewer.hide()
+    
+    def update_edit_pandas_view(self):
+        print('update_edit_pandas_view not yet implemented')
+        path, fname = os.path.split(self.tracker.base_filename)
+        locked_id = CustomButton.locked_part
+        fname = path + '/_temp/' + fname + CustomButton.extension[locked_id]
       
     def snapshot_button_click(self):
-        print('Saving current image to movie file directorty...')
+        print('Saving current image to movie file directory...')
         img = qimage2ndarray.byte_view(self.viewer.image())
         n=0
         while n < 1000:
-            img_name = self.tracker.data_filename[:-5] + '_frame' + str(self.frame_selector.value()) + '_' + str(n) +'.png'
+            img_name = self.tracker.base_filename + '_frame' + str(self.frame_selector.value()) + '_' + str(n) +'.png'
             if Path(img_name).is_file():
                 n = n+1
             else:
@@ -584,78 +677,63 @@ class MainWindow(QMainWindow):
         """------------------------------------------------------------
         Functions that control the processing
         --------------------------------------------------------------"""
-    def autosave_button_click(self):
-        self.tracker.parameters['config']['autosave_settings'] = self.autosave_on_process.isChecked()
 
     def live_update_button_click(self):
         if self.live_update_button.isChecked():
             self.update_viewer()
-        self.tracker.parameters['config']['live_updates'] = self.live_update_button.isChecked()
+        self.tracker.parameters['config']['_live_updates'] = self.live_update_button.isChecked()
 
-    def process_part_button_click(self):
-        '''
-        This button processes the movie but it skips the postprocess and annotation steps
-        It is designed as a first step to experiment with different postprocessing and
-        and annotation steps. Some of these require data from other frames which is not
-        possible if you just process a single frame. To then process that data you need
-        to check the use_part_button.
-        '''
-        postprocess_init_state = self.tracker.postprocess_select
-        annotate_init_state = self.tracker.postprocess_select
-        self.tracker.postprocess_select = False
-        self.tracker.annotate_select = False
-        self.process_button_click()
-        self.tracker.postprocess_select = postprocess_init_state
-        self.tracker.annotate_select = annotate_init_state
-
-    def use_part_button_click(self):
-        '''This code only changes appearance of gui and checks
-        to see if .hdf5 data file exists. The commands tracker.process
-        and tracker.process_frame take a keyword use_part which
-        is set by checking toggle status of this button.
-        '''
-        if isfile(self.tracker.data_filename):
-            for i in range(5):#index cycles through different tabs from experiment to link
-                if self.use_part_button.isChecked():
-                    self.toplevel_settings.disable_tabs(i,enable=False)
-                    self.toggle_img.setChecked(False)
-                    self.select_img_view()
-                    self.toggle_img.setCheckable(False)
-                else:
-                    self.toplevel_settings.disable_tabs(i, enable=True)
-                    self.toggle_img.setCheckable(True)
-        else:
-            self.use_part_button.setChecked(False)
-            QMessageBox.about(self, "", "You must run 'Process Part' before you can use this")
+    def update_lock(self):
+        self.tracker.parameters['config']['_locked_part'] = CustomButton.locked_part
+        self.tracker.data.clear_caches()
+        self.update_viewer()
+        self.update_pandas_view()
+        self.update_edit_pandas_view()
 
     def process_button_click(self): 
         self.status_bar.setStyleSheet("background-color : lightBlue")
         self.status_bar.showMessage("Depending on the size of your movie etc this could take awhile. You can track progress in the command window.")    
-        self.show()
 
-        self.tracker.reset_annotator()
-        if self.autosave_on_process.isChecked():
-            write_paramdict_file(self.tracker.parameters, self.settings_filename)
+        self.tracker.reset_annotator()            
 
-        if self.use_part_button.isChecked():
-            #This starts from original datafile of tracked data and then performs
-            # postprocessing and annotation steps only.
-            self.tracker.process(use_part=True)
-        else:
-            #Normal processing of entire movie. Either process_button_click or process_part_button_click
-            self.tracker.process()
+        #This is accessing a class variable of CustomButton
+        self.tracker.process(lock_part=CustomButton.locked_part)
 
-        write_paramdict_file(self.tracker.parameters, self.tracker.data_filename[:-5] + '_expt.param')
-        
+        self.settings_filename = self.tracker.base_filename + '_expt.param'
+        write_paramdict_file(self.tracker.parameters, self.settings_filename)
+
         self.reset_statusbar()
         QMessageBox.about(self, "", "Processing Finished")
-        self.reboot(open_settings=False)
+        self.reboot()
+
+    def clean_up(self):
+        path, _ = os.path.split(self.movie_filename)
+        temp_folder = path + '/_temp'
+        CustomButton.reset_lock()
+        try:               
+            shutil.rmtree(temp_folder)
+        except:
+            """Remove folder using elevated privileges"""
+            if sys.platform == 'win32':
+                cmd = f'powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList \'/c rd /s /q \"{folder_path}\"\'\"'
+                subprocess.run(cmd, shell=True, check=True)
+            else:
+                print('Error removing _temp folder')
+
+    
+    
+
 
     def close_button_click(self):
         sys.exit()
 
 
 
+
+  
+        
+
+        
 
 
 

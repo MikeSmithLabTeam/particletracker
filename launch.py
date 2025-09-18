@@ -1,8 +1,13 @@
-#import particletracker as pt
+# import particletracker as pt
 from particletracker import track_gui
-from tests.test_integration import test_eyes
+import os
 
 
 if __name__ == '__main__':
-    track_gui("testdata/bkg_test")
-    #test_eyes()
+    userprofile = os.environ['USERPROFILE']
+    path = userprofile + \
+        "\\OneDrive - The University of Nottingham\\Documents\\Programming\\particletracker\\testdata\\"
+    
+    track_gui(path + "hydrogel.mp4",settings_filename=path +"hydrogel.param")
+    
+    # test_eyes()

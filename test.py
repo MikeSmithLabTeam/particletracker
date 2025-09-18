@@ -1,3 +1,10 @@
-from tests.test_preprocess import test_subtract_bkg_img
+from tests.test_integration import *
 
-test_subtract_bkg_img()
+print('running test')
+#test_eyes()
+#test_colloids()
+#test_hydrogel()
+#test_bacteria()
+#test_discs()
+test_preprocess()
+#test_postprocess()

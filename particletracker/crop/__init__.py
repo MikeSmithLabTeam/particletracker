@@ -10,11 +10,11 @@ class ReadCropVideo(ReadVideo):
         if error_reporting is not None:
             self.error = error_reporting
         try:
-            ReadVideo.__init__(self, filename=filename, frame_range=parameters['config']['frame_range'])
+            ReadVideo.__init__(self, filename=filename, frame_range=parameters['config']['_frame_range'])
         except:
             #Avoid crash if new video has num_frames < max_frames in settings file.
-            parameters['config']['frame_range'] = (0, None, 1)
-            ReadVideo.__init__(self, filename=filename, frame_range=parameters['config']['frame_range'])
+            parameters['config']['_frame_range'] = (0, None, 1)
+            ReadVideo.__init__(self, filename=filename, frame_range=parameters['config']['_frame_range'])
 
         self.parameters = parameters['crop']
         '''
@@ -30,12 +30,20 @@ class ReadCropVideo(ReadVideo):
             crop_width = self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]
             if (self.height < crop_height) or (self.width < crop_width):
                 self.reset()
+            self.crop_frame_size = (crop_width, crop_height)
+        
+        #If self.reset() called you could enter both if statements
+        if self.parameters['crop_box'] is None:
+            self.crop_frame_size = self.frame_size
+        self.properties['crop_frame_size'] = self.crop_frame_size
+        
         self.set_mask()
            
     def reset(self):
         #To set crop back to max image size
         self.parameters['crop_box']=None
         self.reset_mask()
+        
         
     def reset_mask(self):
         #None for a mask means same size as crop.
@@ -116,8 +124,10 @@ class ReadCropVideo(ReadVideo):
         if pts is None:
             mask = img
         else:            
-            radius = ((pts[1][1]-pts[0][1])**2+(pts[1][0]-pts[0][0])**2)**0.5
-            mask = cv2.circle(img,pts[0],int(radius),255,thickness=-1)
+            radius = int(((pts[1][1]-pts[0][1])**2+(pts[1][0]-pts[0][0])**2)**0.5)
+            # Convert center point coordinates to integers
+            center = (int(pts[0][0]), int(pts[0][1]))
+            mask = cv2.circle(img, center, int(radius), 255, thickness=-1)
         return mask
 
     def mask_rect(self, pts):
@@ -141,26 +151,6 @@ class ReadCropVideo(ReadVideo):
         frame=super().read_frame(n=n)
         cropped_frame=self.apply_crop(frame)
         return cropped_frame
-
-"""
-    def apply_mask(self,frame):
-        #mask = crop(self.mask, self.parameters)
-        return cv2.bitwise_and(frame, self.mask)        
-    except Exception as e:
-            error = CropMaskError(e)
-            flash_error_msg(error, self.error)
-            return frame
-
-            
-def apply_crop(self, frame):
-    try:
-        return crop(frame, self.parameters)
-    except Exception as e:
-        error = CropMaskError(e)
-        flash_error_msg(error, self.error)
-        return frame
-"""
-        
     
 
 def crop(frame, parameters):
