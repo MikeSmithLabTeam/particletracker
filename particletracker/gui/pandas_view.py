@@ -53,7 +53,7 @@ class pandasModel_edit(QtCore.QAbstractTableModel):
     def setData(self, index, value, role):
         if role == Qt.ItemDataRole.EditRole:
             if value == str(0): #deal with zero error
-                value = np.float(0)
+                value = np.float64(0)
             self._data.iloc[index.row(), index.column()] = np.float64(value) #set new values
 
             return True
@@ -171,7 +171,7 @@ class PandasWidget(QtWidgets.QDialog):
         dataframe. New row is inserted below the selected row. Once row is inserted, the pandasModel is
         updated and changes are displayed in GUI. Displays message if no row is selected.
         """
-
+        
         index = self.view.currentIndex()
         row_idx = index.row()
         if row_idx == -1:
@@ -217,14 +217,13 @@ class PandasWidget(QtWidgets.QDialog):
         Writes dataframe displayed in the window to a .hdf5 file
         """
         try:
-            self.df.to_hdf(".hdf5", key="data", mode="w")
+            self.df.to_hdf("testdata.hdf5", key="data", mode="w")
         except Exception as e:
             self.df = pd.DataFrame()
             raise PandasViewError(e)
 
     def update_file(self, filename, frame):
         self.filename = filename
-
         try:
             df = pd.read_hdf(filename)
             if "frame" in df.columns:
@@ -248,12 +247,15 @@ class PandasWidget(QtWidgets.QDialog):
         """
 
         self.filename = filename
-        
         try: 
-            df = pd.read_hdf(filename).sort_values("particle")
+
+            df = pd.read_hdf(filename)
+            if "particle" in df.columns:
+                df = df.sort_values("particle")
 
             if os.path.exists("data_temp.hdf5") == False:
                 df.to_hdf("data_temp.hdf5", key="data", mode="w")
+
             if "frame" in df.columns:
                 df2 = df[df["frame"] == frame]
             else:
