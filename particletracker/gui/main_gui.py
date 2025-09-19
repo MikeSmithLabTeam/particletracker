@@ -628,8 +628,8 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'pandas_viewer'):
             self.pandas_viewer.close()
             self.pandas_viewer.deleteLater()
-        self.pandas_viewer = PandasWidget(parent=self)
-        #self.update_pandas_view()
+        self.pandas_viewer = PandasWidget(parent=self, edit=False)
+        self.update_pandas_view()
 
     def pandas_button_click(self):
         if self.pandas_button.isChecked():
@@ -648,7 +648,6 @@ class MainWindow(QMainWindow):
             self.edit_pandas_viewer.deleteLater()
         self.edit_pandas_viewer = PandasWidget(parent=self, edit=True)
         
-    
     def edit_pandas_button_click(self):
         if self.edit_pandas_button.isChecked():
             self.edit_pandas_viewer.show()
@@ -656,10 +655,14 @@ class MainWindow(QMainWindow):
             self.edit_pandas_viewer.hide()
     
     def update_edit_pandas_view(self):
-        print('update_edit_pandas_view not yet implemented')
         path, fname = os.path.split(self.tracker.base_filename)
-        locked_id = CustomButton.locked_part
-        fname = path + '/_temp/' + fname + CustomButton.extension[locked_id]
+        fname = path + '/_temp/' + fname +'_temp.hdf5'
+        self.edit_pandas_viewer.update_file_editable(fname, self.frame_selector.value())
+
+        #path, fname = os.path.split(self.tracker.base_filename)
+        #locked_id = CustomButton.locked_part
+        #fname = path + '/_temp/' + fname + CustomButton.extension[locked_id]
+
       
     def snapshot_button_click(self):
         print('Saving current image to movie file directory...')
@@ -719,10 +722,6 @@ class MainWindow(QMainWindow):
                 subprocess.run(cmd, shell=True, check=True)
             else:
                 print('Error removing _temp folder')
-
-    
-    
-
 
     def close_button_click(self):
         sys.exit()
