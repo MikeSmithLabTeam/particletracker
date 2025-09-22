@@ -17,6 +17,7 @@ dependencies:
   - slicerator
   - pip
   - pip:
+    - trackpy
     - git+https://github.com/mikesmithlabteam/labvision
 
 
