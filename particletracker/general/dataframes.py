@@ -107,7 +107,7 @@ class DataRead:
         Value : bool indicates whether to use full or temp dataset
         """
         self._use_full = value
-        self._clear_cache()  # Clear cache when switching modes
+        #self._clear_cache()  # Clear cache when switching modes
 
     @property
     def _active_df(self):
@@ -115,6 +115,7 @@ class DataRead:
         if self.full:
             if self._df is None:
                 self._load()
+                print(f'returning full dataframe from {self.lock_part}' )
             return self._df
         else:
             self.load_temp()

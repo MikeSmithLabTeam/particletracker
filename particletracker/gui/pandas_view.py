@@ -160,21 +160,20 @@ class PandasWidget(QtWidgets.QDialog):
         index = self.view.currentIndex()
         row_idx = index.row()
 
-        lock_index = CustomButton.locked_part        
-        store = self.data._stores[lock_index]
-        _original = store.full
-        store.full = True
-
         if row_idx == -1:
             msg = "No row selected."
             self.message_box(msg)
         else:
             new_item = pd.DataFrame(self.df.iloc[[row_idx]])
             self.df = pd.concat([self.df, new_item], ignore_index=True).sort_values("particle")
+        
 
         self.model = pandasModel_edit(self.df)
         self.view.setModel(self.model)
         self.view.selectRow(row_idx)
+        print('add_row', self.df)
+        print('df in model', self.model._data)
+        self._store_changes()
 
     def delete_row_clicked(self):
         """
@@ -209,23 +208,26 @@ class PandasWidget(QtWidgets.QDialog):
         """
         Stores changes to the DataRead store. These changes are reversible.
         """
-        lock_index = CustomButton.locked_part        
+        lock_index = CustomButton.locked_part   
+        print('lock', lock_index)     
         store = self.data._stores[lock_index]
-        _original = store.full
-        store.full = True        
+               
         self.df.set_index(np.ones(self.df.shape[0]) * self.frame, inplace=True)
         self.df.index.name = 'frame'
+
+        _original = self.full
+        self.full=True
+
         store._active_df
+        print(store._df)
         store._df.drop(index=self.frame, inplace=True)
         store._df = pd.concat([self.df, store._df], sort=True)
- 
-
+        print('self.df', self.df)
+        print('store._df', store._df)
         if write:
             print('writing to file')
             store._df.to_hdf(store.read_filename, key="data")
-        
-        store.full = _original
-      
+        self.full=_original
 
     def update_file(self, frame):
         try:
@@ -250,10 +252,18 @@ class PandasWidget(QtWidgets.QDialog):
         corresponding to selected frame number. Then sets the model to be used by the
         QAbstractTabelModel() class in the GUI window.
         """
+    
         try:
-            self._store_changes() #stores any previous changes to the df.
+            print("ENtering update_editable\n\n\n\n\n\n\n")
+            print('b4 store_changes', self.frame)
+
+            #self._store_changes() #stores any previous changes to the df.
         except:
             print("No data to store.")
+        
+        
+        self.frame = frame
+        print('self.frame', self.frame)
         
         lock_index = CustomButton.locked_part
         if lock_index == -1:
@@ -267,14 +277,12 @@ class PandasWidget(QtWidgets.QDialog):
                 self.data.post_store
 
             store = self.data._stores[lock_index]
-            _original = store.full
-            store.full=True
+            print('store index 0', store._df)
             df2 = store.get_data(f_index=frame)
             if 'particle' not in df2.columns:
                 num_particles = np.shape(df2)[0]
                 df2['particle']=np.linspace(0,num_particles-1, num=num_particles).astype(int)
-            store.full = _original
-        
+                
         self.df = df2
         self.model = pandasModel_edit(self.df)
         self.view.setModel(self.model)
