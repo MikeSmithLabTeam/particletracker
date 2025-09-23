@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QLabel, QPushButton, QMessageBox,
     QStatusBar, QMenuBar, QFileDialog
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSlot, QSize
+from PyQt6.QtCore import Qt, QTimer, pyqtSlot, QSize, QModelIndex
 from PyQt6.QtGui import QIcon, QFont, QAction
 
 import os
@@ -129,7 +129,7 @@ class MainWindow(QMainWindow):
         dir,_ =os.path.split(os.path.abspath(__file__))
         resources_dir = os.path.join(dir,'icons','icons')
         self.toolbar = CustomToolBar('Toolbar')
-        self.toolbar.setIconSize(QSize(16,16))
+        self.toolbar.setIconSize(QSize(24,24))
         self.addToolBar(self.toolbar)
 
         '''
@@ -169,7 +169,7 @@ class MainWindow(QMainWindow):
             QIcon(os.path.join(resources_dir, "view_pandas.png")),
             "Show Dataframe View", self)
         self.pandas_button.triggered.connect(self.pandas_button_click)
-        self.pandas_button.setCheckable(True)
+        self.pandas_button.setCheckable(False)
         self.pandas_button.setChecked(False)
         self.toolbar.addAction(self.pandas_button)
 
@@ -177,7 +177,7 @@ class MainWindow(QMainWindow):
             QIcon(os.path.join(resources_dir, "edit_pandas.png")),
             "Show Dataframe View", self)
         self.edit_pandas_button.triggered.connect(self.edit_pandas_button_click)
-        self.edit_pandas_button.setCheckable(True)
+        self.edit_pandas_button.setCheckable(False)
         self.edit_pandas_button.setChecked(False)
         self.toolbar.addAction(self.edit_pandas_button)
 
@@ -276,6 +276,7 @@ class MainWindow(QMainWindow):
 
         self.help_menu.addAction(docs)
         self.help_menu.addAction(about)
+
 
     def load_default_settings(self):
         pathname, _ = os.path.split(self.movie_filename)
@@ -386,7 +387,6 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
 
-
     """
     -------------------------------------------------------------
     -------------------------------------------------------------
@@ -432,6 +432,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(int)
     def frame_selector_slot(self, value): 
+        print('------------------\n\n\n\n\n frame changed\n\n\n\n\n\n------------------------------------------------------')
         try:
             self.update_viewer()
         except:
@@ -486,10 +487,9 @@ class MainWindow(QMainWindow):
                 self.update_dictionary_params(['crop','mask_polygon'], None, 'textbox')
                 self.update_param_widgets('crop')
             if ('crop' in paramdict_location[1]) or ('mask' in paramdict_location[1]):
-                self.tracker.cap.set_mask()          
-        
+                self.tracker.cap.set_mask()             
         self.update_viewer()
-        self.update_pandas_view()
+    
 
     @pyqtSlot(tuple)
     def method_change(self, value):
@@ -504,10 +504,18 @@ class MainWindow(QMainWindow):
         self.update_param_widgets(sender.title)
         self.update_viewer()
         self.update_pandas_view()
+        self.update_edit_pandas_view()
 
     @pyqtSlot(Exception)
     def handle_error(self, error):
         flash_error_msg(error, self)
+    
+
+    @pyqtSlot(QModelIndex, QModelIndex)
+    def update_edit_pandas_frame(self):
+        print('Slot firing')
+        self.edit_pandas_viewer._store_changes()
+        self.update_edit_pandas_view()
 
     """------------------------------------------------------
     Various methods to update sections of the program.
@@ -563,7 +571,11 @@ class MainWindow(QMainWindow):
                 param_adjustor.build_widgets(title, self.tracker.parameters[title])
 
     def update_viewer(self):
+        
         if self.live_update_button.isChecked():
+            
+            
+
             frame_number = self.frame_selector.value()
             
             annotated_img, proc_img = self.tracker.process(f_index=frame_number, lock_part=CustomButton.locked_part)
@@ -573,10 +585,9 @@ class MainWindow(QMainWindow):
                 self.viewer.setImage(bgr_to_rgb(proc_img))
             else:
                 self.viewer.setImage(bgr_to_rgb(annotated_img))
-
-            if hasattr(MainWindow, 'pandas_viewer'):
-                self.update_pandas_view()
-
+              
+            self.update_pandas_view()
+            self.update_edit_pandas_view()
                     
     def reset_viewer(self):
         self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],
@@ -618,7 +629,6 @@ class MainWindow(QMainWindow):
         settings_filename = save_settings_dialog(self, self.settings_filename)
         write_paramdict_file(self.tracker.parameters, settings_filename)
     
-    
 
     """-------------------------------------------------------------
     Functions relevant to the tools section
@@ -628,40 +638,36 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'pandas_viewer'):
             self.pandas_viewer.close()
             self.pandas_viewer.deleteLater()
-        self.pandas_viewer = PandasWidget(parent=self, edit=False)
+        
+        self.pandas_viewer = PandasWidget(parent=self, edit=False, data=self.tracker.data)
         self.update_pandas_view()
 
     def pandas_button_click(self):
-        if self.pandas_button.isChecked():
-            self.pandas_viewer.show()
-        else:
-            self.pandas_viewer.hide()
+        self.pandas_viewer.show()
 
     def update_pandas_view(self):
-        path, fname = os.path.split(self.tracker.base_filename)
-        fname = path + '/_temp/' + fname +'_temp.hdf5'
-        self.pandas_viewer.update_file(fname, self.frame_selector.value())
+        try:            
+            self.pandas_viewer.update_file(self.frame_selector.value())
+        except:
+            print("file not found")
     
+
     def setup_edit_pandas_viewer(self):
         if hasattr(self, 'edit_pandas_viewer'):
             self.edit_pandas_viewer.close()
             self.edit_pandas_viewer.deleteLater()
-        self.edit_pandas_viewer = PandasWidget(parent=self, edit=True)
-        
-    def edit_pandas_button_click(self):
-        if self.edit_pandas_button.isChecked():
-            self.edit_pandas_viewer.show()
-        else:
-            self.edit_pandas_viewer.hide()
-    
-    def update_edit_pandas_view(self):
-        path, fname = os.path.split(self.tracker.base_filename)
-        fname = path + '/_temp/' + fname +'_temp.hdf5'
-        self.edit_pandas_viewer.update_file_editable(fname, self.frame_selector.value())
+        self.edit_pandas_viewer = PandasWidget(parent=self, edit=True, data=self.tracker.data)
+        self.edit_pandas_viewer.model.dataChanged.connect(self.update_edit_pandas_frame)
+        self.update_edit_pandas_view()
 
-        #path, fname = os.path.split(self.tracker.base_filename)
-        #locked_id = CustomButton.locked_part
-        #fname = path + '/_temp/' + fname + CustomButton.extension[locked_id]
+    def edit_pandas_button_click(self):
+        self.edit_pandas_viewer.show()
+        
+    def update_edit_pandas_view(self):
+        try:
+            self.edit_pandas_viewer.update_file_editable(self.frame_selector.value())
+        except:
+            print("File not available")
 
       
     def snapshot_button_click(self):

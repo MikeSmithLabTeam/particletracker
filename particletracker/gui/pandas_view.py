@@ -5,34 +5,11 @@ import numpy as np
 from PyQt6 import QtCore, QtWidgets, QtGui
 from PyQt6.QtCore import Qt
 
+
 from ..customexceptions import *
+from ..gui.menubar import CustomButton
 
-
-class pandasModel_read(QtCore.QAbstractTableModel):
-
-    def __init__(self, data):
-        QtCore.QAbstractTableModel.__init__(self)
-        self._data = data
-
-    def rowCount(self, parent=None):
-        return self._data.shape[0]
-
-    def columnCount(self, parent=None):
-        return self._data.shape[1]
-
-    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-        if index.isValid():
-            if role == Qt.ItemDataRole.DisplayRole:
-                return str(self._data.iloc[index.row(), index.column()])
-        return None
-
-    def headerData(self, col, orientation, role):
-        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            return self._data.columns[col]
-        return None
-
-
-class pandasModel_edit(QtCore.QAbstractTableModel):
+class pandasModel(QtCore.QAbstractTableModel):
 
     def __init__(self, data):
         QtCore.QAbstractTableModel.__init__(self)
@@ -50,35 +27,45 @@ class pandasModel_edit(QtCore.QAbstractTableModel):
                 return str(self._data.iloc[index.row(), index.column()])
         return None
 
-    def setData(self, index, value, role):
-        if role == Qt.ItemDataRole.EditRole:
-            if value == str(0): #deal with zero error
-                value = np.float64(0)
-            self._data.iloc[index.row(), index.column()] = np.float64(value) #set new values
-
-            return True
-        return False
-
     def headerData(self, col, orientation, role):
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self._data.columns[col]
         return None
     
+class pandasModel_edit(pandasModel):
+    def __init__(self, data):
+        super(pandasModel_edit,self).__init__(data)
+        
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if index.isValid():
+            if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.EditRole:
+                return str(self._data.iloc[index.row(), index.column()])
+        return None
+
+    def setData(self, index, value, role):
+        if role == Qt.ItemDataRole.EditRole:
+            if value == str(0): #deal with zero error
+                value = np.float64(0)
+            self._data.iloc[index.row(), index.column()] = np.float64(value) #set new values
+            return True
+        return False
+
     def flags(self, index):
         return Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsEditable
     
 
 class PandasWidget(QtWidgets.QDialog):
-    def __init__(self, parent=None, edit=False):
+    def __init__(self, parent=None, edit=False, data=None):
         QtWidgets.QWidget.__init__(self, parent)
         self.parent = parent
         self.edit = edit #set edit flag i.e edit or read-only.
-
+        self.data = data    
+        self.frame = None
 
         if self.edit == False:    #read only dataframe viewer
             self.view = QtWidgets.QTableView()
-            model = pandasModel_read(pd.DataFrame())
-            self.view.setModel(model)
+            self.model = pandasModel(pd.DataFrame())
+            self.view.setModel(self.model)
             lay = QtWidgets.QVBoxLayout()
             lay.addWidget(self.view)
             button_layout = QtWidgets.QHBoxLayout()
@@ -93,10 +80,10 @@ class PandasWidget(QtWidgets.QDialog):
             save_to_csv_button.clicked.connect(self.save_button_clicked)
 
 
-        if self.edit == True:    #editable dataframe viewer
+        elif self.edit == True:    #editable dataframe viewer
             self.view = QtWidgets.QTableView()
-            model = pandasModel_edit(pd.DataFrame())
-            self.view.setModel(model)
+            self.model = pandasModel_edit(pd.DataFrame())
+            self.view.setModel(self.model)
             lay = QtWidgets.QVBoxLayout()
             lay.addWidget(self.view)
             button_layout = QtWidgets.QHBoxLayout()
@@ -113,10 +100,8 @@ class PandasWidget(QtWidgets.QDialog):
 
             add_row_button.clicked.connect(self.add_row_clicked)
             delete_row_button.clicked.connect(self.delete_row_clicked)
-            save_button.clicked.connect(self.save_button_clicked)
+            save_button.clicked.connect(lambda x : self._store_changes(write=True))
             reset_button.clicked.connect(self.reset_button_clicked)
-        
-
 
         lay.addLayout(button_layout)
         self.setLayout(lay)
@@ -145,7 +130,7 @@ class PandasWidget(QtWidgets.QDialog):
     def close_button_clicked(self):
         self.hide()
         self.parent.pandas_button.setChecked(False)
-        
+
     def save_button_clicked(self):
         directory = os.path.split(self.filename)[0]
         name, _ = QtWidgets.QFileDialog.getSaveFileName(
@@ -156,7 +141,7 @@ class PandasWidget(QtWidgets.QDialog):
         options=QtWidgets.QFileDialog.Option.DontUseNativeDialog)
         name = name.split('.')[0]+'.csv'
         self.df.to_csv(name)
-    
+
     def message_box(self, msg_string):
         """
         Displays message pop up. Takes message string to be displayed as input.
@@ -174,16 +159,22 @@ class PandasWidget(QtWidgets.QDialog):
         
         index = self.view.currentIndex()
         row_idx = index.row()
+
+        lock_index = CustomButton.locked_part        
+        store = self.data._stores[lock_index]
+        _original = store.full
+        store.full = True
+
         if row_idx == -1:
             msg = "No row selected."
             self.message_box(msg)
         else:
             new_item = pd.DataFrame(self.df.iloc[[row_idx]])
             self.df = pd.concat([self.df, new_item], ignore_index=True).sort_values("particle")
-            model = pandasModel_edit(self.df)
-            self.view.setModel(model)
-            self.view.selectRow(row_idx)
-            self.write_to_file()
+
+        self.model = pandasModel_edit(self.df)
+        self.view.setModel(self.model)
+        self.view.selectRow(row_idx)
 
     def delete_row_clicked(self):
         """
@@ -198,74 +189,94 @@ class PandasWidget(QtWidgets.QDialog):
             msg = "No row selected"
             self.message_box(msg)
         else:
-            self.df = self.df.drop([row_idx])
-            self.df = self.df.reset_index(drop=True)
-            model = pandasModel_edit(self.df)
-            self.view.setModel(model)
-            self.write_to_file()
-    
+            drop_label = self.df.iloc[row_idx]["particle"]
+            self.df = self.df.set_index("particle")
+            self.df = self.df.drop([drop_label]).sort_values("particle")
+            self.df = self.df.reset_index()
+            self.model = pandasModel_edit(self.df)
+            self.view.setModel(self.model)
+
     def reset_button_clicked(self):
         """
         Reverts changes made to the dataframe. Loads a copy of the original dataframe loaded 
         by the user.
         """
-        self.update_file_editable("data_temp.hdf5", 1)
+        self.data._stores[CustomButton.locked_part].reload()
+        self.update_file_editable(self.frame)
         self.message_box("Changes reverted")
 
-    def write_to_file(self):
+    def _store_changes(self, write=False):
         """
-        Writes dataframe displayed in the window to a .hdf5 file
+        Stores changes to the DataRead store. These changes are reversible.
         """
-        try:
-            self.df.to_hdf("testdata.hdf5", key="data", mode="w")
-        except Exception as e:
-            self.df = pd.DataFrame()
-            raise PandasViewError(e)
+        lock_index = CustomButton.locked_part        
+        store = self.data._stores[lock_index]
+        _original = store.full
+        store.full = True        
+        self.df.set_index(np.ones(self.df.shape[0]) * self.frame, inplace=True)
+        self.df.index.name = 'frame'
+        store._active_df
+        store._df.drop(index=self.frame, inplace=True)
+        store._df = pd.concat([self.df, store._df], sort=True)
+ 
 
-    def update_file(self, filename, frame):
-        self.filename = filename
+        if write:
+            print('writing to file')
+            store._df.to_hdf(store.read_filename, key="data")
+        
+        store.full = _original
+      
+
+    def update_file(self, frame):
         try:
-            df = pd.read_hdf(filename)
-            if "frame" in df.columns:
-                df2 = df[df.index == frame]
-            else:
-                df2 = df.reset_index()
+            self.frame=frame
+            store = self.data.post_store
+            _original = store.full
+            store.full=False
+            df2 = store.get_data(f_index=frame)
+            self.data.post_store.full=_original
+            self.df=df2
         except Exception as e:
             self.df = pd.DataFrame()
             raise PandasViewError(e)
         
-        self.df = df2
-        model = pandasModel_read(df2)
-        self.view.setModel(model)
+        self.model = pandasModel(self.df)
+        self.view.setModel(self.model)
 
-    def update_file_editable(self, filename, frame):
+    def update_file_editable(self, frame):
         """
         Reads in dataframe from .hdf5 file and sorts dataframe based on particle number.
         Saves copy of the dataframe as a temp .hdf5 file. Selects section of dataframe
         corresponding to selected frame number. Then sets the model to be used by the
         QAbstractTabelModel() class in the GUI window.
         """
+        try:
+            self._store_changes() #stores any previous changes to the df.
+        except:
+            print("No data to store.")
+        
+        lock_index = CustomButton.locked_part
+        if lock_index == -1:
+            df2=pd.DataFrame()
+        else:
+            if lock_index == 0:
+                self.data.track_store
+            elif lock_index == 1:
+                self.data.link_store
+            elif lock_index == 2:
+                self.data.post_store
 
-        self.filename = filename
-        try: 
-
-            df = pd.read_hdf(filename)
-            if "particle" in df.columns:
-                df = df.sort_values("particle")
-
-            if os.path.exists("data_temp.hdf5") == False:
-                df.to_hdf("data_temp.hdf5", key="data", mode="w")
-
-            if "frame" in df.columns:
-                df2 = df[df["frame"] == frame]
-            else:
-                df2 = df
-        except Exception as e:
-            self.df = pd.DataFrame()
-            raise PandasViewError(e)
-
+            store = self.data._stores[lock_index]
+            _original = store.full
+            store.full=True
+            df2 = store.get_data(f_index=frame)
+            if 'particle' not in df2.columns:
+                num_particles = np.shape(df2)[0]
+                df2['particle']=np.linspace(0,num_particles-1, num=num_particles).astype(int)
+            store.full = _original
+        
         self.df = df2
-        model = pandasModel_edit(df2)
-        self.view.setModel(model)
+        self.model = pandasModel_edit(self.df)
+        self.view.setModel(self.model)
 
 

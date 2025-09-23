@@ -117,7 +117,7 @@ class DataRead:
                 self._load()
             return self._df
         else:
-            self._load_temp()
+            self.load_temp()
             return self._temp_df
 
     def _load(self):
@@ -131,7 +131,7 @@ class DataRead:
             print(f'Error loading read file: {e}')
             self._df = pd.DataFrame()  # Create empty DataFrame on error
 
-    def _load_temp(self):
+    def load_temp(self):
         """Load data from temporary file"""
         try:
             self._temp_df = pd.read_hdf(self.temp_filename, key='data')
@@ -140,6 +140,7 @@ class DataRead:
         except Exception as e:
             print(f'Error loading temp file: {e}')
             self._temp_df = pd.DataFrame()  # Create empty DataFrame on error
+        return self._temp_df
 
     def reload(self):
         # Data is lazy loaded this is just setting the _df and _temp_df back to None
@@ -172,17 +173,19 @@ class DataRead:
 
         # Get frame index from modified data
         frame_idx = modified_df.index[0]
-
+        
         df = self._active_df
-
         # Add new columns with NaN values
         new_cols = modified_df.columns.difference(df.columns)
+        
         #for col in new_cols:
         #    df[col] = np.nan
         for col in new_cols:
             df[col] = pd.Series(dtype=modified_df[col].dtype)
+        
         # Update the specific frame with new values
         mask = df.index == frame_idx
+        
         for col in modified_df.columns:
             df.loc[mask, col] = modified_df[col].values.squeeze()
         
@@ -202,6 +205,7 @@ class DataRead:
         pd.DataFrame
             Single frame data
         """
+    
         active_df = self._active_df
         if active_df is None:
             return pd.DataFrame()

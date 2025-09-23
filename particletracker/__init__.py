@@ -8,7 +8,7 @@ from particletracker.project import PTWorkflow
 from particletracker.gui.main_gui import MainWindow
 
 
-
+import time
 
 
 def track_gui(movie_filename=None, settings_filename=None):
@@ -29,6 +29,7 @@ def track_gui(movie_filename=None, settings_filename=None):
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
     app = QApplication(sys.argv)
+    
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 
@@ -36,12 +37,13 @@ def track_gui(movie_filename=None, settings_filename=None):
         app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     
     screen_size = app.primaryScreen().size()
-
+    
     window = MainWindow(
         movie_filename=movie_filename,
         settings_filename=settings_filename, screen_size=screen_size)
     window.show()
     #Start event loop
+    
     app.exec()
 
 

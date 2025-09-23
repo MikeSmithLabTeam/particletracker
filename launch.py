@@ -6,7 +6,7 @@ import os
 if __name__ == '__main__':
     userprofile = os.environ['USERPROFILE']
     path = userprofile + \
-        "\\OneDrive - The University of Nottingham\\Documents\\Programming\\particletracker\\testdata\\"
+        "\\OneDrive - The University of Nottingham\\PhD\\coding\\test\\particletracker\\testdata\\"
     
     track_gui(path + "hydrogel.mp4",settings_filename=path +"hydrogel.param")
     
