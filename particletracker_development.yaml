@@ -18,7 +18,6 @@ dependencies:
   - pip
   - pip:
     - git+https://github.com/mikesmithlabteam/labvision
-    - git+https://github.com/mikesmithlabteam/qtwidgets
-    - git+https://github.com/mikesmithlabteam/filehandling
+
 
   
