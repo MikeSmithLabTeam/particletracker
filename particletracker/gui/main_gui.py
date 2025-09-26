@@ -510,12 +510,11 @@ class MainWindow(QMainWindow):
     def handle_error(self, error):
         flash_error_msg(error, self)
     
-
-    @pyqtSlot(QModelIndex, QModelIndex)
-    def update_edit_pandas_frame(self):
-        print('Slot firing')
-        self.edit_pandas_viewer._store_changes()
-        self.update_edit_pandas_view()
+    
+    @pyqtSlot()
+    def update_edit_pandas(self):
+        print('update_edit_pandas firing')
+        self.update_viewer()
 
     """------------------------------------------------------
     Various methods to update sections of the program.
@@ -577,7 +576,10 @@ class MainWindow(QMainWindow):
             
 
             frame_number = self.frame_selector.value()
-            
+            try:
+                print('update_viewer', self.tracker.data.track_store._df)
+            except:
+                pass
             annotated_img, proc_img = self.tracker.process(f_index=frame_number, lock_part=CustomButton.locked_part)
 
             toggle = self.toggle_img.isChecked()
@@ -658,13 +660,13 @@ class MainWindow(QMainWindow):
             self.edit_pandas_viewer.close()
             self.edit_pandas_viewer.deleteLater()
         self.edit_pandas_viewer = PandasWidget(parent=self, edit=True, data=self.tracker.data)
-        self.edit_pandas_viewer.model.dataChanged.connect(self.update_edit_pandas_frame)
+        self.edit_pandas_viewer.data_updated_signal.connect(self.update_edit_pandas)
         self.update_edit_pandas_view()
 
     def edit_pandas_button_click(self):
         self.update_edit_pandas_view()
         self.edit_pandas_viewer.show()
-        
+    
     def update_edit_pandas_view(self):
         try:
             self.edit_pandas_viewer.update_file_editable(self.frame_selector.value())
