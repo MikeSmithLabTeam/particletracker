@@ -83,10 +83,10 @@ class MainWindow(QMainWindow):
                 self.setStatusBar(None)
                 self.status_bar.deleteLater()
 
-      
         #Create the key behind the scenes object
         self.open_tracker()
-        
+
+
         #Basic structural organising elements
         self.setWindowTitle("Particle Tracker")
         self.main_panel = QWidget()
@@ -643,6 +643,7 @@ class MainWindow(QMainWindow):
         self.update_pandas_view()
 
     def pandas_button_click(self):
+        self.update_pandas_view()
         self.pandas_viewer.show()
 
     def update_pandas_view(self):
@@ -661,6 +662,7 @@ class MainWindow(QMainWindow):
         self.update_edit_pandas_view()
 
     def edit_pandas_button_click(self):
+        self.update_edit_pandas_view()
         self.edit_pandas_viewer.show()
         
     def update_edit_pandas_view(self):
@@ -694,7 +696,7 @@ class MainWindow(QMainWindow):
 
     def update_lock(self):
         self.tracker.parameters['config']['_locked_part'] = CustomButton.locked_part
-        self.tracker.data.clear_caches()
+        self.tracker.data.clear_data()
         self.update_viewer()
         self.update_pandas_view()
         self.update_edit_pandas_view()

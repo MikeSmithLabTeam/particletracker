@@ -98,6 +98,7 @@ class PTWorkflow:
         through preprocessor, tracker, linker, postprocessor and annotator. However, if you process the whole
         then the preprocessor is called from within tracker. All frames are tracked and then all frames are linked etc.
         """
+        
         if not os.path.exists(self.temp_folder):
             os.mkdir(self.temp_folder)
 
@@ -113,11 +114,14 @@ class PTWorkflow:
 
             if lock_part < 0:
                 self.pt.track(f_index=f_index)
+
             if lock_part < 1:
                 self.link.link_trajectories(
                     f_index=f_index, lock_part=lock_part)
+
             if lock_part < 2:
                 self.pp.process(f_index=f_index, lock_part=lock_part)
+
             if lock_part < 3:
                 annotated_frame = self.an.annotate(
                     f_index=f_index, lock_part=lock_part)

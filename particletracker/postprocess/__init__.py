@@ -9,6 +9,7 @@ from ..postprocess import postprocessing_methods as pm
 
 class PostProcessor:
     def __init__(self, parameters=None, data=None):
+        self.data=data
         self.link_store = data.link_store
         self.parameters = parameters      
 
@@ -22,10 +23,16 @@ class PostProcessor:
         previously created through processing all the data. Decorator on the postprocessing functions determines whether a single frame or range of frame data is sent to postprocessing function. Single frame data output to _temp.hdf5.
         4) Processing the entire movie or range of frames with or without locking of linking stage. Data output to _postprocess.hdf5     
         """
-        #Set output_filename
+
         print('Postprocessing...')
+        assert lock_part < 2, 'PTWorkflow.process logic should guarantee this'
+
+        _original = self.link_store.full
+
+        #Set output_filename
         if f_index is None:
             output_filename = self.link_store.output_filename
+            self.link_store.clear_data()
         else:
             output_filename = self.link_store.temp_filename
         
@@ -39,7 +46,7 @@ class PostProcessor:
         if f_index is None:
             # processing whole thing
             start, stop, step = self.parameters['config']['_frame_range']
-            df = self.link_store.get_data()
+            df = self.link_store.get_df()
             if df.empty:
                 raise ValueError("No data found in link store")
             max_frame = df.index.max()
@@ -57,11 +64,11 @@ class PostProcessor:
         """This block either copies across the data if no postprocessing methods (if block) or the line in the else block containing getattr(pm, method_name() says call the method in postprocessing_methods.py with the name method_name and pass the parameters to it. Take the return value and add it to the postprocessing store.
         See intro to postprocessing to understand how parameters and full dataframe are parsed by each function.
         """ 
-        self.link_store.reload()         
+         
         with DataWrite(output_filename) as store:
             if not self.parameters['postprocess']['postprocess_method']:
                 #No methods selected copy data across
-                store.write_data(self.link_store.get_data(f_index=f_index))
+                store.write_data(self.link_store.get_df(f_index=f_index))
             else:
                 for f in tqdm(range(start, stop, step), 'Postprocessing'):
                     combined_modified_df = None
@@ -79,10 +86,13 @@ class PostProcessor:
                                 combined_modified_df = combined_modified_df.merge(modified_df, on=['particle', 'frame'], how='outer')
 
                     if combined_modified_df is not None:
-                        self.link_store.combine_data(combined_modified_df)
+                        self.link_store.combine_data(modified_df=combined_modified_df)
 
                     # Finally, write the data for the current frame
-                    store.write_data(self.link_store.get_data(f_index=f), f_index=f)
+                    store.write_data(self.link_store.get_df(f_index=f), f_index=f)
+        
+        self.link_store.full=_original
+
         print('Postprocessing complete')
 
                                         

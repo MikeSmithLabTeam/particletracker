@@ -21,13 +21,13 @@ class DataManager:
 
     def update_lock(self, lock_part=-1):
         DataRead.lock_part = lock_part
-        self.clear_caches()
+        self.clear_data()
 
     @property
     def track_store(self):
         """Lazy loading of tracking data"""
-        if self._stores[0] is None:
-            self._stores[0] = DataRead(
+        #if self._stores[0] is None:
+        self._stores[0] = DataRead(
                 f"{self.base_filename}_track.hdf5",
                 self.temp_filename,
                 output_filename=f"{self.base_filename}_link.hdf5",
@@ -39,8 +39,8 @@ class DataManager:
     @property
     def link_store(self):
         """Lazy loading of tracking data"""
-        if self._stores[1] is None:
-            self._stores[1] = DataRead(
+        #if self._stores[1] is None:
+        self._stores[1] = DataRead(
                 f"{self.base_filename}_link.hdf5",
                 self.temp_filename,
                 output_filename=f"{self.base_filename}_postprocess.hdf5",
@@ -50,21 +50,21 @@ class DataManager:
     @property
     def post_store(self):
         """Lazy loading of tracking data"""
-        if self._stores[2] is None:
-            self._stores[2] = DataRead(
+        #if self._stores[2] is None:
+        self._stores[2] = DataRead(
                 f"{self.base_filename}_postprocess.hdf5",
                 self.temp_filename,
                 output_filename=None,
                 store_index=2)
         return self._stores[2]
 
-    def clear_caches(self):
+    def clear_data(self):
         """Clear all data caches"""
         for idx, store in enumerate(self._stores):
             if idx > DataRead.lock_part:
                 if store is not None:
-                    store._clear_cache()
-                    self._stores[idx] = None
+                    store.clear_data()
+                    #self._stores[idx] = None
 
 
 class DataRead:
@@ -92,95 +92,80 @@ class DataRead:
         self.store_index = store_index
         self._df = None
         self._temp_df = None
-        self._use_full = False
-        self._clear_cache()
+        self.full=False
 
     @property
-    def full(self):
-        """Whether to use full dataset or temporary data"""
-        return self._use_full or self.store_index == DataRead.lock_part
-
-    @full.setter
-    def full(self, value):
-        """Set whether to use full dataset
-
-        Value : bool indicates whether to use full or temp dataset
-        """
-        self._use_full = value
-        #self._clear_cache()  # Clear cache when switching modes
+    def df(self):
+        """Returns full dataframe. Loads lazily."""
+        if self._df is None:
+            self._df = self._load(self._df, full=True)
+        return self._df
 
     @property
-    def _active_df(self):
-        """Returns reference to active dataframe based on full property"""
-        if self.full:
-            if self._df is None:
-                self._load()
-                print(f'returning full dataframe from {self.lock_part}' )
-            return self._df
-        else:
-            self.load_temp()
-            return self._temp_df
-
-    def _load(self):
-        """Lazy load DataFrame from read_filename"""
-        try:
-            if self._df is None:
-                self._df = pd.read_hdf(self.read_filename, key='data')
-            if not self._df.index.is_monotonic_increasing:
-                self._df.sort_index(inplace=True)
-        except Exception as e:
-            print(f'Error loading read file: {e}')
-            self._df = pd.DataFrame()  # Create empty DataFrame on error
-
-    def load_temp(self):
-        """Load data from temporary file"""
-        try:
-            self._temp_df = pd.read_hdf(self.temp_filename, key='data')
-            if not self._temp_df.index.is_monotonic_increasing:
-                self._temp_df.sort_index(inplace=True)
-        except Exception as e:
-            print(f'Error loading temp file: {e}')
-            self._temp_df = pd.DataFrame()  # Create empty DataFrame on error
+    def temp_df(self):
+        """Returns temporary dataframe. Loads lazily"""
+        self._temp_df = self._load(self._temp_df, full=False)
         return self._temp_df
 
-    def reload(self):
-        # Data is lazy loaded this is just setting the _df and _temp_df back to None
-        self._clear_cache()
-
-    def get_data(self, f_index=None):
-        """
-        Get data from the dataset with caching for single frames and lazy loading.
+    def _load(self, df, full=False):
+        """internal loading method"""
+        try:
+            if full:
+                df = pd.read_hdf(self.read_filename, key='data')
+            else:
+                df = pd.read_hdf(self.temp_filename, key='data')
+            if not df.index.is_monotonic_increasing:
+                df.sort_index(inplace=True)
+            return df  
+        except Exception as e:
+            print(f'Error loading file: {e}')
+            return pd.DataFrame()
+    
+    def get_df(self, f_index=None):
+        """Returns single or whole frame from the whole dataframe in _df.
 
         Parameters
         ----------
-        f_index : int, optional
-            If provided, returns single frame data (using cache)
-            If None, returns entire DataFrame
-
+        f_index : int        
 
         Returns
         -------
         pd.DataFrame
-            Requested data
         """
-        if f_index is None:
-            return self._active_df
-        return self._get_frame(f_index)
+        if not self.full:
+            return self.temp_df
+        else:
+            df=self.df
+            if f_index is None:
+                return df
+            else:
+                try:
+                    frame_data = df.loc[f_index]
+                    if isinstance(frame_data, pd.Series):
+                        # If only one row, convert to DataFrame
+                        frame_data = frame_data.to_frame().T
+                except KeyError:
+                    frame_data = df.iloc[0:0]
+                    print(f'Frame {f_index} not found in data')
+                return frame_data
+
+    def clear_data(self):
+        self._df = None
+        self._temp_df = None
 
     @error_with_hint("HINT: this often happens if you try to use a method in gui that requires previous stage to be locked. You can still process the entire movie.")
     def combine_data(self, modified_df=None):
-        if modified_df is None:
-            return
-
         # Get frame index from modified data
         frame_idx = modified_df.index[0]
         
-        df = self._active_df
+        if self.full:
+            df = self.df
+        else:
+            df = self.temp_df
+
         # Add new columns with NaN values
         new_cols = modified_df.columns.difference(df.columns)
         
-        #for col in new_cols:
-        #    df[col] = np.nan
         for col in new_cols:
             df[col] = pd.Series(dtype=modified_df[col].dtype)
         
@@ -190,42 +175,8 @@ class DataRead:
         for col in modified_df.columns:
             df.loc[mask, col] = modified_df[col].values.squeeze()
         
-
-    @lru_cache(maxsize=1)
-    def _get_frame(self, f_index):
-        """
-        Cached access for single frame retrieval
-
-        Parameters
-        ----------
-        f_index : int
-            Frame number to retrieve
-
-        Returns
-        -------
-        pd.DataFrame
-            Single frame data
-        """
-    
-        active_df = self._active_df
-        if active_df is None:
-            return pd.DataFrame()
-
-        try:
-            frame_data = self._active_df.loc[f_index]
-            if isinstance(frame_data, pd.Series):
-                # If only one row, convert to DataFrame
-                frame_data = frame_data.to_frame().T
-        except KeyError:
-            frame_data = self._active_df.iloc[0:0]
-            print(f'Frame {f_index} not found in data')
-        return frame_data.copy()
-
-    def _clear_cache(self):
-        """Clear the frame reading cache"""
-        self._get_frame.cache_clear()
-        self._df = None
-        self._temp_df = None
+        return df
+        
 
 
 def df_single(func):
@@ -233,7 +184,7 @@ def df_single(func):
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
         store = args[0]
-        new_args = (store.get_data(f_index=kwargs['f_index']),) + args[1:]
+        new_args = (store.get_df(f_index=kwargs['f_index']),) + args[1:]
         return func(*new_args, **kwargs)
     return wrapper_param_format
 
@@ -246,7 +197,8 @@ def df_range(func):
         f_index = kwargs['f_index']
         parameters = kwargs['parameters']
 
-        df = store.get_data(f_index=None)
+        #Get the whole dataframe
+        df = store.get_df(f_index=None)
 
         if 'output_name' in parameters.keys():
             output_name = parameters['output_name']

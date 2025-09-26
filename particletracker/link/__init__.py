@@ -18,36 +18,44 @@ class LinkTrajectory:
     def link_trajectories(self, f_index=None, lock_part=-1):
         print('Linking...')
         """Implements the trackpy functions link_df and filter_stubs"""
-        if lock_part < 1:
-            if f_index is None:
-                # processing whole thing
-                output_filename = self.track_store.output_filename
-                self.track_store.full = True
+        _original = self.track_store.full
+
+        assert lock_part < 1, 'PTWorkflow.process logic should guarantee this'
+        # 3 cases:
+        if f_index is None:
+            # lock_part == -1 and f_index is None
+            # Tracking processes whole movie. If f_index is None linking operates
+            # on whole movie.
+            output_filename = self.track_store.output_filename
+            self.track_store.full = True
+            self.track_store.clear_data()
+        else:
+            #process single frame f_index
+            output_filename = self.track_store.temp_filename   
+            if lock_part == -1:
+                #Tracking only operates on one frame producing _temp.hdf5, Linking reads from this temporary file
+                self.track_store.full=False
             else:
-                #process single frame
-                output_filename = self.track_store.temp_filename   
-                if lock_part == -1:
-                    #This reads the tracking from _temp.hdf5, created when the gui processes a single frame
-                    self.track_store.full=False
-                else:
-                    #Processing whole movie or having lock_part==0
-                    self.track_store.full=True
+                #If lock_part == 0 The tracking data on whole movie is stored in a file _track.hdf5 created previously. We only want to operate on one frame of this. You load full tracking data and then grab a single frame process it and store result in a temporary file.
+                self.track_store.full=True
 
-            df = self.track_store.get_data(f_index=f_index)
+        df = self.track_store.get_df(f_index=f_index)
 
-            if df is not None and df.isna().all().all():
-                #If it is an empty dataframe copy to _link.hdf5 file
-                df=df
-            elif (f_index is None) and ('default' in self.parameters['link']['link_method']):#
-                #Default trackpy linking method only used when processing whole movie.
-                df = default(df, self.parameters['link']['default'])
-            else:
-                #no linking - this takes place when analysing temp single frames or as an option on the whole movie.
-                df = no_linking(self.track_store.get_data(f_index=f_index))
+        if df is not None and df.isna().all().all():
+            #If it is an empty dataframe copy to _link.hdf5 file
+            df=df
+        elif (f_index is None) and ('default' in self.parameters['link']['link_method']):#
+            #Default trackpy linking method only used when processing whole movie.
+            df = default(df, self.parameters['link']['default'])
+        else:
+            #no linking - this takes place when analysing temp single frames or as an option on the whole movie.
+            df = no_linking(self.track_store.get_df(f_index=f_index))
 
-            with DataWrite(output_filename) as store:
-                store.write_data(df)
+        with DataWrite(output_filename) as store:
+            store.write_data(df)
         
+        #reset datastore state
+        self.track_store.full = _original
         print('Linking Complete')
  
 

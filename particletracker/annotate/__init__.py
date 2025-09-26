@@ -13,11 +13,13 @@ class TrackingAnnotator:
     def __init__(self, parameters=None, vidobject=None, data=None,frame=None, framerate=50):
         self.parameters = parameters
         self.cap = vidobject
+        self.data=data
         self.pp_store = data.post_store
         self.output_filename = self.cap.filename[:-4] + '_annotate.mp4'
 
     def annotate(self, f_index=None, lock_part=-1):  
         print("Annotating...") 
+        _original = self.pp_store.full
         video_output = get_param_val(self.parameters['config']['video_output']['output'])
         
         #If no movie is requested and processing whole then return nothing
@@ -28,7 +30,7 @@ class TrackingAnnotator:
         if f_index is None and video_output:
             scale= get_param_val(self.parameters['config']['video_output']['scale'])
             output_vid=WriteVideo(self.output_filename, frame=self.cap.read_frame(n=0), scale=scale)
-            self.pp_store.reload()
+            self.pp_store.clear_data()
 
         #whole movie
         if f_index is None:
@@ -44,7 +46,6 @@ class TrackingAnnotator:
             self.pp_store.full= (lock_part==2)
             if lock_part==2:
                 create_temp_hdf(self.pp_store, f_index)
-
 
             # When lock_part is changed the full dataframe associated with the link data is reloaded.
 
@@ -63,6 +64,9 @@ class TrackingAnnotator:
             if f_index is None and video_output:
                 output_vid.add_frame(frame)
         
+        #reset store state
+        self.pp_store.full = _original
+
         # close movie or return annotated frame
         if f_index is None and video_output:
             output_vid.close()
@@ -70,8 +74,6 @@ class TrackingAnnotator:
         else:
             return frame
 
-
-
 def create_temp_hdf(pp_store, f_index):
-    df = pp_store.get_data(f_index=f_index)
+    df = pp_store.get_df(f_index=f_index)
     df.to_hdf(pp_store.temp_filename, key='data')

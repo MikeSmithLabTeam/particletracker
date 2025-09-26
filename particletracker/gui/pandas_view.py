@@ -47,6 +47,9 @@ class pandasModel_edit(pandasModel):
             if value == str(0): #deal with zero error
                 value = np.float64(0)
             self._data.iloc[index.row(), index.column()] = np.float64(value) #set new values
+
+            # Emit the dataChanged signal
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole])
             return True
         return False
 
@@ -62,25 +65,7 @@ class PandasWidget(QtWidgets.QDialog):
         self.data = data    
         self.frame = None
 
-        if self.edit == False:    #read only dataframe viewer
-            self.view = QtWidgets.QTableView()
-            self.model = pandasModel(pd.DataFrame())
-            self.view.setModel(self.model)
-            lay = QtWidgets.QVBoxLayout()
-            lay.addWidget(self.view)
-            button_layout = QtWidgets.QHBoxLayout()
-            
-            close_button = QtWidgets.QPushButton("Close", self)
-            save_to_csv_button = QtWidgets.QPushButton("Save", self)
-
-            button_layout.addWidget(close_button)
-            button_layout.addWidget(save_to_csv_button)
-
-            close_button.clicked.connect(self.close_button_clicked)
-            save_to_csv_button.clicked.connect(self.save_button_clicked)
-
-
-        elif self.edit == True:    #editable dataframe viewer
+        if self.edit:    #editable dataframe viewer
             self.view = QtWidgets.QTableView()
             self.model = pandasModel_edit(pd.DataFrame())
             self.view.setModel(self.model)
@@ -98,15 +83,34 @@ class PandasWidget(QtWidgets.QDialog):
             button_layout.addWidget(save_button)
             button_layout.addWidget(reset_button)
 
+            # Connect signals
+            self.model.dataChanged.connect(lambda: self.update_file_editable(self.frame))
             add_row_button.clicked.connect(self.add_row_clicked)
             delete_row_button.clicked.connect(self.delete_row_clicked)
             save_button.clicked.connect(lambda x : self._store_changes(write=True))
             reset_button.clicked.connect(self.reset_button_clicked)
+        
+        else:    #read only dataframe viewer
+            self.view = QtWidgets.QTableView()
+            self.model = pandasModel(pd.DataFrame())
+            self.view.setModel(self.model)
+            lay = QtWidgets.QVBoxLayout()
+            lay.addWidget(self.view)
+            button_layout = QtWidgets.QHBoxLayout()
+            
+            close_button = QtWidgets.QPushButton("Close", self)
+            save_to_csv_button = QtWidgets.QPushButton("Save", self)
+
+            button_layout.addWidget(close_button)
+            button_layout.addWidget(save_to_csv_button)
+
+            close_button.clicked.connect(self.close_button_clicked)
+            save_to_csv_button.clicked.connect(self.save_button_clicked)
 
         lay.addLayout(button_layout)
         self.setLayout(lay)
         self.view.show()
-        self.setWindowTitle('df')
+        self.setWindowTitle(f'df - frame')
 
         # Get screen size using QScreen
         screen = self.screen()
@@ -156,7 +160,12 @@ class PandasWidget(QtWidgets.QDialog):
         dataframe. New row is inserted below the selected row. Once row is inserted, the pandasModel is
         updated and changes are displayed in GUI. Displays message if no row is selected.
         """
-        
+        lock_index = CustomButton.locked_part   
+        store = self.data._stores[lock_index]
+
+        if store._df is None:
+            store.df
+
         index = self.view.currentIndex()
         row_idx = index.row()
 
@@ -166,13 +175,10 @@ class PandasWidget(QtWidgets.QDialog):
         else:
             new_item = pd.DataFrame(self.df.iloc[[row_idx]])
             self.df = pd.concat([self.df, new_item], ignore_index=True).sort_values("particle")
-        
 
         self.model = pandasModel_edit(self.df)
         self.view.setModel(self.model)
         self.view.selectRow(row_idx)
-        print('add_row', self.df)
-        print('df in model', self.model._data)
         self._store_changes()
 
     def delete_row_clicked(self):
@@ -181,6 +187,12 @@ class PandasWidget(QtWidgets.QDialog):
         from the dataframe, updates the pandasModel and displays changes in the GUI. Displays message if 
         no row has been selected.
         """
+        lock_index = CustomButton.locked_part   
+        store = self.data._stores[lock_index]
+
+        if store._df is None:
+            store.df
+
         index = self.view.currentIndex() 
         row_idx = index.row()
         
@@ -200,7 +212,7 @@ class PandasWidget(QtWidgets.QDialog):
         Reverts changes made to the dataframe. Loads a copy of the original dataframe loaded 
         by the user.
         """
-        self.data._stores[CustomButton.locked_part].reload()
+        self.data._stores[CustomButton.locked_part].clear_data()
         self.update_file_editable(self.frame)
         self.message_box("Changes reverted")
 
@@ -209,25 +221,22 @@ class PandasWidget(QtWidgets.QDialog):
         Stores changes to the DataRead store. These changes are reversible.
         """
         lock_index = CustomButton.locked_part   
-        print('lock', lock_index)     
         store = self.data._stores[lock_index]
                
         self.df.set_index(np.ones(self.df.shape[0]) * self.frame, inplace=True)
         self.df.index.name = 'frame'
 
-        _original = self.full
-        self.full=True
+        _original = store.full
+        store.full=True
 
-        store._active_df
-        print(store._df)
+        if store._df is None:
+            store.df
         store._df.drop(index=self.frame, inplace=True)
         store._df = pd.concat([self.df, store._df], sort=True)
-        print('self.df', self.df)
-        print('store._df', store._df)
+    
         if write:
-            print('writing to file')
             store._df.to_hdf(store.read_filename, key="data")
-        self.full=_original
+        store.full=_original
 
     def update_file(self, frame):
         try:
@@ -235,13 +244,15 @@ class PandasWidget(QtWidgets.QDialog):
             store = self.data.post_store
             _original = store.full
             store.full=False
-            df2 = store.get_data(f_index=frame)
+            df2 = store.get_df(f_index=frame)
             self.data.post_store.full=_original
             self.df=df2
+            #self.setWindowTitle(f'df - frame = {frame}')
         except Exception as e:
             self.df = pd.DataFrame()
             raise PandasViewError(e)
         
+        df2 = order_headings(df2)
         self.model = pandasModel(self.df)
         self.view.setModel(self.model)
 
@@ -252,39 +263,33 @@ class PandasWidget(QtWidgets.QDialog):
         corresponding to selected frame number. Then sets the model to be used by the
         QAbstractTabelModel() class in the GUI window.
         """
-    
-        try:
-            print("ENtering update_editable\n\n\n\n\n\n\n")
-            print('b4 store_changes', self.frame)
-
-            #self._store_changes() #stores any previous changes to the df.
-        except:
-            print("No data to store.")
-        
-        
-        self.frame = frame
-        print('self.frame', self.frame)
-        
+        self.frame = frame        
         lock_index = CustomButton.locked_part
         if lock_index == -1:
             df2=pd.DataFrame()
         else:
-            if lock_index == 0:
-                self.data.track_store
-            elif lock_index == 1:
-                self.data.link_store
-            elif lock_index == 2:
-                self.data.post_store
-
             store = self.data._stores[lock_index]
-            print('store index 0', store._df)
-            df2 = store.get_data(f_index=frame)
+            df2 = store.get_df(f_index=frame)
             if 'particle' not in df2.columns:
                 num_particles = np.shape(df2)[0]
                 df2['particle']=np.linspace(0,num_particles-1, num=num_particles).astype(int)
-                
+        
+        df2 = order_headings(df2)
         self.df = df2
         self.model = pandasModel_edit(self.df)
         self.view.setModel(self.model)
+
+def order_headings(df):
+    # Define a list of columns that should always appear first
+    fixed_order = ['particle', 'x', 'y']
+    
+    # Get all other columns and sort them alphabetically
+    other_columns = sorted([col for col in df.columns if col not in fixed_order])
+    
+    # Combine the fixed order with the other columns to create the final, consistent order
+    desired_order = fixed_order + other_columns
+    
+    # Re-index the DataFrame to enforce the desired order
+    return df.reindex(columns=desired_order, fill_value=np.nan)
 
 
