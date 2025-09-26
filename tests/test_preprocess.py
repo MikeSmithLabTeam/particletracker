@@ -1,12 +1,13 @@
-
-from labvision.images.basics import display
-import particletracker.preprocess.preprocessing_methods as pm
 import pandas as pd
 import numpy as np
 import cv2
 import os
 import sys  # import os
+import shutil
 
+from labvision.images.basics import display
+import particletracker.preprocess.preprocessing_methods as pm#
+from particletracker import batchprocess
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -55,10 +56,13 @@ def test_preprocess():
     batchprocess("testdata/colloids.mp4", "testdata/test_preprocess.param")
     output_video = "testdata/colloids_annotate.mp4"
     output_df = "testdata/colloids.hdf5"
+    temp_dir = "tests/_temp"
+
+
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video), 'Preprocessing steps errored'
-    assert int(df.loc[5, ['x']].to_numpy()[0][0]) == int(
-        33.94708869287488), df.loc[5, ['x']].to_numpy()[0][0]
+    assert int(df.loc[0, ['x']].to_numpy()[0][0]) == int(
+        33.94708869287488), df.loc[0, ['x']].to_numpy()[0][0]
     os.remove(output_video)
     os.remove(output_df)
     if os.path.exists(temp_dir):
