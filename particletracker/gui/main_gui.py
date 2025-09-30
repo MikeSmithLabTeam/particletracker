@@ -17,6 +17,7 @@ import qimage2ndarray
 import webbrowser
 from scipy import spatial
 import copy
+import pandas as pd
 
 #Our other repos
 from qtwidgets.sliders import QCustomSlider
@@ -31,6 +32,7 @@ from ..general.writeread_param_dict import write_paramdict_file
 from ..general.parameters import parse_values
 from ..general.param_file_creator import create_param_file
 from ..customexceptions import flash_error_msg
+from ..general.dataframes import DataRead
 
 from ..general.imageformat import bgr_to_rgb
 from .pandas_view import PandasWidget
@@ -86,7 +88,6 @@ class MainWindow(QMainWindow):
         #Create the key behind the scenes object
         self.open_tracker()
 
-
         #Basic structural organising elements
         self.setWindowTitle("Particle Tracker")
         self.main_panel = QWidget()
@@ -98,8 +99,10 @@ class MainWindow(QMainWindow):
         self.setup_menus_toolbar()
         self.setup_viewer(self.view_layout)# Contains image window, frame slider and spinbox.
         self.setup_settings_panel(self.settings_layout)# Contains all widgets on rhs of gui.
-        self.setup_pandas_viewer()
-        self.setup_edit_pandas_viewer()
+        self.setup_pandas_read()
+        self.pandas_read.data_updated_signal.connect(self.pandas_read_update)
+        self.setup_pandas_edit()
+        self.pandas_edit.data_updated_signal.connect(self.pandas_edit_update)
 
         #Add filled components to the main layout
         self.main_layout.addLayout(self.view_layout,3)
@@ -165,21 +168,21 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.live_update_button)
 
 
-        self.pandas_button = QAction(
+        self.pandas_read_button = QAction(
             QIcon(os.path.join(resources_dir, "view_pandas.png")),
             "Show Dataframe View", self)
-        self.pandas_button.triggered.connect(self.pandas_button_click)
-        self.pandas_button.setCheckable(False)
-        self.pandas_button.setChecked(False)
-        self.toolbar.addAction(self.pandas_button)
+        self.pandas_read_button.triggered.connect(self.pandas_read_button_click)
+        self.pandas_read_button.setCheckable(False)
+        self.pandas_read_button.setChecked(False)
+        self.toolbar.addAction(self.pandas_read_button)
 
-        self.edit_pandas_button = QAction(
+        self.pandas_edit_button = QAction(
             QIcon(os.path.join(resources_dir, "edit_pandas.png")),
             "Show Dataframe View", self)
-        self.edit_pandas_button.triggered.connect(self.edit_pandas_button_click)
-        self.edit_pandas_button.setCheckable(False)
-        self.edit_pandas_button.setChecked(False)
-        self.toolbar.addAction(self.edit_pandas_button)
+        self.pandas_edit_button.triggered.connect(self.pandas_edit_button_click)
+        self.pandas_edit_button.setCheckable(False)
+        self.pandas_edit_button.setChecked(False)
+        self.toolbar.addAction(self.pandas_edit_button)
 
         self.snapshot_button = QAction(
             QIcon(os.path.join(resources_dir, "camera.png")),
@@ -262,8 +265,8 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(close_button)
 
         self.tool_menu.addAction(self.live_update_button)
-        self.tool_menu.addAction(self.pandas_button)
-        self.tool_menu.addAction(self.edit_pandas_button)
+        self.tool_menu.addAction(self.pandas_read_button)
+        self.tool_menu.addAction(self.pandas_edit_button)
         self.tool_menu.addAction(self.snapshot_button)
 
         self.process_menu.addAction(self.cleanup)     
@@ -382,7 +385,6 @@ class MainWindow(QMainWindow):
     def open_tracker(self):
         """PTWorkFlow is the top level class that controls the entire tracking process
         """
-        
         self.tracker = PTWorkflow(video_filename=self.movie_filename, param_filename=self.settings_filename, error_reporting=self)
         if hasattr(self, 'viewer_is_setup'):
             self.reset_viewer()
@@ -410,17 +412,17 @@ class MainWindow(QMainWindow):
         output = qimage2ndarray.rgb_view(Qimg)
         print(output[int(y),int(x),:])
 
-        if self.pandas_viewer.isVisible():
-            points = self.pandas_viewer.df[['x', 'y']].values
+        if self.pandas_read.isVisible():
+            points = self.pandas_read.df[['x', 'y']].values
             tree = spatial.KDTree(points)
             dist, idx = tree.query((x, y))
-            self.pandas_viewer.view.selectRow(idx)
+            self.pandas_read.view.selectRow(idx)
         
-        if self.edit_pandas_viewer.isVisible():
-            points = self.edit_pandas_viewer.df[['x', 'y']].values
+        if self.pandas_edit.isVisible():
+            points = self.pandas_edit.df[['x', 'y']].values
             tree = spatial.KDTree(points)
             dist, idx = tree.query((x, y))
-            self.edit_pandas_viewer.view.selectRow(idx)
+            self.pandas_edit.view.selectRow(idx)
 
 
         self.timer = QTimer(self)
@@ -432,9 +434,13 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(int)
     def frame_selector_slot(self, value): 
-        print('------------------\n\n\n\n\n frame changed\n\n\n\n\n\n------------------------------------------------------')
         try:
             self.update_viewer()
+            if self.pandas_read.isVisible():
+                self.update_pandas_read()
+            if self.pandas_edit.isVisible():
+                self.update_pandas_edit()
+            
         except:
             msg=QMessageBox(self)
             msg.setText(
@@ -473,7 +479,6 @@ class MainWindow(QMainWindow):
         elif sender.meta == 'ResetMask':
             self.tracker.cap.reset()
             self.update_param_widgets('crop')
-
             self.viewer.clearImage()
 
         else:
@@ -489,6 +494,11 @@ class MainWindow(QMainWindow):
             if ('crop' in paramdict_location[1]) or ('mask' in paramdict_location[1]):
                 self.tracker.cap.set_mask()             
         self.update_viewer()
+        
+        if self.pandas_read.isVisible():
+            self.update_pandas_read()
+        if self.pandas_edit.isVisible():
+            self.update_pandas_edit()
     
 
     @pyqtSlot(tuple)
@@ -503,18 +513,27 @@ class MainWindow(QMainWindow):
         self.update_dictionary_params(location, value, 'list')
         self.update_param_widgets(sender.title)
         self.update_viewer()
-        self.update_pandas_view()
-        self.update_edit_pandas_view()
+        if self.pandas_read.isVisible():
+            self.update_pandas_read()
+        if self.pandas_edit.isVisible():
+            self.update_pandas_edit()
 
     @pyqtSlot(Exception)
     def handle_error(self, error):
         flash_error_msg(error, self)
     
     
-    @pyqtSlot()
-    def update_edit_pandas(self):
-        print('update_edit_pandas firing')
+    @pyqtSlot(int, DataRead)
+    def pandas_edit_update(self, store_index, store):
+        #Data has been changed in the Pandas View and needs to tell rest of program
+        data_manager = self.tracker.data
+        data_manager.update_store(store_index, store)
         self.update_viewer()
+        #self.update_pandas_edit()
+
+    def pandas_read_update(self):
+        #Probably superfluous
+        self.update_pandas_read()
 
     """------------------------------------------------------
     Various methods to update sections of the program.
@@ -570,16 +589,10 @@ class MainWindow(QMainWindow):
                 param_adjustor.build_widgets(title, self.tracker.parameters[title])
 
     def update_viewer(self):
-        
+        lock_index = CustomButton.locked_part           
         if self.live_update_button.isChecked():
-            
-            
-
             frame_number = self.frame_selector.value()
-            try:
-                print('update_viewer', self.tracker.data.track_store._df)
-            except:
-                pass
+
             annotated_img, proc_img = self.tracker.process(f_index=frame_number, lock_part=CustomButton.locked_part)
 
             toggle = self.toggle_img.isChecked()
@@ -588,8 +601,8 @@ class MainWindow(QMainWindow):
             else:
                 self.viewer.setImage(bgr_to_rgb(annotated_img))
               
-            self.update_pandas_view()
-            self.update_edit_pandas_view()
+            #self.update_pandas_read()
+            #self.update_pandas_edit()
                     
     def reset_viewer(self):
         self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],
@@ -597,10 +610,10 @@ class MainWindow(QMainWindow):
                                            step_=1,
                                            )
         self.movie_label.setText(self.movie_filename)
-        if hasattr(MainWindow, 'pandas_viewer'):
-            self.update_pandas_view()
-        if hasattr(MainWindow, 'edit_pandas_viewer'):
-            self.update_edit_pandas_view()
+        if hasattr(MainWindow, 'pandas_read'):
+            self.update_pandas_read()
+        if hasattr(MainWindow, 'pandas_edit'):
+            self.update_pandas_edit()
 
     def reset_frame_range_click(self):
         self.tracker.cap.set_frame_range((0,None,1))
@@ -636,40 +649,37 @@ class MainWindow(QMainWindow):
     Functions relevant to the tools section
     --------------------------------------------------------------"""
     
-    def setup_pandas_viewer(self):
-        if hasattr(self, 'pandas_viewer'):
-            self.pandas_viewer.close()
-            self.pandas_viewer.deleteLater()
+    def setup_pandas_read(self):
+        if hasattr(self, 'pandas_read'):
+            self.pandas_read.close()
+            self.pandas_read.deleteLater()
+        self.pandas_read = PandasWidget(parent=self, edit=False, data=self.tracker.data)
         
-        self.pandas_viewer = PandasWidget(parent=self, edit=False, data=self.tracker.data)
-        self.update_pandas_view()
+    def pandas_read_button_click(self):
+        self.update_pandas_read()
+        self.pandas_read.show()
 
-    def pandas_button_click(self):
-        self.update_pandas_view()
-        self.pandas_viewer.show()
-
-    def update_pandas_view(self):
+    def update_pandas_read(self):
+        # Data changed in program and need to update the pandas view
         try:            
-            self.pandas_viewer.update_file(self.frame_selector.value())
+            self.pandas_read.update_file(self.frame_selector.value())
         except:
             print("file not found")
-    
 
-    def setup_edit_pandas_viewer(self):
-        if hasattr(self, 'edit_pandas_viewer'):
-            self.edit_pandas_viewer.close()
-            self.edit_pandas_viewer.deleteLater()
-        self.edit_pandas_viewer = PandasWidget(parent=self, edit=True, data=self.tracker.data)
-        self.edit_pandas_viewer.data_updated_signal.connect(self.update_edit_pandas)
-        self.update_edit_pandas_view()
+    def setup_pandas_edit(self):
+        if hasattr(self, 'pandas_edit'):
+            self.pandas_edit.close()
+            self.pandas_edit.deleteLater()
+        self.pandas_edit = PandasWidget(parent=self, edit=True, data=self.tracker.data)
 
-    def edit_pandas_button_click(self):
-        self.update_edit_pandas_view()
-        self.edit_pandas_viewer.show()
+    def pandas_edit_button_click(self):
+        self.update_pandas_edit()
+        self.pandas_edit.show()
     
-    def update_edit_pandas_view(self):
+    def update_pandas_edit(self):
+        # Data changed in program and need to update the pandas view
         try:
-            self.edit_pandas_viewer.update_file_editable(self.frame_selector.value())
+            self.pandas_edit.update_file_editable(self.frame_selector.value())
         except:
             print("File not available")
 
@@ -700,8 +710,8 @@ class MainWindow(QMainWindow):
         self.tracker.parameters['config']['_locked_part'] = CustomButton.locked_part
         self.tracker.data.clear_data()
         self.update_viewer()
-        self.update_pandas_view()
-        self.update_edit_pandas_view()
+        self.update_pandas_read()
+        self.update_pandas_edit()
 
     def process_button_click(self): 
         self.status_bar.setStyleSheet("background-color : lightBlue")

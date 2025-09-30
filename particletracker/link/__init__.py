@@ -22,13 +22,16 @@ class LinkTrajectory:
 
         assert lock_part < 1, 'PTWorkflow.process logic should guarantee this'
         # 3 cases:
+        print('link f_index', f_index)
+        print('lock_part', lock_part)
         if f_index is None:
             # lock_part == -1 and f_index is None
             # Tracking processes whole movie. If f_index is None linking operates
             # on whole movie.
             output_filename = self.track_store.output_filename
             self.track_store.full = True
-            self.track_store.clear_data()
+            print('A', self.track_store._df)
+            #self.track_store.clear_data()
         else:
             #process single frame f_index
             output_filename = self.track_store.temp_filename   
@@ -38,8 +41,10 @@ class LinkTrajectory:
             else:
                 #If lock_part == 0 The tracking data on whole movie is stored in a file _track.hdf5 created previously. We only want to operate on one frame of this. You load full tracking data and then grab a single frame process it and store result in a temporary file.
                 self.track_store.full=True
+            print('B', self.track_store._df)
 
         df = self.track_store.get_df(f_index=f_index)
+        print('df', df)
 
         if df is not None and df.isna().all().all():
             #If it is an empty dataframe copy to _link.hdf5 file
@@ -53,7 +58,8 @@ class LinkTrajectory:
 
         with DataWrite(output_filename) as store:
             store.write_data(df)
-        
+            
+
         #reset datastore state
         self.track_store.full = _original
         print('Linking Complete')

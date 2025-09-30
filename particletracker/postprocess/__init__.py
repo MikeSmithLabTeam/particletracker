@@ -32,7 +32,7 @@ class PostProcessor:
         #Set output_filename
         if f_index is None:
             output_filename = self.link_store.output_filename
-            self.link_store.clear_data()
+            #self.link_store.clear_data()
         else:
             output_filename = self.link_store.temp_filename
         
@@ -64,7 +64,7 @@ class PostProcessor:
         """This block either copies across the data if no postprocessing methods (if block) or the line in the else block containing getattr(pm, method_name() says call the method in postprocessing_methods.py with the name method_name and pass the parameters to it. Take the return value and add it to the postprocessing store.
         See intro to postprocessing to understand how parameters and full dataframe are parsed by each function.
         """ 
-         
+        
         with DataWrite(output_filename) as store:
             if not self.parameters['postprocess']['postprocess_method']:
                 #No methods selected copy data across
@@ -84,12 +84,17 @@ class PostProcessor:
                             else:
                                 # For subsequent methods, merge their output 
                                 combined_modified_df = combined_modified_df.merge(modified_df, on=['particle', 'frame'], how='outer')
-
+    
                     if combined_modified_df is not None:
                         self.link_store.combine_data(modified_df=combined_modified_df)
+            
 
                     # Finally, write the data for the current frame
-                    store.write_data(self.link_store.get_df(f_index=f), f_index=f)
+                    if self.link_store.full:
+                        store.write_data(self.link_store.get_df(f_index=f), f_index=f)
+                    else:
+                        store.write_data(self.link_store._temp_df, f_index=f)
+                    
         
         self.link_store.full=_original
 

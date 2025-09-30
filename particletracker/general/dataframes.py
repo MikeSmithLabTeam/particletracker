@@ -57,6 +57,14 @@ class DataManager:
                 output_filename=None,
                 store_index=2)
         return self._stores[2]
+    
+    def update_store(self, store_index: int, updated_store):
+        """
+        Replaces the old DataRead instance at the given index with the new, 
+        updated instance provided by the PandasWidget.
+        """
+        
+        self._stores[store_index] = updated_store
 
     def clear_data(self):
         """Clear all data caches"""
@@ -157,7 +165,7 @@ class DataRead:
     def combine_data(self, modified_df=None):
         # Get frame index from modified data
         frame_idx = modified_df.index[0]
-        
+
         if self.full:
             df = self.df
         else:
@@ -168,14 +176,21 @@ class DataRead:
         
         for col in new_cols:
             df[col] = pd.Series(dtype=modified_df[col].dtype)
-        
+
         # Update the specific frame with new values
         mask = df.index == frame_idx
         
         for col in modified_df.columns:
             df.loc[mask, col] = modified_df[col].values.squeeze()
         
+        
+        if self.full:
+            self._df = df
+        else:
+            self._temp_df = df
+        
         return df
+
         
 
 

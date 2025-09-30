@@ -5,6 +5,8 @@ import numpy as np
 from PyQt6 import QtCore, QtWidgets, QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot
 
+from ..general.dataframes import DataRead
+
 
 from ..customexceptions import *
 from ..gui.menubar import CustomButton
@@ -43,7 +45,6 @@ class pandasModel_edit(pandasModel):
         return None
 
     def setData(self, index, value, role):
-        print('setData', index, value, role)
         if role == Qt.ItemDataRole.EditRole:
             if value == str(0):
                 value = np.float64(0)
@@ -51,7 +52,6 @@ class pandasModel_edit(pandasModel):
             try:
                 self._data.iloc[index.row(), index.column()] = np.float64(value)
             except ValueError:
-                # Return False if the conversion failed
                 return False
 
             # Just can't get this to connect
@@ -65,7 +65,7 @@ class pandasModel_edit(pandasModel):
 
 class PandasWidget(QtWidgets.QDialog):
     # Declare the custom signal
-    data_updated_signal = pyqtSignal()
+    data_updated_signal = pyqtSignal(int, DataRead)
         
     def __init__(self, parent=None, edit=False, data=None):
         QtWidgets.QWidget.__init__(self, parent)
@@ -120,7 +120,8 @@ class PandasWidget(QtWidgets.QDialog):
         lay.addLayout(button_layout)
         self.setLayout(lay)
         self.view.show()
-        self.setWindowTitle(f'df - frame')
+        
+        self.title = None
 
         # Get screen size using QScreen
         screen = self.screen()
@@ -138,15 +139,13 @@ class PandasWidget(QtWidgets.QDialog):
         self.move(qr.topLeft())
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
-        self.parent.pandas_button.setChecked(False)
         return super().closeEvent(a0)
     
     def close_button_clicked(self):
         self.hide()
-        self.parent.pandas_button.setChecked(False)
 
     def save_button_clicked(self):
-        directory = os.path.split(self.filename)[0]
+        directory = os.path.split(self.data.temp_filename)[0][:-6]
         name, _ = QtWidgets.QFileDialog.getSaveFileName(
         self, 
         "Save to csv", 
@@ -247,16 +246,15 @@ class PandasWidget(QtWidgets.QDialog):
 
         if store._df is None:
             store.df
+
         store._df.drop(index=self.frame, inplace=True)
         store._df = pd.concat([self.df, store._df], sort=True)
-        print('Storing data')
-        print(self.df)
-        print(store._df)
     
         if write:
             store._df.to_hdf(store.read_filename, key="data")
         store.full=_original
-        self.data_updated_signal.emit()
+
+        self.data_updated_signal.emit(lock_index, store)
 
     def update_file(self, frame):
         try:
@@ -267,7 +265,9 @@ class PandasWidget(QtWidgets.QDialog):
             df2 = store.get_df(f_index=frame)
             self.data.post_store.full=_original
             self.df=df2
-            #self.setWindowTitle(f'df - frame = {frame}')
+
+            title = f'Reading frame : '
+            self.setWindowTitle(title + str(frame))
         except Exception as e:
             self.df = pd.DataFrame()
             raise PandasViewError(e)
@@ -276,7 +276,7 @@ class PandasWidget(QtWidgets.QDialog):
         self.model = pandasModel(self.df)
         self.view.setModel(self.model)
 
-    def update_file_editable(self, frame):
+    def update_file_editable(self, f_index):
         """
         Updates the model's data to a new DataFrame.
         """
@@ -284,13 +284,13 @@ class PandasWidget(QtWidgets.QDialog):
         self.model.beginResetModel()
 
         # 2. Update the underlying data.
-        self.frame = frame
+        self.frame = f_index
         lock_index = CustomButton.locked_part
         if lock_index == -1:
             df2 = pd.DataFrame()
         else:
             store = self.data._stores[lock_index]
-            df2 = store.get_df(f_index=frame)
+            df2 = store.get_df(f_index=f_index)
             if 'particle' not in df2.columns:
                 num_particles = np.shape(df2)[0]
                 df2['particle'] = np.linspace(0, num_particles - 1, num=num_particles).astype(int)
@@ -299,53 +299,40 @@ class PandasWidget(QtWidgets.QDialog):
         # The crucial line: Update the model's internal data.
         self.model._data = df2
         self.df = df2
+
+        if CustomButton.locked_part == 0:
+            title = f'Editing tracking frame : '
+        elif CustomButton.locked_part == 1:
+            title = f'Editing linking frame : '
+        elif CustomButton.locked_part == 2:
+            title = f'Editing postprocessing frame : '
+        else:
+            title = f'Can only edit with a stage locked'
+        self.setWindowTitle(title + str(f_index))
         
         # 3. End the model reset process. This tells the view to reread all data from the model.
         self.model.endResetModel()
 
-        # You can now emit your custom signal to notify other parts of the GUI
-        #self.data_updated_signal.emit()
     
-    '''def update_file_editable(self, frame):
-        """
-        Selects section of dataframe
-        corresponding to selected frame number. Then sets the model to be used by the
-        QAbstractTabelModel() class in the GUI window.
-        """
-        self.frame = frame        
-        lock_index = CustomButton.locked_part
-        if lock_index == -1:
-            df2=pd.DataFrame()
-        else:
-            store = self.data._stores[lock_index]
-            _original = store.full
-            print('store df', store._df)
-            store.full=True
-            df2 = store.get_df(f_index=frame)
-            store.full=_original
-            print('update_editable', df2)
-            if 'particle' not in df2.columns:
-                num_particles = np.shape(df2)[0]
-                df2['particle']=np.linspace(0,num_particles-1, num=num_particles).astype(int)
-        
-        df2 = order_headings(df2)
-        self.df = df2
-        print('b4 model', df2)
-        self.model = pandasModel_edit(df2)
-        self.view.setModel(self.model)
-        print('finished')'''
-
 def order_headings(df):
-    # Define a list of columns that should always appear first
-    fixed_order = ['particle', 'x', 'y']
+    # Define a list of columns that should always appear first (lowercase for comparison)
+    fixed_order_names = ['particle', 'x', 'y']
+    column_map = {col.strip().lower(): col for col in df.columns}
     
-    # Get all other columns and sort them alphabetically
-    other_columns = sorted([col for col in df.columns if col not in fixed_order])
+    desired_order_original_case = []
     
-    # Combine the fixed order with the other columns to create the final, consistent order
-    desired_order = fixed_order + other_columns
+    for target_name in fixed_order_names:
+        original_name = column_map.get(target_name)
+        if original_name is not None:
+            desired_order_original_case.append(original_name)
+    other_columns_original_case = []
     
-    # Re-index the DataFrame to enforce the desired order
-    return df.reindex(columns=desired_order, fill_value=np.nan)
+    for col in sorted(df.columns):
+        if col.strip().lower() not in fixed_order_names:
+            other_columns_original_case.append(col)
+    
+    final_order = desired_order_original_case + other_columns_original_case
+    
+    return df.reindex(columns=final_order, fill_value=np.nan)
 
 

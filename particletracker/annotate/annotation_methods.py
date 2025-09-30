@@ -612,10 +612,9 @@ def voronoi(data,frame, f_index=None, parameters=None, *args, **kwargs):
         annotated frame : np.ndarray
     
     """
-
     thickness = parameters['thickness']
 
-    subset_df = _get_class_subset(data.get_data(f_index=f_index), parameters)
+    subset_df = _get_class_subset(data.get_df(f_index=f_index), parameters)
     contour_pts = subset_df[['voronoi']].values
     (colours, colourbar) = colour_array(subset_df, f_index, parameters)
 
@@ -716,20 +715,14 @@ def vectors(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     dx = parameters['dx_column']
     dy = parameters['dy_column']
     vectors = df_single[['x', 'y',dx, dy]].to_numpy()
-    print(vectors)
-
     thickness = parameters['thickness']
-    print('default line_type', parameters['line_type'])
     line_type = parameters['line_type']
     tip_length = 0.01*parameters['tip_length']
     vector_scale = 0.01*parameters['vector_scale']
-    print('vector scale')
 
     (colours, colourbar) = colour_array(df_single, f_index, parameters)
-    print('colours')
     
     for i, vector in enumerate(vectors):
-        print(i, vector)
         frame = cv2.arrowedLine(frame, (int(vector[0]), int(vector[1])),
                                 (int(vector[0]+vector[2]*vector_scale),int(vector[1]+vector[3]*vector_scale)),
                                 color=colours[i], thickness=int(thickness),line_type=int(line_type),shift=0,tipLength=tip_length)
@@ -825,7 +818,6 @@ def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs
         traj_pts = np.array(traj_pts.values, np.int32).reshape((-1,1,2))
         frame = cv2.polylines(frame,[traj_pts],False,colours[index],int(thickness))
 
-    print(colourbar)
     if colourbar is not None:
         frame = place_colourbar_in_image(frame, colourbar, parameters)     
     return frame

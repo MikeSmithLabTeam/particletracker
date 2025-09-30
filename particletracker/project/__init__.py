@@ -98,7 +98,6 @@ class PTWorkflow:
         through preprocessor, tracker, linker, postprocessor and annotator. However, if you process the whole
         then the preprocessor is called from within tracker. All frames are tracked and then all frames are linked etc.
         """
-        
         if not os.path.exists(self.temp_folder):
             os.mkdir(self.temp_folder)
 

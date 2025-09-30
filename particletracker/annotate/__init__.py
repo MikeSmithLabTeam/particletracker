@@ -1,7 +1,10 @@
 from tqdm import tqdm
 import os
 
+import numpy as np
+
 from labvision.video import WriteVideo
+from labvision.images.basics import display
 
 from ..annotate import annotation_methods as am
 from ..general.parameters import get_method_name, get_param_val, get_method_key
@@ -30,14 +33,14 @@ class TrackingAnnotator:
         if f_index is None and video_output:
             scale= get_param_val(self.parameters['config']['video_output']['scale'])
             output_vid=WriteVideo(self.output_filename, frame=self.cap.read_frame(n=0), scale=scale)
-            self.pp_store.clear_data()
+            #self.pp_store.clear_data()
 
         #whole movie
         if f_index is None:
             start = self.cap.frame_range[0]
             stop = self.cap.frame_range[1]
             step = self.cap.frame_range[2]
-            self.pp_store.full=True # need whole dataframe loaded.
+            self.pp_store.full=True 
         else:
             start=f_index
             stop=f_index+1
@@ -46,18 +49,19 @@ class TrackingAnnotator:
             self.pp_store.full= (lock_part==2)
             if lock_part==2:
                 create_temp_hdf(self.pp_store, f_index)
-
             # When lock_part is changed the full dataframe associated with the link data is reloaded.
-
+        
         self.cap.set_frame(start)
 
         #Do the annotation
         for f in tqdm(range(start, stop, step), 'Annotating'):
             frame = self.cap.read_frame()
+            
             try:
                 for method in self.parameters['annotate']['annotate_method']:
                     method_name, call_num = get_method_name(method)
                     frame = getattr(am, method_name)(self.pp_store, frame, f_index=f, parameters=self.parameters, call_num=call_num, section='annotate')
+                
             except:
                 print('No data to annotate')
 
