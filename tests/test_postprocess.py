@@ -34,27 +34,11 @@ def test_postprocess():
         # Attempt to delete the folder before the test runs
         shutil.rmtree(temp_dir, ignore_errors=True)
 
-    batchprocess("testdata/hydrogel.mp4", "testdata/test_postprocess.param")
+    #batchprocess("testdata/hydrogel.mp4", "testdata/test_postprocess.param")
     
-    df = pd.read_hdf(output_df)
+    #df = pd.read_hdf(output_df)
 
-    assert os.path.exists(output_video), 'Postprocessing steps errored'
-    assert int(df.loc[5, ['x']].to_numpy()[0][0]) == int(
-        1030), 'Tested x value in df incorrect' + str(df.loc[3, ['x']].to_numpy()[0][0])
-    assert int(df.loc[5, ['theta']].to_numpy()[0][0]) == int(
-        14.1670555226312), 'Tested angle value in df incorrect'
-    assert int(10*df.loc[5, ['hexatic_order_re']].to_numpy()[1][0]) == int(
-        10*0.640), 'Tested hexatic_order_re value in df incorrect'
-    assert int(100*df.loc[5, ['hexatic_order_ang']].to_numpy()[1][0]) == int(
-        100*-0.04394359424687039), 'Tested heaxatic_order_ang value in df incorrect'
-    assert int(df.loc[5, ['x_diff']].to_numpy()[0][0]) == int(
-        -1.0), 'Tested x_diff value in df incorrect'
-    assert int(df.loc[5, ['vx']].to_numpy()[1][0]) == int(
-        -30), 'Tested vx value in df incorrect'
-    assert int(df.loc[5, ['median_x']].to_numpy()[0][0]) == int(
-        862), 'Tested median_x value in df incorrect'
-    assert int(df.loc[5, ['number_of_neighbours']].to_numpy()[1][0]) == int(
-        3.0), 'Tested number_of_neighbours value in df incorrect'
+    assert False, "This is yet to be setup"
 
     os.remove(output_video)
     os.remove(output_df)

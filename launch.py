@@ -8,8 +8,4 @@ if __name__ == '__main__':
     path = userprofile + \
         "\\OneDrive - The University of Nottingham\\Documents\\Programming\\particletracker\\testdata\\"
     
-    print(path)
-    #track_gui(path + "hydrogel.mp4",settings_filename=path +"hydrogel1.param")
-    track_gui("testdata/colloids.mp4", "testdata/test_preprocess.param")
-    
-    # test_eyes()
+    track_gui("testdata/hydrogel.mp4", "testdata/test_postprocess.param")

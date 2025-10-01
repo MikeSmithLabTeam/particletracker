@@ -211,7 +211,6 @@ def classify(df_frame, *args, f_index=None, parameters=None, **kwargs):
         updated dataframe including new column
 
     '''
-    print('classify', df_frame)
     column = parameters['column_name']
     output_name=parameters['output_name']
 
