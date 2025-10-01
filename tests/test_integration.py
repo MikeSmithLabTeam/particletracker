@@ -42,11 +42,17 @@ def test_eyes():
     Postprocessing: mean,
     Annotation: Circle,
     """
-    batchprocess("testdata/eyes.mp4", "testdata/test_eyes.param")
-    
     output_video = "testdata/eyes_annotate.mp4"
     output_df = "testdata/eyes.hdf5"
     temp_dir = "testdata/_temp"
+
+    if os.path.exists(temp_dir):
+        # Attempt to delete the folder before the test runs
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+    batchprocess("testdata/eyes.mp4", "testdata/test_eyes.param")
+    
+    
     df = pd.read_hdf(output_df)
     
     assert os.path.exists(output_video), 'Eyes annotated video not created'
@@ -67,10 +73,17 @@ def test_colloids():
     Postprocessing: add_frame_data
     Annotation: circles, particle_labels, trajectories, text_label, var_label
     """
-    batchprocess("testdata/colloids.mp4", "testdata/test_colloids.param")
     output_video = "testdata/colloids_annotate.mp4"
     output_df = "testdata/colloids.hdf5"
     temp_dir = "testdata/_temp"
+
+    if os.path.exists(temp_dir):
+        # Attempt to delete the folder before the test runs
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+    batchprocess("testdata/colloids.mp4", "testdata/test_colloids.param")
+    
+
 
     df = pd.read_hdf(output_df)
     
@@ -91,10 +104,16 @@ def test_hydrogel():
     Postprocessing:voronoi,
     Annotation: Circle,
     """
-    batchprocess("testdata/hydrogel.mp4", "testdata/test_hydrogel.param")
     output_video = "testdata/hydrogel_annotate.mp4"
     output_df = "testdata/hydrogel.hdf5"
     temp_dir = "testdata/_temp"
+
+    if os.path.exists(temp_dir):
+        # Attempt to delete the folder before the test runs
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+    batchprocess("testdata/hydrogel.mp4", "testdata/test_hydrogel.param")
+    
 
     df = pd.read_hdf(output_df)
 
@@ -114,11 +133,16 @@ def test_bacteria():
     Postprocessing: contour_boxes, classify
     Annotation: boxes,
     """
-    batchprocess("testdata/bacteria.mp4", "testdata/test_bacteria.param")
     output_video = "testdata/bacteria_annotate.mp4"
     output_df = "testdata/bacteria.hdf5"
     temp_dir = "testdata/_temp"
 
+    if os.path.exists(temp_dir):
+        # Attempt to delete the folder before the test runs
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+    batchprocess("testdata/bacteria.mp4", "testdata/test_bacteria.param")
+    
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video), 'Bacteria annotated video not created'
     assert int(df.loc[0, ['box_width']].to_numpy()[0][0]) == int(
@@ -137,13 +161,18 @@ def test_discs():
     Postprocessing: neighbours,
     Annotation: circles, networks, particle_labels,
     """
-    batchprocess("testdata/discs.mp4",
-                    "testdata/test_discs.param")
     output_video = "testdata/discs_annotate.mp4"
     output_df = "testdata/discs.hdf5"
     output_csv = "testdata/discs.csv"
     temp_dir = "testdata/_temp"
 
+    if os.path.exists(temp_dir):
+        # Attempt to delete the folder before the test runs
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+    batchprocess("testdata/discs.mp4",
+                    "testdata/test_discs.param")
+    
     df = pd.read_hdf(output_df)
     assert os.path.exists(output_video), 'Error Discs annotated video not created'
     assert df.loc[0, ['x']].to_numpy()[0][0] == 1019.5, df.loc[0, ['x']].to_numpy()[

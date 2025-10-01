@@ -211,6 +211,7 @@ def classify(df_frame, *args, f_index=None, parameters=None, **kwargs):
         updated dataframe including new column
 
     '''
+    print('classify', df_frame)
     column = parameters['column_name']
     output_name=parameters['output_name']
 
@@ -312,7 +313,7 @@ def contour_boxes(df_frame, *args, f_index=None, **kwargs):
     df_frame['box_length'] = box_length
     df_frame['box_area'] = box_area
     df_frame['box_pts'] = box_pts
-   
+    print('boxes', df_frame)
     return df_frame
 
 @error_handling

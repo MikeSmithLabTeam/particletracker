@@ -529,7 +529,7 @@ class MainWindow(QMainWindow):
         data_manager = self.tracker.data
         data_manager.update_store(store_index, store)
         self.update_viewer()
-        #self.update_pandas_edit()
+        
 
     def pandas_read_update(self):
         #Probably superfluous
@@ -600,9 +600,6 @@ class MainWindow(QMainWindow):
                 self.viewer.setImage(bgr_to_rgb(proc_img))
             else:
                 self.viewer.setImage(bgr_to_rgb(annotated_img))
-              
-            #self.update_pandas_read()
-            #self.update_pandas_edit()
                     
     def reset_viewer(self):
         self.frame_selector.changeSettings(min_=self.tracker.cap.frame_range[0],

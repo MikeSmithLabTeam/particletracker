@@ -50,7 +50,7 @@ def track_gui(movie_filename=None, settings_filename=None):
 
 
 
-def batchprocess(moviefilter, settings):
+def batchprocess(moviefilter, settings_filename=None):
     '''
     batchprocess enables you to process all files specified with a filefilter using a single settings.param file
 
@@ -65,7 +65,7 @@ def batchprocess(moviefilter, settings):
     '''
 
     for filename in BatchProcess(moviefilter):
-        tracker = PTWorkflow(video_filename=filename, param_filename=settings)
+        tracker = PTWorkflow(video_filename=filename, param_filename=settings_filename)
         tracker.process()
 
 

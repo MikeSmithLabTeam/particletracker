@@ -63,7 +63,7 @@ class DataManager:
         Replaces the old DataRead instance at the given index with the new, 
         updated instance provided by the PandasWidget.
         """
-        
+        print('updating store')
         self._stores[store_index] = updated_store
 
     def clear_data(self):

@@ -35,6 +35,8 @@ class pandasModel(QtCore.QAbstractTableModel):
         return None
     
 class pandasModel_edit(pandasModel):
+    data_change = pyqtSignal()
+
     def __init__(self, data):
         super(pandasModel_edit,self).__init__(data)
         
@@ -54,6 +56,7 @@ class pandasModel_edit(pandasModel):
             except ValueError:
                 return False
 
+            self.data_change.emit()
             # Just can't get this to connect
             #self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole])
             return True
@@ -72,29 +75,28 @@ class PandasWidget(QtWidgets.QDialog):
         self.parent = parent
         self.edit = edit #set edit flag i.e edit or read-only.
         self.data = data    
-        self.frame = None
+        self.f_index = None
 
         if self.edit:    #editable dataframe viewer
+
             self.view = QtWidgets.QTableView()
             self.model = pandasModel_edit(pd.DataFrame())
             self.view.setModel(self.model)
             lay = QtWidgets.QVBoxLayout()
             lay.addWidget(self.view)
             button_layout = QtWidgets.QHBoxLayout()
+            self.model.data_change.connect(self._data_update)
             
-            update_button = QtWidgets.QPushButton("Update", self)
             add_row_button = QtWidgets.QPushButton("Add row", self)
             delete_row_button = QtWidgets.QPushButton("Delete row", self)
             save_button = QtWidgets.QPushButton("Save", self)
             reset_button = QtWidgets.QPushButton("Reset", self)
             
-            button_layout.addWidget(update_button)
             button_layout.addWidget(add_row_button)
             button_layout.addWidget(delete_row_button)
             button_layout.addWidget(save_button)
             button_layout.addWidget(reset_button)
 
-            update_button.clicked.connect(self.update_clicked)
             add_row_button.clicked.connect(self.add_row_clicked)
             delete_row_button.clicked.connect(self.delete_row_clicked)
             save_button.clicked.connect(lambda x : self._data_update(write=True))
@@ -163,8 +165,6 @@ class PandasWidget(QtWidgets.QDialog):
         msg.setText(str(msg_string))
         msg.show()
 
-    def update_clicked(self):
-        self._data_update()
 
     def add_row_clicked(self):
         """
@@ -175,23 +175,22 @@ class PandasWidget(QtWidgets.QDialog):
         lock_index = CustomButton.locked_part   
         store = self.data._stores[lock_index]
 
-        if store._df is None:
-            store.df
+        #if store._df is None:
+        #    store.df
 
         index = self.view.currentIndex()
         row_idx = index.row()
 
-        if row_idx == -1:
-            msg = "No row selected."
-            self.message_box(msg)
-        else:
-            new_item = pd.DataFrame(self.df.iloc[[row_idx]])
-            self.df = pd.concat([self.df, new_item], ignore_index=True).sort_values("particle")
+        new_item = pd.DataFrame(self.df.iloc[[row_idx]])
+        df2 = pd.concat([self.df, new_item], ignore_index=True).sort_values("particle")
 
-        self.model = pandasModel_edit(self.df)
+        self.model = pandasModel_edit(df2)
         self.view.setModel(self.model)
         self.view.selectRow(row_idx)
-        self._data_update()
+        self.data._stores[lock_index] = df2
+        #self._data_update()
+        self.data_updated_signal.emit(self.f_index, self.data._stores[CustomButton.locked_part])
+        self.update_file_editable(self.f_index)
 
     def delete_row_clicked(self):
         """
@@ -213,12 +212,16 @@ class PandasWidget(QtWidgets.QDialog):
             self.message_box(msg)
         else:
             drop_label = self.df.iloc[row_idx]["particle"]
-            self.df = self.df.set_index("particle")
-            self.df = self.df.drop([drop_label]).sort_values("particle")
-            self.df = self.df.reset_index()
+            df2 = self.df.set_index("particle")
+            df2.drop([drop_label]).sort_values("particle", inplace=True)
+            df2.reset_index(inplace=True)
             self.model = pandasModel_edit(self.df)
             self.view.setModel(self.model)
-        self._data_update()      
+            self.data._stores[lock_index] = df2
+        #self._data_update()  
+        self.data_updated_signal.emit(self.f_index, self.data._stores[CustomButton.locked_part])
+        self.update_file_editable(self.f_index)
+            
         
 
     def reset_button_clicked(self):
@@ -227,9 +230,11 @@ class PandasWidget(QtWidgets.QDialog):
         by the user.
         """
         self.data._stores[CustomButton.locked_part].clear_data()
-        self.update_file_editable(self.frame)
+        self.data._stores[CustomButton.locked_part].df
+        #self.df = self.data._stores[CustomButton.locked_part].df.loc[self.f_index]
+        self.data_updated_signal.emit(self.f_index, self.data._stores[CustomButton.locked_part])
+        self.update_file_editable(self.f_index)
         self.message_box("Changes reverted")
-        self._data_update()
 
     def _data_update(self, write=False):
         """
@@ -238,7 +243,7 @@ class PandasWidget(QtWidgets.QDialog):
         lock_index = CustomButton.locked_part   
         store = self.data._stores[lock_index]
                
-        self.df.set_index(np.ones(self.df.shape[0]) * self.frame, inplace=True)
+        self.df.set_index(np.ones(self.df.shape[0]) * self.f_index, inplace=True)
         self.df.index.name = 'frame'
 
         _original = store.full
@@ -246,8 +251,8 @@ class PandasWidget(QtWidgets.QDialog):
 
         if store._df is None:
             store.df
-
-        store._df.drop(index=self.frame, inplace=True)
+        
+        store._df.drop(index=self.f_index, inplace=True)
         store._df = pd.concat([self.df, store._df], sort=True)
     
         if write:
@@ -256,18 +261,18 @@ class PandasWidget(QtWidgets.QDialog):
 
         self.data_updated_signal.emit(lock_index, store)
 
-    def update_file(self, frame):
+    def update_file(self, f_index):
         try:
-            self.frame=frame
+            self.f_index=f_index
             store = self.data.post_store
             _original = store.full
             store.full=False
-            df2 = store.get_df(f_index=frame)
+            df2 = store.get_df(f_index=f_index)
             self.data.post_store.full=_original
             self.df=df2
 
             title = f'Reading frame : '
-            self.setWindowTitle(title + str(frame))
+            self.setWindowTitle(title + str(f_index))
         except Exception as e:
             self.df = pd.DataFrame()
             raise PandasViewError(e)
@@ -284,7 +289,7 @@ class PandasWidget(QtWidgets.QDialog):
         self.model.beginResetModel()
 
         # 2. Update the underlying data.
-        self.frame = f_index
+        self.f_index = f_index
         lock_index = CustomButton.locked_part
         if lock_index == -1:
             df2 = pd.DataFrame()
@@ -296,9 +301,10 @@ class PandasWidget(QtWidgets.QDialog):
                 df2['particle'] = np.linspace(0, num_particles - 1, num=num_particles).astype(int)
 
         df2 = order_headings(df2)
-        # The crucial line: Update the model's internal data.
+        
         self.model._data = df2
         self.df = df2
+
 
         if CustomButton.locked_part == 0:
             title = f'Editing tracking frame : '
