@@ -10,6 +10,6 @@ if __name__ == '__main__':
     
     print(path)
     #track_gui(path + "hydrogel.mp4",settings_filename=path +"hydrogel1.param")
-    track_gui("testdata/bacteria.mp4", "testdata/test_bacteria.param")
+    track_gui("testdata/colloids.mp4", "testdata/test_preprocess.param")
     
     # test_eyes()

@@ -75,25 +75,11 @@ class PostProcessor:
                     for method in self.parameters['postprocess']['postprocess_method']:
                         method_name, call_num = get_method_name(method)
                         
-                        print('b4 methods', self.link_store._temp_df)
                         modified_df = getattr(pm, method_name)(self.link_store,f_index=f,parameters=self.parameters, call_num=call_num, section='postprocess')
-                        print('init', method, modified_df)
 
                         if modified_df is not None:
-                            #This handles multiple methods
-                            if combined_modified_df is None:
-                                combined_modified_df = modified_df
-                            else:
-                                # For subsequent methods, merge their output 
-                                combined_modified_df = combined_modified_df.merge(modified_df, on=['particle', 'frame'], how='outer')
+                            self.link_store.combine_data(modified_df=modified_df)            
 
-                    if combined_modified_df is not None:
-                        self.link_store.combine_data(modified_df=combined_modified_df)
-                        print(self.link_store.full)
-                        print('init', self.link_store._temp_df)
-            
-
-                    # Finally, write the data for the current frame
                     if self.link_store.full:
                         store.write_data(self.link_store.get_df(f_index=f), f_index=f)
                     else:

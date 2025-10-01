@@ -141,7 +141,10 @@ class DataRead:
         pd.DataFrame
         """
         if not self.full:
-            return self.temp_df
+            if self._temp_df is None:
+                return self.temp_df
+            else:
+                return self._temp_df
         else:
             df=self.df
             if f_index is None:
@@ -169,7 +172,10 @@ class DataRead:
         if self.full:
             df = self.df
         else:
-            df = self.temp_df
+            if self._temp_df is None:
+                df = self.temp_df
+            else:
+                df=self._temp_df
 
         # Add new columns with NaN values
         new_cols = modified_df.columns.difference(df.columns)

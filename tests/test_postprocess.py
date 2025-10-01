@@ -26,9 +26,16 @@ def test_postprocess():
     Passing tests implies the code produces the same result as before!!
 
     """
-    batchprocess("testdata/hydrogel.mp4", "testdata/test_postprocess.param")
     output_video = "testdata/hydrogel_annotate.mp4"
     output_df = "testdata/hydrogel.hdf5"
+    temp_dir = "testdata/_temp"
+
+    if os.path.exists(temp_dir):
+        # Attempt to delete the folder before the test runs
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+    batchprocess("testdata/hydrogel.mp4", "testdata/test_postprocess.param")
+    
     df = pd.read_hdf(output_df)
 
     assert os.path.exists(output_video), 'Postprocessing steps errored'
