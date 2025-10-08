@@ -25,7 +25,7 @@ Handles errors produced by each function
 The decorator @param_parse reduces params dictionary to the appropriate bit. If you need access to 
 other section of params outside those relevant to function do not use and implement yourself.
 3)df_single or df_range:
-Some postprocessing methods need range of dataframe and some just need one frame.  In postprocessing you don't need logic specifying whether to read the full or partial dataframe as this is handled by the decorator on the postprocessing_methods. The decorator @df_single or @df_multiple chop down the dataframes passed to the methods."""
+Some postprocessing methods need range of dataframe and some just need one frame.  In postprocessing you don't need logic specifying whether to read the full or partial dataframe as this is handled by the decorator on the postprocessing_methods. The decorator  or @df_multiple chop down the dataframes passed to the methods."""
 
 
 '''
@@ -36,8 +36,7 @@ All these methods operate on single frames
 
 @error_handling
 @param_parse
-@df_single
-def absolute(df_frame, *args, f_index=None, parameters=None, **kwargs):
+def absolute(df, *args,  parameters=None, **kwargs):
     """Returns new column with absolute value of input column
 
     Parameters
@@ -46,7 +45,7 @@ def absolute(df_frame, *args, f_index=None, parameters=None, **kwargs):
 
     Args
     ----
-    df_frame
+    df
         The dataframe for all data
     f_index
         Integer for the frame in twhich calculations need to be made
@@ -62,8 +61,8 @@ def absolute(df_frame, *args, f_index=None, parameters=None, **kwargs):
 """
     column_name = parameters['column_name']
     
-    df_frame[column_name + '_abs'] = np.abs(df_frame[column_name]) 
-    return df_frame
+    df[column_name + '_abs'] = np.abs(df[column_name]) 
+    return df
 
 '''
 ------------------------------------------------------------------------------------------------
@@ -72,8 +71,7 @@ This function allows you to load data into a column opposite each frame number
 '''
 @error_handling
 @param_parse
-@df_single
-def add_frame_data(df_frame, f_index=None, parameters=None, *args, **kwargs):
+def add_frame_data(df,  parameters=None, *args, **kwargs):
     '''
     Add frame data allows you to manually add a new column of df to the dfframe. 
     
@@ -109,18 +107,18 @@ def add_frame_data(df_frame, f_index=None, parameters=None, *args, **kwargs):
     -------
         updated dataframe including new column
     '''
+    assert False, "Not yet implemented in upgrade"
     datapath = parameters['data_path']
     filename = os.path.join(datapath,parameters['data_filename'])
     if '.csv' not in filename:
         filename = filename + '.csv'
     new_df = pd.read_csv(filename, header=None).squeeze("columns")
-    df_frame[parameters['new_column_name']] = new_df[new_df.index == f_index]
-    return df_frame
+    df[parameters['new_column_name']] = new_df[new_df.index == f_index]
+    return df
 
 @error_handling
 @param_parse
-@df_single
-def angle(df_frame,  *args, f_index=None, parameters=None, **kwargs):
+def angle(df,  *args,  parameters=None, **kwargs):
     '''
     Angle calculates the angle specified by two components.
 
@@ -147,7 +145,7 @@ def angle(df_frame,  *args, f_index=None, parameters=None, **kwargs):
     Args
     ----
 
-    df_frame
+    df
         The dataframe in which all data is stored
     f_index
         Integer specifying the frame for which calculations need to be made.
@@ -161,19 +159,18 @@ def angle(df_frame,  *args, f_index=None, parameters=None, **kwargs):
         updated dataframe including new column
 
     '''
-    if parameters['output_name'] not in df_frame.columns:
-        df_frame[parameters['output_name']] = np.nan
+    if parameters['output_name'] not in df.columns:
+        df[parameters['output_name']] = np.nan
     
     if parameters['units'] == 'degrees':
-        df_frame[parameters['output_name']] = np.arctan2(df_frame[parameters['y_column']],df_frame[parameters['x_column']])*(180/np.pi)
+        df[parameters['output_name']] = np.arctan2(df[parameters['y_column']],df[parameters['x_column']])*(180/np.pi)
     else:
-        df_frame[parameters['output_name']] = np.arctan2(df_frame[parameters['y_column']],df_frame[parameters['x_column']])
-    return df_frame
+        df[parameters['output_name']] = np.arctan2(df[parameters['y_column']],df[parameters['x_column']])
+    return df
 
 @error_handling
 @param_parse
-@df_single
-def classify(df_frame, *args, f_index=None, parameters=None, **kwargs):
+def classify(df, *args,  parameters=None, **kwargs):
     '''
     Classifies particles based on values in a particular column
 
@@ -197,7 +194,7 @@ def classify(df_frame, *args, f_index=None, parameters=None, **kwargs):
     
     Args
     ----
-    df_frame
+    df
         The dataframe in which all data is stored
     f_index
         Integer specifying the frame for which calculations need to be made.
@@ -214,11 +211,11 @@ def classify(df_frame, *args, f_index=None, parameters=None, **kwargs):
     column = parameters['column_name']
     output_name=parameters['output_name']
 
-    if output_name not in df_frame.columns:
-        df_frame[output_name] = np.nan
+    if output_name not in df.columns:
+        df[output_name] = np.nan
     
-    df_frame[output_name] = df_frame[column].apply(_classify_fn, lower_threshold_value=parameters['lower_threshold'], upper_threshold_value=parameters['upper_threshold'])
-    return df_frame
+    df[output_name] = df[column].apply(_classify_fn, lower_threshold_value=parameters['lower_threshold'], upper_threshold_value=parameters['upper_threshold'])
+    return df
 
 
 def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
@@ -229,8 +226,7 @@ def _classify_fn(x, lower_threshold_value=None, upper_threshold_value=None):
 
 @error_handling
 @param_parse
-@df_single
-def contour_boxes(df_frame, *args, f_index=None, **kwargs):
+def contour_boxes(df, *args,  **kwargs):
     """
     Contour boxes calculates the rotated minimum area bounding box
 
@@ -267,16 +263,16 @@ def contour_boxes(df_frame, *args, f_index=None, **kwargs):
         updated dataframe including new column
     """
 
-    if 'box_cx' not in df_frame.columns:
-        df_frame['box_cx'] = np.nan
-        df_frame['box_cy'] = np.nan
-        df_frame['box_angle'] = np.nan
-        df_frame['box_length'] = np.nan
-        df_frame['box_width'] = np.nan
-        df_frame['box_area'] = np.nan
-        df_frame['box_pts'] = np.nan
+    if 'box_cx' not in df.columns:
+        df['box_cx'] = np.nan
+        df['box_cy'] = np.nan
+        df['box_angle'] = np.nan
+        df['box_length'] = np.nan
+        df['box_width'] = np.nan
+        df['box_area'] = np.nan
+        df['box_pts'] = np.nan
     
-    contours = df_frame[['contours']].values
+    contours = df[['contours']].values
 
     box_cx = []
     box_cy = []
@@ -305,15 +301,15 @@ def contour_boxes(df_frame, *args, f_index=None, **kwargs):
         else:
             box_pts.append(info_contour[5])
 
-    df_frame['box_cx'] = box_cx
-    df_frame['box_cy'] = box_cy
-    df_frame['box_angle'] = box_angle
-    df_frame['box_width'] = box_width
-    df_frame['box_length'] = box_length
-    df_frame['box_area'] = box_area
-    df_frame['box_pts'] = box_pts
-    print('boxes', df_frame)
-    return df_frame
+    df['box_cx'] = box_cx
+    df['box_cy'] = box_cy
+    df['box_angle'] = box_angle
+    df['box_width'] = box_width
+    df['box_length'] = box_length
+    df['box_area'] = box_area
+    df['box_pts'] = box_pts
+    print('boxes', df)
+    return df
 
 @error_handling
 def _rotated_bounding_rectangle(contour):
@@ -329,14 +325,13 @@ def _rotated_bounding_rectangle(contour):
 
 @error_handling
 @param_parse
-@df_single
-def hexatic_order(df_frame, *args, f_index=None, parameters=None, **kwargs):
+def hexatic_order(df, *args,  parameters=None, **kwargs):
     """
     Calculates the hexatic order parameter of each particle.
     """
     method = parameters.get('method', 'delaunay')  # Default to Delaunay
     cutoff = parameters['cutoff']
-    points = df_frame[['x', 'y']].values
+    points = df[['x', 'y']].values
     
     # Use the appropriate method to find neighbors
     if method == 'delaunay':
@@ -355,12 +350,12 @@ def hexatic_order(df_frame, *args, f_index=None, parameters=None, **kwargs):
     psi_6[valid_indices] = sum_exp_6j[valid_indices] / num_neighbors[valid_indices]
     
     # Add the results to the DataFrame
-    df_frame['hexatic_order_complex'] = psi_6
-    df_frame['hexatic_order_magnitude'] = np.abs(psi_6)
-    df_frame['hexatic_order_phase'] = np.angle(psi_6)
-    df_frame['number_of_neighbours'] = num_neighbors
+    df['hexatic_order_complex'] = psi_6
+    df['hexatic_order_magnitude'] = np.abs(psi_6)
+    df['hexatic_order_phase'] = np.angle(psi_6)
+    df['number_of_neighbours'] = num_neighbors
     
-    return df_frame
+    return df
 
 def _find_delaunay_for_hexatic(points, cutoff):
     tri = sp.Delaunay(points)
@@ -406,8 +401,7 @@ def _find_kdtree_for_hexatic(points, cutoff, num_neighbors):
 
 @error_handling
 @param_parse
-@df_single
-def logic_AND(df_frame, *args, f_index=None, parameters=None, **kwargs):
+def logic_AND(df, *args,  parameters=None, **kwargs):
     '''
     Applys a logical and operation to two columns of boolean values.
 
@@ -442,13 +436,12 @@ def logic_AND(df_frame, *args, f_index=None, parameters=None, **kwargs):
     column2 = parameters['column_name2']
     output_name = parameters['output_name']
     
-    df_frame[output_name] = df_frame[column1] * df_frame[column2]
-    return df_frame
+    df[output_name] = df[column1] * df[column2]
+    return df
 
 @error_handling
 @param_parse
-@df_single
-def logic_NOT(df_frame, *args, f_index=None, parameters=None, **kwargs):
+def logic_NOT(df, *args,  parameters=None, **kwargs):
     '''
     Apply a logical not operation to a column of boolean values.
 
@@ -483,13 +476,12 @@ def logic_NOT(df_frame, *args, f_index=None, parameters=None, **kwargs):
     column = parameters['column_name']
     output_name = parameters['output_name']
 
-    df_frame[output_name] = ~df_frame[column]
-    return df_frame
+    df[output_name] = ~df[column]
+    return df
 
 @error_handling
 @param_parse
-@df_single
-def logic_OR(df_frame, *args, f_index=None, parameters=None, **kwargs):
+def logic_OR(df, *args,  parameters=None, **kwargs):
     '''
     Apply a logical or operation to two columns of boolean values.
 
@@ -522,13 +514,12 @@ def logic_OR(df_frame, *args, f_index=None, parameters=None, **kwargs):
     column2 = parameters['column_name2']
     output_name = parameters['output_name']
 
-    df_frame[output_name] = df_frame[column1] + df_frame[column2]
-    return df_frame
+    df[output_name] = df[column1] + df[column2]
+    return df
 
 @error_handling
 @param_parse
-@df_single
-def magnitude(df_frame, *args, f_index=None, parameters=None, **kwargs):
+def magnitude(df, *args,  parameters=None, **kwargs):
     '''
     Calculates the magnitude of 2 input columns (x^2 + y^2)^0.5 = r
     
@@ -558,13 +549,12 @@ def magnitude(df_frame, *args, f_index=None, parameters=None, **kwargs):
     column2 = parameters['column_name2']
     output_name = parameters['output_name']
 
-    df_frame[output_name] = (df_frame[column]**2 + df_frame[column2]**2)**0.5  
-    return df_frame
+    df[output_name] = (df[column]**2 + df[column2]**2)**0.5  
+    return df
 
 @error_handling
 @param_parse
-@df_single
-def neighbours(df_frame, *args, f_index=None, parameters=None, **kwargs):
+def neighbours(df, *args,  parameters=None, **kwargs):
     '''
     Find the nearest neighbours of a particle
 
@@ -610,16 +600,16 @@ def neighbours(df_frame, *args, f_index=None, parameters=None, **kwargs):
     method = parameters['method']
 
     if method == 'delaunay':
-        df_frame =_find_delaunay(df_frame, parameters=parameters)
+        df =_find_delaunay(df, parameters=parameters)
     elif method == 'kdtree':
-        df_frame =_find_kdtree(df_frame, parameters=parameters)     
-    return df_frame
+        df =_find_kdtree(df, parameters=parameters)     
+    return df
 
-def _find_kdtree(df_frame, parameters=None):
+def _find_kdtree(df, parameters=None):
     cutoff = parameters['cutoff']
     num_neighbours = int(parameters['neighbours'])
-    points = df_frame[['x', 'y']].values
-    particle_ids = df_frame[['particle']].values.flatten()
+    points = df[['x', 'y']].values
+    particle_ids = df[['particle']].values.flatten()
     tree = sp.KDTree(points)
     
     # Query for the `num_neighbours` nearest particles, with the specified cutoff
@@ -641,15 +631,15 @@ def _find_kdtree(df_frame, parameters=None):
         current_neighbor_dists = distances[i, 1:][valid_mask].tolist()
         neighbour_dists.append(current_neighbor_dists)
 
-    df_frame['neighbours'] = neighbour_ids
-    df_frame['neighbour_dists'] = neighbour_dists
-    return df_frame
+    df['neighbours'] = neighbour_ids
+    df['neighbour_dists'] = neighbour_dists
+    return df
 
 @error_handling
-def _find_delaunay(df_frame, parameters=None):
+def _find_delaunay(df, parameters=None):
     cutoff = parameters['cutoff']
-    points = df_frame[['x', 'y']].values
-    particle_ids = df_frame[['particle']].values.flatten()
+    points = df[['x', 'y']].values
+    particle_ids = df[['particle']].values.flatten()
     tess = sp.Delaunay(points)
     list_indices, point_indices = tess.vertex_neighbor_vertices
 
@@ -677,17 +667,16 @@ def _find_delaunay(df_frame, parameters=None):
         neighbour_ids_list.append(current_neighbor_ids)
         neighbour_dists_list.append(current_neighbor_dists)
     
-    df_frame['neighbours'] = neighbour_ids_list
-    df_frame['neighbour_dists'] = neighbour_dists_list
+    df['neighbours'] = neighbour_ids_list
+    df['neighbour_dists'] = neighbour_dists_list
     
-    return df_frame
+    return df
 
 
 
 @error_handling
 @param_parse
-@df_single
-def voronoi(df_frame, *args, f_index=None, **kwargs):
+def voronoi(df, *args,  **kwargs):
     """
     Calculate the voronoi network of particle.
 
@@ -707,7 +696,7 @@ def voronoi(df_frame, *args, f_index=None, **kwargs):
     Args
     ----
 
-    df_frame
+    df
         The dataframe in which all data is stored
     f_index
         Integer specifying the frame for which calculations need to be made.
@@ -720,11 +709,19 @@ def voronoi(df_frame, *args, f_index=None, **kwargs):
     -------
         updated dataframe including new column
     """
-    points = df_frame[['x', 'y']].values
+    print('voronoi', df)
+    df['voronoi']=np.nan
+    df['voronoi_area']=np.nan
+
+    f_index = kwargs['f_index']
+    print('f', f_index)
+    points = df[['x', 'y']].loc[f_index].values
+    print(points)
     vor = sp.Voronoi(points)
-    df_frame['voronoi']=_get_voronoi_coords(vor)
-    df_frame['voronoi_area']=_voronoi_props(vor)
-    return df_frame
+    df['voronoi'].loc[f_index]=_get_voronoi_coords(vor)
+    df['voronoi_area'].loc[f_index]=_voronoi_props(vor)
+    print('workflow link', f_index)
+    return df
 
 def _get_voronoi_coords(vor):
     voronoi_coords = []
@@ -756,8 +753,7 @@ def _voronoi_props(vor):
 
 @error_handling
 @param_parse
-@df_single
-def real_imag(df_frame, *args, f_index=None, parameters=None, **kwargs):
+def real_imag(df, *args, parameters=None, **kwargs):
     """
     Extracts the real, imaginary, complex magnitude and complex angle from a complex number and puts them in
     new columns. Mainly useful for subsequent annotation with dynamic colour map.
@@ -768,7 +764,7 @@ def real_imag(df_frame, *args, f_index=None, parameters=None, **kwargs):
 
     Args
     ----
-    df_frame
+    df
         The dataframe for all data
     f_index
         Integer for the frame in twhich calculations need to be made
@@ -784,15 +780,14 @@ def real_imag(df_frame, *args, f_index=None, parameters=None, **kwargs):
     """
     column_name = parameters['column_name']
 
-    df_frame[column_name + '_re'] = np.real(df_frame[column_name])
-    df_frame[column_name + '_im'] = np.imag(df_frame[column_name])
-    df_frame[column_name + '_mag'] = np.absolute(df_frame[column_name])
-    df_frame[column_name + '_ang'] = np.angle(df_frame[column_name])
-    return df_frame
+    df[column_name + '_re'] = np.real(df[column_name])
+    df[column_name + '_im'] = np.imag(df[column_name])
+    df[column_name + '_mag'] = np.absolute(df[column_name])
+    df[column_name + '_ang'] = np.angle(df[column_name])
+    return df
 
 @error_handling
-@df_single
-def audio_frequency(df_frame, *args, f_index=None, parameters=None, **kwargs):
+def audio_frequency(df, *args,  parameters=None, **kwargs):
     """
     Decodes the audio frequency in our videos. We use this to 
     encode information about the acceleration being applied to a video
@@ -824,16 +819,15 @@ def audio_frequency(df_frame, *args, f_index=None, parameters=None, **kwargs):
     audio_arr = audio.extract_wav("out.wav")[:,0]
     peak = audio.fourier_transform_peak(audio_arr,1/bitrate)
     
-    if 'audio_frequency' not in df_frame.columns:
-        df_frame['audio_frequency'] = -1.0
+    if 'audio_frequency' not in df.columns:
+        df['audio_frequency'] = -1.0
 
-    df_frame['audio_frequency'] = peak
-    return df_frame
+    df['audio_frequency'] = peak
+    return df
 
 @error_handling
 @param_parse
-@df_single
-def duty_to_acceleration(df_frame, f_index=None, parameters=None, *args, **kwargs):
+def duty_to_acceleration(df,  parameters=None, *args, **kwargs):
     """
     Calculates dimensionless acceleration values of the system. Takes audio frequency 
     from function: 'audio_frequency' and calculates duty cycle. Acceleration determined
@@ -849,7 +843,7 @@ def duty_to_acceleration(df_frame, f_index=None, parameters=None, *args, **kwarg
     
     Args
     ----
-        df_frame ([type]): [description]
+        df ([type]): [description]
         f_index ([type], optional): [description]. Defaults to None.
         parameters ([type], optional): [description]. Defaults to None.
         call_num ([type], optional): [description]. Defaults to None.
@@ -868,7 +862,7 @@ def duty_to_acceleration(df_frame, f_index=None, parameters=None, *args, **kwarg
 
     func = lambda x,a,b,c,d,e, : a*x**4 + b*x**3 + c*x**2 + d*x + e
 
-    peak_freq = df_frame['audio_frequency']
+    peak_freq = df['audio_frequency']
     duty = (peak_freq.iloc[0] - 1000) / 15
     cal_arr = calibration_data.to_numpy()
     duty_data = cal_arr[:,0]
@@ -877,9 +871,9 @@ def duty_to_acceleration(df_frame, f_index=None, parameters=None, *args, **kwarg
     duty_idx, = np.where(np.round(duty_interp,1)==np.round(duty,1))
     acceleration = np.round(acc_interp[duty_idx[0]], 2)
     
-    df_frame['duty_cycle'] = duty
-    df_frame['acceleration'] = acceleration
-    return df_frame
+    df['duty_cycle'] = duty
+    df['acceleration'] = acceleration
+    return df
 
 '''
 ---------------------------------------------------------------------------------------------
@@ -890,8 +884,7 @@ multiple frames have been processed and you are using part.
 
 @error_with_hint("HINT: this func only works in the gui when locked. Span must be an odd value.")
 @param_parse
-@df_range
-def difference(df_range, f_index=None, parameters=None, *args, **kwargs):
+def difference(df_range,  parameters=None, *args, **kwargs):
     '''
     Calculates the centered finite difference of a particle's values and
     returns the result for a specific frame index.
@@ -916,18 +909,17 @@ def difference(df_range, f_index=None, parameters=None, *args, **kwargs):
     df_temp[output_name] = shifted_forward - shifted_backward
 
     # Extract the data for the specified frame index and ensure it's a DataFrame
-    df_frame = df_temp.loc[(slice(None), f_index), :].copy()
+    df = df_temp.loc[(slice(None), f_index), :].copy()
 
     # Convert the 'particle' index level back into a column and filter
-    final_df = df_frame.reset_index(level='particle')
+    final_df = df.reset_index(level='particle')
     
     return final_df
     
 
 @error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")
 @param_parse
-@df_range
-def mean(df_range, f_index=None, parameters=None, *args, **kwargs):
+def mean(df_range,  parameters=None, *args, **kwargs):
     '''
     Calculates the rolling mean of a particle's values and returns the result
     for a specific frame index.
@@ -946,18 +938,17 @@ def mean(df_range, f_index=None, parameters=None, *args, **kwargs):
     df_temp[output_name] = rolling_mean_series
 
     # Extract the data for the specified frame index and ensure it's a DataFrame
-    df_frame = df_temp.loc[(slice(None), f_index), :].copy()
+    df = df_temp.loc[(slice(None), f_index), :].copy()
 
     # Remove the particle index level so the output is clean
      # Convert the 'particle' index level back into a column
-    #df_frame = df_frame.reset_index(level='particle').filter(items=['particle', output_name])
-    df_frame = df_frame.reset_index(level='particle')#.filter(items=['particle', output_name])
-    return df_frame
+    #df = df.reset_index(level='particle').filter(items=['particle', output_name])
+    df = df.reset_index(level='particle')#.filter(items=['particle', output_name])
+    return df
 
 @error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")
 @param_parse
-@df_range
-def median(df_range, f_index=None, parameters=None, *args, **kwargs):
+def median(df_range,  parameters=None, *args, **kwargs):
     '''
     Calculates the rolling mean of a particle's values and returns the result
     for a specific frame index.
@@ -976,19 +967,18 @@ def median(df_range, f_index=None, parameters=None, *args, **kwargs):
     df_temp[output_name] = rolling_mean_series
 
     # Extract the data for the specified frame index and ensure it's a DataFrame
-    df_frame = df_temp.loc[(slice(None), f_index), :].copy()
+    df = df_temp.loc[(slice(None), f_index), :].copy()
 
     # Remove the particle index level so the output is clean
      # Convert the 'particle' index level back into a column
-    df_frame = df_frame.reset_index(level='particle')
+    df = df.reset_index(level='particle')
       
-    return df_frame
+    return df
 
 
 @error_with_hint("HINT: this func only works in the gui when locked. Span must be an odd value.")
 @param_parse
-@df_range
-def rate(df_range, f_index=None, parameters=None, *args, **kwargs):
+def rate(df_range,  parameters=None, *args, **kwargs):
     '''
     Rate of change of a particle property with frame.
     '''
@@ -1025,14 +1015,12 @@ def rate(df_range, f_index=None, parameters=None, *args, **kwargs):
     df_temp[output_name] = rate_of_change  
 
     # Extract the data for the specified frame index and ensure it's a DataFrame
-    df_frame = df_temp.loc[(slice(None), f_index), :].copy()
+    df = df_temp.loc[(slice(None), f_index), :].copy()
 
     # Convert the 'particle' index level back into a column and filter
-    final_df = df_frame.reset_index(level='particle')
+    final_df = df.reset_index(level='particle')
 
     return final_df
-
-
 
 def get_duty_cycle():
     """The shaker amplitude in our experiments is encoded into the audio of our video frames. We

@@ -32,6 +32,7 @@ class LinkTrajectory:
             output_filename = self.track_store.temp_filename   
             if lock_part == -1:
                 #Tracking only operates on one frame producing _temp.hdf5, Linking reads from this temporary file
+                self.track_store.clear_temp_df()
                 df=self.track_store.temp_df
             else:
                 #If lock_part == 0 The tracking data on whole movie is stored in a file _track.hdf5 created previously. We only want to operate on one frame of this. You load full tracking data and then grab a single frame process it and store result in a temporary file.

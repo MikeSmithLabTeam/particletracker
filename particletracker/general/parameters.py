@@ -31,6 +31,17 @@ def get_method_key(method, call_num=None):
         method_key = method + '*' + call_num
     return method_key
 
+def get_span(params):
+    """params is a section of param dictionary e.g parameters['postprocess']"""
+    span=1
+    for key in params.keys():
+        if type(params[key]) is dict:
+            for key_inner in params[key].keys():
+                if key_inner == 'span':
+                    if params[key][key_inner][0] > span:
+                        span = params[key][key_inner][0]
+    return span
+
 def get_parent(func):
     filename = func.__file__
 

@@ -1,8 +1,9 @@
 from tqdm import tqdm
 import os
 import pandas as pd
+import numpy as np
 
-from ..general.parameters import get_method_name
+from ..general.parameters import get_method_name, get_span
 from ..general.dataframes import DataWrite, combine_data_frames
 from ..postprocess import postprocessing_methods as pm
 
@@ -34,28 +35,23 @@ class PostProcessor:
             output_filename = self.link_store.temp_filename
         
         #Choose whether to load full df or temp
-        if f_index is None or lock_part == 1:
+        if f_index is None:
             df = self.link_store.df
+        elif lock_part == 1 and self.parameters['postprocess']['postprocess_method']:
+            full_df = self.link_store.df
+
+            max_span = get_span(self.parameters['postprocess'])
+
+            half_span = np.floor(max_span / 2)
+            start = max(f_index - half_span, full_df.index.min())
+            finish = min(f_index + half_span, full_df.index.max())
+
+            #return a range
+            df = full_df.loc[start:finish]
         else:
             self.link_store.clear_temp_df()
             df = self.link_store.temp_df
-
-        #Set start, stop and step
-        if f_index is None:
-            # processing whole thing
-            start, stop, step = self.parameters['config']['_frame_range']
-            df = self.link_store.df
-            if df.empty:
-                raise ValueError("No data found in link store")
-            max_frame = df.index.max()
-            if pd.isna(max_frame):
-                raise ValueError("Invalid frame index found in data")
-            stop = int(max_frame + 1)
-        else:
-            #process single frame
-            start = f_index
-            stop = f_index + 1
-            step = 1        
+            print('straight from store', df)      
 
         """This block either copies across the data if no postprocessing methods (if block) or the line in the else block containing getattr(pm, method_name() says call the method in postprocessing_methods.py with the name method_name and pass the parameters to it. Take the return value and add it to the postprocessing store.
         See intro to postprocessing to understand how parameters and full dataframe are parsed by each function.
@@ -66,18 +62,17 @@ class PostProcessor:
                 #No methods selected copy data across
                 store.write_data(df)
             else:
-                for f in tqdm(range(start, stop, step), 'Postprocessing'):
-                    for method in self.parameters['postprocess']['postprocess_method']:
-                        method_name, call_num = get_method_name(method)
-                        print('df b4', df)
-                        modified_df = getattr(pm, method_name)(df,f_index=f,parameters=self.parameters, call_num=call_num, section='postprocess')
-                        print('init modified_df', modified_df)
+                for method in self.parameters['postprocess']['postprocess_method']:
+                    method_name, call_num = get_method_name(method)
+                    df = getattr(pm, method_name)(df,f_index=f_index, parameters=self.parameters, call_num=call_num, section='postprocess')    
 
-                        if modified_df is not None:
-                            df = combine_data_frames(df,modified_df)   
-                        print('df', df)         
-
-                    store.write_data(df.loc[f], f_index=f)
+                
+                if f_index is not None:
+                    print('Temp', f_index)
+                    store.write_data(df.loc[f_index])
+                else:
+                    print('Full')
+                    store.write_data(df)
 
         print('Postprocessing complete')
 
