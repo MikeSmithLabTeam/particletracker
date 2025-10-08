@@ -53,9 +53,11 @@ def test_eyes():
     batchprocess("testdata/eyes.mp4", "testdata/test_eyes.param")
     
     
-    df = pd.read_hdf(output_df)
+    
     
     assert os.path.exists(output_video), 'Eyes annotated video not created'
+
+    df = pd.read_hdf(output_df)
     assert int(df.loc[3, ['x_mean']].to_numpy()[0][0]) == int(
         152.3), df.loc[3, ['x_mean']].to_numpy()[0][0]
     os.remove(output_video)

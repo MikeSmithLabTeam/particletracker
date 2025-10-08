@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 from ..general.parameters import get_method_name
-from ..general.dataframes import DataWrite
+from ..general.dataframes import DataWrite, combine_data_frames
 from ..postprocess import postprocessing_methods as pm
 
 
@@ -25,28 +25,26 @@ class PostProcessor:
         """
 
         print('Postprocessing...')
-        assert lock_part < 2, 'PTWorkflow.process logic should guarantee this'
-
-        _original = self.link_store.full
+        assert lock_part < 2, 'PTWorkflow.process logic should guarantee this but it broke'
 
         #Set output_filename
         if f_index is None:
             output_filename = self.link_store.output_filename
-            #self.link_store.clear_data()
         else:
             output_filename = self.link_store.temp_filename
         
         #Choose whether to load full df or temp
         if f_index is None or lock_part == 1:
-            self.link_store.full=True
+            df = self.link_store.df
         else:
-            self.link_store.full=False
+            self.link_store.clear_temp_df()
+            df = self.link_store.temp_df
 
         #Set start, stop and step
         if f_index is None:
             # processing whole thing
             start, stop, step = self.parameters['config']['_frame_range']
-            df = self.link_store.get_df()
+            df = self.link_store.df
             if df.empty:
                 raise ValueError("No data found in link store")
             max_frame = df.index.max()
@@ -59,8 +57,6 @@ class PostProcessor:
             stop = f_index + 1
             step = 1        
 
-
-
         """This block either copies across the data if no postprocessing methods (if block) or the line in the else block containing getattr(pm, method_name() says call the method in postprocessing_methods.py with the name method_name and pass the parameters to it. Take the return value and add it to the postprocessing store.
         See intro to postprocessing to understand how parameters and full dataframe are parsed by each function.
         """ 
@@ -68,25 +64,20 @@ class PostProcessor:
         with DataWrite(output_filename) as store:
             if not self.parameters['postprocess']['postprocess_method']:
                 #No methods selected copy data across
-                store.write_data(self.link_store.get_df(f_index=f_index))
+                store.write_data(df)
             else:
                 for f in tqdm(range(start, stop, step), 'Postprocessing'):
-                    combined_modified_df = None
                     for method in self.parameters['postprocess']['postprocess_method']:
                         method_name, call_num = get_method_name(method)
-                        
-                        modified_df = getattr(pm, method_name)(self.link_store,f_index=f,parameters=self.parameters, call_num=call_num, section='postprocess')
+                        print('df b4', df)
+                        modified_df = getattr(pm, method_name)(df,f_index=f,parameters=self.parameters, call_num=call_num, section='postprocess')
+                        print('init modified_df', modified_df)
 
                         if modified_df is not None:
-                            self.link_store.combine_data(modified_df=modified_df)            
+                            df = combine_data_frames(df,modified_df)   
+                        print('df', df)         
 
-                    if self.link_store.full:
-                        store.write_data(self.link_store.get_df(f_index=f), f_index=f)
-                    else:
-                        store.write_data(self.link_store._temp_df, f_index=f)
-                    
-        
-        self.link_store.full=_original
+                    store.write_data(df, f_index=f)
 
         print('Postprocessing complete')
 

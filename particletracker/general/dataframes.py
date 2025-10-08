@@ -63,7 +63,6 @@ class DataManager:
         Replaces the old DataRead instance at the given index with the new, 
         updated instance provided by the PandasWidget.
         """
-        print('updating store')
         self._stores[store_index] = updated_store
 
     def clear_data(self):
@@ -71,7 +70,8 @@ class DataManager:
         for idx, store in enumerate(self._stores):
             if idx > DataRead.lock_part:
                 if store is not None:
-                    store.clear_data()
+                    store.clear_df()
+                    store.clear_temp_df()
                     #self._stores[idx] = None
 
 
@@ -100,22 +100,22 @@ class DataRead:
         self.store_index = store_index
         self._df = None
         self._temp_df = None
-        self.full=False
 
     @property
     def df(self):
         """Returns full dataframe. Loads lazily."""
         if self._df is None:
-            self._df = self._load(self._df, full=True)
+            self._df = self._load(full=True)
         return self._df
 
     @property
     def temp_df(self):
         """Returns temporary dataframe. Loads lazily"""
-        self._temp_df = self._load(self._temp_df, full=False)
+        if self._temp_df is None:
+            self._temp_df = self._load(full=False)
         return self._temp_df
 
-    def _load(self, df, full=False):
+    def _load(self, full=False):
         """internal loading method"""
         try:
             if full:
@@ -130,7 +130,7 @@ class DataRead:
             return pd.DataFrame()
     
     def get_df(self, f_index=None):
-        """Returns single or whole frame from the whole dataframe in _df.
+        """Returns single frame from the whole dataframe in _df.
 
         Parameters
         ----------
@@ -140,30 +140,25 @@ class DataRead:
         -------
         pd.DataFrame
         """
-        if not self.full:
-            if self._temp_df is None:
-                return self.temp_df
-            else:
-                return self._temp_df
-        else:
-            df=self.df
-            if f_index is None:
-                return df
-            else:
-                try:
-                    frame_data = df.loc[f_index]
-                    if isinstance(frame_data, pd.Series):
-                        # If only one row, convert to DataFrame
-                        frame_data = frame_data.to_frame().T
-                except KeyError:
-                    frame_data = df.iloc[0:0]
-                    print(f'Frame {f_index} not found in data')
-                return frame_data
+        assert f_index is not None, 'If you want full df use .df property'
 
-    def clear_data(self):
+        df=self.df        
+        try:
+            frame_data = df.loc[f_index]
+            if isinstance(frame_data, pd.Series):
+                # If only one row, convert to DataFrame
+                frame_data = frame_data.to_frame().T
+        except KeyError:
+            frame_data = df.iloc[0:0]
+            print(f'Frame {f_index} not found in data')
+        return frame_data
+
+    def clear_df(self):
         self._df = None
+    
+    def clear_temp_df(self):
         self._temp_df = None
-
+"""
     @error_with_hint("HINT: this often happens if you try to use a method in gui that requires previous stage to be locked. You can still process the entire movie.")
     def combine_data(self, modified_df=None):
         # Get frame index from modified data
@@ -172,11 +167,8 @@ class DataRead:
         if self.full:
             df = self.df
         else:
-            if self._temp_df is None:
-                df = self.temp_df
-            else:
-                df=self._temp_df
-
+            df = self.temp_df
+            
         # Add new columns with NaN values
         new_cols = modified_df.columns.difference(df.columns)
         
@@ -189,7 +181,6 @@ class DataRead:
         for col in modified_df.columns:
             df.loc[mask, col] = modified_df[col].values.squeeze()
         
-        
         if self.full:
             self._df = df
         else:
@@ -197,15 +188,16 @@ class DataRead:
         
         return df
 
-        
+"""       
 
 
 def df_single(func):
     """df_single decorator is designed to send a single frame of the data to a function"""
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
-        store = args[0]
-        new_args = (store.get_df(f_index=kwargs['f_index']),) + args[1:]
+        df = args[0]
+        new_args = (df.loc[kwargs['f_index']],) + args[1:]
+        
         return func(*new_args, **kwargs)
     return wrapper_param_format
 
@@ -214,13 +206,10 @@ def df_range(func):
     """df_range decorator is designed to send a range of frames of the data to a function"""
     @functools.wraps(func)
     def wrapper_param_format(*args, **kwargs):
-        store = args[0]
+        df = args[0]
+
         f_index = kwargs['f_index']
         parameters = kwargs['parameters']
-
-        #Get the whole dataframe
-        df = store.get_df(f_index=None)
-
         if 'output_name' in parameters.keys():
             output_name = parameters['output_name']
             if output_name not in df.columns:
@@ -318,3 +307,34 @@ class DataWrite:
     def __exit__(self, exc_type, exc_value, traceback):
         self.close_output()
         return None
+
+
+def combine_data_frames(df, modified_df):
+    """
+    Merges single-frame modified data (modified_df) back into 
+    the multi-frame main DataFrame (df) by deleting the old frame
+    and replacing it with the new data.
+
+    Args:
+        df (pd.DataFrame): The multi-frame DataFrame (the main data store).
+        modified_df (pd.DataFrame): The single-frame DataFrame with modifications
+                                    (which may have a different number of rows).
+
+    Returns:
+        pd.DataFrame: The updated DataFrame.
+    """
+    if modified_df.empty:
+        return df.copy(deep=False) 
+
+    frame_idx = modified_df.index[0]
+    print("combine_data_frames")
+    print('modified_df', modified_df)
+    print('df',df)
+    print(frame_idx)
+    retained_df = df[df.index != frame_idx]
+    print('retained', retained_df)    
+    updated_df = pd.concat([retained_df, modified_df], sort=True)
+    
+    updated_df.index.name='frame'
+    print('updated',updated_df)
+    return updated_df

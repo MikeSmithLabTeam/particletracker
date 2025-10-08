@@ -932,24 +932,31 @@ def mean(df_range, f_index=None, parameters=None, *args, **kwargs):
     Calculates the rolling mean of a particle's values and returns the result
     for a specific frame index.
     '''
+    print('mean df_range', df_range)
     column = parameters['column_name']
     output_name = parameters['output_name']
     span = parameters['span']
 
     # Create a MultiIndex for proper grouping and sorting 
     df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
+    print('mean df_temp', df_temp)
     # Calculate the rolling mean and store it in a temporary Series
     rolling_mean_series = df_temp.groupby(level='particle')[column].rolling(
         window=span, center=True).mean().reset_index(level=0, drop=True)
+    print('seriess', rolling_mean_series)
     # Re-index the series to match the original DataFrame and add it
     df_temp[output_name] = rolling_mean_series
+    print('df_temp[output]', df_temp)
 
     # Extract the data for the specified frame index and ensure it's a DataFrame
     df_frame = df_temp.loc[(slice(None), f_index), :].copy()
+    print('df_frame', df_frame)
 
     # Remove the particle index level so the output is clean
      # Convert the 'particle' index level back into a column
-    df_frame = df_frame.reset_index(level='particle').filter(items=['particle', output_name])
+    #df_frame = df_frame.reset_index(level='particle').filter(items=['particle', output_name])
+    df_frame = df_frame.reset_index(level='particle')#.filter(items=['particle', output_name])
+    print('mean return', df_frame)
     return df_frame
 
 @error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")

@@ -413,13 +413,13 @@ class MainWindow(QMainWindow):
         print(output[int(y),int(x),:])
 
         if self.pandas_read.isVisible():
-            points = self.pandas_read.df[['x', 'y']].values
+            points = self.pandas_read.model._data[['x', 'y']].values
             tree = spatial.KDTree(points)
             dist, idx = tree.query((x, y))
             self.pandas_read.view.selectRow(idx)
         
         if self.pandas_edit.isVisible():
-            points = self.pandas_edit.df[['x', 'y']].values
+            points = self.pandas_edit.model._data[['x', 'y']].values
             tree = spatial.KDTree(points)
             dist, idx = tree.query((x, y))
             self.pandas_edit.view.selectRow(idx)
@@ -529,6 +529,8 @@ class MainWindow(QMainWindow):
         data_manager = self.tracker.data
         data_manager.update_store(store_index, store)
         self.update_viewer()
+        print('pandas_edit_update', data_manager._stores[store_index].df)
+        self.pandas_edit.update_file_editable(self.frame_selector.value())
         
 
     def pandas_read_update(self):
@@ -588,8 +590,7 @@ class MainWindow(QMainWindow):
                 param_adjustor.remove_widgets()
                 param_adjustor.build_widgets(title, self.tracker.parameters[title])
 
-    def update_viewer(self):
-        lock_index = CustomButton.locked_part           
+    def update_viewer(self):        
         if self.live_update_button.isChecked():
             frame_number = self.frame_selector.value()
 

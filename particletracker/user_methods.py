@@ -15,15 +15,24 @@ The methods in a given section all take the same inputs and outputs.
 
 
 from .customexceptions import *
-from .general.parameters import get_method_name, get_method_key, get_param_val
+from .general.parameters import get_method_name, get_method_key, get_param_val, param_parse
+from .general.dataframes import df_single, df_range
 
 '''
 --------------------------------------------------------------------------------------
 Preprocessing Methods
 --------------------------------------------------------------------------------------
 '''
+"""
+The following decorators can be used.
+@df_single - if you want data to be a single frames dataframe use this
+@df_range - if you want data to be a dataframe covering a range of frames specified in your parameters span field use this
+@param_parse - This chops the dictionary down to just the bit relevant to your method. Use if you don't need info for the rest of the program.
+
+"""
+
 @error_handling
-def preprocess_method_name(frame, parameters=None, call_num=None):
+def preprocess_method_name(data, parameters=None, call_num=None):
     """
     Docstring for method. Replace 'example_method_name' in function name 
     and below.

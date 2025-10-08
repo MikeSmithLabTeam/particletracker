@@ -560,7 +560,8 @@ def networks(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
 
 @error_with_hint(additional_message="HINT: To run Voronoi Annotation you must have selected Voronoi in the postprocessing section")
 @param_parse
-def voronoi(data,frame, f_index=None, parameters=None, *args, **kwargs):
+@df_single
+def voronoi(df_single,frame, f_index=None, parameters=None, *args, **kwargs):
     """
     Voronoi draws the voronoi network that surrounds each particle
 
@@ -614,7 +615,7 @@ def voronoi(data,frame, f_index=None, parameters=None, *args, **kwargs):
     """
     thickness = parameters['thickness']
 
-    subset_df = _get_class_subset(data.get_df(f_index=f_index), parameters)
+    subset_df = _get_class_subset(df_single, parameters)
     contour_pts = subset_df[['voronoi']].values
     (colours, colourbar) = colour_array(subset_df, f_index, parameters)
 

@@ -8,4 +8,4 @@ if __name__ == '__main__':
     path = userprofile + \
         "\\OneDrive - The University of Nottingham\\Documents\\Programming\\particletracker\\testdata\\"
     
-    track_gui("testdata/hydrogel.mp4", "testdata/test_postprocess.param")
+    track_gui("testdata/eyes.mp4", "testdata/test_eyes.param")
