@@ -333,8 +333,8 @@ def combine_data_frames(df, modified_df):
     print(frame_idx)
     retained_df = df[df.index != frame_idx]
     print('retained', retained_df)    
-    updated_df = pd.concat([retained_df, modified_df], sort=True)
-    
+    updated_df = pd.concat([retained_df, modified_df])
     updated_df.index.name='frame'
     print('updated',updated_df)
+    updated_df.sort_index(inplace=True)
     return updated_df

@@ -77,7 +77,7 @@ class PostProcessor:
                             df = combine_data_frames(df,modified_df)   
                         print('df', df)         
 
-                    store.write_data(df, f_index=f)
+                    store.write_data(df.loc[f], f_index=f)
 
         print('Postprocessing complete')
 

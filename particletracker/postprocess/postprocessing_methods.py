@@ -919,7 +919,7 @@ def difference(df_range, f_index=None, parameters=None, *args, **kwargs):
     df_frame = df_temp.loc[(slice(None), f_index), :].copy()
 
     # Convert the 'particle' index level back into a column and filter
-    final_df = df_frame.reset_index(level='particle').filter(items=['particle', 'frame', output_name])
+    final_df = df_frame.reset_index(level='particle')
     
     return final_df
     
@@ -932,31 +932,26 @@ def mean(df_range, f_index=None, parameters=None, *args, **kwargs):
     Calculates the rolling mean of a particle's values and returns the result
     for a specific frame index.
     '''
-    print('mean df_range', df_range)
     column = parameters['column_name']
     output_name = parameters['output_name']
     span = parameters['span']
 
     # Create a MultiIndex for proper grouping and sorting 
     df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
-    print('mean df_temp', df_temp)
+
     # Calculate the rolling mean and store it in a temporary Series
     rolling_mean_series = df_temp.groupby(level='particle')[column].rolling(
         window=span, center=True).mean().reset_index(level=0, drop=True)
-    print('seriess', rolling_mean_series)
     # Re-index the series to match the original DataFrame and add it
     df_temp[output_name] = rolling_mean_series
-    print('df_temp[output]', df_temp)
 
     # Extract the data for the specified frame index and ensure it's a DataFrame
     df_frame = df_temp.loc[(slice(None), f_index), :].copy()
-    print('df_frame', df_frame)
 
     # Remove the particle index level so the output is clean
      # Convert the 'particle' index level back into a column
     #df_frame = df_frame.reset_index(level='particle').filter(items=['particle', output_name])
     df_frame = df_frame.reset_index(level='particle')#.filter(items=['particle', output_name])
-    print('mean return', df_frame)
     return df_frame
 
 @error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")
@@ -985,7 +980,7 @@ def median(df_range, f_index=None, parameters=None, *args, **kwargs):
 
     # Remove the particle index level so the output is clean
      # Convert the 'particle' index level back into a column
-    df_frame = df_frame.reset_index(level='particle').filter(items=['particle', output_name])
+    df_frame = df_frame.reset_index(level='particle')
       
     return df_frame
 
@@ -1006,10 +1001,19 @@ def rate(df_range, f_index=None, parameters=None, *args, **kwargs):
     fps = parameters['fps']
 
     # Create a MultiIndex for proper grouping and sorting
-    df_temp = df_range.set_index(['particle', 'frame']).sort_index()
+    df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
 
-    # Calculate the difference in the column's value
-    diff_values = df_temp.groupby(level='particle')[column].diff(periods=span)
+    # Ensure span is an odd number for a centered difference
+    if span % 2 == 0:
+        raise ValueError("Span for centered difference must be odd.")
+    half_span = span // 2
+
+    # Calculate the centered finite difference
+    shifted_forward = df_temp.groupby(level='particle')[column].shift(-half_span)
+    shifted_backward = df_temp.groupby(level='particle')[column].shift(half_span)
+
+    # Store the calculated difference in a new column
+    diff_values = shifted_forward - shifted_backward
 
     # Calculate the time difference (span / fps)
     time_diff = span / fps
@@ -1018,13 +1022,13 @@ def rate(df_range, f_index=None, parameters=None, *args, **kwargs):
     rate_of_change = diff_values / time_diff
 
     # Add the rate to a new column
-    df_temp[output_name] = rate_of_change
+    df_temp[output_name] = rate_of_change  
 
     # Extract the data for the specified frame index and ensure it's a DataFrame
     df_frame = df_temp.loc[(slice(None), f_index), :].copy()
 
-    # Convert the 'particle' index level back to a column
-    final_df = df_frame.reset_index(level='particle').filter(items=['particle', 'frame', output_name])
+    # Convert the 'particle' index level back into a column and filter
+    final_df = df_frame.reset_index(level='particle')
 
     return final_df
 
