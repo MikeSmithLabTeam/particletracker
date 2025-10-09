@@ -379,7 +379,7 @@ def circles(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     y_col_name = parameters['ydata_column']
     r_col_name = parameters['rdata_column']
     
-    subset_df = _get_class_subset(df_single, parameters)
+    subset_df = _get_class_subset(df_single, parameters).copy()
 
     if get_param_val(parameters['rad_from_data']):
         circles = subset_df[[x_col_name, y_col_name, r_col_name]].values

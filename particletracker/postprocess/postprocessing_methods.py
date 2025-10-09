@@ -107,13 +107,24 @@ def add_frame_data(df,  parameters=None, *args, **kwargs):
     -------
         updated dataframe including new column
     '''
-    assert False, "Not yet implemented in upgrade"
+    f_index = kwargs['f_index']
+    df[parameters['new_column_name']] = np.nan
+    
+    if f_index is None:
+        #process all frames
+        indices = list(set(df.index.values.tolist()))
+    else:
+        #Just process frame of interest
+        indices=[f_index]
+    
     datapath = parameters['data_path']
     filename = os.path.join(datapath,parameters['data_filename'])
     if '.csv' not in filename:
         filename = filename + '.csv'
     new_df = pd.read_csv(filename, header=None).squeeze("columns")
-    df[parameters['new_column_name']] = new_df[new_df.index == f_index]
+
+    for f_index in indices:
+        df.loc[f_index, parameters['new_column_name']] = new_df[new_df.index == f_index]
     return df
 
 @error_handling
@@ -329,31 +340,48 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
     """
     Calculates the hexatic order parameter of each particle.
     """
+    df['hexatic_order_complex']=pd.Series(np.nan, index=df.index, dtype=object)
+    df['hexatic_order_magnitude']=pd.Series(np.nan, index=df.index, dtype=object)
+    df['hexatic_order_phase']=pd.Series(np.nan, index=df.index, dtype=object)
+    df['number_of_neighbours']=pd.Series(np.nan, index=df.index, dtype=object)
+    
     method = parameters.get('method', 'delaunay')  # Default to Delaunay
     cutoff = parameters['cutoff']
-    points = df[['x', 'y']].values
     
-    # Use the appropriate method to find neighbors
-    if method == 'delaunay':
-        neighbors_data = _find_delaunay_for_hexatic(points, cutoff)
-    elif method == 'kdtree':
-        num_neighbors = int(parameters['neighbours'])
-        neighbors_data = _find_kdtree_for_hexatic(points, cutoff, num_neighbors)
-    else:
-        raise ValueError(f"Unknown method '{method}' for hexatic order calculation.")
-    
-    sum_exp_6j, num_neighbors = neighbors_data
+    f_index = kwargs['f_index']
 
-    # Calculate the complex hexatic order parameter
-    psi_6 = np.zeros(len(points), dtype=complex)
-    valid_indices = num_neighbors > 0
-    psi_6[valid_indices] = sum_exp_6j[valid_indices] / num_neighbors[valid_indices]
-    
-    # Add the results to the DataFrame
-    df['hexatic_order_complex'] = psi_6
-    df['hexatic_order_magnitude'] = np.abs(psi_6)
-    df['hexatic_order_phase'] = np.angle(psi_6)
-    df['number_of_neighbours'] = num_neighbors
+    if f_index is None:
+        #process all frames
+        indices = list(set(df.index.values.tolist()))
+    else:
+        #Just process frame of interest
+        indices=[f_index]
+
+    for f_index in indices:
+        points = df[['x', 'y']].loc[f_index].values
+        frame_indices = df.loc[f_index].index
+
+        # Use the appropriate method to find neighbors
+        if method == 'delaunay':
+            neighbors_data = _find_delaunay_for_hexatic(points, cutoff)
+        elif method == 'kdtree':
+            num_neighbors = int(parameters['neighbours'])
+            neighbors_data = _find_kdtree_for_hexatic(points, cutoff, num_neighbors)
+        else:
+            raise ValueError(f"Unknown method '{method}' for hexatic order calculation.")
+        
+        sum_exp_6j, num_neighbors = neighbors_data
+
+        # Calculate the complex hexatic order parameter
+        psi_6 = np.zeros(len(points), dtype=complex)
+        valid_indices = num_neighbors > 0
+        psi_6[valid_indices] = sum_exp_6j[valid_indices] / num_neighbors[valid_indices]       
+        
+        # Create a Series for each result and align it to the correct particle indices
+        df.loc[f_index, 'hexatic_order_complex'] = pd.Series(psi_6, index=frame_indices)
+        df.loc[f_index, 'hexatic_order_magnitude'] = pd.Series(np.abs(psi_6), index=frame_indices)
+        df.loc[f_index, 'hexatic_order_phase'] = pd.Series(np.angle(psi_6), index=frame_indices)
+        df.loc[f_index, 'number_of_neighbours'] = pd.Series(num_neighbors, index=frame_indices)
     
     return df
 
@@ -597,12 +625,24 @@ def neighbours(df, *args,  parameters=None, **kwargs):
 
 
     '''    
+    df['neighbours'] = pd.Series(np.nan, index=df.index, dtype=object)
+    df['neighbour_dists'] = pd.Series(np.nan, index=df.index, dtype=object)
+
     method = parameters['method']
 
-    if method == 'delaunay':
-        df =_find_delaunay(df, parameters=parameters)
-    elif method == 'kdtree':
-        df =_find_kdtree(df, parameters=parameters)     
+    f_index = kwargs['f_index']
+    if f_index is None:
+        #process all frames
+        indices = list(set(df.index.values.tolist()))
+    else:
+        #Just process frame of interest
+        indices=[f_index]
+    
+    for f_index in indices:
+        if method == 'delaunay':
+            df.loc[f_index,['neighbours', 'neighbour_dists']] =_find_delaunay(df.loc[f_index], parameters=parameters)
+        elif method == 'kdtree':
+            df.loc[f_index,['neighbours', 'neighbour_dists']] =_find_kdtree(df.loc[f_index], parameters=parameters)     
     return df
 
 def _find_kdtree(df, parameters=None):
@@ -709,18 +749,24 @@ def voronoi(df, *args,  **kwargs):
     -------
         updated dataframe including new column
     """
-    print('voronoi', df)
-    df['voronoi']=np.nan
-    df['voronoi_area']=np.nan
-
+    df['voronoi']=pd.Series(np.nan, index=df.index, dtype=object)
+    df['voronoi_area']=pd.Series(np.nan, index=df.index, dtype=object)
     f_index = kwargs['f_index']
-    print('f', f_index)
-    points = df[['x', 'y']].loc[f_index].values
-    print(points)
-    vor = sp.Voronoi(points)
-    df['voronoi'].loc[f_index]=_get_voronoi_coords(vor)
-    df['voronoi_area'].loc[f_index]=_voronoi_props(vor)
-    print('workflow link', f_index)
+
+    if f_index is None:
+        #process all frames
+        indices = list(set(df.index.values.tolist()))
+    else:
+        #Just process frame of interest
+        indices=[f_index]
+
+    for f_index in indices:
+        points = df[['x', 'y']].loc[f_index].values
+        frame_indices = df.loc[f_index].index
+
+        vor = sp.Voronoi(points)
+        df.loc[f_index, 'voronoi'] = pd.Series(_get_voronoi_coords(vor), index=frame_indices)
+        df.loc[f_index, 'voronoi_area']=_voronoi_props(vor)
     return df
 
 def _get_voronoi_coords(vor):
@@ -892,7 +938,10 @@ def difference(df_range,  parameters=None, *args, **kwargs):
     column = parameters['column_name']
     output_name = parameters['output_name']
     span = parameters['span']
-    
+
+    if output_name not in df.columns:
+        df[output_name]=np.nan
+
     # Create a MultiIndex for proper grouping and sorting
     df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
 
@@ -904,22 +953,21 @@ def difference(df_range,  parameters=None, *args, **kwargs):
     # Calculate the centered finite difference
     shifted_forward = df_temp.groupby(level='particle')[column].shift(-half_span)
     shifted_backward = df_temp.groupby(level='particle')[column].shift(half_span)
-    
+
     # Store the calculated difference in a new column
-    df_temp[output_name] = shifted_forward - shifted_backward
+    diff_values = shifted_forward - shifted_backward
 
-    # Extract the data for the specified frame index and ensure it's a DataFrame
-    df = df_temp.loc[(slice(None), f_index), :].copy()
-
-    # Convert the 'particle' index level back into a column and filter
-    final_df = df.reset_index(level='particle')
+    # Add the rate to a new column
+    df_temp[output_name] = diff_values
+    df = df_temp
+    df.reset_index(level='particle', inplace=True)    
     
-    return final_df
+    return df
     
 
 @error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")
 @param_parse
-def mean(df_range,  parameters=None, *args, **kwargs):
+def mean(df,  parameters=None, *args, **kwargs):
     '''
     Calculates the rolling mean of a particle's values and returns the result
     for a specific frame index.
@@ -928,22 +976,20 @@ def mean(df_range,  parameters=None, *args, **kwargs):
     output_name = parameters['output_name']
     span = parameters['span']
 
+    if output_name not in df.columns:
+        df[output_name]=np.nan
+
     # Create a MultiIndex for proper grouping and sorting 
-    df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
+    df_temp = df.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
 
     # Calculate the rolling mean and store it in a temporary Series
     rolling_mean_series = df_temp.groupby(level='particle')[column].rolling(
         window=span, center=True).mean().reset_index(level=0, drop=True)
     # Re-index the series to match the original DataFrame and add it
     df_temp[output_name] = rolling_mean_series
+    df = df_temp#.droplevel(level='particle').reindex(original_index)
 
-    # Extract the data for the specified frame index and ensure it's a DataFrame
-    df = df_temp.loc[(slice(None), f_index), :].copy()
-
-    # Remove the particle index level so the output is clean
-     # Convert the 'particle' index level back into a column
-    #df = df.reset_index(level='particle').filter(items=['particle', output_name])
-    df = df.reset_index(level='particle')#.filter(items=['particle', output_name])
+    df.reset_index(level='particle', inplace=True)
     return df
 
 @error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")
@@ -957,23 +1003,24 @@ def median(df_range,  parameters=None, *args, **kwargs):
     output_name = parameters['output_name']
     span = parameters['span']
 
+    if output_name not in df.columns:
+        df[output_name]=np.nan
+
     # Create a MultiIndex for proper grouping and sorting 
-    df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
+    df_temp = df.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
 
     # Calculate the rolling mean and store it in a temporary Series
     rolling_mean_series = df_temp.groupby(level='particle')[column].rolling(
         window=span, center=True).median().reset_index(level=0, drop=True)
+    
     # Re-index the series to match the original DataFrame and add it
     df_temp[output_name] = rolling_mean_series
+    df = df_temp
 
-    # Extract the data for the specified frame index and ensure it's a DataFrame
-    df = df_temp.loc[(slice(None), f_index), :].copy()
-
-    # Remove the particle index level so the output is clean
-     # Convert the 'particle' index level back into a column
-    df = df.reset_index(level='particle')
-      
+    df.reset_index(level='particle', inplace=True)
     return df
+      
+ 
 
 
 @error_with_hint("HINT: this func only works in the gui when locked. Span must be an odd value.")
@@ -989,6 +1036,9 @@ def rate(df_range,  parameters=None, *args, **kwargs):
     output_name = parameters['output_name']
     span = parameters['span']
     fps = parameters['fps']
+
+    if output_name not in df.columns:
+        df[output_name]=np.nan
 
     # Create a MultiIndex for proper grouping and sorting
     df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
@@ -1013,14 +1063,10 @@ def rate(df_range,  parameters=None, *args, **kwargs):
 
     # Add the rate to a new column
     df_temp[output_name] = rate_of_change  
+    df = df_temp
+    df.reset_index(level='particle', inplace=True)
 
-    # Extract the data for the specified frame index and ensure it's a DataFrame
-    df = df_temp.loc[(slice(None), f_index), :].copy()
-
-    # Convert the 'particle' index level back into a column and filter
-    final_df = df.reset_index(level='particle')
-
-    return final_df
+    return df
 
 def get_duty_cycle():
     """The shaker amplitude in our experiments is encoded into the audio of our video frames. We

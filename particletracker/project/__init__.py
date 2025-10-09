@@ -2,6 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 import shutil
+import warnings
+
+warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
 from ..crop import ReadCropVideo
 from .. import preprocess, track, link, postprocess, \

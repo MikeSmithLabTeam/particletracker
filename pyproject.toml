@@ -24,7 +24,7 @@ dependencies = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["particletracker"]
-filterwarnings = ["ignore:your performance may suffer as PyTables will pickle object types that it cannot map directly to c-types:tables.PerformanceWarning"]
+filterwarnings = ["ignore::pandas.io.pytables.PerformanceWarning",]
 
 [tool.setuptools.packages]
 find = {include=["particletracker", "particletracker.*"], exclude=["testdata"]}

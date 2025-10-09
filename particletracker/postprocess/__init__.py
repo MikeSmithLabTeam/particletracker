@@ -50,8 +50,7 @@ class PostProcessor:
             df = full_df.loc[start:finish]
         else:
             self.link_store.clear_temp_df()
-            df = self.link_store.temp_df
-            print('straight from store', df)      
+            df = self.link_store.temp_df 
 
         """This block either copies across the data if no postprocessing methods (if block) or the line in the else block containing getattr(pm, method_name() says call the method in postprocessing_methods.py with the name method_name and pass the parameters to it. Take the return value and add it to the postprocessing store.
         See intro to postprocessing to understand how parameters and full dataframe are parsed by each function.
@@ -68,10 +67,8 @@ class PostProcessor:
 
                 
                 if f_index is not None:
-                    print('Temp', f_index)
                     store.write_data(df.loc[f_index])
                 else:
-                    print('Full')
                     store.write_data(df)
 
         print('Postprocessing complete')
