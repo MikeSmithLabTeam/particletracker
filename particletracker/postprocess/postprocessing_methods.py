@@ -930,7 +930,7 @@ multiple frames have been processed and you are using part.
 
 @error_with_hint("HINT: this func only works in the gui when locked. Span must be an odd value.")
 @param_parse
-def difference(df_range,  parameters=None, *args, **kwargs):
+def difference(df,  parameters=None, *args, **kwargs):
     '''
     Calculates the centered finite difference of a particle's values and
     returns the result for a specific frame index.
@@ -943,7 +943,7 @@ def difference(df_range,  parameters=None, *args, **kwargs):
         df[output_name]=np.nan
 
     # Create a MultiIndex for proper grouping and sorting
-    df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
+    df_temp = df.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
 
     # Ensure span is an odd number for a centered difference
     if span % 2 == 0:
@@ -987,16 +987,15 @@ def mean(df,  parameters=None, *args, **kwargs):
         window=span, center=True).mean().reset_index(level=0, drop=True)
     # Re-index the series to match the original DataFrame and add it
     df_temp[output_name] = rolling_mean_series
-    df = df_temp#.droplevel(level='particle').reindex(original_index)
-
+    df = df_temp
     df.reset_index(level='particle', inplace=True)
     return df
 
 @error_with_hint("HINT: This method will not work in the gui unless you lock the link stage.")
 @param_parse
-def median(df_range,  parameters=None, *args, **kwargs):
+def median(df,  parameters=None, *args, **kwargs):
     '''
-    Calculates the rolling mean of a particle's values and returns the result
+    Calculates the rolling median of a particle's values and returns the result
     for a specific frame index.
     '''
     column = parameters['column_name']
@@ -1025,13 +1024,10 @@ def median(df_range,  parameters=None, *args, **kwargs):
 
 @error_with_hint("HINT: this func only works in the gui when locked. Span must be an odd value.")
 @param_parse
-def rate(df_range,  parameters=None, *args, **kwargs):
+def rate(df,  parameters=None, *args, **kwargs):
     '''
     Rate of change of a particle property with frame.
     '''
-    # Create a deep copy to prevent side-effects in the calling code
-    df_range = df_range.copy()
-
     column = parameters['column_name']
     output_name = parameters['output_name']
     span = parameters['span']
@@ -1041,7 +1037,7 @@ def rate(df_range,  parameters=None, *args, **kwargs):
         df[output_name]=np.nan
 
     # Create a MultiIndex for proper grouping and sorting
-    df_temp = df_range.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
+    df_temp = df.set_index('particle', append=True).sort_index().reorder_levels(['particle', 'frame'])
 
     # Ensure span is an odd number for a centered difference
     if span % 2 == 0:

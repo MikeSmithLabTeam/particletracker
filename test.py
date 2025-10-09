@@ -1,7 +1,9 @@
 from tests.test_integration import *
 from tests.test_preprocess import *
+from tests.test_postprocess import *
+
 print('running test')
-test_eyes()
+#test_eyes()
 #test_colloids()
 #test_hydrogel()
 #test_bacteria()
@@ -10,3 +12,6 @@ test_eyes()
 #test_subtract_mean_bkg()
 #test_subtract_bkg_img()
 #test_preprocess()
+
+#test_networks_methods()
+test_rolling_methods()
