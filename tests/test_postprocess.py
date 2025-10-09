@@ -1,32 +1,22 @@
 import numpy as np
-import pandas as pd
-from particletracker.postprocess.postprocessing_methods import hexatic_order
 import scipy.spatial as sp
-
 import pandas as pd
 import os
 import shutil
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from particletracker import batchprocess
+from particletracker.postprocess.postprocessing_methods import hexatic_order
 
 
-
-def test_postprocess():
+def test_network_methods():
     """Testing the postprocessing methods
 
-    test_eyes checks the mean
-    test_bacteria checks the contour_boxes and classify
-    test_colloids checks the add_frame_data
-    test_hydrogel checks the voronoi
-    test_discs checks the neighbours
-
-    Here we test the remaining methods where possible.
-    If you are going to use these you should still check the output
-    makes sense as we didn't double check the output when we wrote these.
-    Passing tests implies the code produces the same result as before!!
+    Uses hydrogel to test voronoi, neighbours, hexatic
 
     """
-    output_video = "testdata/hydrogel_annotate.mp4"
     output_df = "testdata/hydrogel.hdf5"
     temp_dir = "testdata/_temp"
 
@@ -34,13 +24,14 @@ def test_postprocess():
         # Attempt to delete the folder before the test runs
         shutil.rmtree(temp_dir, ignore_errors=True)
 
-    #batchprocess("testdata/hydrogel.mp4", "testdata/test_postprocess.param")
+    batchprocess("testdata/hydrogel.mp4", "testdata/test_networks.param")
     
-    #df = pd.read_hdf(output_df)
+    df = pd.read_hdf(output_df)
 
-    assert False, "This is yet to be setup"
+    assert int(df.loc[0,'voronoi_area'].to_numpy()[3]) == int(81650), 'Voronoi failed'
+    assert df.loc[0,'neighbours'].to_numpy()[3][0] == 29, 'Neighbours failed'
+    assert int(100*df.loc[0,'hexatic_order_phase'].to_numpy()[3]) == int(18), 'Hexatic failed'
 
-    os.remove(output_video)
     os.remove(output_df)
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
