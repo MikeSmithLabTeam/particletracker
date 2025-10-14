@@ -20,6 +20,7 @@ import os
 import sys
 import shutil
 import time
+import subprocess
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from particletracker import suppress_warnings
@@ -32,6 +33,17 @@ These tests follow the tutorials and check that the output is as expected.
 Note they don't test anything to do with the gui.
 ---------------------------------------------------------------------------------------------------------"""
 
+def clean_up(temp_folder):
+    if os.path.exists(temp_folder):
+        try:               
+            shutil.rmtree(temp_folder)
+        except:
+            """Remove folder using elevated privileges"""
+            if sys.platform == 'win32':
+                cmd = f'powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList \'/c rd /s /q \"{temp_folder}\"\'\"'
+                subprocess.run(cmd, shell=True, check=False)
+            else:
+                print('Error removing _temp folder')
 
 def test_eyes():
     """Test follows eye tutorial, checks annotated movie produced and that a particular 
@@ -46,9 +58,7 @@ def test_eyes():
     output_df = "testdata/eyes.hdf5"
     temp_dir = "testdata/_temp"
 
-    if os.path.exists(temp_dir):
-        # Attempt to delete the folder before the test runs
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    clean_up(temp_dir)
 
     batchprocess("testdata/eyes.mp4", "testdata/test_eyes.param")
     
@@ -79,9 +89,7 @@ def test_colloids():
     output_df = "testdata/colloids.hdf5"
     temp_dir = "testdata/_temp"
 
-    if os.path.exists(temp_dir):
-        # Attempt to delete the folder before the test runs
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    clean_up(temp_dir)
 
     batchprocess("testdata/colloids.mp4", "testdata/test_colloids.param")
     
@@ -110,9 +118,7 @@ def test_hydrogel():
     output_df = "testdata/hydrogel.hdf5"
     temp_dir = "testdata/_temp"
 
-    if os.path.exists(temp_dir):
-        # Attempt to delete the folder before the test runs
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    clean_up(temp_dir)
 
     batchprocess("testdata/hydrogel.mp4", "testdata/test_hydrogel.param")
     
@@ -139,9 +145,7 @@ def test_bacteria():
     output_df = "testdata/bacteria.hdf5"
     temp_dir = "testdata/_temp"
 
-    if os.path.exists(temp_dir):
-        # Attempt to delete the folder before the test runs
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    clean_up(temp_dir)
 
     batchprocess("testdata/bacteria.mp4", "testdata/test_bacteria.param")
     
@@ -168,9 +172,7 @@ def test_discs():
     output_csv = "testdata/discs.csv"
     temp_dir = "testdata/_temp"
 
-    if os.path.exists(temp_dir):
-        # Attempt to delete the folder before the test runs
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    clean_up(temp_dir)
 
     batchprocess("testdata/discs.mp4",
                     "testdata/test_discs.param")
