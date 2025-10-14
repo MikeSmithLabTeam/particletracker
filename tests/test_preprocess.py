@@ -13,6 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from labvision.images.basics import display
 import particletracker as pt
 import particletracker.preprocess.preprocessing_methods as pm
+from tests.test_integration import clean_up
 
 
 def test_subtract_mean_bkg():
@@ -20,9 +21,7 @@ def test_subtract_mean_bkg():
     
     temp_dir = "testdata/_temp"
 
-    if os.path.exists(temp_dir):
-        # Attempt to delete the folder before the test runs
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    clean_up(temp_dir)
     
     parameters = {}
     parameters['preprocess'] = {'subtract_bkg': {'subtract_bkg_type': ['mean', ('mean', 'median', 'grayscale', 'red', 'green', 'blue')],
@@ -40,9 +39,8 @@ def test_subtract_mean_bkg():
 def test_subtract_bkg_img():
     """Testing that bkg_img subtraction works in particle tracker"""
     temp_dir = "testdata/_temp"
-    if os.path.exists(temp_dir):
-        # Attempt to delete the folder before the test runs
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    
+    clean_up(temp_dir)
 
 
     parameters = {}
@@ -73,9 +71,7 @@ def test_preprocess():
     output_video = "testdata/colloids_annotate.mp4"
     output_df = "testdata/colloids.hdf5"
 
-    if os.path.exists(temp_dir):
-        # Attempt to delete the folder before the test runs
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    clean_up(temp_dir)
 
     pt.batchprocess("testdata/colloids.mp4", "testdata/test_preprocess.param")
     

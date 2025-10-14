@@ -736,7 +736,7 @@ class MainWindow(QMainWindow):
         except:
             """Remove folder using elevated privileges"""
             if sys.platform == 'win32':
-                cmd = f'powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList \'/c rd /s /q \"{folder_path}\"\'\"'
+                cmd = f'powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList \'/c rd /s /q \"{temp_folder}\"\'\"'
                 subprocess.run(cmd, shell=True, check=True)
             else:
                 print('Error removing _temp folder')

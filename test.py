@@ -3,7 +3,7 @@ from tests.test_preprocess import *
 from tests.test_postprocess import *
 
 print('running test')
-#test_eyes()
+test_eyes()
 #test_colloids()
 #test_hydrogel()
 #test_bacteria()
@@ -14,4 +14,4 @@ print('running test')
 #test_preprocess()
 
 #test_networks_methods()
-test_rolling_methods()
+#test_rolling_methods()

@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from particletracker import batchprocess
 from particletracker.postprocess.postprocessing_methods import hexatic_order
+from tests.test_integration import clean_up
 
 
 def test_network_methods():
@@ -20,9 +21,7 @@ def test_network_methods():
     output_df = "testdata/hydrogel.hdf5"
     temp_dir = "testdata/_temp"
 
-    if os.path.exists(temp_dir):
-        # Attempt to delete the folder before the test runs
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    clean_up(temp_dir)
 
     batchprocess("testdata/hydrogel.mp4", "testdata/test_networks.param")
     
@@ -45,9 +44,7 @@ def test_rolling_methods():
     output_df = "testdata/eyes.hdf5"
     temp_dir = "testdata/_temp"
 
-    if os.path.exists(temp_dir):
-        # Attempt to delete the folder before the test runs
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    clean_up(temp_dir)
 
     batchprocess("testdata/eyes.mp4", "testdata/test_rolling.param")
     
