@@ -19,6 +19,7 @@ To install here is a step by step recommended guide to setting things up.  In
 case you are coming to this new to python or new to programming we provide the steps in a lot of detail.
 If you are comfortable in python skip through! 
 
+- Make sure you have git installed (https://git-scm.com/downloads) 
 - Download and install miniconda (https://docs.conda.io/en/latest/miniconda.html)
 - Open a conda terminal:
 
