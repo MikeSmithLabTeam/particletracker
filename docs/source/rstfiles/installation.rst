@@ -54,7 +54,7 @@ Instructions abound on Google.
 Verifying the installation
 --------------------------
 
-If you `git clone` the github repo and installed as above you should now be able to go to the directory on your terminal and type pytest. Hopefully you should see that all the tests pass confirming the installation. This tests the core code but not the gui.
+If you `git clone` the github repo and installed as above you should now be able to go to the directory on your terminal and type pytest. Hopefully you should see that all the tests pass confirming the installation. If you find all the tests fail with a `WinError 5` open the testdata folder and manually delete the `_temp` folder. Now rerun the tests. This tests the core code but not the gui.
 
 Alternatively, to verify that the installation is working correctly you should read the getting started section which 
 explains how to launch the software. Once you have done 
