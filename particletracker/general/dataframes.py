@@ -158,37 +158,6 @@ class DataRead:
     
     def clear_temp_df(self):
         self._temp_df = None
-"""
-    @error_with_hint("HINT: this often happens if you try to use a method in gui that requires previous stage to be locked. You can still process the entire movie.")
-    def combine_data(self, modified_df=None):
-        # Get frame index from modified data
-        frame_idx = modified_df.index[0]
-
-        if self.full:
-            df = self.df
-        else:
-            df = self.temp_df
-            
-        # Add new columns with NaN values
-        new_cols = modified_df.columns.difference(df.columns)
-        
-        for col in new_cols:
-            df[col] = pd.Series(dtype=modified_df[col].dtype)
-
-        # Update the specific frame with new values
-        mask = df.index == frame_idx
-        
-        for col in modified_df.columns:
-            df.loc[mask, col] = modified_df[col].values.squeeze()
-        
-        if self.full:
-            self._df = df
-        else:
-            self._temp_df = df
-        
-        return df
-
-"""       
 
 
 def df_single(func):
@@ -327,14 +296,8 @@ def combine_data_frames(df, modified_df):
         return df.copy(deep=False) 
 
     frame_idx = modified_df.index[0]
-    print("combine_data_frames")
-    print('modified_df', modified_df)
-    print('df',df)
-    print(frame_idx)
-    retained_df = df[df.index != frame_idx]
-    print('retained', retained_df)    
+    retained_df = df[df.index != frame_idx] 
     updated_df = pd.concat([retained_df, modified_df])
     updated_df.index.name='frame'
-    print('updated',updated_df)
     updated_df.sort_index(inplace=True)
     return updated_df

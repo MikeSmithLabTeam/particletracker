@@ -24,8 +24,7 @@ Handles errors produced by each function
 2)@param_parse:
 The decorator @param_parse reduces params dictionary to the appropriate bit. If you need access to 
 other section of params outside those relevant to function do not use and implement yourself.
-3)df_single or df_range:
-Some postprocessing methods need range of dataframe and some just need one frame.  In postprocessing you don't need logic specifying whether to read the full or partial dataframe as this is handled by the decorator on the postprocessing_methods. The decorator  or @df_multiple chop down the dataframes passed to the methods."""
+"""
 
 
 '''
