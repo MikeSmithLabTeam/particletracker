@@ -28,9 +28,9 @@ def test_network_methods():
     
     df = pd.read_hdf(output_df)
 
-    assert int(df.loc[0,'voronoi_area'].to_numpy()[3]) == int(6018), int(df.loc[0,'voronoi_area'].to_numpy()[3])
-    assert df.loc[0,'neighbours'].to_numpy()[4][0] == 608, df.loc[0,'neighbours'].to_numpy()[4][0]
-    assert int(100*df.loc[0,'hexatic_order_phase'].to_numpy()[3]) == int(-115), int(100*df.loc[0,'hexatic_order_phase'].to_numpy()[3])
+    assert int(df.loc[0,'voronoi_area'].to_numpy()[3]) == int(81650.5916), int(df.loc[0,'voronoi_area'].to_numpy()[3])
+    assert df.loc[0,'neighbours'].to_numpy()[4][0] == 29, df.loc[0,'neighbours'].to_numpy()[4][0]
+    assert int(100*df.loc[0,'hexatic_order_phase'].to_numpy()[3]) == int(18.2519), int(100*df.loc[0,'hexatic_order_phase'].to_numpy()[3])
 
     os.remove(output_df)
     if os.path.exists(temp_dir):

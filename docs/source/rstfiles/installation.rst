@@ -20,14 +20,14 @@ case you are coming to this new to python or new to programming we provide the s
 If you are comfortable in python skip through! 
 
 - Download and install miniconda (https://docs.conda.io/en/latest/miniconda.html)
-- Go to "https://github.com/MikeSmithLabTeam/particletracker/blob/master/particletracker.yaml"
-- Download this file (its an icon on top righ with a downwards arrow) and save to your project directory
 - Open a conda terminal:
 
 On Windows type Anaconda at the windows search and then select "Anaconda Prompt"
 On Linux and Mac open a terminal. 
 
-- Navigate to your project directory: type "cd path\to\project\directory"
+- In the terminal navigate to your project directory.
+- Type `git clone https://github.com/MikeSmithLabTeam/particletracker.git`
+- Then `cd particletracker`
 - Type conda env create -f particletracker.yaml
 - Go make a cup of coffee.
 
@@ -53,9 +53,9 @@ Instructions abound on Google.
 Verifying the installation
 --------------------------
 
+If you `git clone` the github repo and installed as above you should now be able to go to the directory on your terminal and type pytest. Hopefully you should see that all the tests pass confirming the installation. This tests the core code but not the gui.
 
-
-To verify that the installation is working correctly you should read the getting started section which 
+Alternatively, to verify that the installation is working correctly you should read the getting started section which 
 explains how to launch the software. Once you have done 
 this there are 5 example videos which also act as tutorials which should enable you to verify and test the core functionality of the software.
 

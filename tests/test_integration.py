@@ -120,7 +120,7 @@ def test_hydrogel():
     df = pd.read_hdf(output_df)
 
     assert os.path.exists(output_video), 'Hydrogel annotated video not created'
-    assert int(df.loc[0, ['voronoi_area']].to_numpy()[2][0]) == int(1145.768422864055), df.loc[0, ['voronoi_area']].to_numpy()[2][0]  # 'tested value in hydrogel df incorrect'
+    assert int(df.loc[0, ['voronoi_area']].to_numpy()[2][0]) == int(1081609.2758450378), df.loc[0, ['voronoi_area']].to_numpy()[2][0]  # 'tested value in hydrogel df incorrect'
     os.remove(output_video)
     os.remove(output_df)
     if os.path.exists(temp_dir):

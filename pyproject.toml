@@ -8,18 +8,18 @@ build-backend = "setuptools.build_meta"
 name = "particletracker"
 version = "3.0.0"
 dependencies = [
+"PyQt6>=6.0.0",
 "sphinx>=4.0",
 "sphinx-autobuild>=2021.3.14",
 "sphinx-rtd-theme>=1.2.0",
 "qimage2ndarray",
 "trackpy",
 "moviepy>=2.0",
-"PyQt6",
-"opencv-python",
 "slicerator",
 "legacy-cgi",
 "labvision @ git+https://github.com/MikeSmithLabTeam/labvision",
 ]
+
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
