@@ -1,15 +1,14 @@
-name: pt
+name: test
 channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.13.8
+  - python=3.12
   - pytables
   - numpy >=1.25
   - scipy
   - pandas
   - matplotlib
-  - opencv
   - pexpect
   - pytest
   - tqdm
