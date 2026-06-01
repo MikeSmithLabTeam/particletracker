@@ -4,59 +4,65 @@ Installation and Getting Started
 Installation
 ------------
 
+1. Installing just to use the gui or batch processing (start here if you are new to python)
+
 Even if you know no python you should have no problems setting this up with 
 the instructions below and this should run on any system. It can be run with 2 lines of code! 
-If you encounter problems please report them via the issues tracker on the github page
+If you encounter problems please report them via the `issues tracker<https://github.com/MikeSmithLabTeam/particletracker/issues>` on the github page
 
-https://github.com/MikeSmithLabTeam/particletracker/issues
+The software should work on all operating systems (Windows, Linux, Mac). It has only been thoroughly tested on Windows and Ubuntu Linux.
 
-An additional feature of this project, is that we have tried to make extending it as easy as possible. 
-It might mean as little as adding a few lines of python code into a preconfigured template.
-
-The software should work on all operating systems (Windows, Linux, Mac). It has only been thoroughly tested on Windows 10 and Ubuntu Linux.
-
-To install here is a step by step recommended guide to setting things up.  In
+To install here is a step by step recommended guide to setting things up. In
 case you are coming to this new to python or new to programming we provide the steps in a lot of detail.
 If you are comfortable in python skip through! 
 
-- Make sure you have git installed (https://git-scm.com/downloads) 
-- Download and install miniconda (https://docs.conda.io/en/latest/miniconda.html)
-- Open a conda terminal:
+- Make sure you have `git installed <https://git-scm.com/downloads>`` 
+- Install `UV <https://docs.astral.sh/uv/getting-started/installation/>
 
-On Windows type Anaconda at the windows search and then select "Anaconda Prompt"
-On Linux and Mac open a terminal. 
+Check that uv is in your path by opening a terminal and typing `uv --version`. 
+If you get an error that uv is not found then you will need to add it to your path. The instructions for this depend on your operating system but are easily found with a google search.
 
-- In the terminal navigate to your project directory.
-- Type `git clone https://github.com/MikeSmithLabTeam/particletracker.git`
-- Then `cd particletracker`
-- Type conda env create -f particletracker.yaml
-- Go make a cup of coffee.
+Navigate to the folder you want to install particletracker in and type:
 
-On Windows we sometimes ran into an error at this point concerning the hdflib that 
+- uv init
+- uv add git+https://github.com/mikesmithlabteam/particletracker.git
+- uv sync
+
+That's the installation finished. Now whenever you want to run it, in the terminal 
+from the same folder type:
+
+- uv run python
+- from particletracker import track_gui
+- track_gui()
+
+You should see a dialogue open, which means everything is working.
+
+On Windows we sometimes ran into an error aconcerning the hdflib that 
 can be resolved by installing the Microsoft Visual Studio Build tools. Once you've
 installed them restart computer, open anaconda terminal, activate environment (step 2 above)
-Rerun the final command above. The build tools can be installed from here:
+Rerun the final command above. Install the `build tools<https://visualstudio.microsoft.com/visual-cpp-build-tools/ >`
 
-https://visualstudio.microsoft.com/visual-cpp-build-tools/ 
 
-Once installed you will need some way to write simple code and execute it. The bare bones 
-approach is to use notepad and write the few lines of code as detailed in "Getting started". Save 
-the file as eg. testscript.py and then from the conda command prompt navigate to the correct folder 
-and run this script using "python testscript.py". Alternatively and far better in the long run is to
-install a python IDE and learn how to run code in the conda environment you've 
-just created. Good IDEs include among others:
+2. Installing with a view to editing the code or running the tests
 
-- PyCharm (https://www.jetbrains.com/pycharm/download/),
-- VsCode (https://code.visualstudio.com/download)
+Clone the repository to your computer using git:
 
-Instructions abound on Google.
+- `git clone https://github.com/MikeSmithLabTeam/particletracker.git`
+- `cd particletracker`
+- `uv pip install -e .`
+- `uv sync`
+
 
 Verifying the installation
 --------------------------
 
-If you `git clone` the github repo and installed as above you should now be able to go to the directory on your terminal and type pytest. Hopefully you should see that all the tests pass confirming the installation. If you find all the tests fail with a `WinError 5` open the testdata folder and manually delete the `_temp` folder. Now rerun the tests. This tests the core code but not the gui.
+If you `git clone` the github repo you can verify the installation is working correctly by:
 
-Alternatively, to verify that the installation is working correctly you should read the getting started section which 
+- `uv run pytest` from the root directory of the repository.
+
+The testdata is included with the repository under testdata.
+
+Alternatively, if you did the quick installation is working correctly you should read the getting started section which 
 explains how to launch the software. Once you have done 
 this there are 5 example videos which also act as tutorials which should enable you to verify and test the core functionality of the software.
 

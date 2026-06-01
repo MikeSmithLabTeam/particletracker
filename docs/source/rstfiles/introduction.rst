@@ -26,7 +26,7 @@ Reporting Issues
 ----------------
 
 We aim to test this software against the testdata described in the tutorials however bugs do slip through. 
-If you become aware of an issue please report it https://github.com/MikeSmithLabTeam/particletracker/issues 
+If you become aware of an issue please `report it <https://github.com/MikeSmithLabTeam/particletracker/issues>`` 
 
 
 Citing ParticleTracker

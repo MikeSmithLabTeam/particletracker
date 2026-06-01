@@ -41,7 +41,7 @@ all future tracking. Then if necessary you can automatically process batches of 
 Basic orientation for using the track_gui
 -----------------------------------------
 
-Watch the video
+Watch the video (N.B the videos use a slightly older version of particletracker with conda environments but the principles are the same).
 
 .. raw:: html
 

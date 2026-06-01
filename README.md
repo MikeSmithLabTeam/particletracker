@@ -5,30 +5,40 @@ ParticleTracker is a gui based particle tracking software that brings together a
 ![Examples of tracked data created using ParticleTracker](graphicalabstract.png)
 
 ## Documentation 
-[https://particletracker.readthedocs.io/en/latest/index.html](https://particletracker.readthedocs.io/en/latest/index.html)
+[Read the Docs](https://particletracker.readthedocs.io/en/latest/index.html)
 
 ## Video Tutorials
 [Youtube Playlist of Tutorials](https://www.youtube.com/playlist?list=PL56zLBbX0yZZw18yyMM9tD0fLrobmdbJG)
 
-## Installation from github
+## Different ways to install
+
 Full details in documentation but in brief:
 
-Download the particletracker.yaml file and then use it to create a new conda environment:
+1. Install to use
 
-    conda env create -f particletracker.yaml
+    - [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
+    - uv pip install git+https://github.com/MikeSmithLabTeam/particletracker
 
-Alternatively you can install the conda dependencies and then pip install:
+2. Install to edit underlying code
 
-    pip install git+https://github.com/mikesmithlabteam/particletracker
+    - git clone https://github.com/MikeSmithLabTeam/particletracker
+    - cd particletracker
+    - uv pip install -e .
+    - uv sync
 
-Finally, for development purposes, you can also create a new conda environment:
+3. Test the gui or run as standalone software using Docker
 
-    conda env create -f particlertracker_development.yaml
+    - [Install Docker](https://docs.docker.com/engine/install/)
+    - docker run mikesmithcode/particletracker
+
 
 ## To add as a dependency to another pip repository
-Add the following argument to setup.py setuptools.setup()
+Add the following argument to your pyproject.toml
 
-    dependency_links=['https://github.com/MikeSmithLabTeam/particletracker/tarball/repo/master#egg=package-1.0'],
+    [project]
+    dependencies = [
+        "particletracker @ git+https://github.com/MikeSmithLabTeam/particletracker",
+    ]
 
 ## Citation
 To cite this project in your publications please cite the following paper:
