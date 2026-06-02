@@ -27,6 +27,8 @@ Full details in documentation but in brief:
     - git clone https://github.com/MikeSmithLabTeam/particletracker
     - cd particletracker
     - uv sync --editable .
+
+## Testing
     
 If you run the command below then a pre-commit hook is activated which makes sure tests are run.
 
