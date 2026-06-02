@@ -4,7 +4,7 @@ Installation and Getting Started
 Installation
 ------------
 
-You have 3 options:
+You have 2 options:
 
 1. Installing just to use the gui or batch processing (start here if you are new to python)
 
@@ -53,10 +53,6 @@ Clone the repository to your computer using git:
 - `cd particletracker`
 - `uv sync --editable .`
 
-3. Installing using Docker
-
-
-
 
 Verifying the installation
 --------------------------
@@ -67,9 +63,9 @@ If you `git clone` the github repo you can verify the installation is working co
 
 The testdata is included with the repository under testdata.
 
-Alternatively, if you did the quick installation is working correctly you should read the getting started section which 
-explains how to launch the software. Once you have done 
-this there are 5 example videos which also act as tutorials which should enable you to verify and test the core functionality of the software.
+Alternatively, if you did the quick installation you can read the getting started section which 
+explains how to launch the software. Once you have done this there are 5 example videos which 
+also act as tutorials which should enable you to verify and test the core functionality of the software.
 
 To download the testdata go to: https://download-directory.github.io/
 and paste in the following URL: https://github.com/MikeSmithLabTeam/particletracker/tree/master/testdata

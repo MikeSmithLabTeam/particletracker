@@ -33,12 +33,17 @@ dependencies = [
     "pillow",
     "openpyxl",
     "jupyterlab",
-    "pytest",
     "tables",
 ]
 
 [project.scripts]
 particletracker = "particletracker.main:launch_gui"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.0",
+    "pytest>=9.0.3",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
