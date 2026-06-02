@@ -17,19 +17,16 @@ Full details in documentation but in brief:
 1. Install to use
 
     - [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
-    - uv pip install git+https://github.com/MikeSmithLabTeam/particletracker
+    - cd to folder
+    - uv init
+    - uv add git+https://github.com/MikeSmithLabTeam/particletracker
+    - uv sync
 
 2. Install to edit underlying code
 
     - git clone https://github.com/MikeSmithLabTeam/particletracker
     - cd particletracker
-    - uv pip install -e .
-    - uv sync
-
-3. Test the gui or run as standalone software using Docker
-
-    - [Install Docker](https://docs.docker.com/engine/install/)
-    - docker run mikesmithcode/particletracker
+    - uv sync --editable .
 
 
 ## To add as a dependency to another pip repository

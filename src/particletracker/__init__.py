@@ -12,7 +12,7 @@ from particletracker.gui.main_gui import MainWindow
 import time
 
 
-def track_gui(movie_filename=None, settings_filename=None):
+def track_gui(movie_filename=None, settings_filename=None, data_dir=None):
     '''
     track_gui is a simple function that launches the main gui tracking window.
 
@@ -20,12 +20,14 @@ def track_gui(movie_filename=None, settings_filename=None):
     ----------
     movie: optional path to movie to process if not specified a dialogue window prompts user to navigate to file.
     settings: optional path to .param settings config file, if not set a default config file is automatically generated using create_param_file in general.param_file_creator
-
+    data_dir: optional path to data directory, if not set defaults to testdata folder in particletracker repo. This is used as the initial directory for the file dialogues.
+    
     Returns None
     -------
 
     '''
- 
+    if data_dir is not None:
+        os.environ["PARTICLETRACKER_DATA"] = str(data_dir)
 
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
@@ -51,7 +53,7 @@ def track_gui(movie_filename=None, settings_filename=None):
 
 
 
-def batchprocess(moviefilter, settings_filename=None):
+def batchprocess(moviefilter, settings_filename=None, data_dir=None):
     '''
     batchprocess enables you to process all files specified with a filefilter using a single settings.param file
 
@@ -64,6 +66,8 @@ def batchprocess(moviefilter, settings_filename=None):
     -------
 
     '''
+    if data_dir is not None:
+        os.environ["PARTICLETRACKER_DATA"] = str(data_dir)
 
     for filename in BatchProcess(moviefilter):
         tracker = PTWorkflow(video_filename=filename, param_filename=settings_filename)

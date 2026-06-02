@@ -37,7 +37,7 @@ from ..general.dataframes import DataRead
 from ..general.imageformat import bgr_to_rgb
 from .pandas_view import PandasWidget
 
-from .file_io import check_filenames, open_movie_dialog, open_settings_dialog, save_settings_dialog
+from ..general.filehandling import check_filenames, open_movie_dialog, open_settings_dialog, save_settings_dialog
 
 
 

@@ -14,7 +14,7 @@ import labvision.images.colours as colours
 from ..general.parameters import param_parse, get_param_val, get_method_key
 from ..crop import crop
 from ..customexceptions import error_handling
-from ..gui.file_io import img_name_wrangle
+from ..general.filehandling import img_name_wrangle
 
 
 @error_handling

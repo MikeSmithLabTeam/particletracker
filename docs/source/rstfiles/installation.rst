@@ -4,6 +4,8 @@ Installation and Getting Started
 Installation
 ------------
 
+You have 3 options:
+
 1. Installing just to use the gui or batch processing (start here if you are new to python)
 
 Even if you know no python you should have no problems setting this up with 
@@ -49,8 +51,11 @@ Clone the repository to your computer using git:
 
 - `git clone https://github.com/MikeSmithLabTeam/particletracker.git`
 - `cd particletracker`
-- `uv pip install -e .`
-- `uv sync`
+- `uv sync --editable .`
+
+3. Installing using Docker
+
+
 
 
 Verifying the installation
