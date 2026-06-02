@@ -34,7 +34,7 @@ If you run the command below then a pre-commit hook is activated which makes sur
 
     - pre-commit install
 
-The github repo is configured to run tests. `ptdev` branch will just report the results, main will reject pushes / merges which don't pass.
+The github repo is configured to run tests. `ptdev` branch reports the results, the main branch will reject pushes / merges which don't pass.
 
 
 ## To add as a dependency to another pip repository
