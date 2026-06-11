@@ -154,6 +154,15 @@ def create_param_file(filename):
         },
         'absolute': {
             'column_name': 'x'
+        },
+        'crystal_id':{'peak_height': [30,1,60, 1],
+                      'smoothing': [2.0,0.2,10.0,0.1],
+                      'debug': [False, ('True', 'False')],
+
+        },
+        'boundary_and_tj_id':{
+            'min_neighbours_gb':[3,1,10,1],
+            'min_neighbours_tj':[4,1,10,1],
         }
 
     }

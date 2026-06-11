@@ -7,6 +7,8 @@ import os
 import subprocess
 import pandas as pd
 import scipy.optimize as opt
+from scipy.signal import find_peaks
+from scipy.ndimage import gaussian_filter1d
 
 from labvision import audio, video
 from moviepy.audio.io.AudioFileClip import AudioFileClip
@@ -1081,3 +1083,186 @@ def calibrate_acceleration():
 
 
 
+def _find_min_id(phi_array,peak_positions):
+    """Calculates the id of the crystal to which all particles in the array belong. It implements wrapping so that a phi of 2.8 will find a peak at say -2.8"""
+    low_peaks = len(peak_positions[peak_positions<-np.pi])
+    num_peaks = len(peak_positions[peak_positions<np.pi]) - low_peaks
+    min_id = np.argmin(np.abs(phi_array[:,None] - peak_positions), axis=1) - low_peaks 
+    
+    min_id[min_id < 0] = min_id[min_id < 0] + num_peaks
+    
+    min_id[min_id >= num_peaks] = min_id[min_id >= num_peaks] - num_peaks
+    return min_id
+
+import matplotlib.pyplot as plt
+def plotting(df):
+    gb = df
+    df_0 = gb[gb['crystal_id']==0]
+    df_1 = gb[gb['crystal_id']==1]
+    df_2 = gb[gb['crystal_id']==2]
+    df_3 = gb[gb['crystal_id']==3]
+
+    plt.scatter(df_0['x'],df_0['y'])
+    plt.scatter(df_1['x'],df_1['y'])
+    plt.scatter(df_2['x'],df_2['y'])
+    plt.scatter(df_3['x'],df_3['y'])
+
+    plt.gca().invert_yaxis()
+    plt.legend()
+    plt.show()
+    
+def crystal_ID_plot(df, parameters):
+    '''
+    return df with extra column containing crystal ID
+    '''
+    peak_height = parameters['peak_height']
+    smoothing = parameters['smoothing']
+
+    phi = df['hexatic_order_phase']
+
+    hist, bin_edges=np.histogram(phi, bins = 50, range=(-np.pi,np.pi)) # increasing one side allows one edge peak to be identified
+    bins = 0.5*(bin_edges[:-1] + bin_edges[1:])
+
+    pad_width = 10
+    padded_hist = np.pad(hist, pad_width=pad_width, mode='wrap')
+
+    smoothed_data = gaussian_filter1d(padded_hist, sigma=smoothing)
+    padded_peaks, properties = find_peaks(smoothed_data, height=peak_height)
+    peaks = padded_peaks
+
+    #dont include in particle tracker
+    bin_width = bins[1] - bins[0]
+    left_bins = bins[-pad_width:] - (len(bins) * bin_width)
+    right_bins = bins[:pad_width] + (len(bins) * bin_width)
+    padded_bins = np.concatenate([left_bins, bins, right_bins])
+
+    
+    plt.plot(padded_bins, padded_hist)
+    plt.plot(padded_bins, smoothed_data, 'g-')
+    plt.plot(bins, hist, 'x')
+    plt.plot(padded_bins[peaks], padded_hist[peaks], 'ro')
+    
+    plt.axvline(-np.pi, color='r', linestyle = '--')
+    plt.axvline(np.pi, color='r', linestyle = '--')
+    plt.show()
+
+
+@error_handling
+@param_parse
+def crystal_id(df, *args, parameters=None, **kwargs):
+    """Crystal ID finds clusters of a particular phase in the hexatic order parameter and assigns them an id.
+    It returns a series which labels each particle according to which crystal it is a part of.
+    
+    params:
+
+    peak_height = min height of a peak to be detected
+    smoothing: width of gaussian in smoothing out peaks in the histogram used for detection.
+
+    return df with extra column containing crystal ID
+    """
+
+    n_bins = 50
+    pad_width = 10
+    peak_height = parameters['peak_height']
+    smoothing = parameters['smoothing']
+    debug = parameters['debug']
+
+
+    if 'crystal_id' not in df.columns:
+        df['crystal_id'] = np.nan
+    
+
+
+    phi = df['hexatic_order_phase']
+
+    hist, bin_edges=np.histogram(phi, bins = n_bins, range=(-np.pi,np.pi)) # increasing one side allows one edge peak to be identified
+    bins = 0.5*(bin_edges[:-1] + bin_edges[1:])
+
+    padded_hist = np.pad(hist, pad_width=pad_width, mode='wrap')
+    right_bins = bins[:pad_width] + (len(bins) * (bins[1]-bins[0]))
+    left_bins = bins[-pad_width:] - (len(bins) * (bins[1]-bins[0]))
+    padded_bins = np.concatenate([left_bins ,bins, right_bins])
+
+    smoothed_data = gaussian_filter1d(padded_hist, sigma=smoothing)
+    padded_peaks, properties = find_peaks(smoothed_data, height=peak_height)
+    #peaks = (padded_peaks - pad_width)
+    peaks=padded_peaks
+
+    phi_array = np.array(phi)
+    df['crystal_id'] = _find_min_id(phi_array, padded_bins[peaks])
+
+    #plotting(df)
+    if debug:
+        crystal_ID_plot(df, parameters)
+
+    return df  
+
+@error_handling
+@param_parse
+def boundary_and_tj_id(df, *args, parameters=None, **kwargs):
+    """
+    Identify particles with neighbours in differrent crystals.
+    requires hexatic_order, Neighbours(~20) and crystal_id to have been run.    
+
+    Parameters
+    ----------
+    min_neighours_gb 
+        minimum number of 2 different crystal in a particles neighbourhood, to be assigned GB
+    min_neighbours_tj
+        min number of 3 different crystals in a neighbourhood for a particle to be considered a triple junction.
+    
+    Args
+    ----
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+
+    Returns
+    -------
+        updated dataframe including new columns "is_boundary" and "is_triple_junction", boolean denoting GB and TJ particles. 
+
+    """
+    
+    #define new columns
+    df['is_boundary'] = pd.Series(np.nan, index=df.index, dtype=bool)
+    df['is_triple_junction'] = pd.Series(np.nan, index=df.index, dtype=bool)
+
+    #define parameters
+    min_neighbours_gb = parameters['min_neighbours_gb']
+    min_neighbours_tj = parameters['min_neighbours_tj']
+
+    # build lookup array to map particle ID to crystal ID
+    lookup_series = df.set_index("particle")["crystal_id"] + 1 #plus one to make all crystal numbers above 0
+    max_id = df["particle"].max()
+    full_lookup = np.zeros(max_id + 2, dtype=int)
+    full_lookup[lookup_series.index] = lookup_series.values
+    # Set the dummy particle's crystal_id to 0 (indicating no crystal)
+    full_lookup[-1] = 0
+
+    # convert neighbours column to list
+    neighbor_lists = df["neighbours"].tolist()
+    num_particles = len(df)
+    max_neighbors = max(len(n) for n in neighbor_lists)
+    #create matrix of neighbour ids, -1 in empty spaces points to dummy particle with crystal_id 0
+    neighbors_matrix = np.full((num_particles, max_neighbors), -1, dtype=int)
+    #populate matrix with neighbour ids
+    for i, n in enumerate(neighbor_lists):
+        neighbors_matrix[i, : len(n)] = n
+
+    # create new array with neigbours crystal ID rather than particle ID
+    neighbor_crystals = full_lookup[neighbors_matrix]
+
+    # add particles own crystal to the first column
+    own_crystals = df["crystal_id"].to_numpy()[:, np.newaxis] + 1
+    full_neighborhood = np.hstack((own_crystals, neighbor_crystals))
+
+    crystal_id_values = np.arange(1, np.max(full_neighborhood) + 1)
+    counts = np.vstack([np.bincount(row, minlength=crystal_id_values[-1] + 1)[crystal_id_values] for row in full_neighborhood])
+
+    df['is_boundary'] = np.sum(counts >= min_neighbours_gb, axis=1) >= 2
+    df['is_triple_junction'] = np.sum(counts >= min_neighbours_tj, axis=1) >= 3
+
+    return df
