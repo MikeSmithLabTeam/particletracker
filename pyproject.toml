@@ -49,8 +49,4 @@ dev = [
 testpaths = ["tests"]
 pythonpath = [".","src"]
 filterwarnings = ["ignore::pandas.io.pytables.PerformanceWarning"]
-
-
-[tool.hatch.packages.find]
-where = ["src"]
-include = ["particletracker*"]
+    

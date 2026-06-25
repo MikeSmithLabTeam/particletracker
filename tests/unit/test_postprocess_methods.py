@@ -196,3 +196,4 @@ def test_difference_mean_median_and_rate_with_particle_time_series():
     assert np.isclose(mean_output.loc[1, 'x_mean'], 2.0)
     assert np.isclose(median_output.loc[1, 'x_median'], 2.0)
     assert np.isclose(rate_output.loc[1, 'x_rate'], 2.0 / 3.0)
+
