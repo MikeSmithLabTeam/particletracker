@@ -1150,6 +1150,23 @@ def crystal_ID_plot(df, parameters):
 @error_handling
 @param_parse
 def crystal_id(df, *args, parameters=None, **kwargs):
+    if 'crystal_id' not in df.columns:
+        df['crystal_id'] = np.nan #pd.Series(np.nan, index=df.index, dtype='Int64')
+    
+    f_index = kwargs['f_index']
+    if f_index is None:
+        #process all frames
+        indices = list(set(df.index.values.tolist()))
+    else:
+        #Just process frame of interest
+        indices=[f_index]
+    
+    for f_index in indices:
+        df.loc[f_index,['crystal_id']] =_crystal_id(df.loc[f_index], parameters=parameters)
+    return df
+
+
+def _crystal_id(df, *args, parameters=None, **kwargs):
     """Crystal ID finds clusters of a particular phase in the hexatic order parameter and assigns them an id.
     It returns a series which labels each particle according to which crystal it is a part of.
     
@@ -1166,12 +1183,6 @@ def crystal_id(df, *args, parameters=None, **kwargs):
     peak_height = parameters['peak_height']
     smoothing = parameters['smoothing']
     debug = parameters['debug']
-
-
-    if 'crystal_id' not in df.columns:
-        df['crystal_id'] = np.nan
-    
-
 
     phi = df['hexatic_order_phase']
 
@@ -1227,9 +1238,49 @@ def boundary_and_tj_id(df, *args, parameters=None, **kwargs):
     """
     
     #define new columns
-    df['is_boundary'] = pd.Series(np.nan, index=df.index, dtype=bool)
-    df['is_triple_junction'] = pd.Series(np.nan, index=df.index, dtype=bool)
+    if 'is_triple_junction' not in df.columns:
+        df['is_boundary'] = pd.Series(np.nan, index=df.index, dtype=bool)
+        df['is_triple_junction'] = pd.Series(np.nan, index=df.index, dtype=bool)
 
+    f_index = kwargs['f_index']
+    if f_index is None:
+        #process all frames
+        indices = list(set(df.index.values.tolist()))
+    else:
+        #Just process frame of interest
+        indices=[f_index]
+    
+    for f_index in indices:
+        df.loc[f_index,['is_boundary', 'is_triple_junction']] =_boundary_and_tj_id(df.loc[f_index], parameters=parameters)
+    return df
+
+def _boundary_and_tj_id(df, *args, parameters=None, **kwargs):
+    """
+    Identify particles with neighbours in differrent crystals.
+    requires hexatic_order, Neighbours(~20) and crystal_id to have been run.    
+
+    Parameters
+    ----------
+    min_neighours_gb 
+        minimum number of 2 different crystal in a particles neighbourhood, to be assigned GB
+    min_neighbours_tj
+        min number of 3 different crystals in a neighbourhood for a particle to be considered a triple junction.
+    
+    Args
+    ----
+    df
+        The dataframe in which all data is stored
+    f_index
+        Integer specifying the frame for which calculations need to be made.
+    parameters
+        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
+
+    Returns
+    -------
+        updated dataframe including new columns "is_boundary" and "is_triple_junction", boolean denoting GB and TJ particles. 
+
+    """
+    
     #define parameters
     min_neighbours_gb = parameters['min_neighbours_gb']
     min_neighbours_tj = parameters['min_neighbours_tj']
@@ -1256,7 +1307,7 @@ def boundary_and_tj_id(df, *args, parameters=None, **kwargs):
     neighbor_crystals = full_lookup[neighbors_matrix]
 
     # add particles own crystal to the first column
-    own_crystals = df["crystal_id"].to_numpy()[:, np.newaxis] + 1
+    own_crystals = (df["crystal_id"].to_numpy()[:, np.newaxis] + 1).astype(int)
     full_neighborhood = np.hstack((own_crystals, neighbor_crystals))
 
     crystal_id_values = np.arange(1, np.max(full_neighborhood) + 1)
