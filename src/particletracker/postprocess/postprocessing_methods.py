@@ -1137,10 +1137,14 @@ def crystal_ID_plot(df, parameters):
     padded_bins = np.concatenate([left_bins, bins, right_bins])
 
     
-    plt.plot(padded_bins, padded_hist)
-    plt.plot(padded_bins, smoothed_data, 'g-')
-    plt.plot(bins, hist, 'x')
-    plt.plot(padded_bins[peaks], padded_hist[peaks], 'ro')
+    plt.plot(padded_bins, padded_hist, label = 'padded data')
+    plt.plot(padded_bins, smoothed_data, 'g-', label = 'smoothed')
+    plt.plot(bins, hist, 'x', label = 'Histogram')
+    plt.plot(padded_bins[peaks], padded_hist[peaks], 'ro', label = 'peak selected if inside pi')
+    plt.xlabel('Hexatic_order_phase [deg]')
+    plt.ylabel('n')
+    plt.legend()
+
     
     plt.axvline(-np.pi, color='r', linestyle = '--')
     plt.axvline(np.pi, color='r', linestyle = '--')
