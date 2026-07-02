@@ -24,7 +24,6 @@ def no_linking(df):
     #No linking either for whole movie or because only processing single frame. 
     # Adds a particle id to dataframes for convenience
     # These are made up and no relation to the particle ids in the fully processed video.
-
     num_particles = np.shape(df)[0]
     pids = np.linspace(0,num_particles-1, num=num_particles).astype(int)
     df['particle'] = pids

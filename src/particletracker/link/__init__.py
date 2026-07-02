@@ -1,3 +1,6 @@
+from tracemalloc import start, stop
+
+from matplotlib.pyplot import step
 import numpy as np
 import os
 from tqdm import tqdm
@@ -37,18 +40,28 @@ class LinkTrajectory:
                 #If lock_part == 0 The tracking data on whole movie is stored in a file _track.hdf5 created previously. We only want to operate on one frame of this. You load full tracking data and then grab a single frame process it and store result in a temporary file.
                 df=self.track_store.get_df(f_index=f_index)
 
-        if df is not None and df.isna().all().all():
-            #If it is an empty dataframe copy to _link.hdf5 file
-            df=df
-        elif (f_index is None) and ('default' in self.parameters['link']['link_method']):#
-            #Default trackpy linking method only used when processing whole movie.
-            df = default(df, self.parameters['link']['default'])
-        else:
-            #no linking - this takes place when analysing temp single frames or as an option on the whole movie.
-            df = no_linking(df)
-
         with DataWrite(output_filename) as store:
-            store.write_data(df)
+            if df is not None and df.isna().all().all():
+                #If it is an empty dataframe copy to _link.hdf5 file
+                df=df
+                store.write_data(df)
+            elif (f_index is None) and ('default' in self.parameters['link']['link_method']):#
+                #Default trackpy linking method only used when processing whole movie.
+                df = default(df, self.parameters['link']['default'])
+                store.write_data(df)
+            elif (f_index is not None):
+                #no linking - this takes place when analysing temp single frames or as an option on the whole movie.
+                df = no_linking(df)
+                store.write_data(df)
+            else:               
+                #This is for situation where applying no_linking to all the movie's data
+                frame_indices =df.index.unique().tolist()
+                for f in frame_indices:
+                    df_frame = no_linking(df.loc[f])
+                    store.write_data(df_frame, f_index=f)
+
+
+
             
         print('Linking Complete')
  

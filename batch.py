@@ -7,10 +7,10 @@ if __name__ == '__main__':
   
 
 
-    path1 = "E:\\RawData\\Joe\\grain_boundarys\\Triple_H\\new_code_tests\\84g_550_static\\"
+    path = "E:\\RawData\\Joe\\grain_boundarys\\Triple_H\\new_code_tests\\84g_600_static\\13930001.MP4"
     #path2 = "E:\\RawData\\Joe\\grain_boundarys\\Triple_H\\82g\\4K_50p\\625\\"
     path3 = "E:\\RawData\\Joe\\grain_boundarys\\Triple_H\\82g\\4K_50p\\700-650Q\\"
-    settings = "E:\\RawData\\Joe\\grain_boundarys\\Triple_H\\new_code_tests\\84g_550_static\\test.param"
+    settings = "E:\\RawData\\Joe\\grain_boundarys\\Triple_H\\new_code_tests\\testfull_nolink_noanno_6tj.param"
 
     #batchprocess(path1+"*.MP4", settings)
 
@@ -20,4 +20,4 @@ if __name__ == '__main__':
 
    
     #batchprocess(path+"*.MP4", settings)
-    track_gui()
+    track_gui(movie_filename=path, settings_filename=settings)

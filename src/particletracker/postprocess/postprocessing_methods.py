@@ -341,6 +341,7 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
     """
     Calculates the hexatic order parameter of each particle.
     """
+    print('inside hexatic order')
     df['hexatic_order_complex']=pd.Series(np.nan, index=df.index, dtype=object)
     df['hexatic_order_magnitude']=pd.Series(np.nan, index=df.index, dtype=object)
     df['hexatic_order_phase']=pd.Series(np.nan, index=df.index, dtype=object)
@@ -626,6 +627,7 @@ def neighbours(df, *args,  parameters=None, **kwargs):
 
 
     '''    
+    print('inside neighbours')
     df['neighbours'] = pd.Series(np.nan, index=df.index, dtype=object)
     df['neighbour_dists'] = pd.Series(np.nan, index=df.index, dtype=object)
 
@@ -643,8 +645,52 @@ def neighbours(df, *args,  parameters=None, **kwargs):
         if method == 'delaunay':
             df.loc[f_index,['neighbours', 'neighbour_dists']] =_find_delaunay(df.loc[f_index], parameters=parameters)
         elif method == 'kdtree':
-            df.loc[f_index,['neighbours', 'neighbour_dists']] =_find_kdtree(df.loc[f_index], parameters=parameters)     
+            df.loc[f_index,['neighbours', 'neighbour_dists']] =_find_kdtree(df.loc[f_index], parameters=parameters)      
     return df
+
+def _new_find_kdtree(df, parameters=None):
+    cutoff = parameters['cutoff']
+    num_neighbours = int(parameters['neighbours'])
+    points = df[['x', 'y']].values
+    particle_ids = df['particle'].values.flatten()
+    tree = sp.KDTree(points)
+    
+    # Query for the nearest particles
+    distances, indices = tree.query(points, k=num_neighbours + 1, distance_upper_bound=cutoff)
+    
+    clean_neighbour_ids = []
+    clean_neighbour_dists = []
+    
+    # Loop over every particle in this frame to isolate its actual neighbors
+    for i in range(len(points)):
+        # Get the neighbor row indices and distances for particle i
+        idx_row = indices[i]
+        dist_row = distances[i]
+        
+        # Filter out:
+        # 1. The particle itself (the first match where distance is 0)
+        # 2. SciPy's out-of-bounds dummy index (idx == len(points))
+        # 3. Any infinite distances (where no neighbor was found within the cutoff)
+        valid_mask = (idx_row < len(points)) & (dist_row <= cutoff) & (np.isfinite(dist_row))
+        
+        valid_indices = idx_row[valid_mask]
+        valid_distances = dist_row[valid_mask]
+        
+        # Map the raw positional row indices back to your actual global particle IDs
+        # Exclude the self-match if it's still present in the valid set
+        current_particle_id = particle_ids[i]
+        actual_ids = [int(particle_ids[v_idx]) for v_idx in valid_indices if particle_ids[v_idx] != current_particle_id]
+        actual_dists = [float(d) for d in valid_distances[:len(actual_ids)]]
+        
+        clean_neighbour_ids.append(actual_ids)
+        clean_neighbour_dists.append(actual_dists)
+        
+    # Build a clean return dataframe for this frame matching its incoming index
+    return_df = pd.DataFrame(index=df.index)
+    return_df['neighbours'] = clean_neighbour_ids
+    return_df['neighbour_dists'] = clean_neighbour_dists
+    
+    return return_df
 
 def _find_kdtree(df, parameters=None):
     cutoff = parameters['cutoff']
@@ -1154,6 +1200,7 @@ def crystal_ID_plot(df, parameters):
 @error_handling
 @param_parse
 def crystal_id(df, *args, parameters=None, **kwargs):
+    print('inside crystal id')
     if 'crystal_id' not in df.columns:
         df['crystal_id'] = np.nan #pd.Series(np.nan, index=df.index, dtype='Int64')
     
@@ -1240,7 +1287,7 @@ def boundary_and_tj_id(df, *args, parameters=None, **kwargs):
         updated dataframe including new columns "is_boundary" and "is_triple_junction", boolean denoting GB and TJ particles. 
 
     """
-    
+    print('inside boundary id')
     #define new columns
     if 'is_triple_junction' not in df.columns:
         df['is_boundary'] = pd.Series(np.nan, index=df.index, dtype=bool)
@@ -1284,14 +1331,16 @@ def _boundary_and_tj_id(df, *args, parameters=None, **kwargs):
         updated dataframe including new columns "is_boundary" and "is_triple_junction", boolean denoting GB and TJ particles. 
 
     """
-    
+
     #define parameters
     min_neighbours_gb = parameters['min_neighbours_gb']
     min_neighbours_tj = parameters['min_neighbours_tj']
 
+    
     # build lookup array to map particle ID to crystal ID
     lookup_series = df.set_index("particle")["crystal_id"] + 1 #plus one to make all crystal numbers above 0
     max_id = df["particle"].max()
+    print("max_id = ", max_id)
     full_lookup = np.zeros(max_id + 2, dtype=int)
     full_lookup[lookup_series.index] = lookup_series.values
     # Set the dummy particle's crystal_id to 0 (indicating no crystal)
@@ -1309,15 +1358,102 @@ def _boundary_and_tj_id(df, *args, parameters=None, **kwargs):
 
     # create new array with neigbours crystal ID rather than particle ID
     neighbor_crystals = full_lookup[neighbors_matrix]
+    """
 
+    # 1. CREATE A LOCAL MAPPING TO COMPRESS HIGHER IDS
+    # Map the high global particle IDs to a tight 0-indexed local array (0 to ~2154)
+    unique_particles = df["particle"].unique()
+    num_particles = len(unique_particles)
+    print("num_particles = ", num_particles)
+    
+    # Create a fast mapping series: index = global ID, value = local 0-indexed position
+    local_id_map = pd.Series(np.arange(num_particles), index=unique_particles)
+    local_id_map[-1] = -1 # Keep your dummy particle pointer intact
+    
+    # 2. CONVERT BOTH THE DF AND THE NEIGHBORS MATRIX TO LOCAL IDS
+    local_particle_ids = local_id_map[df["particle"]].values
+    
+    # 3. BUILD YOUR FULL LOOKUP (Now safely limited to just the single frame size!)
+    # Size is exactly num_particles + 2
+    full_lookup = np.zeros(num_particles + 2, dtype=np.int64)
+    print("full_lookup size = ", full_lookup.shape)
+    
+    # Set the mapping using local indices instead of global ones
+    crystal_values = df["crystal_id"].values + 1
+    full_lookup[local_particle_ids] = crystal_values
+    full_lookup[-1] = 0 # Dummy particle points to 0
+    
+    # 4. CONVERT NEIGHBORS COLUMN
+    neighbor_lists = df["neighbours"].tolist()
+    max_neighbors = max(len(n) for n in neighbor_lists)
+    print("max_neighbors = ", max_neighbors)
+    
+    # Build neighbors matrix using local IDs via our mapping
+    neighbors_matrix = np.full((num_particles, max_neighbors), -1, dtype=np.int64)
+    for i, n in enumerate(neighbor_lists):
+        # Map global neighbor IDs to local 0-indexed IDs before putting them in the matrix
+        neighbors_matrix[i, :len(n)] = local_id_map[n].values
+        
+    # 5. EXECUTE LOOKUP (This line remains exactly the same as your original!)
+    neighbor_crystals = full_lookup[neighbors_matrix]
+    """
+########
     # add particles own crystal to the first column
     own_crystals = (df["crystal_id"].to_numpy()[:, np.newaxis] + 1).astype(int)
     full_neighborhood = np.hstack((own_crystals, neighbor_crystals))
-
+    print("full_neighborhood max = ", np.max(full_neighborhood))
     crystal_id_values = np.arange(1, np.max(full_neighborhood) + 1)
     counts = np.vstack([np.bincount(row, minlength=crystal_id_values[-1] + 1)[crystal_id_values] for row in full_neighborhood])
 
     df['is_boundary'] = np.sum(counts >= min_neighbours_gb, axis=1) >= 2
     df['is_triple_junction'] = np.sum(counts >= min_neighbours_tj, axis=1) >= 3
 
+    return df
+
+
+
+def _boundary_and_tj_id_fast(df, *args, parameters=None, **kwargs):
+    min_neighbours_gb = parameters['min_neighbours_gb']
+    min_neighbours_tj = parameters['min_neighbours_tj']
+    
+    # 1. Use standard types for the mapping to avoid the ExtensionArray '_hasna' bug
+    # Zip native numpy/python types instead of the Series object directly
+    particles = df['particle'].to_numpy(dtype=np.int64)
+    crystals = df['crystal_id'].to_numpy(dtype=np.int64)
+    crystal_map = dict(zip(particles, crystals))
+    
+    # 2. Explode using a clean slice of the original dataframe
+    exploded = df[['particle', 'neighbours']].explode('neighbours')
+    
+    # Drop any rows where a particle has no neighbors (None/NaN)
+    exploded = exploded.dropna(subset=['neighbours'])
+    
+    # 3. Force neighbor IDs to clean int64 so the dictionary map can read them seamlessly
+    exploded['neighbours'] = exploded['neighbours'].astype(np.int64)
+    
+    # 4. Map the neighbor particles to their crystal IDs
+    exploded['neighbor_crystal'] = exploded['neighbours'].map(crystal_map)
+    
+    # Drop any neighbors that couldn't be mapped (like your -1 dummy pointers)
+    valid_neighbors = exploded.dropna(subset=['neighbor_crystal'])
+    
+    # 5. Group by particle and neighbor crystal to count occurrences per crystal
+    counts_per_grain = valid_neighbors.groupby(['particle', 'neighbor_crystal']).size().reset_index(name='count')
+    
+    # --- APPLY YOUR SIMPLIFIED DEFINITIONS ---
+    
+    # Boundary: Must have >= min_neighbours_gb in at least 2 different crystals
+    gb_condition = counts_per_grain['count'] >= min_neighbours_gb
+    gb_counts = counts_per_grain[gb_condition].groupby('particle').size()
+    gb_particles = gb_counts[gb_counts >= 2].index
+    
+    # Triple Junction: Must have >= min_neighbours_tj in at least 3 different crystals
+    tj_condition = counts_per_grain['count'] >= min_neighbours_tj
+    tj_counts = counts_per_grain[tj_condition].groupby('particle').size()
+    tj_particles = tj_counts[tj_counts >= 3].index
+    
+    # 6. Map results back safely using the original data type
+    df['is_boundary'] = df['particle'].isin(gb_particles)
+    df['is_triple_junction'] = df['particle'].isin(tj_particles)
+    
     return df
