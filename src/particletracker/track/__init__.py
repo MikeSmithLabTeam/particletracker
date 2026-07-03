@@ -69,10 +69,10 @@ class ParticleTracker(QObject):
         if lock_part == -1:
             if f_index is None:
                 'When processing whole video store in file with same name as movie'
-                output_filename = f"{self.base_filename}_track.hdf5"
+                output_filename = f"{self.base_filename}_track.parquet"
             else:
                 'store temporarily'
-                output_filename = f"{self.base_filename}_temp.hdf5"
+                output_filename = f"{self.base_filename}_temp.parquet"
 
             if f_index is None:
                 start = self.cap.frame_range[0]

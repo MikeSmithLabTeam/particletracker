@@ -33,16 +33,16 @@ class LinkTrajectory:
             #process single frame f_index
             output_filename = self.track_store.temp_filename   
             if lock_part == -1:
-                #Tracking only operates on one frame producing _temp.hdf5, Linking reads from this temporary file
+                #Tracking only operates on one frame producing _temp.parquet, Linking reads from this temporary file
                 self.track_store.clear_temp_df()
                 df=self.track_store.temp_df
             else:
-                #If lock_part == 0 The tracking data on whole movie is stored in a file _track.hdf5 created previously. We only want to operate on one frame of this. You load full tracking data and then grab a single frame process it and store result in a temporary file.
+                #If lock_part == 0 The tracking data on whole movie is stored in a file _track.parquet created previously. We only want to operate on one frame of this. You load full tracking data and then grab a single frame process it and store result in a temporary file.
                 df=self.track_store.get_df(f_index=f_index)
 
         with DataWrite(output_filename) as store:
             if df is not None and df.isna().all().all():
-                #If it is an empty dataframe copy to _link.hdf5 file
+                #If it is an empty dataframe copy to _link.parquet file
                 df=df
                 store.write_data(df)
             elif (f_index is None) and ('default' in self.parameters['link']['link_method']):#

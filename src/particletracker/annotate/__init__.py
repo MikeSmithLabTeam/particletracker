@@ -43,7 +43,7 @@ class TrackingAnnotator:
             start=f_index
             stop=f_index+1
             step=1
-            #If postprocessing is locked read the full dataframe _postprocess.hdf5 otherwise use _temp.hdf5
+            #If postprocessing is locked read the full dataframe _postprocess.parquet otherwise use _temp.parquet
             if lock_part==2:
                 df = self.pp_store.df
                 create_temp_hdf(self.pp_store, f_index)
@@ -76,4 +76,4 @@ class TrackingAnnotator:
 
 def create_temp_hdf(pp_store, f_index):
     df = pp_store.get_df(f_index=f_index)
-    df.to_hdf(pp_store.temp_filename, key='data')
+    df.to_parquet(pp_store.temp_filename)

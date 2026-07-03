@@ -341,8 +341,7 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
     """
     Calculates the hexatic order parameter of each particle.
     """
-    print('inside hexatic order')
-    df['hexatic_order_complex']=pd.Series(np.nan, index=df.index, dtype=object)
+    #df['hexatic_order_complex']=pd.Series(np.nan, index=df.index, dtype=object)
     df['hexatic_order_magnitude']=pd.Series(np.nan, index=df.index, dtype=object)
     df['hexatic_order_phase']=pd.Series(np.nan, index=df.index, dtype=object)
     df['number_of_neighbours']=pd.Series(np.nan, index=df.index, dtype=object)
@@ -380,7 +379,7 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
         psi_6[valid_indices] = sum_exp_6j[valid_indices] / num_neighbors[valid_indices]       
         
         # Create a Series for each result and align it to the correct particle indices
-        df.loc[f_index, 'hexatic_order_complex'] = pd.Series(psi_6, index=frame_indices)
+        #df.loc[f_index, 'hexatic_order_complex'] = pd.Series(psi_6, index=frame_indices)
         df.loc[f_index, 'hexatic_order_magnitude'] = pd.Series(np.abs(psi_6), index=frame_indices)
         df.loc[f_index, 'hexatic_order_phase'] = pd.Series(np.angle(psi_6), index=frame_indices)
         df.loc[f_index, 'number_of_neighbours'] = pd.Series(num_neighbors, index=frame_indices)

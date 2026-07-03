@@ -67,13 +67,13 @@ def test_preprocess():
     """
     temp_dir = "testdata/_temp"
     output_video = "testdata/colloids_annotate.mp4"
-    output_df = "testdata/colloids.hdf5"
+    output_df = "testdata/colloids.parquet"
 
     clean_up(temp_dir)
 
     pt.batchprocess("testdata/colloids.mp4", "testdata/test_preprocess.param")
     
-    df = pd.read_hdf(output_df)
+    df = pd.read_parquet(output_df)
     assert os.path.exists(output_video), 'Preprocessing steps errored'
     
     os.remove(output_video)

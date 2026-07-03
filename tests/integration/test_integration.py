@@ -53,7 +53,7 @@ def test_eyes():
     Annotation: Circle,
     """
     output_video = "testdata/eyes_annotate.mp4"
-    output_df = "testdata/eyes.hdf5"
+    output_df = "testdata/eyes.parquet"
     temp_dir = "testdata/_temp"
 
     clean_up(temp_dir)
@@ -65,7 +65,7 @@ def test_eyes():
     
     assert os.path.exists(output_video), 'Eyes annotated video not created'
 
-    df = pd.read_hdf(output_df)
+    df = pd.read_parquet(output_df)
     assert int(df.loc[3, ['x_mean']].to_numpy()[0][0]) == int(
         152.3), df.loc[3, ['x_mean']].to_numpy()[0][0]
     os.remove(output_video)
@@ -84,7 +84,7 @@ def test_colloids():
     Annotation: circles, particle_labels, trajectories, text_label, var_label
     """
     output_video = "testdata/colloids_annotate.mp4"
-    output_df = "testdata/colloids.hdf5"
+    output_df = "testdata/colloids.parquet"
     temp_dir = "testdata/_temp"
 
     clean_up(temp_dir)
@@ -93,7 +93,7 @@ def test_colloids():
     
 
 
-    df = pd.read_hdf(output_df)
+    df = pd.read_parquet(output_df)
     
     assert os.path.exists(output_video)
     assert int(df.loc[0, ['mass']].to_numpy()[0][0]) == int(
@@ -113,7 +113,7 @@ def test_hydrogel():
     Annotation: Circle,
     """
     output_video = "testdata/hydrogel_annotate.mp4"
-    output_df = "testdata/hydrogel.hdf5"
+    output_df = "testdata/hydrogel.parquet"
     temp_dir = "testdata/_temp"
 
     clean_up(temp_dir)
@@ -121,7 +121,7 @@ def test_hydrogel():
     batchprocess("testdata/hydrogel.mp4", "testdata/test_hydrogel.param")
     
 
-    df = pd.read_hdf(output_df)
+    df = pd.read_parquet(output_df)
 
     assert os.path.exists(output_video), 'Hydrogel annotated video not created'
     assert int(df.loc[0, ['voronoi_area']].to_numpy()[2][0]) == int(1081609.2758450378), df.loc[0, ['voronoi_area']].to_numpy()[2][0]  # 'tested value in hydrogel df incorrect'
@@ -140,14 +140,14 @@ def test_bacteria():
     Annotation: boxes,
     """
     output_video = "testdata/bacteria_annotate.mp4"
-    output_df = "testdata/bacteria.hdf5"
+    output_df = "testdata/bacteria.parquet"
     temp_dir = "testdata/_temp"
 
     clean_up(temp_dir)
 
     batchprocess("testdata/bacteria.mp4", "testdata/test_bacteria.param")
     
-    df = pd.read_hdf(output_df)
+    df = pd.read_parquet(output_df)
     assert os.path.exists(output_video), 'Bacteria annotated video not created'
     assert int(df.loc[0, ['box_width']].to_numpy()[0][0]) == int(
         4.0), df.loc[0, ['box_width']].to_numpy()[0][0]
@@ -166,7 +166,7 @@ def test_discs():
     Annotation: circles, networks, particle_labels,
     """
     output_video = "testdata/discs_annotate.mp4"
-    output_df = "testdata/discs.hdf5"
+    output_df = "testdata/discs.parquet"
     output_csv = "testdata/discs.csv"
     temp_dir = "testdata/_temp"
 
@@ -175,7 +175,7 @@ def test_discs():
     batchprocess("testdata/discs.mp4",
                     "testdata/test_discs.param")
     
-    df = pd.read_hdf(output_df)
+    df = pd.read_parquet(output_df)
     assert os.path.exists(output_video), 'Error Discs annotated video not created'
     assert df.loc[0, ['x']].to_numpy()[0][0] == 1019.5, df.loc[0, ['x']].to_numpy()[
         0][0]  # 'tested value in discs df incorrect'

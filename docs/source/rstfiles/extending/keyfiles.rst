@@ -4,7 +4,7 @@ Understanding key files
 Within the software we make use of several important files
 
 - .param files
-- .hdf5 files
+- .parquet files
 
 .param files
 ------------
@@ -71,19 +71,19 @@ without needing to run the gui. When a video is processed a copy of the param fi
 saved to the same folder with videoname.param
 
 
-.hdf5 files
+.parquet files
 -----------
 hdf5 files are for storing the data outputted from the tracking. These come
 in two types:
 
-1. vidname_temp.hdf5
-2. vidname.hdf5
+1. vidname_temp.parquet
+2. vidname.parquet
 
 The first is the output from a single frame analysed on the fly in the gui.
 This is what one is usually accessing. The second is the result from analysing
 all the frames either with the "process_part" or "process". When you check the "use_part"
-the software switches from using the vidname_temp.hdf5 file to the vidname.hdf5 to perform
+the software switches from using the vidname_temp.parquet file to the vidname.parquet to perform
 postprocessing / annotation. This is sometimes necessary. For instance to calculate
-a trajectory you must work with data from other frames. The vidname.hdf5 also represents the data file
+a trajectory you must work with data from other frames. The vidname.parquet also represents the data file
 to which your tracked video data is stored and is the one you should access in the Jupyter Notebook
 to continue with the analysis.

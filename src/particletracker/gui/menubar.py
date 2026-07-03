@@ -19,9 +19,9 @@ class CustomToolBar(QToolBar):
 class CustomButton(QToolButton):
     """These are a set of buttons on the menubar used for stage by stage processing"""
     buttons=[None,None,None]
-    extension=('_track.hdf5',
-               '_link.hdf5',
-               '_postprocess.hdf5')
+    extension=('_track.parquet',
+               '_link.parquet',
+               '_postprocess.parquet')
     locked_part=-1
     # A signal that indicates the new value. It is fed the CustomButton.locked_part
     lockButtons = pyqtSignal(int) 
@@ -95,10 +95,10 @@ class CustomButton(QToolButton):
         #Trying to track requires no prerequisites
         if part >= 0:
             prerequisite_files_ok = prerequisite_files_ok and os.path.exists(self.path + '/_temp/' + self.filename[:-4] + CustomButton.extension[0])
-        #Trying to link requires _track.hdf5
+        #Trying to link requires _track.parquet
         if part >= 1:
             prerequisite_files_ok = prerequisite_files_ok and os.path.exists(self.path + '/_temp/' + self.filename[:-4] + CustomButton.extension[1])
-        #Trying to postprocess requires _link.hdf5
+        #Trying to postprocess requires _link.parquet
         if part >=2: 
             prerequisite_files_ok = prerequisite_files_ok and os.path.exists(self.path + '/_temp/' + self.filename[:-4] + CustomButton.extension[2])
         return prerequisite_files_ok
