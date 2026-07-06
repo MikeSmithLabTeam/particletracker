@@ -9,6 +9,7 @@ import pandas as pd
 import scipy.optimize as opt
 from scipy.signal import find_peaks
 from scipy.ndimage import gaussian_filter1d
+import pyarrow as pa
 
 from labvision import audio, video
 from moviepy.audio.io.AudioFileClip import AudioFileClip
@@ -626,7 +627,7 @@ def neighbours(df, *args,  parameters=None, **kwargs):
 
 
     '''    
-    print('inside neighbours')
+    #print('inside neighbours')
     df['neighbours'] = pd.Series(np.nan, index=df.index, dtype=object)
     df['neighbour_dists'] = pd.Series(np.nan, index=df.index, dtype=object)
 
@@ -1199,7 +1200,7 @@ def crystal_ID_plot(df, parameters):
 @error_handling
 @param_parse
 def crystal_id(df, *args, parameters=None, **kwargs):
-    print('inside crystal id')
+    #print('inside crystal id')
     if 'crystal_id' not in df.columns:
         df['crystal_id'] = np.nan #pd.Series(np.nan, index=df.index, dtype='Int64')
     
@@ -1286,7 +1287,7 @@ def boundary_and_tj_id(df, *args, parameters=None, **kwargs):
         updated dataframe including new columns "is_boundary" and "is_triple_junction", boolean denoting GB and TJ particles. 
 
     """
-    print('inside boundary id')
+    #print('inside boundary id')
     #define new columns
     if 'is_triple_junction' not in df.columns:
         df['is_boundary'] = pd.Series(np.nan, index=df.index, dtype=bool)
@@ -1339,7 +1340,7 @@ def _boundary_and_tj_id(df, *args, parameters=None, **kwargs):
     # build lookup array to map particle ID to crystal ID
     lookup_series = df.set_index("particle")["crystal_id"] + 1 #plus one to make all crystal numbers above 0
     max_id = df["particle"].max()
-    print("max_id = ", max_id)
+    #print("max_id = ", max_id)
     full_lookup = np.zeros(max_id + 2, dtype=int)
     full_lookup[lookup_series.index] = lookup_series.values
     # Set the dummy particle's crystal_id to 0 (indicating no crystal)
@@ -1400,7 +1401,7 @@ def _boundary_and_tj_id(df, *args, parameters=None, **kwargs):
     # add particles own crystal to the first column
     own_crystals = (df["crystal_id"].to_numpy()[:, np.newaxis] + 1).astype(int)
     full_neighborhood = np.hstack((own_crystals, neighbor_crystals))
-    print("full_neighborhood max = ", np.max(full_neighborhood))
+    #print("full_neighborhood max = ", np.max(full_neighborhood))
     crystal_id_values = np.arange(1, np.max(full_neighborhood) + 1)
     counts = np.vstack([np.bincount(row, minlength=crystal_id_values[-1] + 1)[crystal_id_values] for row in full_neighborhood])
 
