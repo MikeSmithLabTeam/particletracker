@@ -76,4 +76,4 @@ class TrackingAnnotator:
 
 def create_temp_hdf(pp_store, f_index):
     df = pp_store.get_df(f_index=f_index)
-    df.to_parquet(pp_store.temp_filename)
+    df.to_parquet(pp_store.temp_filename, engine="pyarrow")

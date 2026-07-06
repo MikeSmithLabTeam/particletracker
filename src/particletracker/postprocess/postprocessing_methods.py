@@ -10,11 +10,17 @@ import scipy.optimize as opt
 from scipy.signal import find_peaks
 from scipy.ndimage import gaussian_filter1d
 import pyarrow as pa
+import matplotlib.pyplot as plt
 
 from labvision import audio, video
 from moviepy.audio.io.AudioFileClip import AudioFileClip
 from ..general.parameters import param_parse
 from ..customexceptions import *
+
+arrow_bool = pd.ArrowDtype(pa.bool_())
+arrowint8_type = pd.ArrowDtype(pa.list_(pa.int8()))
+arrowint16_type = pd.ArrowDtype(pa.list_(pa.int16()))
+arrowf32_type = pd.ArrowDtype(pa.list_(pa.float32()))
 
 """
 Postprocessing methods can have a number of decorators.
@@ -343,11 +349,12 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
     Calculates the hexatic order parameter of each particle.
     """
     #df['hexatic_order_complex']=pd.Series(np.nan, index=df.index, dtype=object)
-    df['hexatic_order_magnitude']=pd.Series(np.nan, index=df.index, dtype=object)
-    df['hexatic_order_phase']=pd.Series(np.nan, index=df.index, dtype=object)
-    df['number_of_neighbours']=pd.Series(np.nan, index=df.index, dtype=object)
+    df['hexatic_order_magnitude']=pd.Series(None, index=df.index)
+    df['hexatic_order_phase']=pd.Series(None, index=df.index)
+    df['number_of_neighbours']=pd.Series(None, index=df.index, dtype=np.uint8)
     
     method = parameters.get('method', 'delaunay')  # Default to Delaunay
+    #method = parameters['method']
     cutoff = parameters['cutoff']
     
     f_index = kwargs['f_index']
@@ -360,7 +367,7 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
         indices=[f_index]
 
     for f_index in indices:
-        points = df[['x', 'y']].loc[f_index].values
+        points = df.loc[f_index, ['x', 'y']].to_numpy(dtype=np.float32)
         frame_indices = df.loc[f_index].index
 
         # Use the appropriate method to find neighbors
@@ -383,7 +390,7 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
         #df.loc[f_index, 'hexatic_order_complex'] = pd.Series(psi_6, index=frame_indices)
         df.loc[f_index, 'hexatic_order_magnitude'] = pd.Series(np.abs(psi_6), index=frame_indices)
         df.loc[f_index, 'hexatic_order_phase'] = pd.Series(np.angle(psi_6), index=frame_indices)
-        df.loc[f_index, 'number_of_neighbours'] = pd.Series(num_neighbors, index=frame_indices)
+        df.loc[f_index, 'number_of_neighbours'] = pd.Series(num_neighbors, index=frame_indices, dtype=np.uint8)
     
     return df
 
@@ -627,9 +634,9 @@ def neighbours(df, *args,  parameters=None, **kwargs):
 
 
     '''    
-    #print('inside neighbours')
-    df['neighbours'] = pd.Series(np.nan, index=df.index, dtype=object)
-    df['neighbour_dists'] = pd.Series(np.nan, index=df.index, dtype=object)
+
+    df['neighbours'] = pd.Series(None, index=df.index, dtype=arrowint16_type)
+    df['neighbour_dists'] = pd.Series(None, index=df.index, dtype=arrowf32_type)
 
     method = parameters['method']
 
@@ -648,49 +655,6 @@ def neighbours(df, *args,  parameters=None, **kwargs):
             df.loc[f_index,['neighbours', 'neighbour_dists']] =_find_kdtree(df.loc[f_index], parameters=parameters)      
     return df
 
-def _new_find_kdtree(df, parameters=None):
-    cutoff = parameters['cutoff']
-    num_neighbours = int(parameters['neighbours'])
-    points = df[['x', 'y']].values
-    particle_ids = df['particle'].values.flatten()
-    tree = sp.KDTree(points)
-    
-    # Query for the nearest particles
-    distances, indices = tree.query(points, k=num_neighbours + 1, distance_upper_bound=cutoff)
-    
-    clean_neighbour_ids = []
-    clean_neighbour_dists = []
-    
-    # Loop over every particle in this frame to isolate its actual neighbors
-    for i in range(len(points)):
-        # Get the neighbor row indices and distances for particle i
-        idx_row = indices[i]
-        dist_row = distances[i]
-        
-        # Filter out:
-        # 1. The particle itself (the first match where distance is 0)
-        # 2. SciPy's out-of-bounds dummy index (idx == len(points))
-        # 3. Any infinite distances (where no neighbor was found within the cutoff)
-        valid_mask = (idx_row < len(points)) & (dist_row <= cutoff) & (np.isfinite(dist_row))
-        
-        valid_indices = idx_row[valid_mask]
-        valid_distances = dist_row[valid_mask]
-        
-        # Map the raw positional row indices back to your actual global particle IDs
-        # Exclude the self-match if it's still present in the valid set
-        current_particle_id = particle_ids[i]
-        actual_ids = [int(particle_ids[v_idx]) for v_idx in valid_indices if particle_ids[v_idx] != current_particle_id]
-        actual_dists = [float(d) for d in valid_distances[:len(actual_ids)]]
-        
-        clean_neighbour_ids.append(actual_ids)
-        clean_neighbour_dists.append(actual_dists)
-        
-    # Build a clean return dataframe for this frame matching its incoming index
-    return_df = pd.DataFrame(index=df.index)
-    return_df['neighbours'] = clean_neighbour_ids
-    return_df['neighbour_dists'] = clean_neighbour_dists
-    
-    return return_df
 
 def _find_kdtree(df, parameters=None):
     cutoff = parameters['cutoff']
@@ -703,24 +667,24 @@ def _find_kdtree(df, parameters=None):
     # The first neighbor is always the particle itself, so we query k+1.
     distances, indices = tree.query(points, k=num_neighbours + 1, distance_upper_bound=cutoff)
     
-    neighbour_ids = []
-    neighbour_dists = []
+    
+    # Replace the manual 'for' loop in _find_kdtree with this:
+    # 1. Create masks for valid neighbors for all particles at once
+    valid_masks = indices[:, 1:] < len(points)
+    
+    # 2. Vectorized list creation using list comprehension
+    neighbour_ids = [
+        particle_ids[indices[i, 1:][valid_masks[i]]].tolist() 
+        for i in range(len(points))
+    ]
+    neighbour_dists = [
+        distances[i, 1:][valid_masks[i]].tolist() 
+        for i in range(len(points))
+    ]
 
-    for i in range(len(points)):
-        # Filter out invalid neighbors (fill value) and the particle itself (index 0)
-        valid_mask = indices[i, 1:] < len(points)
-        
-        # Get neighbor IDs using advanced indexing
-        current_neighbor_ids = particle_ids[indices[i, 1:][valid_mask]].tolist()
-        neighbour_ids.append(current_neighbor_ids)
-        
-        # Get corresponding distances
-        current_neighbor_dists = distances[i, 1:][valid_mask].tolist()
-        neighbour_dists.append(current_neighbor_dists)
-
-    df['neighbours'] = neighbour_ids
-    df['neighbour_dists'] = neighbour_dists
-    return df
+    df['neighbours'] = pd.Series(neighbour_ids, index=df.index, dtype=arrowint16_type)
+    df['neighbour_dists'] = pd.Series(neighbour_dists, index=df.index, dtype=arrowf32_type)
+    return df[['neighbours', 'neighbour_dists']] # Only return the columns we need
 
 @error_handling
 def _find_delaunay(df, parameters=None):
@@ -754,10 +718,9 @@ def _find_delaunay(df, parameters=None):
         neighbour_ids_list.append(current_neighbor_ids)
         neighbour_dists_list.append(current_neighbor_dists)
     
-    df['neighbours'] = neighbour_ids_list
-    df['neighbour_dists'] = neighbour_dists_list
-    
-    return df
+    df['neighbours'] = pd.Series(neighbour_ids_list, index=df.index, dtype=arrowint16_type)
+    df['neighbour_dists'] = pd.Series(neighbour_dists_list, index=df.index, dtype=arrowf32_type)
+    return df[['neighbours', 'neighbour_dists']]
 
 
 
@@ -1140,23 +1103,6 @@ def _find_min_id(phi_array,peak_positions):
     min_id[min_id >= num_peaks] = min_id[min_id >= num_peaks] - num_peaks
     return min_id
 
-import matplotlib.pyplot as plt
-def plotting(df):
-    gb = df
-    df_0 = gb[gb['crystal_id']==0]
-    df_1 = gb[gb['crystal_id']==1]
-    df_2 = gb[gb['crystal_id']==2]
-    df_3 = gb[gb['crystal_id']==3]
-
-    plt.scatter(df_0['x'],df_0['y'])
-    plt.scatter(df_1['x'],df_1['y'])
-    plt.scatter(df_2['x'],df_2['y'])
-    plt.scatter(df_3['x'],df_3['y'])
-
-    plt.gca().invert_yaxis()
-    plt.legend()
-    plt.show()
-    
 def crystal_ID_plot(df, parameters):
     '''
     return df with extra column containing crystal ID
@@ -1235,7 +1181,7 @@ def _crystal_id(df, *args, parameters=None, **kwargs):
     smoothing = parameters['smoothing']
     debug = parameters['debug']
 
-    phi = df['hexatic_order_phase']
+    phi = df['hexatic_order_phase'].to_numpy(dtype=np.float32, na_value=np.nan)
 
     hist, bin_edges=np.histogram(phi, bins = n_bins, range=(-np.pi,np.pi)) # increasing one side allows one edge peak to be identified
     bins = 0.5*(bin_edges[:-1] + bin_edges[1:])
@@ -1347,7 +1293,7 @@ def _boundary_and_tj_id(df, *args, parameters=None, **kwargs):
     full_lookup[-1] = 0
 
     # convert neighbours column to list
-    neighbor_lists = df["neighbours"].tolist()
+    neighbor_lists = df["neighbours"].to_numpy()
     num_particles = len(df)
     max_neighbors = max(len(n) for n in neighbor_lists)
     #create matrix of neighbour ids, -1 in empty spaces points to dummy particle with crystal_id 0
@@ -1358,51 +1304,16 @@ def _boundary_and_tj_id(df, *args, parameters=None, **kwargs):
 
     # create new array with neigbours crystal ID rather than particle ID
     neighbor_crystals = full_lookup[neighbors_matrix]
-    """
 
-    # 1. CREATE A LOCAL MAPPING TO COMPRESS HIGHER IDS
-    # Map the high global particle IDs to a tight 0-indexed local array (0 to ~2154)
-    unique_particles = df["particle"].unique()
-    num_particles = len(unique_particles)
-    print("num_particles = ", num_particles)
-    
-    # Create a fast mapping series: index = global ID, value = local 0-indexed position
-    local_id_map = pd.Series(np.arange(num_particles), index=unique_particles)
-    local_id_map[-1] = -1 # Keep your dummy particle pointer intact
-    
-    # 2. CONVERT BOTH THE DF AND THE NEIGHBORS MATRIX TO LOCAL IDS
-    local_particle_ids = local_id_map[df["particle"]].values
-    
-    # 3. BUILD YOUR FULL LOOKUP (Now safely limited to just the single frame size!)
-    # Size is exactly num_particles + 2
-    full_lookup = np.zeros(num_particles + 2, dtype=np.int64)
-    print("full_lookup size = ", full_lookup.shape)
-    
-    # Set the mapping using local indices instead of global ones
-    crystal_values = df["crystal_id"].values + 1
-    full_lookup[local_particle_ids] = crystal_values
-    full_lookup[-1] = 0 # Dummy particle points to 0
-    
-    # 4. CONVERT NEIGHBORS COLUMN
-    neighbor_lists = df["neighbours"].tolist()
-    max_neighbors = max(len(n) for n in neighbor_lists)
-    print("max_neighbors = ", max_neighbors)
-    
-    # Build neighbors matrix using local IDs via our mapping
-    neighbors_matrix = np.full((num_particles, max_neighbors), -1, dtype=np.int64)
-    for i, n in enumerate(neighbor_lists):
-        # Map global neighbor IDs to local 0-indexed IDs before putting them in the matrix
-        neighbors_matrix[i, :len(n)] = local_id_map[n].values
-        
-    # 5. EXECUTE LOOKUP (This line remains exactly the same as your original!)
-    neighbor_crystals = full_lookup[neighbors_matrix]
-    """
-########
     # add particles own crystal to the first column
     own_crystals = (df["crystal_id"].to_numpy()[:, np.newaxis] + 1).astype(int)
     full_neighborhood = np.hstack((own_crystals, neighbor_crystals))
-    #print("full_neighborhood max = ", np.max(full_neighborhood))
-    crystal_id_values = np.arange(1, np.max(full_neighborhood) + 1)
+    
+    max_val = np.max(full_neighborhood)
+    if max_val < 1:
+        max_val = 1
+        
+    crystal_id_values = np.arange(1, max_val + 1)
     counts = np.vstack([np.bincount(row, minlength=crystal_id_values[-1] + 1)[crystal_id_values] for row in full_neighborhood])
 
     df['is_boundary'] = np.sum(counts >= min_neighbours_gb, axis=1) >= 2

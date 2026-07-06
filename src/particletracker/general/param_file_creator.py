@@ -148,6 +148,7 @@ def create_param_file(filename):
         },
         'hexatic_order': {
             'cutoff': [10, 1, 100, 1],
+            'method':['delaunay',('delaunay','kdtree')]
         },
         'real_imag': {
             'column_name': 'hexatic_order'

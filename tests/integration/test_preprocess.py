@@ -73,7 +73,7 @@ def test_preprocess():
 
     pt.batchprocess("testdata/colloids.mp4", "testdata/test_preprocess.param")
     
-    df = pd.read_parquet(output_df)
+    df = pd.read_parquet(output_df,engine="pyarrow", dtype_backend="pyarrow")
     assert os.path.exists(output_video), 'Preprocessing steps errored'
     
     os.remove(output_video)

@@ -119,9 +119,9 @@ class DataRead:
         """internal loading method"""
         try:
             if full:
-                df = pd.read_parquet(self.read_filename)
+                df = pd.read_parquet(self.read_filename,engine="pyarrow",dtype_backend="pyarrow")
             else:
-                df = pd.read_parquet(self.temp_filename)
+                df = pd.read_parquet(self.temp_filename,engine="pyarrow", dtype_backend="pyarrow")
             if not df.index.is_monotonic_increasing:
                 df.sort_index(inplace=True)
             return df  
@@ -256,11 +256,11 @@ class DataWrite:
         try:
             if self._output_df is not None:
                 # Write full dataframe
-                self._output_df.to_parquet(self._output_file)
+                self._output_df.to_parquet(self._output_file,engine="pyarrow")
             elif self._output_frames:
                 # Concatenate and write collected frames
                 final_df = pd.concat(self._output_frames)
-                final_df.to_parquet(self._output_file)
+                final_df.to_parquet(self._output_file,engine="pyarrow")
         except Exception as e:
             print(f'Error in writing data: {e}')
             raise  # Re-raise the exception after cleanup

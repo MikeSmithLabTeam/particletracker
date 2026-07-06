@@ -23,7 +23,7 @@ def test_network_methods():
 
     batchprocess("testdata/hydrogel.mp4", "testdata/test_networks.param")
     
-    df = pd.read_parquet(output_df)
+    df = pd.read_parquet(output_df,engine="pyarrow", dtype_backend="pyarrow")
 
     assert int(df.loc[0,'voronoi_area'].to_numpy()[3]) == int(81650.5916), int(df.loc[0,'voronoi_area'].to_numpy()[3])
     assert df.loc[0,'neighbours'].to_numpy()[4][0] == 29, df.loc[0,'neighbours'].to_numpy()[4][0]
@@ -46,7 +46,7 @@ def test_rolling_methods():
 
     batchprocess("testdata/eyes.mp4", "testdata/test_rolling.param")
     
-    df = pd.read_parquet(output_df)
+    df = pd.read_parquet(output_df,engine="pyarrow", dtype_backend="pyarrow")
 
 
     assert df.loc[3,'x_mean'].to_numpy()[0] == np.float64(151.16666666666666),'mean failed'

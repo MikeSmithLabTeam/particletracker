@@ -255,7 +255,7 @@ class PandasWidget(QtWidgets.QDialog):
 
 
         if write:
-            store._df.to_parquet(store.read_filename)
+            store._df.to_parquet(store.read_filename, engine="pyarrow")
 
         self.data_updated_signal.emit(lock_index, store)
 

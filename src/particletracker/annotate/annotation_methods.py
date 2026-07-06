@@ -201,7 +201,7 @@ def particle_labels(df_single, frame, f_index=None, parameters=None, *args, **kw
 
     particle_values = df_single[parameters['values_column']].values
 
-    df_empty = np.isnan(particle_values[0])
+    df_empty = pd.isna(particle_values[0])
     if np.all(df_empty):
         return frame
 
@@ -293,7 +293,7 @@ def boxes(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     box_pts = subset_df[['box_pts']].values
     
     if np.shape(box_pts)[0] == 1:
-        df_empty = np.isnan(box_pts[0])
+        df_empty = pd.isna(box_pts[0])
         if np.all(df_empty):
             #0 boxes
             return frame
@@ -389,8 +389,7 @@ def circles(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     thickness = parameters['thickness']
 
     #No objects found
-    df_empty = np.isnan(circles[0])
-    if np.all(df_empty):
+    if len(circles) == 0 or circles is None or pd.isna(circles).all():
         return frame
     
     (colours, colourbar) = colour_array(subset_df, f_index, parameters)
@@ -463,10 +462,15 @@ def contours(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     subset_df = _get_class_subset(df_single, parameters)
     contour_pts = subset_df[['contours']].values
     (colours, colourbar) = colour_array(subset_df, f_index, parameters)
+
+    if len(contour_pts) == 0 or contour_pts is None:
+        return frame
+    
     if np.shape(contour_pts)[0] == 1:
-        df_empty = np.isnan(contour_pts[0])
+        # pd.isna handles PyArrow <NA> and None safely
+        df_empty = pd.isna(contour_pts[0])
         if np.all(df_empty):
-            #0 contours
+            # 0 contours
             return frame
 
     for index, contour in enumerate(contour_pts):
@@ -619,7 +623,7 @@ def voronoi(df_single,frame, f_index=None, parameters=None, *args, **kwargs):
     (colours, colourbar) = colour_array(subset_df, f_index, parameters)
 
     if np.shape(contour_pts)[0] == 1:
-        df_empty = np.isnan(contour_pts[0])
+        df_empty = pd.isna(contour_pts[0])
         if np.all(df_empty):
             #0 contours
             return frame
@@ -633,7 +637,7 @@ def voronoi(df_single,frame, f_index=None, parameters=None, *args, **kwargs):
 
 
 def _draw_polygon(img, pts, col=(0,0,255), thickness=1, closed=True):
-    if np.any(np.isnan(pts[0])):
+    if np.any(pd.isna(pts[0])):
         return img
     
     if thickness == -1:
