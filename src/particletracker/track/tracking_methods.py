@@ -327,12 +327,14 @@ def contours(pp_frame, frame, parameters=None, *args, **kwargs):
                 aspect = max(w, h)/min(w, h)
 
                 if (aspect <= aspect_max) & (aspect >= aspect_min):
+                    flat_contour = contour.flatten().tolist()
+
                     if use_intensities:
                         intensity = _find_intensity_inside_contour(
                             contour, frame, get_intensity_method)
-                        info_contour = [cx, cy, area, contour, intensity]
+                        info_contour = [cx, cy, area, flat_contour, intensity]
                     else:
-                        info_contour = [cx, cy, area, contour]
+                        info_contour = [cx, cy, area, flat_contour]
                     info.append(info_contour)
 
     if use_intensities:

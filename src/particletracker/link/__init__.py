@@ -40,24 +40,32 @@ class LinkTrajectory:
                 #If lock_part == 0 The tracking data on whole movie is stored in a file _track.parquet created previously. We only want to operate on one frame of this. You load full tracking data and then grab a single frame process it and store result in a temporary file.
                 df=self.track_store.get_df(f_index=f_index)
 
+        #df=df.convert_dtypes(dtype_backend='numpy_nullable')
+        
+        df.index = df.index.astype('int64')
+
+
         with DataWrite(output_filename) as store:
             if df is not None and df.isna().all().all():
                 #If it is an empty dataframe copy to _link.parquet file
-                df=df
+                df=df.convert_dtypes(dtype_backend='pyarrow')
                 store.write_data(df)
             elif (f_index is None) and ('default' in self.parameters['link']['link_method']):#
                 #Default trackpy linking method only used when processing whole movie.
                 df = default(df, self.parameters['link']['default'])
+                #df.convert_dtypes(dtype_backend='pyarrow')
                 store.write_data(df)
             elif (f_index is not None):
                 #no linking - this takes place when analysing temp single frames or as an option on the whole movie.
                 df = no_linking(df)
+                #df.convert_dtypes(dtype_backend='pyarrow')
                 store.write_data(df)
             else:               
                 #This is for situation where applying no_linking to all the movie's data
                 frame_indices =df.index.unique().tolist()
                 for f in frame_indices:
                     df_frame = no_linking(df.loc[f])
+                    #df.convert_dtypes(dtype_backend='pyarrow')
                     store.write_data(df_frame, f_index=f)
 
 

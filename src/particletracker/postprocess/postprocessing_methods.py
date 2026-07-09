@@ -746,6 +746,56 @@ def neighbours(df, *args, parameters=None, **kwargs):
     f_index = kwargs.get('f_index')
     method = parameters['method']
     
+    # Ensure columns exist with correct Arrow Extension types
+    if 'neighbours' not in df.columns:
+        df['neighbours'] = pd.Series(None, index=df.index, dtype=arrowint16_type)
+        df['neighbour_dists'] = pd.Series(None, index=df.index, dtype=arrowf32_type)
+
+    """
+    # --- CASE 1: Single Frame Path ---
+    if f_index is not None:
+        frame_df = df.loc[[f_index]]
+        if method == 'delaunay':
+            arrow_ids, arrow_dists = _find_delaunay_optimized(frame_df, parameters)
+        elif method == 'kdtree':
+            arrow_ids, arrow_dists = _find_kdtree_optimized(frame_df, parameters)
+            
+        row_positions = np.where(df.index == f_index)[0]
+        
+        # Directly drop the PyArrow objects into place
+        df.iloc[row_positions, df.columns.get_loc('neighbours')] = arrow_ids
+        df.iloc[row_positions, df.columns.get_loc('neighbour_dists')] = arrow_dists
+        
+        return df
+    """
+    # --- CASE 2: Multi-Frame Path ---
+    #Split dataframe into frame sized chunks
+    grouped = df.groupby(level=0)
+    arrow_ids_chunks = []
+    arrow_dists_chunks = []
+    
+    for frame_id, frame_df in tqdm(grouped, desc="Calculating neighbours"):
+        if method == 'delaunay':
+            arrow_ids, arrow_dists = _find_delaunay_optimized(frame_df, parameters)
+        elif method == 'kdtree':
+            arrow_ids, arrow_dists = _find_kdtree_optimized(frame_df, parameters)
+        
+        arrow_ids_chunks.append(arrow_ids)
+        arrow_dists_chunks.append(arrow_dists)
+
+    # Fast chunk concatenation
+    final_ids_arrow = pa.chunked_array(arrow_ids_chunks)
+    final_dists_arrow = pa.chunked_array(arrow_dists_chunks)
+    
+    df['neighbours'] = pd.Series(final_ids_arrow.combine_chunks(), index=df.index, dtype=arrowint16_type)
+    df['neighbour_dists'] = pd.Series(final_dists_arrow.combine_chunks(), index=df.index, dtype=arrowf32_type)
+        
+    return df
+
+def _neighbours(df, *args, parameters=None, **kwargs):
+    f_index = kwargs.get('f_index')
+    method = parameters['method']
+    
     # Initialize target columns if they don't exist yet
     if 'neighbours' not in df.columns:
         df['neighbours'] = pd.Series(None, index=df.index, dtype=arrowint16_type)
@@ -794,6 +844,44 @@ def neighbours(df, *args, parameters=None, **kwargs):
 def _find_kdtree_optimized(df, parameters):
     cutoff = parameters['cutoff']
     num_neighbours = int(parameters['neighbours'])
+    
+    points = df[['x', 'y']].values
+    particle_ids = df['particle'].values
+    n_points = len(points)
+    
+    # 1. Query the KDTree
+    tree = sp.KDTree(points)
+    distances, indices = tree.query(points, k=num_neighbours + 1, distance_upper_bound=cutoff, workers=-1)
+    
+    # Strip query-self columns
+    distances = distances[:, 1:]
+    indices = indices[:, 1:]
+    
+    # 2. Vectorized Masking
+    valid_masks = indices < n_points
+    
+    # 3. Flatten the data completely to true 1D arrays
+    # This prevents PyArrow from seeing any multi-dimensional data structures
+    flat_indices = indices[valid_masks]
+    flat_dists = distances[valid_masks]
+    
+    # Map raw indices to actual particle IDs globally in 1D
+    flat_mapped_ids = particle_ids[flat_indices]
+    
+    # 4. Compute row offsets (where each particle's list starts and ends)
+    row_counts = np.sum(valid_masks, axis=1)
+    offsets = np.insert(np.cumsum(row_counts), 0, 0).astype(np.int32)
+    
+    # 5. Build native PyArrow ListArrays natively from 1D data structures
+    # (Bypasses pa.array completely, maintaining ultra-low RAM and maximum speed)
+    pa_ids = pa.ListArray.from_arrays(pa.array(offsets), pa.array(flat_mapped_ids, type=pa.int16()))
+    pa_dists = pa.ListArray.from_arrays(pa.array(offsets), pa.array(flat_dists, type=pa.float32()))
+    
+    return pa_ids, pa_dists
+
+def _find_kdtree(df, parameters):
+    cutoff = parameters['cutoff']
+    num_neighbours = int(parameters['neighbours'])
     points = df[['x', 'y']].values
     particle_ids = df['particle'].values
     
@@ -826,7 +914,7 @@ def _find_delaunay_optimized(df, parameters):
     neighbour_dists_list = []
     
     for i in range(len(points)):
-        p1 = points[i]
+        p1 = points[i].astype(float)
         delaunay_neighbors = point_indices[list_indices[i]:list_indices[i+1]]
         
         if len(delaunay_neighbors) == 0:
@@ -834,7 +922,7 @@ def _find_delaunay_optimized(df, parameters):
             neighbour_dists_list.append([])
             continue
             
-        p2 = points[delaunay_neighbors]
+        p2 = points[delaunay_neighbors].astype(float)
         dists = np.linalg.norm(p1 - p2, axis=1)
         valid_mask = dists < cutoff
         

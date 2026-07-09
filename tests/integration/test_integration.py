@@ -68,10 +68,10 @@ def test_eyes():
     df = pd.read_parquet(output_df,engine="pyarrow", dtype_backend="pyarrow")
     assert int(df.loc[3, ['x_mean']].to_numpy()[0][0]) == int(
         152.3), df.loc[3, ['x_mean']].to_numpy()[0][0]
-    os.remove(output_video)
-    os.remove(output_df)
-    if os.path.exists(temp_dir):
-        shutil.rmtree(temp_dir)
+    #os.remove(output_video)
+    #os.remove(output_df)
+    #if os.path.exists(temp_dir):
+    #    shutil.rmtree(temp_dir)
 
 
 def test_colloids():
