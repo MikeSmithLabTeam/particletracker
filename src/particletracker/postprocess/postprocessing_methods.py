@@ -11,11 +11,23 @@ from scipy.signal import find_peaks
 from scipy.ndimage import gaussian_filter1d
 import pyarrow as pa
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from labvision import audio, video
 from moviepy.audio.io.AudioFileClip import AudioFileClip
 from ..general.parameters import param_parse
 from ..customexceptions import *
+import time
+
+def time_it(func):
+    def wrapper(*args, **kwargs):
+        print(f"running {func.__name__}")
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"[{func.__name__}] took {end - start:.4f} seconds")
+        return result
+    return wrapper
 
 arrow_bool = pd.ArrowDtype(pa.bool_())
 arrowint8_type = pd.ArrowDtype(pa.list_(pa.int8()))
@@ -341,7 +353,7 @@ def _rotated_bounding_rectangle(contour):
     info = [rect[0][0], rect[0][1], rect[2], dim[0], dim[1], box]
     return info
 
-
+@time_it
 @error_handling
 @param_parse
 def hexatic_order(df, *args,  parameters=None, **kwargs):
@@ -366,7 +378,7 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
         #Just process frame of interest
         indices=[f_index]
 
-    for f_index in indices:
+    for f_index in tqdm(indices, desc="Calculating Hexatic order"):
         points = df.loc[f_index, ['x', 'y']].to_numpy(dtype=np.float32)
         frame_indices = df.loc[f_index].index
 
@@ -589,6 +601,9 @@ def magnitude(df, *args,  parameters=None, **kwargs):
     df[output_name] = (df[column]**2 + df[column2]**2)**0.5  
     return df
 
+"""
+
+@time_it
 @error_handling
 @param_parse
 def neighbours(df, *args,  parameters=None, **kwargs):
@@ -648,7 +663,7 @@ def neighbours(df, *args,  parameters=None, **kwargs):
         #Just process frame of interest
         indices=[f_index]
     
-    for f_index in indices:
+    for f_index in tqdm(indices, desc="Calculating neighbours"):
         if method == 'delaunay':
             df.loc[f_index,['neighbours', 'neighbour_dists']] =_find_delaunay(df.loc[f_index], parameters=parameters)
         elif method == 'kdtree':
@@ -722,7 +737,111 @@ def _find_delaunay(df, parameters=None):
     df['neighbour_dists'] = pd.Series(neighbour_dists_list, index=df.index, dtype=arrowf32_type)
     return df[['neighbours', 'neighbour_dists']]
 
+"""
 
+@time_it
+@error_handling
+@param_parse
+def neighbours(df, *args, parameters=None, **kwargs):
+    f_index = kwargs.get('f_index')
+    method = parameters['method']
+    
+    # Initialize target columns if they don't exist yet
+    if 'neighbours' not in df.columns:
+        df['neighbours'] = pd.Series(None, index=df.index, dtype=arrowint16_type)
+        df['neighbour_dists'] = pd.Series(None, index=df.index, dtype=arrowf32_type)
+
+    # --- CASE 1: Single Frame Optimization ---
+    if f_index is not None:
+        # Pull the frame data directly without a groupby wrapper
+        frame_df = df.loc[[f_index]]
+        
+        if method == 'delaunay':
+            n_ids, n_dists = _find_delaunay_optimized(frame_df, parameters)
+        elif method == 'kdtree':
+            n_ids, n_dists = _find_kdtree_optimized(frame_df, parameters)
+            
+        # Safely capture the clean integer row coordinates
+        row_positions = np.where(df.index == f_index)[0]
+        
+        # Convert Python lists of lists into object arrays so Pandas assigns them cleanly 
+        df.iloc[row_positions, df.columns.get_loc('neighbours')] = np.array(n_ids, dtype=object)
+        df.iloc[row_positions, df.columns.get_loc('neighbour_dists')] = np.array(n_dists, dtype=object)
+        
+        return df
+
+    # --- CASE 2: Multi-Frame (Full Loop) Run ---
+    grouped = df.groupby(level=0)
+    all_neighbours = []
+    all_dists = []
+    # each frame neigbours are calculated and added to (.extend) a massive list instead of constanly writing to the df, this means fram 100 is just as fast as frame 1
+    for frame_id, frame_df in tqdm(grouped, desc="Calculating neighbours"):
+        if method == 'delaunay':
+            n_ids, n_dists = _find_delaunay_optimized(frame_df, parameters)
+        elif method == 'kdtree':
+            n_ids, n_dists = _find_kdtree_optimized(frame_df, parameters)
+            
+        all_neighbours.extend(n_ids)
+        all_dists.extend(n_dists)
+
+    # Direct parallel array mapping back into the main storage structure
+    df['neighbours'] = pd.Series(all_neighbours, index=df.index, dtype=arrowint16_type)
+    df['neighbour_dists'] = pd.Series(all_dists, index=df.index, dtype=arrowf32_type)
+        
+    return df
+
+
+def _find_kdtree_optimized(df, parameters):
+    cutoff = parameters['cutoff']
+    num_neighbours = int(parameters['neighbours'])
+    points = df[['x', 'y']].values
+    particle_ids = df['particle'].values
+    
+    tree = sp.KDTree(points)
+    distances, indices = tree.query(points, k=num_neighbours + 1, distance_upper_bound=cutoff)
+    
+    valid_masks = indices[:, 1:] < len(points)
+    
+    neighbour_ids = [
+        particle_ids[indices[i, 1:][valid_masks[i]]].tolist() 
+        for i in range(len(points))
+    ]
+    neighbour_dists = [
+        distances[i, 1:][valid_masks[i]].tolist() 
+        for i in range(len(points))
+    ]
+    
+    return neighbour_ids, neighbour_dists
+
+
+def _find_delaunay_optimized(df, parameters):
+    cutoff = parameters['cutoff']
+    points = df[['x', 'y']].values
+    particle_ids = df['particle'].values
+    
+    tess = sp.Delaunay(points)
+    list_indices, point_indices = tess.vertex_neighbor_vertices
+
+    neighbour_ids_list = []
+    neighbour_dists_list = []
+    
+    for i in range(len(points)):
+        p1 = points[i]
+        delaunay_neighbors = point_indices[list_indices[i]:list_indices[i+1]]
+        
+        if len(delaunay_neighbors) == 0:
+            neighbour_ids_list.append([])
+            neighbour_dists_list.append([])
+            continue
+            
+        p2 = points[delaunay_neighbors]
+        dists = np.linalg.norm(p1 - p2, axis=1)
+        valid_mask = dists < cutoff
+        
+        neighbour_ids_list.append(particle_ids[delaunay_neighbors[valid_mask]].astype(int).tolist())
+        neighbour_dists_list.append(dists[valid_mask].astype(float).tolist())
+        
+    return neighbour_ids_list, neighbour_dists_list
 
 @error_handling
 @param_parse
@@ -1142,7 +1261,7 @@ def crystal_ID_plot(df, parameters):
     plt.axvline(np.pi, color='r', linestyle = '--')
     plt.show()
 
-
+@time_it
 @error_handling
 @param_parse
 def crystal_id(df, *args, parameters=None, **kwargs):
@@ -1205,6 +1324,7 @@ def _crystal_id(df, *args, parameters=None, **kwargs):
 
     return df  
 
+@time_it
 @error_handling
 @param_parse
 def boundary_and_tj_id(df, *args, parameters=None, **kwargs):
