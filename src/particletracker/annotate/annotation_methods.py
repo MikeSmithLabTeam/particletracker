@@ -8,6 +8,7 @@ from ..general.parameters import get_param_val, get_method_key, param_parse
 from .cmap import colour_array, place_colourbar_in_image
 from ..customexceptions import *
 from ..general.dataframes import df_single, df_range
+from ..general.contour_parsing import reconstruct_box_pts, reconstruct_contour_pts
 
 warnings.simplefilter('ignore')
 
@@ -290,19 +291,18 @@ def boxes(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     
     """
     subset_df = _get_class_subset(df_single, parameters)
-    box_pts = subset_df[['box_pts']].values
+    box_pts = tuple(reconstruct_contour_pts(subset_df[['box_pts']].values))
     
-    if np.shape(box_pts)[0] == 1:
-        df_empty = pd.isna(box_pts[0])
-        if np.all(df_empty):
-            #0 boxes
-            return frame
+    if not box_pts:
+        #0 boxes
+        return frame
 
     (colours, colourbar) = colour_array(subset_df, f_index, parameters)
 
-    for index, box in enumerate(box_pts):
-        frame = _draw_contours(frame, box, col=colours[index],
-                                thickness=int(parameters['thickness']))
+    #for index, box in enumerate(box_pts):
+    #    frame = _draw_contours(frame, box, col=colours[index],
+    #                            thickness=int(parameters['thickness']))
+    frame = _draw_contours(frame, box_pts, col=colours, thickness=int(parameters['thickness']))
         
     if colourbar is not None:
         frame = place_colourbar_in_image(frame, colourbar, parameters) 
@@ -460,22 +460,13 @@ def contours(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
     thickness = parameters['thickness']
     
     subset_df = _get_class_subset(df_single, parameters)
-    contour_pts = subset_df[['contours']].values
+    contour_pts = tuple(reconstruct_contour_pts(subset_df[['contours']].values))
     (colours, colourbar) = colour_array(subset_df, f_index, parameters)
 
-    if len(contour_pts) == 0 or contour_pts is None:
+    if not contour_pts:
         return frame
-    
-    if np.shape(contour_pts)[0] == 1:
-        # pd.isna handles PyArrow <NA> and None safely
-        df_empty = pd.isna(contour_pts[0])
-        if np.all(df_empty):
-            # 0 contours
-            return frame
 
-    for index, contour in enumerate(contour_pts):
-        frame = _draw_contours(frame, contour, col=colours[index],
-                                        thickness=int(thickness))
+    frame = _draw_contours(frame, contour_pts, col=colours, thickness=int(thickness))
     
     if colourbar is not None:
         frame = place_colourbar_in_image(frame, colourbar, parameters) 
@@ -483,11 +474,11 @@ def contours(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
 
 @error_handling
 def _draw_contours(img, contours, col=(0,0,255), thickness=1):
-    if (np.size(np.shape(col)) == 0) | (np.size(np.shape(col)) == 1):
+    if (np.size(np.shape(col)) == 0):
         img = cv2.drawContours(img, contours, -1, col, thickness)
     else:
         for i, contour in enumerate(contours):
-            img = cv2.drawContours(img, contour, -1, col[i], int(thickness))
+            img = cv2.drawContours(img, [contour], -1, col[i], int(thickness))
     return img        
 
 @error_with_hint(additional_message="HINT: To run networks you must have selected neighbours in postprocessing")
@@ -619,31 +610,52 @@ def voronoi(df_single,frame, f_index=None, parameters=None, *args, **kwargs):
     thickness = parameters['thickness']
 
     subset_df = _get_class_subset(df_single, parameters)
-    contour_pts = subset_df[['voronoi']].values
+    
+    # 1. Grab both columns simultaneously. This gives a 2D array of shape (M, 2)
+    # where column 0 is the flat list and column 1 is the vertex count.
+    voronoi_data = subset_df[['voronoi', 'voronoi_counts']].values
     (colours, colourbar) = colour_array(subset_df, f_index, parameters)
 
-    if np.shape(contour_pts)[0] == 1:
-        df_empty = pd.isna(contour_pts[0])
+    if len(voronoi_data) == 0:
+        return frame
+
+    if np.shape(voronoi_data)[0] == 1:
+        # Check if the list column is empty/NaN (handles 0 contours scenario safely)
+        df_empty = pd.isna(voronoi_data[0, 0]) or len(voronoi_data[0, 0]) == 0
         if np.all(df_empty):
-            #0 contours
             return frame
 
-    for index, contour in enumerate(contour_pts):
+    # 2. Iterate through and reconstruct each particle's cell polygon on the fly
+    for index, row in enumerate(voronoi_data):
+        flat_list = row[0]
+        v_count = row[1]
+        
+        # Skip if it's an infinite boundary cell (count was set to 0 or flat_list is empty)
+        if v_count == 0 or len(flat_list) == 0:
+            continue
+            
+        # Reconstruct the original 2D (V, 2) array and cast to int32 for OpenCV
+        contour = np.array(flat_list, dtype=np.int32).reshape(v_count, 2)
+        
+        # 3. Pass the freshly reconstructed (V, 2) polygon array to the drawer
         frame = _draw_polygon(frame, contour, col=colours[index],
                                         thickness=int(thickness))
+                                        
     if colourbar is not None:
         frame = place_colourbar_in_image(frame, colourbar, parameters) 
     return frame
 
 
 def _draw_polygon(img, pts, col=(0,0,255), thickness=1, closed=True):
-    if np.any(pd.isna(pts[0])):
+    # pts arrives here as a clean (V, 2) int32 NumPy array
+    if pts is None or len(pts) == 0:
         return img
     
+    # OpenCV drawing functions expect a list of 2D shapes, i.e., [pts]
     if thickness == -1:
-        img = cv2.fillPoly(img, [pts[0].astype(np.int32)], col)
+        img = cv2.fillPoly(img, [pts], col)
     else:
-        img = cv2.polylines(img, [pts[0].astype(np.int32)], closed, col, thickness) 
+        img = cv2.polylines(img, [pts], closed, col, thickness) 
     return img
 
 """

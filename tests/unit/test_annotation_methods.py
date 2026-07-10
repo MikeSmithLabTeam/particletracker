@@ -162,10 +162,16 @@ def test_networks_draw_lines_between_neighbours():
 
 def test_voronoi_draws_polygons_when_voronoi_defined():
     frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    poly = np.array([[10, 10], [20, 10], [20, 20], [10, 20]], dtype=np.float32)
+    poly = np.array([[10, 10], [20, 10], [20, 20], [10, 20]], dtype=np.float32).flatten().tolist()
+
+
     df = pd.DataFrame(
-        {'voronoi': [poly], 'x': [10], 'y': [10]},
-        index=[0, 0],
+        {
+            'voronoi': [poly], 
+            'voronoi_counts':[[4]],
+            'x': [10], 
+            'y': [10]
+        },
     )
     parameters = {
         'annotation': {

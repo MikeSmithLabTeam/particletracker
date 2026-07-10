@@ -16,6 +16,7 @@ from tqdm import tqdm
 from labvision import audio, video
 from moviepy.audio.io.AudioFileClip import AudioFileClip
 from ..general.parameters import param_parse
+from ..general.contour_parsing import reconstruct_contour_pts
 from ..customexceptions import *
 import time
 
@@ -303,7 +304,7 @@ def contour_boxes(df, *args,  **kwargs):
         df['box_area'] = np.nan
         df['box_pts'] = np.nan
     
-    contours = df[['contours']].values
+    contours = reconstruct_contour_pts(df[['contours']].values)
 
     box_cx = []
     box_cy = []
@@ -312,11 +313,10 @@ def contour_boxes(df, *args,  **kwargs):
     box_width = []
     box_area = []
 
-    if np.shape(contours)[0] == 1:
-        df_empty = np.isnan(contours[0])
-        if np.all(df_empty):
-            #0 contours
-            return df_empty
+    if not contours:
+        return df
+
+    box_pts = []
 
     for index, contour in enumerate(contours):
         info_contour = _rotated_bounding_rectangle(contour)
@@ -327,10 +327,11 @@ def contour_boxes(df, *args,  **kwargs):
         box_width.append(info_contour[3])
         box_length.append(info_contour[4])
         box_area.append(info_contour[3]*info_contour[4])
-        if index == 0:
-            box_pts=[info_contour[5]]
-        else:
-            box_pts.append(info_contour[5])
+        #if index == 0:
+        #    box_pts=[info_contour[5]]
+        #else:
+        #    box_pts.append(info_contour[5])
+        box_pts.append(info_contour[5].flatten().tolist())
 
     df['box_cx'] = box_cx
     df['box_cy'] = box_cy
@@ -338,14 +339,14 @@ def contour_boxes(df, *args,  **kwargs):
     df['box_width'] = box_width
     df['box_length'] = box_length
     df['box_area'] = box_area
-    df['box_pts'] = box_pts
-    print('boxes', df)
+    df['box_pts'] = tuple(box_pts)
+    
     return df
 
 @error_handling
 def _rotated_bounding_rectangle(contour):
     #Helper method
-    rect = cv2.minAreaRect(contour[0])
+    rect = cv2.minAreaRect(contour)
     box = cv2.boxPoints(rect)
     box = np.int32(box)
     dim = np.sort(rect[1])
@@ -948,6 +949,7 @@ def voronoi(df, *args,  **kwargs):
     
     'voronoi'       -   The voronoi coordinates that surround a particle
     'voronoi_area'  -   The area of the voronoi cell associated with a particle
+    'voronoi_counts' -  How many coords part of a voronoi cell used for reconstruction by annotation
 
 
     Args
@@ -966,8 +968,10 @@ def voronoi(df, *args,  **kwargs):
     -------
         updated dataframe including new column
     """
-    df['voronoi']=pd.Series(np.nan, index=df.index, dtype=object)
-    df['voronoi_area']=pd.Series(np.nan, index=df.index, dtype=object)
+    df['voronoi'] = pd.Series([[]] * len(df), index=df.index, dtype=object)
+    df['voronoi_counts'] = pd.Series(0, index=df.index, dtype='int64')
+    df['voronoi_area'] = pd.Series(np.nan, index=df.index, dtype=float)
+    
     f_index = kwargs['f_index']
 
     if f_index is None:
@@ -982,11 +986,37 @@ def voronoi(df, *args,  **kwargs):
         frame_indices = df.loc[f_index].index
 
         vor = sp.Voronoi(points)
-        df.loc[f_index, 'voronoi'] = pd.Series(_get_voronoi_coords(vor), index=frame_indices)
-        df.loc[f_index, 'voronoi_area']=_voronoi_props(vor)
+
+        flat_coords, counts = _get_voronoi_coords(vor)
+        
+        # Map them back into your frame slices
+        df.loc[f_index, 'voronoi'] = pd.Series(flat_coords, index=frame_indices, dtype=object)
+        df.loc[f_index, 'voronoi_counts'] = pd.Series(counts, index=frame_indices, dtype='int64')
+        df.loc[f_index, 'voronoi_area'] = _voronoi_props(vor)
     return df
 
 def _get_voronoi_coords(vor):
+    voronoi_coords = []
+    voronoi_counts = []
+    
+    for index, point in enumerate(vor.points):
+        region = vor.point_region[index]
+        region_pt_indices = vor.regions[region]
+        
+        if -1 in region_pt_indices or len(region_pt_indices) == 0:
+            # Infinite boundary cells get empty list and 0 vertices
+            voronoi_coords.append([])
+            voronoi_counts.append(0)
+        else:
+            region_pt_coords = vor.vertices[region_pt_indices] # Shape (V, 2)
+            
+            # FIX: Flatten the (V, 2) array into a 1D list [x1, y1, x2, y2...]
+            voronoi_coords.append(region_pt_coords.flatten().tolist())
+            voronoi_counts.append(len(region_pt_coords)) # Store V (number of vertices)
+            
+    return voronoi_coords, voronoi_counts
+
+def _old_get_voronoi_coords(vor):
     voronoi_coords = []
     for index, point in enumerate(vor.points):
         region = vor.point_region[index]

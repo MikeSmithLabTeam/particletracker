@@ -21,4 +21,4 @@ if __name__ == '__main__':
    
     #batchprocess(path+"*.MP4", settings)
     #track_gui(movie_filename=path, settings_filename=settings)
-    track_gui(movie_filename="testdata/hydrogel.mp4",settings_filename = "testdata/test_hydrogel.param")
+    track_gui(movie_filename="testdata/hydrogel.mp4",settings_filename = "testdata/temp.param")

@@ -133,7 +133,7 @@ def trackpy(ppframe, frame, params=None, *args, **kwargs):
 
 
 
-
+@error_handling
 def hough(ppframe, frame, params=None, *args, **kwargs):
     '''
     Performs the opencv hough circles transform to locate circles in an image.
