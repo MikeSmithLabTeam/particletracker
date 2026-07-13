@@ -386,9 +386,9 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
         # Use the appropriate method to find neighbors
         if method == 'delaunay':
             neighbors_data = _find_delaunay_for_hexatic(points, cutoff)
-        elif method == 'kdtree':
-            num_neighbors = int(parameters['neighbours'])
-            neighbors_data = _find_kdtree_for_hexatic(points, cutoff, num_neighbors)
+        elif method == 'kdtree': #CAUTION: using KDTree could be problematic for hexatic because it looks past the first row of neighbours
+            num_neighbors = 6 #int(parameters['neighbours'])
+            neighbors_data = _find_kdtree_for_hexatic_parallel(points, cutoff)
         else:
             raise ValueError(f"Unknown method '{method}' for hexatic order calculation.")
         
@@ -404,6 +404,73 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
         df.loc[f_index, 'hexatic_order_magnitude'] = pd.Series(np.abs(psi_6), index=frame_indices)
         df.loc[f_index, 'hexatic_order_phase'] = pd.Series(np.angle(psi_6), index=frame_indices)
         df.loc[f_index, 'number_of_neighbours'] = pd.Series(num_neighbors, index=frame_indices, dtype=np.uint8)
+    
+    return df
+
+@time_it
+@error_handling
+@param_parse
+def _hexatic_order(df, *args, parameters=None, **kwargs):
+    """
+    Calculates the hexatic order parameter of each particle.
+    Optimized to bypass Pandas indexing overhead and handle duplicate frame indices.
+    """
+    method = parameters.get('method', 'delaunay')
+    cutoff = parameters['cutoff']
+    f_index = kwargs.get('f_index', None)
+
+    if f_index is None:
+        # Using unique() ensures we loop over each frame ID exactly once
+        indices = sorted(df.index.unique())
+    else:
+        indices = [f_index]
+
+    # Pre-allocate lists to hold results per frame
+    all_magnitudes = []
+    all_phases = []
+    all_neighbors = []
+
+    for f in tqdm(indices, desc="Calculating Hexatic order"):
+        frame_data = df.loc[f]
+        
+        # Guard against single-particle frames (Pandas returns a Series instead of a DataFrame)
+        if isinstance(frame_data, pd.Series):
+            points = frame_data[['x', 'y']].to_numpy(dtype=np.float32).reshape(1, 2)
+        else:
+            points = frame_data[['x', 'y']].to_numpy(dtype=np.float32)
+
+        # 1. Compute neighbors using vectorized helper functions
+        if method == 'delaunay':
+            neighbors_data = _find_delaunay_for_hexatic_vectorized(points, cutoff)
+        elif method == 'kdtree':
+            neighbors_data = _find_kdtree_for_hexatic_parallel(points, cutoff)
+        else:
+            raise ValueError(f"Unknown method '{method}'")
+        
+        sum_exp_6j, num_neighbors = neighbors_data
+
+        # 2. Calculate complex hexatic order parameter
+        psi_6 = np.zeros(len(points), dtype=complex)
+        valid = num_neighbors > 0
+        psi_6[valid] = sum_exp_6j[valid] / num_neighbors[valid] 
+        
+        # Append raw NumPy arrays
+        all_magnitudes.append(np.abs(psi_6))
+        all_phases.append(np.angle(psi_6))
+        all_neighbors.append(num_neighbors.astype(np.uint8))
+
+    # 3. Handle data assignment safely
+    if f_index is None:
+        # If processing the ENTIRE dataframe, we can concatenate everything
+        # and assign it using raw values, ignoring index alignment completely.
+        df['hexatic_order_magnitude'] = np.concatenate(all_magnitudes)
+        df['hexatic_order_phase'] = np.concatenate(all_phases)
+        df['number_of_neighbours'] = np.concatenate(all_neighbors)
+    else:
+        # If processing just ONE specific frame, assign to that slice directly
+        df.loc[f_index, 'hexatic_order_magnitude'] = all_magnitudes[0]
+        df.loc[f_index, 'hexatic_order_phase'] = all_phases[0]
+        df.loc[f_index, 'number_of_neighbours'] = all_neighbors[0]
     
     return df
 
@@ -426,6 +493,40 @@ def _find_delaunay_for_hexatic(points, cutoff):
                 num_neighbors[i] += 1
     
     return sum_exp_6j, num_neighbors
+
+def _find_kdtree_for_hexatic_parallel(points, cutoff, workers=-1):
+    num_points = len(points)
+    tree = sp.KDTree(points)
+    
+    # 1. Query all points in parallel.
+    # Returns a list of lists of neighbors within the cutoff.
+    neighbors_list = tree.query_ball_point(points, r=cutoff, workers=workers)
+    
+    # 2. Reconstruct flat arrays for vectorized math
+    # We need to build (i, j) index pairs
+    i_indices = np.repeat(np.arange(num_points), [len(lst) for lst in neighbors_list])
+    j_indices = np.concatenate(neighbors_list)
+    
+    # 3. Filter out self-matches (where i == j)
+    mask = i_indices != j_indices
+    i_indices = i_indices[mask]
+    j_indices = j_indices[mask]
+    
+    if len(i_indices) == 0:
+        return np.zeros(num_points, dtype=complex), np.zeros(num_points, dtype=int)
+    
+    # 4. Compute displacements, angles, and exponents for ALL valid pairs at once
+    disp = points[j_indices] - points[i_indices]
+    angles = np.arctan2(disp[:, 1], disp[:, 0])
+    exp_6j = np.exp(6j * angles)
+    
+    # 5. Map the calculations back to particle IDs using fast bincount
+    sum_exp_6j = np.bincount(i_indices, weights=exp_6j.real, minlength=num_points) + \
+                 1j * np.bincount(i_indices, weights=exp_6j.imag, minlength=num_points)
+    
+    num_neighbors = np.bincount(i_indices, minlength=num_points)
+    
+    return sum_exp_6j, num_neighbors    
 
 def _find_kdtree_for_hexatic(points, cutoff, num_neighbors):
     tree = sp.KDTree(points)
