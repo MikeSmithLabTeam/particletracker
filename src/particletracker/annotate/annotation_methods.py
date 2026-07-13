@@ -610,12 +610,15 @@ def voronoi(df_single,frame, f_index=None, parameters=None, *args, **kwargs):
     thickness = parameters['thickness']
 
     subset_df = _get_class_subset(df_single, parameters)
+
+    print(f"\nVoronoi subset df: {subset_df}")
+    print(f"\nVoronoi subset df shape: {subset_df.shape}")
     
     # 1. Grab both columns simultaneously. This gives a 2D array of shape (M, 2)
     # where column 0 is the flat list and column 1 is the vertex count.
     voronoi_data = subset_df[['voronoi', 'voronoi_counts']].values
     (colours, colourbar) = colour_array(subset_df, f_index, parameters)
-
+    print(f"Voroni type: {type(voronoi_data[:, 0])}")
     if len(voronoi_data) == 0:
         return frame
 
