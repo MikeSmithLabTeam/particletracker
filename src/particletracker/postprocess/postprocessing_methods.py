@@ -33,6 +33,7 @@ def time_it(func):
 arrow_bool = pd.ArrowDtype(pa.bool_())
 arrowint8_type = pd.ArrowDtype(pa.list_(pa.int8()))
 arrowint16_type = pd.ArrowDtype(pa.list_(pa.int16()))
+arrowint32_type = pd.ArrowDtype(pa.list_(pa.int32()))
 arrowf32_type = pd.ArrowDtype(pa.list_(pa.float32()))
 
 """
@@ -703,144 +704,6 @@ def magnitude(df, *args,  parameters=None, **kwargs):
     df[output_name] = (df[column]**2 + df[column2]**2)**0.5  
     return df
 
-"""
-
-@time_it
-@error_handling
-@param_parse
-def neighbours(df, *args,  parameters=None, **kwargs):
-    '''
-    Find the nearest neighbours of a particle
-
-    Notes
-    -----
-    Neighbours uses two different methods to find the nearest neighbours: a kdtree (https://en.wikipedia.org/wiki/K-d_tree) 
-    or a delaunay method (https://en.wikipedia.org/wiki/Delaunay_triangulation) to locate the neighbours
-    of particles in a particular frame. It returns the indices of the particles
-    found to be neighbours in a list. You can also select a cutoff distance above which
-    two particles are no longer considered to be neighbours. To visualise the result
-    you can use "networks" in the annotation section.
-
-
-    Parameters
-    ----------
-    method
-        'delaunay' or 'kdtree'
-        https: // docs.scipy.org / doc / scipy / reference / generated / scipy.spatial.Delaunay.html
-    neighbours
-        max number of neighbours to find. This is only relevant for the kdtree.
-    cutoff
-        distance in pixels beyond which particles are no longer considered neighbours
- 
-    'neighbours'    -   A list of particle indices which are neighbours
-    
-    Args
-    ----
-    df
-        The dataframe in which all data is stored
-    f_index
-        Integer specifying the frame for which calculations need to be made.
-    parameters
-        Nested dictionary like object (same as .param files or output from general.param_file_creator.py)
-    call_num
-        Usually None but if multiple calls are made modifies method name with get_method_key
-
-    Returns
-    -------
-        updated dataframe including new column
-
-
-    '''    
-
-    df['neighbours'] = pd.Series(None, index=df.index, dtype=arrowint16_type)
-    df['neighbour_dists'] = pd.Series(None, index=df.index, dtype=arrowf32_type)
-
-    method = parameters['method']
-
-    f_index = kwargs['f_index']
-    if f_index is None:
-        #process all frames
-        indices = list(set(df.index.values.tolist()))
-    else:
-        #Just process frame of interest
-        indices=[f_index]
-    
-    for f_index in tqdm(indices, desc="Calculating neighbours"):
-        if method == 'delaunay':
-            df.loc[f_index,['neighbours', 'neighbour_dists']] =_find_delaunay(df.loc[f_index], parameters=parameters)
-        elif method == 'kdtree':
-            df.loc[f_index,['neighbours', 'neighbour_dists']] =_find_kdtree(df.loc[f_index], parameters=parameters)      
-    return df
-
-
-def _find_kdtree(df, parameters=None):
-    cutoff = parameters['cutoff']
-    num_neighbours = int(parameters['neighbours'])
-    points = df[['x', 'y']].values
-    particle_ids = df[['particle']].values.flatten()
-    tree = sp.KDTree(points)
-    
-    # Query for the `num_neighbours` nearest particles, with the specified cutoff
-    # The first neighbor is always the particle itself, so we query k+1.
-    distances, indices = tree.query(points, k=num_neighbours + 1, distance_upper_bound=cutoff)
-    
-    
-    # Replace the manual 'for' loop in _find_kdtree with this:
-    # 1. Create masks for valid neighbors for all particles at once
-    valid_masks = indices[:, 1:] < len(points)
-    
-    # 2. Vectorized list creation using list comprehension
-    neighbour_ids = [
-        particle_ids[indices[i, 1:][valid_masks[i]]].tolist() 
-        for i in range(len(points))
-    ]
-    neighbour_dists = [
-        distances[i, 1:][valid_masks[i]].tolist() 
-        for i in range(len(points))
-    ]
-
-    df['neighbours'] = pd.Series(neighbour_ids, index=df.index, dtype=arrowint16_type)
-    df['neighbour_dists'] = pd.Series(neighbour_dists, index=df.index, dtype=arrowf32_type)
-    return df[['neighbours', 'neighbour_dists']] # Only return the columns we need
-
-@error_handling
-def _find_delaunay(df, parameters=None):
-    cutoff = parameters['cutoff']
-    points = df[['x', 'y']].values
-    particle_ids = df[['particle']].values.flatten()
-    tess = sp.Delaunay(points)
-    list_indices, point_indices = tess.vertex_neighbor_vertices
-
-    neighbour_ids_list = []
-    neighbour_dists_list = []
-    
-    for i in range(len(points)):
-        p1 = points[i]
-        
-        # Get the neighbor indices for particle i from the Delaunay output
-        delaunay_neighbors = point_indices[list_indices[i]:list_indices[i+1]]
-        
-        current_neighbor_ids = []
-        current_neighbor_dists = []
-        
-        # Iterate over the Delaunay neighbors and apply the cutoff
-        for neighbor_idx in delaunay_neighbors:
-            p2 = points[neighbor_idx]
-            dist = np.linalg.norm(p1 - p2)
-            
-            if dist < cutoff:
-                current_neighbor_ids.append(int(particle_ids[neighbor_idx]))
-                current_neighbor_dists.append(float(dist))
-
-        neighbour_ids_list.append(current_neighbor_ids)
-        neighbour_dists_list.append(current_neighbor_dists)
-    
-    df['neighbours'] = pd.Series(neighbour_ids_list, index=df.index, dtype=arrowint16_type)
-    df['neighbour_dists'] = pd.Series(neighbour_dists_list, index=df.index, dtype=arrowf32_type)
-    return df[['neighbours', 'neighbour_dists']]
-
-"""
-
 @time_it
 @error_handling
 @param_parse
@@ -850,26 +713,9 @@ def neighbours(df, *args, parameters=None, **kwargs):
     
     # Ensure columns exist with correct Arrow Extension types
     if 'neighbours' not in df.columns:
-        df['neighbours'] = pd.Series(None, index=df.index, dtype=arrowint16_type)
+        df['neighbours'] = pd.Series(None, index=df.index, dtype=arrowint32_type)
         df['neighbour_dists'] = pd.Series(None, index=df.index, dtype=arrowf32_type)
 
-    """
-    # --- CASE 1: Single Frame Path ---
-    if f_index is not None:
-        frame_df = df.loc[[f_index]]
-        if method == 'delaunay':
-            arrow_ids, arrow_dists = _find_delaunay_optimized(frame_df, parameters)
-        elif method == 'kdtree':
-            arrow_ids, arrow_dists = _find_kdtree_optimized(frame_df, parameters)
-            
-        row_positions = np.where(df.index == f_index)[0]
-        
-        # Directly drop the PyArrow objects into place
-        df.iloc[row_positions, df.columns.get_loc('neighbours')] = arrow_ids
-        df.iloc[row_positions, df.columns.get_loc('neighbour_dists')] = arrow_dists
-        
-        return df
-    """
     # --- CASE 2: Multi-Frame Path ---
     #Split dataframe into frame sized chunks
     grouped = df.groupby(level=0)
@@ -889,56 +735,8 @@ def neighbours(df, *args, parameters=None, **kwargs):
     final_ids_arrow = pa.chunked_array(arrow_ids_chunks)
     final_dists_arrow = pa.chunked_array(arrow_dists_chunks)
     
-    df['neighbours'] = pd.Series(final_ids_arrow.combine_chunks(), index=df.index, dtype=arrowint16_type)
+    df['neighbours'] = pd.Series(final_ids_arrow.combine_chunks(), index=df.index, dtype=arrowint32_type)
     df['neighbour_dists'] = pd.Series(final_dists_arrow.combine_chunks(), index=df.index, dtype=arrowf32_type)
-        
-    return df
-
-def _neighbours(df, *args, parameters=None, **kwargs):
-    f_index = kwargs.get('f_index')
-    method = parameters['method']
-    
-    # Initialize target columns if they don't exist yet
-    if 'neighbours' not in df.columns:
-        df['neighbours'] = pd.Series(None, index=df.index, dtype=arrowint16_type)
-        df['neighbour_dists'] = pd.Series(None, index=df.index, dtype=arrowf32_type)
-
-    # --- CASE 1: Single Frame Optimization ---
-    if f_index is not None:
-        # Pull the frame data directly without a groupby wrapper
-        frame_df = df.loc[[f_index]]
-        
-        if method == 'delaunay':
-            n_ids, n_dists = _find_delaunay_optimized(frame_df, parameters)
-        elif method == 'kdtree':
-            n_ids, n_dists = _find_kdtree_optimized(frame_df, parameters)
-            
-        # Safely capture the clean integer row coordinates
-        row_positions = np.where(df.index == f_index)[0]
-        
-        # Convert Python lists of lists into object arrays so Pandas assigns them cleanly 
-        df.iloc[row_positions, df.columns.get_loc('neighbours')] = np.array(n_ids, dtype=object)
-        df.iloc[row_positions, df.columns.get_loc('neighbour_dists')] = np.array(n_dists, dtype=object)
-        
-        return df
-
-    # --- CASE 2: Multi-Frame (Full Loop) Run ---
-    grouped = df.groupby(level=0)
-    all_neighbours = []
-    all_dists = []
-    # each frame neigbours are calculated and added to (.extend) a massive list instead of constanly writing to the df, this means fram 100 is just as fast as frame 1
-    for frame_id, frame_df in tqdm(grouped, desc="Calculating neighbours"):
-        if method == 'delaunay':
-            n_ids, n_dists = _find_delaunay_optimized(frame_df, parameters)
-        elif method == 'kdtree':
-            n_ids, n_dists = _find_kdtree_optimized(frame_df, parameters)
-            
-        all_neighbours.extend(n_ids)
-        all_dists.extend(n_dists)
-
-    # Direct parallel array mapping back into the main storage structure
-    df['neighbours'] = pd.Series(all_neighbours, index=df.index, dtype=arrowint16_type)
-    df['neighbour_dists'] = pd.Series(all_dists, index=df.index, dtype=arrowf32_type)
         
     return df
 
@@ -976,32 +774,11 @@ def _find_kdtree_optimized(df, parameters):
     
     # 5. Build native PyArrow ListArrays natively from 1D data structures
     # (Bypasses pa.array completely, maintaining ultra-low RAM and maximum speed)
-    pa_ids = pa.ListArray.from_arrays(pa.array(offsets), pa.array(flat_mapped_ids, type=pa.int16()))
+    pa_ids = pa.ListArray.from_arrays(pa.array(offsets), pa.array(flat_mapped_ids, type=pa.int32()))
     pa_dists = pa.ListArray.from_arrays(pa.array(offsets), pa.array(flat_dists, type=pa.float32()))
     
     return pa_ids, pa_dists
 
-def _find_kdtree(df, parameters):
-    cutoff = parameters['cutoff']
-    num_neighbours = int(parameters['neighbours'])
-    points = df[['x', 'y']].values
-    particle_ids = df['particle'].values
-    
-    tree = sp.KDTree(points)
-    distances, indices = tree.query(points, k=num_neighbours + 1, distance_upper_bound=cutoff)
-    
-    valid_masks = indices[:, 1:] < len(points)
-    
-    neighbour_ids = [
-        particle_ids[indices[i, 1:][valid_masks[i]]].tolist() 
-        for i in range(len(points))
-    ]
-    neighbour_dists = [
-        distances[i, 1:][valid_masks[i]].tolist() 
-        for i in range(len(points))
-    ]
-    
-    return neighbour_ids, neighbour_dists
 
 
 def _find_delaunay_optimized(df, parameters):

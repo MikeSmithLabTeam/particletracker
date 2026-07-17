@@ -181,7 +181,7 @@ def test_voronoi_draws_polygons_when_voronoi_defined():
             "y": 506.5,
             "r": 17.200001,
             "particle": 0,
-            "voronoi": [1028.00871632, 520.22583201, 1005.35929648, 520.0, 10, 10, 20, 20, 10, 20, 20, 10],  # Truncated array
+            "voronoi": [1028.00871632, 520.22583201, 1005.35929648, 520.0, 10, 10, 20, 20, 10, 20, 20, 10],  
             "voronoi_counts": 6,
             "voronoi_area": 1263.070254,
         },
