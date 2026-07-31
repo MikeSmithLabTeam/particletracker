@@ -68,7 +68,7 @@ class ParticleTracker(QObject):
         grabs the parallel_processing method to run tracking serially or using the ProcessPoolExecutor
         (e.g parallel) processing.
 
-        
+
         Parameters
         ---------
         f_index: int or None
