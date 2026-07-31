@@ -6,7 +6,8 @@ import pandas as pd
 
 from ..general.dataframes import DataWrite
 from . import tracking_methods as tm
-
+from .parallel_tracking import track_frames_parallel
+from ..general.parameters import get_param_val, get_method_key, param_parse
 
 class ParticleTracker(QObject):
     track_progress = pyqtSignal(int, int, int, int)
@@ -61,11 +62,18 @@ class ParticleTracker(QObject):
         instantiated by PTWorkflow. If f_index is an integer value only that frame is
         processed. A store is still created.
 
+
+        grabs the parallel_processing method to run tracking serially or using the ProcessPoolExecutor
+        (e.g parallel) processing.
+
+        
         Parameters
         ---------
         f_index: int or None
         """
-        print('Tracking...')
+        active_method = self.parameters['track']['track_method'][0]
+        parallel_processing = self.parameters['track'][active_method]['parallel_processing'][0] #toggle serial/parallel
+
         if lock_part == -1:
             if f_index is None:
                 'When processing whole video store in file with same name as movie'
@@ -85,13 +93,48 @@ class ParticleTracker(QObject):
 
             self.cap.set_frame(start)
 
-            with DataWrite(output_filename) as store:    
-                for f in tqdm(range(start, stop, step), 'Tracking'):
-                    df_frame = self.analyse_frame(n=f)
-                    store.write_data(df_frame, f_index=f)
-                    #Signal to indicate how many frames tracked
-                    self.track_progress.emit(f, start, stop, step)  
-        print('Tracking complete')             
+            if not parallel_processing:
+                print("tracking in serial...")
+                with DataWrite(output_filename) as store:    
+                                for f in tqdm(range(start, stop, step), 'Tracking'):
+                                    df_frame = self.analyse_frame(n=f)
+                                    store.write_data(df_frame, f_index=f)
+                                    #Signal to indicate how many frames tracked
+                                    self.track_progress.emit(f, start, stop, step)  
+                print('Tracking complete')    
+
+            else:#parallel processing
+                print("tracking in parallel...")
+                frame_indices = list(range(start, stop, step))
+                with DataWrite(output_filename) as store:
+                    if f_index is None:
+                        # Whole-video pass: worth the pool startup cost,
+                        # each frame is independent so spread across cores.
+                        progress_bar = tqdm(total=len(frame_indices), desc='Tracking')
+    
+                        def _handle_result(f, df_frame):
+                            store.write_data(df_frame, f_index=f)
+                            # Signal to indicate how many frames tracked
+                            self.track_progress.emit(f, start, stop, step)
+                            progress_bar.update(1)
+    
+                        track_frames_parallel(
+                            self.cap.filename,
+                            self.parameters,
+                            frame_indices,
+                            use_preprocessor=self.ip is not None,
+                            on_result=_handle_result,
+                        )
+                        progress_bar.close()
+                    else:
+                        # Single frame: pool startup overhead isn't worth it.
+                        for f in tqdm(frame_indices, 'Tracking'):
+                            df_frame = self.analyse_frame(n=f)
+                            store.write_data(df_frame, f_index=f)
+                            self.track_progress.emit(f, start, stop, step)
+                print('Tracking complete')
+
+
 
     def analyse_frame(self, n=None):
         """Analyses a single frame using a track method specified in PARAMETERS
