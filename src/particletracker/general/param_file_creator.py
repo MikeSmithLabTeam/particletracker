@@ -75,8 +75,9 @@ def create_param_file(filename):
                   'min_rad': [10, 1, 301, 2],
                   'max_rad': [50, 1, 301, 2],
                   'remove_masked': [False, ('True', 'False')],
-                  'get_intensities': False
+                  'get_intensities': False,
                   },
+
         'contours': {'noise_cutoff': [2, 1, 50, 1],
                      'area_min': [20, 1, 2000, 1],
                      'area_max': [2000, 1, 20000, 1],
