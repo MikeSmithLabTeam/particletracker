@@ -4,9 +4,6 @@ import os
 
 if __name__ == '__main__':
 
-  
-
-
     #path = "E:\\RawData\\Joe\\grain_boundarys\\Triple_H\\new_code_tests\\84g_600_static\\13930001.MP4"
     #path2 = "E:\\RawData\\Joe\\grain_boundarys\\Triple_H\\82g\\4K_50p\\625\\"
     #path3 = "E:\\RawData\\Joe\\grain_boundarys\\Triple_H\\82g\\4K_50p\\700-650Q\\"

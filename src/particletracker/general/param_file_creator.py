@@ -67,8 +67,10 @@ def create_param_file(filename):
                     'max_iterations': [10, 1, 50, 1],
                     'invert': [False, ('True', 'False')],
                     'get_intensities': False,
-                    'intensity_radius': [2, 1, 200, 1]
+                    'intensity_radius': [2, 1, 200, 1],
+                    'parallel_processing': [False, ('False', 'True')]
                     },
+
         'hough': {'min_dist': [105, 1, 501, 2],
                   'p1': [75, 1, 201, 2],
                   'p2': [39, 1, 201, 2],
@@ -76,6 +78,7 @@ def create_param_file(filename):
                   'max_rad': [50, 1, 301, 2],
                   'remove_masked': [False, ('True', 'False')],
                   'get_intensities': False,
+                  'parallel_processing': [False, ('False', 'True')]
                   },
 
         'contours': {'noise_cutoff': [2, 1, 50, 1],
@@ -83,7 +86,8 @@ def create_param_file(filename):
                      'area_max': [2000, 1, 20000, 1],
                      'aspect_min': [1.0, 1.0, 10.0, 0.1],
                      'aspect_max': [10.0, 1.0, 10.0, 0.1],
-                     'get_intensities': False
+                     'get_intensities': False,
+                     'parallel_processing': [False, ('False', 'True')]
                      },
     }
 

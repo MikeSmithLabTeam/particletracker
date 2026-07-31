@@ -193,7 +193,7 @@ def hough(ppframe, frame, params=None, *args, **kwargs):
         param2=get_param_val(parameters[method_key]['p2']),
         minRadius=get_param_val(parameters[method_key]['min_rad']),
         maxRadius=get_param_val(parameters[method_key]['max_rad']))
-
+        
     if circles is not None:
         circles = np.squeeze(circles)
         if circles.ndim == 1:
