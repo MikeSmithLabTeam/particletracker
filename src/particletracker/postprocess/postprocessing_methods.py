@@ -1484,3 +1484,58 @@ def _boundary_and_tj_id_fast(df, *args, parameters=None, **kwargs):
     df['is_triple_junction'] = df['particle'].isin(tj_particles)
     
     return df
+
+
+
+@time_it
+@error_handling
+@param_parse
+def median_classify(df, *args, parameters=None, **kwargs):
+    """
+    Identify median particle for a single frame (f_index) out of a class (e.g., is_triple_junction).
+
+    Parameters
+    ----------
+        - 'classifier_name': str, boolean column to filter by
+        - 'median_col': str, position column to calculate median over ('x' or 'y')
+
+    Returns
+    -------
+        Updated dataframe with 'is_median' boolean column for the given frame.
+    """
+
+    classifier_name = parameters['classifier_name']
+    median_col = parameters['median_of_col']
+
+    # Initialize column if it doesn't exist
+    if 'is_median' not in df.columns:
+        df['is_median'] = False
+
+
+    # Filter by the classifier (e.g. is_triple_junction == True)
+    filtered_frame = df[df[classifier_name]]
+
+    if not filtered_frame.empty:
+
+        print(f"size of df in median_classify {df.shape}")
+
+        median_val = filtered_frame[median_col].median()
+
+        diffs = (filtered_frame[median_col] - median_val).abs()
+        min_pos_in_filtered = diffs.argmin()
+        median_particle_id = filtered_frame['particle'].iloc[min_pos_in_filtered]
+
+        df.loc[df['particle'] == median_particle_id, 'is_median'] = True
+
+        print(f"median y = {median_val}, median particle = {median_particle_id}")
+
+    #
+    #    median_val = filtered_frame[median_col].median()
+    #    
+    #    # Get index of the particle closest to the median
+    #    closest_idx = (filtered_frame[median_col] - median_val).abs().idxmin()
+    #    
+    #    # Set True for that specific particle
+     #   df.at[closest_idx, 'is_median'] = True
+
+    return df

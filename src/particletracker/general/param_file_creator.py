@@ -164,8 +164,11 @@ def create_param_file(filename):
         'boundary_and_tj_id':{
             'min_neighbours_gb':[3,1,10,1],
             'min_neighbours_tj':[4,1,10,1],
-        }
-
+        },
+        'median_classify':{
+            'classifier_name':'is_triple_junction',
+            'median_of_col':['y', ('y', 'x')],
+        },
     }
 
     annotate = {
