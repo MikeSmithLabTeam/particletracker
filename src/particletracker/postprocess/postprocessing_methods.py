@@ -1439,54 +1439,6 @@ def _boundary_and_tj_id(df, *args, parameters=None, **kwargs):
 
 
 
-def _boundary_and_tj_id_fast(df, *args, parameters=None, **kwargs):
-    min_neighbours_gb = parameters['min_neighbours_gb']
-    min_neighbours_tj = parameters['min_neighbours_tj']
-    
-    # 1. Use standard types for the mapping to avoid the ExtensionArray '_hasna' bug
-    # Zip native numpy/python types instead of the Series object directly
-    particles = df['particle'].to_numpy(dtype=np.int64)
-    crystals = df['crystal_id'].to_numpy(dtype=np.int64)
-    crystal_map = dict(zip(particles, crystals))
-    
-    # 2. Explode using a clean slice of the original dataframe
-    exploded = df[['particle', 'neighbours']].explode('neighbours')
-    
-    # Drop any rows where a particle has no neighbors (None/NaN)
-    exploded = exploded.dropna(subset=['neighbours'])
-    
-    # 3. Force neighbor IDs to clean int64 so the dictionary map can read them seamlessly
-    exploded['neighbours'] = exploded['neighbours'].astype(np.int64)
-    
-    # 4. Map the neighbor particles to their crystal IDs
-    exploded['neighbor_crystal'] = exploded['neighbours'].map(crystal_map)
-    
-    # Drop any neighbors that couldn't be mapped (like your -1 dummy pointers)
-    valid_neighbors = exploded.dropna(subset=['neighbor_crystal'])
-    
-    # 5. Group by particle and neighbor crystal to count occurrences per crystal
-    counts_per_grain = valid_neighbors.groupby(['particle', 'neighbor_crystal']).size().reset_index(name='count')
-    
-    # --- APPLY YOUR SIMPLIFIED DEFINITIONS ---
-    
-    # Boundary: Must have >= min_neighbours_gb in at least 2 different crystals
-    gb_condition = counts_per_grain['count'] >= min_neighbours_gb
-    gb_counts = counts_per_grain[gb_condition].groupby('particle').size()
-    gb_particles = gb_counts[gb_counts >= 2].index
-    
-    # Triple Junction: Must have >= min_neighbours_tj in at least 3 different crystals
-    tj_condition = counts_per_grain['count'] >= min_neighbours_tj
-    tj_counts = counts_per_grain[tj_condition].groupby('particle').size()
-    tj_particles = tj_counts[tj_counts >= 3].index
-    
-    # 6. Map results back safely using the original data type
-    df['is_boundary'] = df['particle'].isin(gb_particles)
-    df['is_triple_junction'] = df['particle'].isin(tj_particles)
-    
-    return df
-
-
-
 @time_it
 @error_handling
 @param_parse
@@ -1504,20 +1456,35 @@ def median_classify(df, *args, parameters=None, **kwargs):
         Updated dataframe with 'is_median' boolean column for the given frame.
     """
 
-    classifier_name = parameters['classifier_name']
-    median_col = parameters['median_of_col']
-
     # Initialize column if it doesn't exist
     if 'is_median' not in df.columns:
         df['is_median'] = False
 
+    f_index = kwargs['f_index']
+    if f_index is None:
+        #process all frames
+        indices = list(set(df.index.values.tolist()))
+    else:
+        #Just process frame of interest
+        indices=[f_index]
+    
+    for f_index in indices:
+        df.loc[f_index,['is_median']] =_median_classify(df.loc[f_index], parameters=parameters)
+    return df
+
+def _median_classify(df, *args, parameters=None, **kwargs):
+
+    #print(f"df size passed to _median_classify: {df.shape}")
+
+    classifier_name = parameters['classifier_name']
+    median_col = parameters['median_of_col']
 
     # Filter by the classifier (e.g. is_triple_junction == True)
     filtered_frame = df[df[classifier_name]]
 
     if not filtered_frame.empty:
 
-        print(f"size of df in median_classify {df.shape}")
+        #print(f"size of filtered df in _median_classify {filtered_frame.shape}")
 
         median_val = filtered_frame[median_col].median()
 
@@ -1529,13 +1496,5 @@ def median_classify(df, *args, parameters=None, **kwargs):
 
         print(f"median y = {median_val}, median particle = {median_particle_id}")
 
-    #
-    #    median_val = filtered_frame[median_col].median()
-    #    
-    #    # Get index of the particle closest to the median
-    #    closest_idx = (filtered_frame[median_col] - median_val).abs().idxmin()
-    #    
-    #    # Set True for that specific particle
-     #   df.at[closest_idx, 'is_median'] = True
-
     return df
+
