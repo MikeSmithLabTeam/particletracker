@@ -22,7 +22,7 @@ dependencies = [
     "moviepy>=2.0",
     "slicerator",
     "legacy-cgi",
-    "opencv-python",
+    "opencv-contrib-python",
     "labvision @ git+https://github.com/MikeSmithLabTeam/labvision",
     "numpy>=1.25",
     "scipy",

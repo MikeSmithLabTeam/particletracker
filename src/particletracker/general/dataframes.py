@@ -58,6 +58,7 @@ class DataManager:
                 store_index=2)
         return self._stores[2]
     
+    
     def update_store(self, store_index: int, updated_store):
         """
         Replaces the old DataRead instance at the given index with the new, 
