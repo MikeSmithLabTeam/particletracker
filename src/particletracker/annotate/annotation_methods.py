@@ -840,3 +840,125 @@ def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs
     if colourbar is not None:
         frame = place_colourbar_in_image(frame, colourbar, parameters)     
     return frame
+
+
+
+@error_with_hint(additional_message="HINT: To run tj_gb you must have run find_tj_gb_coords in the postprocessing section")
+@param_parse
+@df_single
+def plot_tj_gb(df_single,frame, f_index=None, parameters=None, *args, **kwargs):
+    tj_x, tj_y = get_entity_coords_for_plotting(df_single, 'TJ')
+    gb1_x, gb1_y = get_entity_coords_for_plotting(df_single, 'GB1')
+    gb2_x, gb2_y = get_entity_coords_for_plotting(df_single, 'GB2')
+    gb3_x, gb3_y = get_entity_coords_for_plotting(df_single, 'GB3')
+    
+    # Helper function to draw polylines from coordinate arrays
+    def draw_gb_lines(x_arr, y_arr, color, thickness):
+        if len(x_arr) > 0 and len(y_arr) > 0:
+            # Reshape coordinates into an (N, 1, 2) integer array required by cv2.polylines
+            pts = np.stack((x_arr, y_arr), axis=-1).astype(np.int32)
+            pts = pts.reshape((-1, 1, 2))
+            cv2.polylines(frame, [pts], isClosed=False, color=color, thickness=thickness)
+
+    # 3. Draw grain boundaries (BGR color format: Yellow, Cyan, Magenta)
+    draw_gb_lines(gb1_x, gb1_y, color=parameters['gb1_colour'], thickness=parameters['gb_thickness'])     
+    draw_gb_lines(gb2_x, gb2_y, color=parameters['gb2_colour'], thickness=parameters['gb_thickness'])    
+    draw_gb_lines(gb3_x, gb3_y, color=parameters['gb3_colour'], thickness=parameters['gb_thickness'])     
+
+    # 4. Draw the triple junction circle (Red in BGR: (0, 0, 255))
+    if tj_x is not None and tj_y is not None:
+        cv2.circle(
+            frame, 
+            center=(int(tj_x), int(tj_y)), 
+            radius=parameters['tj_radius'], 
+            color=parameters['tj_colour'], 
+            thickness=parameters['tj_thickness']
+        )
+
+    return frame
+
+def get_entity_coords_for_plotting(frame_df: pd.DataFrame, entity_type: str):
+    """
+    Extracts coordinates for a specific entity instance (by frame, type, and ID)
+    formatted for plotting.
+    
+    Returns:
+        - For line/path entities (e.g., grain_boundary): A tuple of (x_array, y_array)
+        - For point entities (e.g., triple_junction): A tuple of scalar floats (x, y)
+    """
+    row = frame_df[(frame_df['entity_type'] == entity_type)]
+    
+    coords = row['coords'].iloc[0]
+    arr = np.array(coords)
+
+    if entity_type == 'triple_junction':
+        # Return a single (x, y) point for plt.scatter or plt.plot
+        return float(arr[0]), float(arr[1])
+    else:
+        # Return (x_array, y_array) for a path/line
+        return arr[:, 0], arr[:, 1]
+    
+
+
+
+
+
+
+
+"""Extract and combine the largest filled objects from an RGB image."""
+
+
+
+
+
+def main() -> None:
+  image_path = "C:/Users/ppzmis/OneDrive - The University of Nottingham/Documents/Papers/Joe/triple_junction/up_1_frame0_1.png"
+  image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+
+  h, w = image.shape[:2]
+  center = (w // 2, h // 2)
+  radius = w // 3
+
+  mask = np.ones((h, w), dtype=np.uint8)
+  #mask = cv2.circle(circular_mask, center, radius, 255, thickness=-1)
+
+  red_ref = np.array([0, 0, 128])
+  green_ref = np.array([124, 255, 124])
+  blue_ref = np.array([128, 0, 0])
+
+  tolerance = 10
+
+  
+  final = make_mask(image, red_bounds, green_bounds, blue_bounds, mask)
+
+  cl_rg, cl_gb, cl_br = extract_centerlines_via_skeleton(final)
+  triple_junction = find_triple_junction(cl_rg, cl_gb, cl_br)
+
+  plt.figure()
+  plt.imshow(image)
+
+  for cl, name, col in [
+      (cl_rg, "Centerline 1", "purple"),
+      (cl_gb, "Centerline 2", "orange"),
+      (cl_br, "Centerline 3", "cyan"),
+  ]:
+    if cl:
+      cx = [p[0] for p in cl]
+      cy = [p[1] for p in cl]
+      plt.plot(cx, cy, color=col, linewidth=2, label=name)
+
+  if triple_junction != (0.0, 0.0):
+    plt.scatter(
+        [triple_junction[0]],
+        [triple_junction[1]],
+        color="gold",
+        s=150,
+        marker="X",
+        zorder=10,
+        label="Triple Junction",
+    )
+
+  plt.legend(loc="upper right")
+  plt.title("Centerlines and Triple Junction Superimposed on Original Image")
+  plt.axis("off")
+  plt.show()

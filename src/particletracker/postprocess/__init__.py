@@ -12,6 +12,7 @@ class PostProcessor:
     def __init__(self, parameters=None, data=None):
         self.data=data
         self.link_store = data.link_store
+        self.auxiliary_store = data.auxiliary_store
         self.parameters = parameters      
 
     def process(self, f_index=None, lock_part=-1):
@@ -31,8 +32,10 @@ class PostProcessor:
         #Set output_filename
         if f_index is None:
             output_filename = self.link_store.output_filename
+            auxiliary_filename = self.auxiliary_store.output_filename
         else:
             output_filename = self.link_store.temp_filename
+            auxiliary_filename = self.auxiliary_store.temp_filename
         
         #Choose whether to load full df or temp
         if f_index is None:
@@ -56,24 +59,36 @@ class PostProcessor:
         See intro to postprocessing to understand how parameters and full dataframe are parsed by each function.
         """ 
         
-        with DataWrite(output_filename) as store:
+        # methods that require data to be stored in auxiliary store rather than the main postprocess store.
+        auxiliary_methods = ['find_tj_gb_coords']  
+        aux_df = None
+
+        with DataWrite(output_filename) as store, DataWrite(auxiliary_filename) as aux_store:
             if not self.parameters['postprocess']['postprocess_method']:
-                #No methods selected copy data across
                 store.write_data(df)
             else:
+                aux_df = pd.DataFrame()
+
                 for method in self.parameters['postprocess']['postprocess_method']:
                     method_name, call_num = get_method_name(method)
-                    df = getattr(pm, method_name)(df,f_index=f_index, parameters=self.parameters, call_num=call_num, section='postprocess')    
-
-                
-                if f_index is not None:
-                    store.write_data(df.loc[f_index])
-                else:
-                    store.write_data(df)
+                    
+                    if method_name in auxiliary_methods:
+                        # Auxiliary methods take the current frame/df and return the populated auxiliary DataFrame
+                        aux_df = getattr(pm, method_name)(df, aux_df, f_index=f_index, parameters=self.parameters, call_num=call_num, section='postprocess')
+                    else:
+                        df = getattr(pm, method_name)(df, f_index=f_index, parameters=self.parameters, call_num=call_num, section='postprocess')    
+            
+            if f_index is not None:
+                store.write_data(df.loc[f_index])
+                if aux_df is not None:
+                    aux_store.write_data(aux_df, f_index=f_index)
+            else:
+                store.write_data(df)
+                if aux_df is not None:
+                    aux_store.write_data(aux_df)
 
         print('Postprocessing complete')
-
-                                        
-                    
-                    
+                                                
+                            
+                            
           

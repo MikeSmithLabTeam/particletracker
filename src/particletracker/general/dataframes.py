@@ -16,7 +16,8 @@ class DataManager:
             base_filename.replace('*', ''))
         self.base_filename = base_path + '/_temp/' + base_filename
         self.temp_filename = self.base_filename + '_temp.parquet'
-        self._stores = [None, None, None]  # _track, _link, _postprocess
+        self.temp_aux_filename = self.base_filename + '_temp_auxiliary.parquet'
+        self._stores = [None, None, None, None]  # _track, _link, _postprocess, _auxiliary
         self.update_lock(lock_part=lock_part)
 
     def update_lock(self, lock_part=-1):
@@ -57,6 +58,18 @@ class DataManager:
                 output_filename=None,
                 store_index=2)
         return self._stores[2]
+    
+    @property
+    def auxiliary_store(self):
+        """Lazy loading of arbitrary/extensible non-particle frame data"""
+        if not hasattr(self, '_aux_store') or self._aux_store is None:
+            self._stores[3] = DataRead(
+                f"{self.base_filename}_auxiliary.parquet",
+                self.temp_aux_filename,
+                output_filename=f"{self.base_filename}_auxiliary_output.parquet",
+                store_index=3
+            )
+        return self._stores[3]
     
     
     def update_store(self, store_index: int, updated_store):
@@ -217,17 +230,11 @@ class DataWrite:
 
     def write_data(self, df, f_index=None):
         """
-        Write data to output buffer. close_output will actually write to file. close_output is called
-        automatically if context manager used.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Data to write
-        f_index : int, optional
-            If provided, writes single frame data
-            If None, writes entire DataFrame
+        Write data to output buffer, ignoring empty DataFrames.
         """
+        if df is None or df.empty:
+            return  # Skip writing if there's no data
+
         if f_index is None:
             # Store whole DataFrame
             self._output_df = df
@@ -253,20 +260,18 @@ class DataWrite:
             self._output_df = None
 
     def close_output(self):
-        """Save accumulated data and close output file"""
+        """Save accumulated data and close output file, skipping if empty"""
         try:
-            if self._output_df is not None:
-                # Write full dataframe
-                self._output_df.to_parquet(self._output_file,engine="pyarrow")
+            if self._output_df is not None and not self._output_df.empty:
+                self._output_df.to_parquet(self._output_file, engine="pyarrow")
             elif self._output_frames:
-                # Concatenate and write collected frames
                 final_df = pd.concat(self._output_frames)
-                final_df.to_parquet(self._output_file,engine="pyarrow")
+                if not final_df.empty:
+                    final_df.to_parquet(self._output_file, engine="pyarrow")
         except Exception as e:
             print(f'Error in writing data: {e}')
-            raise  # Re-raise the exception after cleanup
+            raise
         finally:
-            # Clear all stored data
             self._output_df = None
             self._output_frames = []
             self._output_file = None
@@ -302,3 +307,31 @@ def combine_data_frames(df, modified_df):
     updated_df.index.name='frame'
     updated_df.sort_index(inplace=True)
     return updated_df
+
+
+def add_to_aux_frame_df(
+    df: pd.DataFrame, 
+    f_index: int, 
+    entity_type: str, 
+    coords: list, 
+) -> pd.DataFrame:
+    """
+    Appends a new geometric entity (or set of entities) to a frame's DataFrame,
+    auto-incrementing the entity_id per type within that frame.
+    """
+    # Determine the next available entity_id for this specific type within the frame
+    if df.empty or 'entity_type' not in df.columns or 'entity_id' not in df.columns:
+        next_id = 0
+    else:
+        existing_type_rows = df[df['entity_type'] == entity_type]
+        next_id = int(existing_type_rows['entity_id'].max()) + 1 if not existing_type_rows.empty else 0
+
+    new_row = pd.DataFrame({
+        'entity_type': [entity_type],
+        'entity_id': [next_id],
+        'coords': [coords]
+    }, index=pd.Index([f_index], name='frame'))
+
+    if df.empty:
+        return new_row
+    return pd.concat([df, new_row])

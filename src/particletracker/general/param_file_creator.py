@@ -18,6 +18,7 @@ def create_param_file(filename):
 
     crop = {'crop_method': ('crop_box',),
             'crop_box': None,
+            '_crop_frame_size':None,
             'mask_ellipse': None,
             'mask_circle': None,
             'mask_polygon': None,
@@ -174,6 +175,9 @@ def create_param_file(filename):
             'classifier_name':'is_triple_junction',
             'median_of_col':['y', ('y', 'x')],
         },
+        'find_tj_gb_coords':{
+            'dilate_rad': [5,1,50,1],
+        }
     }
 
     annotate = {
@@ -289,6 +293,15 @@ def create_param_file(filename):
             'classifier': [True, ('True', 'False')],
             'colour': (0, 255, 0),  # For static
             'thickness': 2
+        },
+        'plot_tj_gb':{
+            'tj_colour':(200, 200, 200),
+            'tj_radius':5,
+            'tj_thickness':2,            
+            'gb1_colour':(0, 255, 255),
+            'gb2_colour':(255, 255, 0),
+            'gb3_colour':(255, 0, 255),
+            'gb_thickness':2,
         }
     }
 

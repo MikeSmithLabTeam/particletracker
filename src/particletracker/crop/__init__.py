@@ -35,7 +35,7 @@ class ReadCropVideo(ReadVideo):
         #If self.reset() called you could enter both if statements
         if self.parameters['crop_box'] is None:
             self.crop_frame_size = self.frame_size
-        self.properties['crop_frame_size'] = self.crop_frame_size
+        self.parameters['_crop_frame_size'] = self.crop_frame_size
         
         self.set_mask()
            
