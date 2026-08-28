@@ -17,12 +17,12 @@ class PostProcessor:
     def process(self, f_index=None, lock_part=-1):
         """
         Data being processed can follow a number of scenarios
-        1)There may be no postprocessing methods in which case whatever comes in _temp.hdf5 or _link.hdf5 should simply be copied to the output filename - _temp.hdf5 for single frames or _postprocess.hdf5 for full
+        1)There may be no postprocessing methods in which case whatever comes in _temp.parquet or _link.parquet should simply be copied to the output filename - _temp.parquet for single frames or _postprocess.parquet for full
         2) Single frame where there is only a single temporary file from the linking stage. Some postprocessing methods
-        require a range of frames in order to process e.g running mean. The code should "gracefully" error indicating which method has caused the issue at bottom of screen. If there is no error _temp.hdf5 should be postprocessed and output to _temp.hdf5 with the additional data.
-        3) Single frame where the data from the linking stage has been locked. It is only possible to lock if _link.hdf5 has been
-        previously created through processing all the data. Decorator on the postprocessing functions determines whether a single frame or range of frame data is sent to postprocessing function. Single frame data output to _temp.hdf5.
-        4) Processing the entire movie or range of frames with or without locking of linking stage. Data output to _postprocess.hdf5     
+        require a range of frames in order to process e.g running mean. The code should "gracefully" error indicating which method has caused the issue at bottom of screen. If there is no error _temp.parquet should be postprocessed and output to _temp.parquet with the additional data.
+        3) Single frame where the data from the linking stage has been locked. It is only possible to lock if _link.parquet has been
+        previously created through processing all the data. Decorator on the postprocessing functions determines whether a single frame or range of frame data is sent to postprocessing function. Single frame data output to _temp.parquet.
+        4) Processing the entire movie or range of frames with or without locking of linking stage. Data output to _postprocess.parquet     
         """
 
         print('Postprocessing...')

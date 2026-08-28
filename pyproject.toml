@@ -22,7 +22,7 @@ dependencies = [
     "moviepy>=2.0",
     "slicerator",
     "legacy-cgi",
-    "opencv-python",
+    "opencv-contrib-python",
     "labvision @ git+https://github.com/MikeSmithLabTeam/labvision",
     "numpy>=1.25",
     "scipy",
@@ -34,6 +34,7 @@ dependencies = [
     "openpyxl",
     "jupyterlab",
     "tables",
+    "pyarrow>=24.0.0",
 ]
 
 [project.scripts]
@@ -49,8 +50,4 @@ dev = [
 testpaths = ["tests"]
 pythonpath = [".","src"]
 filterwarnings = ["ignore::pandas.io.pytables.PerformanceWarning"]
-
-
-[tool.hatch.packages.find]
-where = ["src"]
-include = ["particletracker*"]
+    

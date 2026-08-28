@@ -2,7 +2,9 @@ import cv2
 import numpy as np
 import pandas as pd
 import pytest
+from types import SimpleNamespace
 
+from particletracker.track import ParticleTracker
 from particletracker.track import tracking_methods as tm
 
 
@@ -164,3 +166,6 @@ def test_trackpy_locates_a_bright_blob():
     assert 'x' in df.columns
     assert 'y' in df.columns
     assert df.shape[0] >= 1
+
+
+

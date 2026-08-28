@@ -118,8 +118,24 @@ def test_magnitude_computes_vector_length():
     assert np.isclose(output.loc[0, 'r'], 5.0)
     assert np.isclose(output.loc[1, 'r'], 5.0)
 
+def test_neighbours_delaunay():
+    df = pd.DataFrame({
+        'particle': [0, 1, 2, 3],
+        'x': [0.0, 1.0, 1.0, 0.0],
+        'y': [0.0, 0.0, 1.0, 1.0]
+    }, index=[0, 0, 0, 0])
+    df.index.name = 'frame'
 
-def test_neighbours_kdtree_and_delaunay_generate_lists():
+    dl_params = {'postprocess': {'neighbours': {'method': 'delaunay', 'cutoff': 2.0}}}
+
+    delaunay_output = pp.neighbours(df.copy(), parameters=dl_params, section='postprocess', call_num=None, f_index=0)
+
+    assert 'neighbours' in delaunay_output.columns
+    assert 'neighbour_dists' in delaunay_output.columns
+    assert delaunay_output.iloc[1]['neighbours'] == [2,3,0]
+    assert delaunay_output.iloc[1]['neighbour_dists'] == [1.,1.4142135381698608,1.]
+
+def test_neighbours_kdtree():
     df = pd.DataFrame({
         'particle': [0, 1, 2, 3],
         'x': [0.0, 1.0, 1.0, 0.0],
@@ -128,15 +144,12 @@ def test_neighbours_kdtree_and_delaunay_generate_lists():
     df.index.name = 'frame'
 
     kt_params = {'postprocess': {'neighbours': {'method': 'kdtree', 'neighbours': 2, 'cutoff': 2.0}}}
-    dl_params = {'postprocess': {'neighbours': {'method': 'delaunay', 'cutoff': 2.0}}}
-
     kdtree_output = pp.neighbours(df.copy(), parameters=kt_params, section='postprocess', call_num=None, f_index=0)
-    delaunay_output = pp.neighbours(df.copy(), parameters=dl_params, section='postprocess', call_num=None, f_index=0)
 
     assert 'neighbours' in kdtree_output.columns
     assert 'neighbour_dists' in kdtree_output.columns
-    assert len(kdtree_output.loc[0, 'neighbours']) >= 1
-    assert len(delaunay_output.loc[0, 'neighbours']) >= 1
+    assert kdtree_output.iloc[1]['neighbours'] == [2,0]
+    assert kdtree_output.iloc[1]['neighbour_dists'] == [1.,1.]
 
 
 def test_voronoi_adds_voronoi_columns():
@@ -196,3 +209,4 @@ def test_difference_mean_median_and_rate_with_particle_time_series():
     assert np.isclose(mean_output.loc[1, 'x_mean'], 2.0)
     assert np.isclose(median_output.loc[1, 'x_median'], 2.0)
     assert np.isclose(rate_output.loc[1, 'x_rate'], 2.0 / 3.0)
+

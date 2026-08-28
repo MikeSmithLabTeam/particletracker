@@ -67,22 +67,27 @@ def create_param_file(filename):
                     'max_iterations': [10, 1, 50, 1],
                     'invert': [False, ('True', 'False')],
                     'get_intensities': False,
-                    'intensity_radius': [2, 1, 200, 1]
+                    'intensity_radius': [2, 1, 200, 1],
+                    'parallel_processing': [False, ('False', 'True')]
                     },
+
         'hough': {'min_dist': [105, 1, 501, 2],
                   'p1': [75, 1, 201, 2],
                   'p2': [39, 1, 201, 2],
                   'min_rad': [10, 1, 301, 2],
                   'max_rad': [50, 1, 301, 2],
                   'remove_masked': [False, ('True', 'False')],
-                  'get_intensities': False
+                  'get_intensities': False,
+                  'parallel_processing': [False, ('False', 'True')]
                   },
+
         'contours': {'noise_cutoff': [2, 1, 50, 1],
                      'area_min': [20, 1, 2000, 1],
                      'area_max': [2000, 1, 20000, 1],
                      'aspect_min': [1.0, 1.0, 10.0, 0.1],
                      'aspect_max': [10.0, 1.0, 10.0, 0.1],
-                     'get_intensities': False
+                     'get_intensities': False,
+                     'parallel_processing': [False, ('False', 'True')]
                      },
     }
 
@@ -148,14 +153,27 @@ def create_param_file(filename):
         },
         'hexatic_order': {
             'cutoff': [10, 1, 100, 1],
+            'method':['delaunay',('delaunay','kdtree')]
         },
         'real_imag': {
             'column_name': 'hexatic_order'
         },
         'absolute': {
             'column_name': 'x'
-        }
+        },
+        'crystal_id':{'peak_height': [30,1,60, 1],
+                      'smoothing': [2.0,0.2,10.0,0.1],
+                      'debug': [False, ('True', 'False')],
 
+        },
+        'boundary_and_tj_id':{
+            'min_neighbours_gb':[3,1,10,1],
+            'min_neighbours_tj':[4,1,10,1],
+        },
+        'median_classify':{
+            'classifier_name':'is_triple_junction',
+            'median_of_col':['y', ('y', 'x')],
+        },
     }
 
     annotate = {

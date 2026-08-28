@@ -91,7 +91,7 @@ class PTWorkflow:
         2 = postprocess locked  --> Creates the final file.
         annotation optional
 
-        - If you just process a single frame then you read a temp.hdf5 datafile from the _temp folder which contains the current frame=f_index data.
+        - If you just process a single frame then you read a temp.parquet datafile from the _temp folder which contains the current frame=f_index data.
         - If you process everything with f_index=None then each stage creates its own file containing data for all frames in _temp folder. The subsequent stage reads from this datafile and saves to a new file. At the end this is copied to the directory containing the video and represents the processed data. An annotated video is optionally produced
         - Once a datafile has been completely processed if the _temp file folder is not cleaned up you can go back and edit things. Locking a particular stage results in data being drawn from a full datafile of previous stage containing complete data. Subsequent stages are either stored in a temporary file for single image processing or in new versions of the datafiles for the later stages if processing everything.
 
@@ -149,7 +149,7 @@ class PTWorkflow:
 def move_final_data(movie_filename):
     path, filename = os.path.split(movie_filename)
     postprocess_datafile = path + '/_temp/' + filename[:-4] + CustomButton.extension[2]
-    output_datafile = path + '/' + filename[:-4] + '.hdf5'
+    output_datafile = path + '/' + filename[:-4] + '.parquet'
 
     if os.path.exists(postprocess_datafile):
         shutil.copy(postprocess_datafile, output_datafile)

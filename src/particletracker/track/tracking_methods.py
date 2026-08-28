@@ -133,7 +133,7 @@ def trackpy(ppframe, frame, params=None, *args, **kwargs):
 
 
 
-
+@error_handling
 def hough(ppframe, frame, params=None, *args, **kwargs):
     '''
     Performs the opencv hough circles transform to locate circles in an image.
@@ -193,6 +193,7 @@ def hough(ppframe, frame, params=None, *args, **kwargs):
         param2=get_param_val(parameters[method_key]['p2']),
         minRadius=get_param_val(parameters[method_key]['min_rad']),
         maxRadius=get_param_val(parameters[method_key]['max_rad']))
+        
     if circles is not None:
         circles = np.squeeze(circles)
         if circles.ndim == 1:
@@ -214,15 +215,14 @@ def hough(ppframe, frame, params=None, *args, **kwargs):
         contour_list.append(_contour_from_mask(
             params['crop'][mask_method_list[0]], mask_method_list[0]))
 
-        num_deleted=0
-        for i in range(len(circles_dict['x'])):
-            point = (circles_dict['x'][i-num_deleted], circles_dict['y'][i-num_deleted])
-            inside = _point_inside_mask(point, contour_list)
-            if not inside:
-                circles_dict['x'] = np.delete(circles_dict['x'], i-num_deleted)
-                circles_dict['y'] = np.delete(circles_dict['y'], i-num_deleted)
-                circles_dict['r'] = np.delete(circles_dict['r'], i-num_deleted)
-                num_deleted+=1
+        #boolean mask marking circles inside the crop mask.
+        keep = np.array([_point_inside_mask((x,y), contour_list)
+                         for x, y in zip(circles_dict['x'], circles_dict['y'])])
+
+        #mask arrays
+        circles_dict['x'] = circles_dict['x'][keep]
+        circles_dict['y'] = circles_dict['y'][keep]
+        circles_dict['r'] = circles_dict['r'][keep]
 
     if (parameters[method_key]['get_intensities'] != False):
 
@@ -327,12 +327,14 @@ def contours(pp_frame, frame, parameters=None, *args, **kwargs):
                 aspect = max(w, h)/min(w, h)
 
                 if (aspect <= aspect_max) & (aspect >= aspect_min):
+                    flat_contour = contour.flatten().tolist()
+
                     if use_intensities:
                         intensity = _find_intensity_inside_contour(
                             contour, frame, get_intensity_method)
-                        info_contour = [cx, cy, area, contour, intensity]
+                        info_contour = [cx, cy, area, flat_contour, intensity]
                     else:
-                        info_contour = [cx, cy, area, contour]
+                        info_contour = [cx, cy, area, flat_contour]
                     info.append(info_contour)
 
     if use_intensities:

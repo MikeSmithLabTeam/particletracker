@@ -162,11 +162,46 @@ def test_networks_draw_lines_between_neighbours():
 
 def test_voronoi_draws_polygons_when_voronoi_defined():
     frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    poly = np.array([[10, 10], [20, 10], [20, 20], [10, 20]], dtype=np.float32)
-    df = pd.DataFrame(
-        {'voronoi': [poly], 'x': [10], 'y': [10]},
-        index=[0, 0],
-    )
+    poly = np.array([[10, 10], [20, 10], [20, 20], [10, 20]], dtype=np.float32).flatten().tolist()
+
+
+    """df = pd.DataFrame(
+        {
+            'voronoi': [poly], 
+            'voronoi_counts':[[4]],
+            'x': [10], 
+            'y': [10]
+        },
+    )"""
+
+    data = [
+        {
+            "frame": 0,
+            "x": 1010.5,
+            "y": 506.5,
+            "r": 17.200001,
+            "particle": 0,
+            "voronoi": [1028.00871632, 520.22583201, 1005.35929648, 520.0, 10, 10, 20, 20, 10, 20, 20, 10],  
+            "voronoi_counts": 6,
+            "voronoi_area": 1263.070254,
+        },
+        {
+            "frame": 0,
+            "x": 2149.5,
+            "y": 946.5,
+            "r": 17.200001,
+            "particle": 1,
+            "voronoi": [2160.40243902, 965.91463415, 2131.05555556, 960.0, 10, 10, 20, 20, 10, 20, 20, 10],
+            "voronoi_counts": 6,
+            "voronoi_area": 1289.310736,
+        },
+    ]
+
+    df = pd.DataFrame(data)
+    # Set 'frame' as the index to match your output format exactly
+    df.set_index("frame", inplace=True)
+
+
     parameters = {
         'annotation': {
             'voronoi': {

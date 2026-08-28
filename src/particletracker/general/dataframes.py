@@ -15,7 +15,7 @@ class DataManager:
         base_path, base_filename = os.path.split(
             base_filename.replace('*', ''))
         self.base_filename = base_path + '/_temp/' + base_filename
-        self.temp_filename = self.base_filename + '_temp.hdf5'
+        self.temp_filename = self.base_filename + '_temp.parquet'
         self._stores = [None, None, None]  # _track, _link, _postprocess
         self.update_lock(lock_part=lock_part)
 
@@ -28,9 +28,9 @@ class DataManager:
         """Lazy loading of tracking data"""
         #if self._stores[0] is None:
         self._stores[0] = DataRead(
-                f"{self.base_filename}_track.hdf5",
+                f"{self.base_filename}_track.parquet",
                 self.temp_filename,
-                output_filename=f"{self.base_filename}_link.hdf5",
+                output_filename=f"{self.base_filename}_link.parquet",
                 store_index=0)
         self._stores[0]
 
@@ -41,9 +41,9 @@ class DataManager:
         """Lazy loading of tracking data"""
         #if self._stores[1] is None:
         self._stores[1] = DataRead(
-                f"{self.base_filename}_link.hdf5",
+                f"{self.base_filename}_link.parquet",
                 self.temp_filename,
-                output_filename=f"{self.base_filename}_postprocess.hdf5",
+                output_filename=f"{self.base_filename}_postprocess.parquet",
                 store_index=1)
         return self._stores[1]
 
@@ -52,11 +52,12 @@ class DataManager:
         """Lazy loading of tracking data"""
         #if self._stores[2] is None:
         self._stores[2] = DataRead(
-                f"{self.base_filename}_postprocess.hdf5",
+                f"{self.base_filename}_postprocess.parquet",
                 self.temp_filename,
                 output_filename=None,
                 store_index=2)
         return self._stores[2]
+    
     
     def update_store(self, store_index: int, updated_store):
         """
@@ -119,9 +120,9 @@ class DataRead:
         """internal loading method"""
         try:
             if full:
-                df = pd.read_hdf(self.read_filename, key='data')
+                df = pd.read_parquet(self.read_filename,engine="pyarrow",dtype_backend="pyarrow")
             else:
-                df = pd.read_hdf(self.temp_filename, key='data')
+                df = pd.read_parquet(self.temp_filename,engine="pyarrow", dtype_backend="pyarrow")
             if not df.index.is_monotonic_increasing:
                 df.sort_index(inplace=True)
             return df  
@@ -256,11 +257,11 @@ class DataWrite:
         try:
             if self._output_df is not None:
                 # Write full dataframe
-                self._output_df.to_hdf(self._output_file, key='data')
+                self._output_df.to_parquet(self._output_file,engine="pyarrow")
             elif self._output_frames:
                 # Concatenate and write collected frames
                 final_df = pd.concat(self._output_frames)
-                final_df.to_hdf(self._output_file, key='data')
+                final_df.to_parquet(self._output_file,engine="pyarrow")
         except Exception as e:
             print(f'Error in writing data: {e}')
             raise  # Re-raise the exception after cleanup
