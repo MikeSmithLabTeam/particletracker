@@ -24,5 +24,8 @@ if __name__ == '__main__':
    
     #batchprocess(path+"*.MP4", settings)
     #track_gui()
-    track_gui(movie_filename=path, settings_filename=settings)
+    path = "/home/mike/Documents/"
+    movie = "scalebar.MP4"
+    settings="scalebar.param"
+    track_gui(movie_filename=path + movie, settings_filename=path + settings )
     #track_gui(movie_filename="testdata/hydrogel.mp4",settings_filename = "testdata/temp.param")

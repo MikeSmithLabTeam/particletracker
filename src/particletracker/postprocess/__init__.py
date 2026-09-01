@@ -78,14 +78,14 @@ class PostProcessor:
                     else:
                         df = getattr(pm, method_name)(df, f_index=f_index, parameters=self.parameters, call_num=call_num, section='postprocess')    
             
-            if f_index is not None:
-                store.write_data(df.loc[f_index])
-                if aux_df is not None:
-                    aux_store.write_data(aux_df, f_index=f_index)
-            else:
-                store.write_data(df)
-                if aux_df is not None:
-                    aux_store.write_data(aux_df)
+                if f_index is not None:
+                    store.write_data(df.loc[f_index])
+                    if aux_df is not None:
+                        aux_store.write_data(aux_df, f_index=f_index)
+                else:
+                    store.write_data(df)
+                    if aux_df is not None:
+                        aux_store.write_data(aux_df)
 
         print('Postprocessing complete')
                                                 

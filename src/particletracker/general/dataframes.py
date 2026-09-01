@@ -263,6 +263,7 @@ class DataWrite:
         """Save accumulated data and close output file, skipping if empty"""
         try:
             if self._output_df is not None and not self._output_df.empty:
+                print("close", self)
                 self._output_df.to_parquet(self._output_file, engine="pyarrow")
             elif self._output_frames:
                 final_df = pd.concat(self._output_frames)

@@ -25,19 +25,21 @@ class ReadCropVideo(ReadVideo):
         a crash.
         '''
 
-        if self.parameters['crop_box'] is not None:
-            crop_height = self.parameters['crop_box'][1][1] - self.parameters['crop_box'][1][0]
-            crop_width = self.parameters['crop_box'][0][1] - self.parameters['crop_box'][0][0]
-            if (self.height < crop_height) or (self.width < crop_width):
-                self.reset()
-            self.crop_frame_size = (crop_width, crop_height)
-        
-        #If self.reset() called you could enter both if statements
-        if self.parameters['crop_box'] is None:
-            self.crop_frame_size = self.frame_size
-        self.parameters['_crop_frame_size'] = self.crop_frame_size
+        self._update_params()
         
         self.set_mask()
+        
+    def _update_params(self):
+        if self.parameters['crop_box'] is not None:
+            crop_height = self.parameters['crop_box'][1][1] - self.parameters['crop_box'][0][1]
+            crop_width = self.parameters['crop_box'][1][0] - self.parameters['crop_box'][0][0]
+            if (self.height < crop_height) or (self.width < crop_width):
+                self.reset()
+            self.parameters['_frame_size'] = (crop_height, crop_width, 3)
+        else:
+            self.crop_frame_size = self.frame_size
+            self.parameters['_frame_size'] = self.frame_size
+    
            
     def reset(self):
         #To set crop back to max image size
@@ -155,12 +157,14 @@ class ReadCropVideo(ReadVideo):
 
 def crop(frame, parameters):
     if np.size(np.shape(frame)) == 3:
-            if parameters['crop_box'] is not None:
-                frame=frame[parameters['crop_box'][0][1]:parameters['crop_box'][1][1],
+        if parameters['crop_box'] is not None:
+            frame=frame[parameters['crop_box'][0][1]:parameters['crop_box'][1][1],
                         parameters['crop_box'][0][0]: parameters['crop_box'][1][0],:]
     else:
         if parameters['crop_box'] is not None:
             frame=frame[parameters['crop_box'][0][1]:parameters['crop_box'][1][1],
                     parameters['crop_box'][0][0]: parameters['crop_box'][1][0]]
+    
+    
     return frame
 

@@ -5,6 +5,19 @@ import numpy as np
 import pandas as pd
 
 
+def mask_polygon(frame_size, pt_list, dilation_rad):
+    mask = np.ones(frame_size[:2], dtype=np.uint8)
+
+    if pt_list is not None:
+        poly = np.array([[p[0], p[1]] for p in pt_list], dtype=np.int32)
+        cv2.fillPoly(mask, [poly], 0)
+        
+        # Shrink the white polygon region
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (dilation_rad, dilation_rad))
+        mask = cv2.dilate(mask, kernel, iterations=3)
+        
+    return mask
+
 def largest_filled_object(binary_img: np.ndarray, kernel_size=11) -> np.ndarray:
     """Return a binary mask containing only the largest thresholded object."""
     kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
@@ -27,28 +40,31 @@ def largest_filled_object(binary_img: np.ndarray, kernel_size=11) -> np.ndarray:
 def construct_mask(
     df: pd.DataFrame,
     frame_size,
+    mask_pts,
     dilate_rad
 ) -> np.ndarray:
     """Create individual masks for red, green, and blue crystals using explicit
 
     color range bounds after applying a central circular mask.
     """
-    combined_mask = df["condition_1"] & df["condition_2"]
-    filtered_df = df[combined_mask]
+    filtered_df = df[~df["is_boundary"]]
     
     # Extract coordinates into a Nx2 numpy array of integers
     points = filtered_df[["x", "y"]].to_numpy(dtype=np.int32)
     radii = filtered_df[["r"]].to_numpy(dtype=np.int32) + dilate_rad
 
     # Create a blank mask with the same dimensions as the original image
-    mask = np.zeros(frame_size[:2], dtype=np.uint8)
+    mask = np.ones(frame_size[:2], dtype=np.uint8)
+    boundary_mask = mask_polygon(frame_size, mask_pts, dilate_rad)
 
     # Draw a filled white circle (255) for each particle coordinate
     for i,pt in enumerate(points):
-        cv2.circle(mask, tuple(pt), radius=radii[i], color=255, thickness=-1)
+        cv2.circle(mask, tuple(pt), radius=int(radii[i][0]), color=0, thickness=-1)
     
-    inverted_mask = cv2.bitwise_not(mask)
-    return inverted_mask
+    mask = 255*cv2.subtract(mask, boundary_mask)
+    
+    
+    return mask
 
 def extract_centerlines_via_skeleton(
     mask: np.ndarray,
@@ -58,16 +74,17 @@ def extract_centerlines_via_skeleton(
 
     # Direct raw skeletonization (no pruning loop)
     raw_skeleton = cv2.ximgproc.thinning(
-        mask, thinningType=cv2.ximgproc.THINNING_ZHANGSUEN
+        mask.astype(np.uint8), 
+        thinningType=cv2.ximgproc.THINNING_ZHANGSUEN
     )
-
+    
     contours, _ = cv2.findContours(
         raw_skeleton, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE
     )
 
     centerlines = []
     for cnt in contours:
-        if len(cnt) > 15:
+        if len(cnt) > 30:
             pts = [(float(p[0][0]), float(p[0][1])) for p in cnt]
             centerlines.append(pts)
     
@@ -87,9 +104,9 @@ def find_grain_boundaries(cl_r, cl_g, cl_b) -> tuple[list[tuple], list[tuple], l
     set_b = {(round(p[0]), round(p[1])) for p in cl_b}
 
     # Filter original ordered lists based on set membership
-    gb_rg = [p for p in cl_r if (round(p[0]), round(p[1])) in set_g]
-    gb_gb = [p for p in cl_g if (round(p[0]), round(p[1])) in set_b]
-    gb_br = [p for p in cl_b if (round(p[0]), round(p[1])) in set_r]
+    gb_rg = [p for p in cl_r if (round(p[0]), round(p[1])) in set_r]
+    gb_gb = [p for p in cl_g if (round(p[0]), round(p[1])) in set_g]
+    gb_br = [p for p in cl_b if (round(p[0]), round(p[1])) in set_b]
 
     return gb_rg, gb_gb, gb_br
 
