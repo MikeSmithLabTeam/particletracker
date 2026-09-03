@@ -27,12 +27,14 @@ Full details in documentation but in brief:
     - git clone https://github.com/MikeSmithLabTeam/particletracker
     - cd particletracker
     - uv sync --editable .
+
+## Testing
     
 If you run the command below then a pre-commit hook is activated which makes sure tests are run.
 
     - pre-commit install
 
-The github repo is configured to run tests. `ptdev` branch will just report the results in Github Actions, `main` will reject pushes / merges which don't pass.
+The github repo is configured to run tests. `ptdev` branch reports the results, the main branch will reject pushes / merges which don't pass.
 
 
 ## To add as a dependency to another pip repository

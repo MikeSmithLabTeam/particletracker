@@ -11,10 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install Qt dependencies
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libopengl0 libxkbcommon0
       - uses: astral-sh/setup-uv@v5
       - name: Install Qt runtime deps
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb libegl1 libxkbcommon-x11-0 libdbus-1-3 libxcb-cursor0
       - run: uv sync
-      - run: xvfb-run -a uv run pytest
+      - run: uv run pytest
+ 

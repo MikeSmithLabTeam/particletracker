@@ -125,7 +125,6 @@ class MainWindow(QMainWindow):
         
         # Show window but don't maximize
         self.show()
-        adjust_y = int((self.target_height-self.screen_size.height())/10)
         self.move(0, int((self.target_height-self.screen_size.height())/10)) # This will set the position
            
     def setup_menus_toolbar(self):

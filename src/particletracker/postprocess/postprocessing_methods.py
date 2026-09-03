@@ -15,8 +15,10 @@ from tqdm import tqdm
 
 from labvision import audio, video
 from moviepy.audio.io.AudioFileClip import AudioFileClip
-from ..general.parameters import param_parse
+from ..general.parameters import param_parse, get_param_val
 from ..general.contour_parsing import reconstruct_contour_pts
+from ..general.dataframes import add_to_aux_frame_df
+from .grain_boundary import construct_mask, find_grain_boundaries, find_triple_junction
 from ..customexceptions import *
 import time
 
@@ -1438,6 +1440,43 @@ def _boundary_and_tj_id(df, *args, parameters=None, **kwargs):
 
     return df
 
+@error_handling
+def find_tj_gb_coords(df, *args, parameters=None, **kwargs):
+    """
+    Find the coordinates of triple junctions and grain boundaries in the dataframe.
+    This uses the tracked coordinates of the particles to generate a dummy coloured
+    image. This is then processed to find the coordinates of the triple junctions and grain boundaries.
+    The Data is stored in the auxiliary dataframe because it is not a property of the particles themselves but rather a property of the system.
+    This method requires you to have run the boundary_and_tj_id method first.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The dataframe containing particle data.
+    parameters : dict, optional
+        Additional parameters for processing (default is None).
+
+    Returns
+    -------
+    Auxiliary DataFrame: pd.DataFrame
+        A DataFrame containing the coordinates of triple junctions and grain boundaries.
+    """
+    frame_size = parameters['crop']['_frame_size']
+    dilate_rad = get_param_val(parameters['postprocess']['find_tj_gb_coords']['dilate_rad'])
+    
+    masks = construct_mask(df,frame_size, dilate_rad)
+    gbs = find_grain_boundaries(masks)
+    tj = find_triple_junction(gbs)
+    
+    f_index = kwargs['f_index']
+    
+    aux_df =pd.DataFrame
+    aux_df = add_to_aux_frame_df(aux_df,f_index,'TJ',tj)
+    aux_df = add_to_aux_frame_df(aux_df,f_index,'GB0',gbs[0])
+    aux_df = add_to_aux_frame_df(aux_df,f_index,'GB1',gbs[1])
+    aux_df = add_to_aux_frame_df(aux_df,f_index,'GB2',gbs[2])
+    
+    return aux_df
 
 
 @time_it

@@ -16,7 +16,8 @@ class DataManager:
             base_filename.replace('*', ''))
         self.base_filename = base_path + '/_temp/' + base_filename
         self.temp_filename = self.base_filename + '_temp.parquet'
-        self._stores = [None, None, None]  # _track, _link, _postprocess
+        self.temp_aux_filename = self.base_filename + '_temp_aux.parquet'
+        self._stores = [None, None, None, None]  # _track, _link, _postprocess, _auxiliary
         self.update_lock(lock_part=lock_part)
 
     def update_lock(self, lock_part=-1):
@@ -57,6 +58,19 @@ class DataManager:
                 output_filename=None,
                 store_index=2)
         return self._stores[2]
+    
+    @property
+    def aux_store(self):
+        """Lazy loading of arbitrary/extensible non-particle frame data"""
+        if not hasattr(self, '_aux_store') or self._aux_store is None:
+            self._stores[3] = DataRead(
+                f"{self.base_filename}_aux.parquet",
+                self.temp_aux_filename,
+                output_filename=f"{self.base_filename}_aux.parquet",
+                store_index=3
+            )
+        return self._stores[3]
+    
     
     def update_store(self, store_index: int, updated_store):
         """
@@ -216,17 +230,11 @@ class DataWrite:
 
     def write_data(self, df, f_index=None):
         """
-        Write data to output buffer. close_output will actually write to file. close_output is called
-        automatically if context manager used.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Data to write
-        f_index : int, optional
-            If provided, writes single frame data
-            If None, writes entire DataFrame
+        Write data to output buffer, ignoring empty DataFrames.
         """
+        if df is None or df.empty:
+            return  # Skip writing if there's no data
+
         if f_index is None:
             # Store whole DataFrame
             self._output_df = df
@@ -252,20 +260,19 @@ class DataWrite:
             self._output_df = None
 
     def close_output(self):
-        """Save accumulated data and close output file"""
+        """Save accumulated data and close output file, skipping if empty"""
         try:
-            if self._output_df is not None:
-                # Write full dataframe
-                self._output_df.to_parquet(self._output_file,engine="pyarrow")
+            if self._output_df is not None and not self._output_df.empty:
+                print("close", self)
+                self._output_df.to_parquet(self._output_file, engine="pyarrow")
             elif self._output_frames:
-                # Concatenate and write collected frames
                 final_df = pd.concat(self._output_frames)
-                final_df.to_parquet(self._output_file,engine="pyarrow")
+                if not final_df.empty:
+                    final_df.to_parquet(self._output_file, engine="pyarrow")
         except Exception as e:
             print(f'Error in writing data: {e}')
-            raise  # Re-raise the exception after cleanup
+            raise
         finally:
-            # Clear all stored data
             self._output_df = None
             self._output_frames = []
             self._output_file = None
@@ -301,3 +308,60 @@ def combine_data_frames(df, modified_df):
     updated_df.index.name='frame'
     updated_df.sort_index(inplace=True)
     return updated_df
+
+
+def add_to_aux_frame_df(
+    df: pd.DataFrame, 
+    f_index: int, 
+    entity_type: str, 
+    coords, 
+) -> pd.DataFrame:
+    """
+    Appends a new geometric entity to a frame's DataFrame, standardising 
+    all coordinate entries into a uniform list-of-lists format for Parquet compatibility.
+    """
+    # 1. Clean and standardise coordinates
+    clean_coords = []
+    if coords is not None:
+        is_single_point = (
+            isinstance(coords, (list, tuple, np.ndarray)) 
+            and len(coords) == 2 
+            and not isinstance(coords[0], (list, tuple, np.ndarray))
+        )
+        
+        if is_single_point:
+            clean_coords = [[float(coords[0]), float(coords[1])]]
+        else:
+            for pt in coords:
+                if len(pt) >= 2:
+                    clean_coords.append([float(pt[0]), float(pt[1])])
+
+    # 2. Build the new row as a clean DataFrame with 'frame' as an explicit column first, 
+    # then set it as index to guarantee uniform structure.
+    new_row = pd.DataFrame({
+        'frame': [f_index],
+        'entity_type': pd.Series([entity_type], dtype='string'),
+        'entity_id': pd.Series([0], dtype='int64'),
+        'coords': [clean_coords]
+    }).set_index('frame')
+
+    if df.empty:
+        return new_row
+
+    # 3. Normalise incoming df so 'frame' is consistently an index if it exists as a column
+    work_df = df.copy()
+    if 'frame' in work_df.columns and work_df.index.name != 'frame':
+        work_df = work_df.set_index('frame')
+
+    # 4. Calculate next_id strictly within this specific frame and entity type
+    if not work_df.empty and 'entity_type' in work_df.columns and 'entity_id' in work_df.columns:
+        # Check rows matching both the current frame index and the entity type
+        frame_matches = work_df[work_df.index == f_index]
+        if not frame_matches.empty:
+            type_matches = frame_matches[frame_matches['entity_type'] == entity_type]
+            if not type_matches.empty:
+                next_id = int(type_matches['entity_id'].max()) + 1
+                new_row['entity_id'] = next_id
+
+    # 5. Safe concatenation aligning index structures
+    return pd.concat([work_df, new_row], axis=0)
