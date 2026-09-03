@@ -226,7 +226,7 @@ def test_tj_gb_coords():
     df = table.to_pandas(ignore_metadata=True)
     
     params = {'crop':{'_frame_size': (2160, 3840, 3)},
-              'postprocess':{'find_tj_gb_coords':{'dilate_rad': [5,1,50,1]}}}
+              'postprocess':{'find_tj_gb_coords':{'dilate_rad': [15,1,50,1]}}}
     
     
     aux_df = pp.find_tj_gb_coords(df, parameters=params, f_index=0)
@@ -234,8 +234,7 @@ def test_tj_gb_coords():
     
     tj_coord = aux_df[aux_df['entity_type'] == 'TJ']['coords'][0][0]
     gb0_first_coord = aux_df[aux_df['entity_type'] == 'GB0']['coords'][0][0]
-    print(tj_coord)
-    print(gb0_first_coord)
+    
     assert(np.array_equal(tj_coord,np.array([1064.0, 1177.0])))
     assert(np.array_equal(gb0_first_coord,np.array([1293.0, 1317.0])))
             

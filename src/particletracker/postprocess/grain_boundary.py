@@ -23,7 +23,7 @@ def crystal_mask(filtered_df, frame_size, dilate_rad):
     mask = np.zeros(frame_size[:2], dtype=np.uint8)
     
     points = filtered_df[["x", "y"]].to_numpy(dtype=np.int32)
-    radii = filtered_df[["r"]].to_numpy(dtype=np.int32) + 3*dilate_rad
+    radii = filtered_df[["r"]].to_numpy(dtype=np.int32) + dilate_rad
     
     for i,pt in enumerate(points):
             cv2.circle(mask, tuple(pt), radius=int(radii[i][0]), color=255, thickness=-1)
