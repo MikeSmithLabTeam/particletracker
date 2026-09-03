@@ -407,7 +407,7 @@ def hexatic_order(df, *args,  parameters=None, **kwargs):
         df.loc[f_index, 'number_of_neighbours'] = pd.Series(num_neighbors, index=frame_indices, dtype=np.uint8)
     
     return df
-
+'''
 @time_it
 @error_handling
 @param_parse
@@ -474,7 +474,7 @@ def _hexatic_order(df, *args, parameters=None, **kwargs):
         df.loc[f_index, 'number_of_neighbours'] = all_neighbors[0]
     
     return df
-
+'''
 def _find_delaunay_for_hexatic(points, cutoff):
     tri = sp.Delaunay(points)
     sum_exp_6j = np.zeros(len(points), dtype=complex)
@@ -810,6 +810,7 @@ def _find_delaunay_optimized(df, parameters):
         
     return neighbour_ids_list, neighbour_dists_list
 
+@time_it
 @error_handling
 @param_parse
 def voronoi(df, *args,  **kwargs):
@@ -859,7 +860,7 @@ def voronoi(df, *args,  **kwargs):
         #Just process frame of interest
         indices=[f_index]
 
-    for f_index in indices:
+    for f_index in tqdm(indices, desc="Processing Voroni"):
         points = df[['x', 'y']].loc[f_index].values
         frame_indices = df.loc[f_index].index
 
@@ -1494,7 +1495,7 @@ def _median_classify(df, *args, parameters=None, **kwargs):
 
         df.loc[df['particle'] == median_particle_id, 'is_median'] = True
 
-        print(f"median y = {median_val}, median particle = {median_particle_id}")
+        #print(f"median y = {median_val}, median particle = {median_particle_id}")
 
     return df
 
