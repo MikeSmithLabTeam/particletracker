@@ -1461,10 +1461,9 @@ def find_tj_gb_coords(df, *args, parameters=None, **kwargs):
         A DataFrame containing the coordinates of triple junctions and grain boundaries.
     """
     frame_size = parameters['crop']['_frame_size']
-    mask_pts = parameters['crop']['mask_polygon']
     dilate_rad = get_param_val(parameters['postprocess']['find_tj_gb_coords']['dilate_rad'])
     
-    masks = construct_mask(df,frame_size, mask_pts, dilate_rad)
+    masks = construct_mask(df,frame_size, dilate_rad)
     gbs = find_grain_boundaries(masks)
     tj = find_triple_junction(gbs)
     

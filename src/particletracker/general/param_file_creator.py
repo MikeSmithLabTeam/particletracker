@@ -18,7 +18,7 @@ def create_param_file(filename):
 
     crop = {'crop_method': ('crop_box',),
             'crop_box': None,
-            '_crop_frame_size':None,
+            '_frame_size':None,
             'mask_ellipse': None,
             'mask_circle': None,
             'mask_polygon': None,

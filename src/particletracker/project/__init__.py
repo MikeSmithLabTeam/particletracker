@@ -150,6 +150,10 @@ def move_final_data(movie_filename):
     path, filename = os.path.split(movie_filename)
     postprocess_datafile = path + '/_temp/' + filename[:-4] + CustomButton.extension[2]
     output_datafile = path + '/' + filename[:-4] + '.parquet'
+    aux_datafile = path + '/_temp/' + filename[:-4] + '_aux.parquet'
+    aux_output_datafile = path + '/' + filename[:-4] + '_aux.parquet'
 
     if os.path.exists(postprocess_datafile):
         shutil.copy(postprocess_datafile, output_datafile)
+    if os.path.exists(aux_datafile):
+            shutil.copy(aux_datafile, aux_output_datafile)

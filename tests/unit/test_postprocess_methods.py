@@ -4,6 +4,8 @@ import cv2
 import numpy as np
 import pandas as pd
 import pytest
+from pathlib import Path
+import pyarrow.parquet as pq
 
 from particletracker.postprocess import postprocessing_methods as pp
 
@@ -209,4 +211,32 @@ def test_difference_mean_median_and_rate_with_particle_time_series():
     assert np.isclose(mean_output.loc[1, 'x_mean'], 2.0)
     assert np.isclose(median_output.loc[1, 'x_median'], 2.0)
     assert np.isclose(rate_output.loc[1, 'x_rate'], 2.0 / 3.0)
+    
+    
+def test_tj_gb_coords():
+    
+
+    root_dir = Path(__file__).resolve().parents[2]
+    
+    # Build the path to your test file
+    test_file_path = root_dir / "testdata" / "tj_gb_coords_testdata.parquet"
+
+    # Load it into your pandas dataframe
+    table = pq.read_table(test_file_path)
+    df = table.to_pandas(ignore_metadata=True)
+    
+    params = {'crop':{'_frame_size': (2160, 3840, 3)},
+              'postprocess':{'find_tj_gb_coords':{'dilate_rad': [5,1,50,1]}}}
+    
+    
+    aux_df = pp.find_tj_gb_coords(df, parameters=params, f_index=0)
+
+    
+    tj_coord = aux_df[aux_df['entity_type'] == 'TJ']['coords'][0][0]
+    gb0_first_coord = aux_df[aux_df['entity_type'] == 'GB0']['coords'][0][0]
+    print(tj_coord)
+    print(gb0_first_coord)
+    assert(np.array_equal(tj_coord,np.array([1064.0, 1177.0])))
+    assert(np.array_equal(gb0_first_coord,np.array([1293.0, 1317.0])))
+            
 

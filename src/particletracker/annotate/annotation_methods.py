@@ -910,7 +910,7 @@ def plot_tj_gb(df_single, frame, f_index=None, parameters=None, *args, **kwargs)
     
     plot_mode = parameters.get('plot_mode', 'both')
     
-    for _, row in df_single.iterrows():
+    for _, row in df_single.iloc[::-1].iterrows():
         
         entity_type = row['entity_type']
         is_tj = entity_type in ('TJ', 'triple_junction')

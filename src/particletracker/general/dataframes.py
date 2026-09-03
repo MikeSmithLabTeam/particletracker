@@ -66,7 +66,7 @@ class DataManager:
             self._stores[3] = DataRead(
                 f"{self.base_filename}_aux.parquet",
                 self.temp_aux_filename,
-                output_filename=f"{self.base_filename}_aux_output.parquet",
+                output_filename=f"{self.base_filename}_aux.parquet",
                 store_index=3
             )
         return self._stores[3]

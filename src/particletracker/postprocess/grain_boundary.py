@@ -33,7 +33,6 @@ def crystal_mask(filtered_df, frame_size, dilate_rad):
 def construct_mask(
     df: pd.DataFrame,
     frame_size,
-    mask_pts,
     dilate_rad
 ) -> np.ndarray:
     """Create individual masks for red, green, and blue crystals using explicit
