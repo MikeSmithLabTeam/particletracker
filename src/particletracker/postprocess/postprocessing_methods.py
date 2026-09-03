@@ -18,7 +18,7 @@ from moviepy.audio.io.AudioFileClip import AudioFileClip
 from ..general.parameters import param_parse, get_param_val
 from ..general.contour_parsing import reconstruct_contour_pts
 from ..general.dataframes import add_to_aux_frame_df
-from .grain_boundary import construct_mask, extract_centerlines_via_skeleton, find_grain_boundaries, find_triple_junction
+from .grain_boundary import construct_mask, find_grain_boundaries, find_triple_junction
 from ..customexceptions import *
 import time
 
@@ -1464,18 +1464,17 @@ def find_tj_gb_coords(df, *args, parameters=None, **kwargs):
     mask_pts = parameters['crop']['mask_polygon']
     dilate_rad = get_param_val(parameters['postprocess']['find_tj_gb_coords']['dilate_rad'])
     
-    mask = construct_mask(df,frame_size, mask_pts, dilate_rad)
-    cl0,cl1, cl2= extract_centerlines_via_skeleton(mask)
-    gb_rg, gb_gb, gb_br = find_grain_boundaries(cl0,cl1,cl2)
-    tj = find_triple_junction(cl0,cl1,cl2)
+    masks = construct_mask(df,frame_size, mask_pts, dilate_rad)
+    gbs = find_grain_boundaries(masks)
+    tj = find_triple_junction(gbs)
     
     f_index = kwargs['f_index']
     
     aux_df =pd.DataFrame
     aux_df = add_to_aux_frame_df(aux_df,f_index,'TJ',tj)
-    aux_df = add_to_aux_frame_df(aux_df,f_index,'GB1',gb_rg)
-    aux_df = add_to_aux_frame_df(aux_df,f_index,'GB2',gb_gb)
-    aux_df = add_to_aux_frame_df(aux_df,f_index,'GB3',gb_br)
+    aux_df = add_to_aux_frame_df(aux_df,f_index,'GB0',gbs[0])
+    aux_df = add_to_aux_frame_df(aux_df,f_index,'GB1',gbs[1])
+    aux_df = add_to_aux_frame_df(aux_df,f_index,'GB2',gbs[2])
     
     return aux_df
 

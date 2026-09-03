@@ -16,7 +16,7 @@ class DataManager:
             base_filename.replace('*', ''))
         self.base_filename = base_path + '/_temp/' + base_filename
         self.temp_filename = self.base_filename + '_temp.parquet'
-        self.temp_aux_filename = self.base_filename + '_temp_auxiliary.parquet'
+        self.temp_aux_filename = self.base_filename + '_temp_aux.parquet'
         self._stores = [None, None, None, None]  # _track, _link, _postprocess, _auxiliary
         self.update_lock(lock_part=lock_part)
 
@@ -60,13 +60,13 @@ class DataManager:
         return self._stores[2]
     
     @property
-    def auxiliary_store(self):
+    def aux_store(self):
         """Lazy loading of arbitrary/extensible non-particle frame data"""
         if not hasattr(self, '_aux_store') or self._aux_store is None:
             self._stores[3] = DataRead(
-                f"{self.base_filename}_auxiliary.parquet",
+                f"{self.base_filename}_aux.parquet",
                 self.temp_aux_filename,
-                output_filename=f"{self.base_filename}_auxiliary_output.parquet",
+                output_filename=f"{self.base_filename}_aux_output.parquet",
                 store_index=3
             )
         return self._stores[3]
@@ -314,25 +314,54 @@ def add_to_aux_frame_df(
     df: pd.DataFrame, 
     f_index: int, 
     entity_type: str, 
-    coords: list, 
+    coords, 
 ) -> pd.DataFrame:
     """
-    Appends a new geometric entity (or set of entities) to a frame's DataFrame,
-    auto-incrementing the entity_id per type within that frame.
+    Appends a new geometric entity to a frame's DataFrame, standardising 
+    all coordinate entries into a uniform list-of-lists format for Parquet compatibility.
     """
-    # Determine the next available entity_id for this specific type within the frame
-    if df.empty or 'entity_type' not in df.columns or 'entity_id' not in df.columns:
-        next_id = 0
-    else:
-        existing_type_rows = df[df['entity_type'] == entity_type]
-        next_id = int(existing_type_rows['entity_id'].max()) + 1 if not existing_type_rows.empty else 0
+    # 1. Clean and standardise coordinates
+    clean_coords = []
+    if coords is not None:
+        is_single_point = (
+            isinstance(coords, (list, tuple, np.ndarray)) 
+            and len(coords) == 2 
+            and not isinstance(coords[0], (list, tuple, np.ndarray))
+        )
+        
+        if is_single_point:
+            clean_coords = [[float(coords[0]), float(coords[1])]]
+        else:
+            for pt in coords:
+                if len(pt) >= 2:
+                    clean_coords.append([float(pt[0]), float(pt[1])])
 
+    # 2. Build the new row as a clean DataFrame with 'frame' as an explicit column first, 
+    # then set it as index to guarantee uniform structure.
     new_row = pd.DataFrame({
-        'entity_type': [entity_type],
-        'entity_id': [next_id],
-        'coords': [coords]
-    }, index=pd.Index([f_index], name='frame'))
+        'frame': [f_index],
+        'entity_type': pd.Series([entity_type], dtype='string'),
+        'entity_id': pd.Series([0], dtype='int64'),
+        'coords': [clean_coords]
+    }).set_index('frame')
 
     if df.empty:
         return new_row
-    return pd.concat([df, new_row])
+
+    # 3. Normalise incoming df so 'frame' is consistently an index if it exists as a column
+    work_df = df.copy()
+    if 'frame' in work_df.columns and work_df.index.name != 'frame':
+        work_df = work_df.set_index('frame')
+
+    # 4. Calculate next_id strictly within this specific frame and entity type
+    if not work_df.empty and 'entity_type' in work_df.columns and 'entity_id' in work_df.columns:
+        # Check rows matching both the current frame index and the entity type
+        frame_matches = work_df[work_df.index == f_index]
+        if not frame_matches.empty:
+            type_matches = frame_matches[frame_matches['entity_type'] == entity_type]
+            if not type_matches.empty:
+                next_id = int(type_matches['entity_id'].max()) + 1
+                new_row['entity_id'] = next_id
+
+    # 5. Safe concatenation aligning index structures
+    return pd.concat([work_df, new_row], axis=0)

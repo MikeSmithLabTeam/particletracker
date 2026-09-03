@@ -18,6 +18,7 @@ class TrackingAnnotator:
         self.cap = vidobject
         self.data=data
         self.pp_store = data.post_store
+        self.aux_store = data.aux_store
         self.output_filename = self.cap.filename[:-4] + '_annotate.mp4'
 
     def annotate(self, f_index=None, lock_part=-1):  
@@ -39,6 +40,7 @@ class TrackingAnnotator:
             stop = self.cap.frame_range[1]
             step = self.cap.frame_range[2]
             df = self.pp_store.df
+            aux_df = self.aux_store.df
         else:
             start=f_index
             stop=f_index+1
@@ -46,12 +48,18 @@ class TrackingAnnotator:
             #If postprocessing is locked read the full dataframe _postprocess.parquet otherwise use _temp.parquet
             if lock_part==2:
                 df = self.pp_store.df
+                aux_df = self.aux_store.df
                 create_temp_hdf(self.pp_store, f_index)
             else:
                 self.pp_store.clear_temp_df()
                 df = self.pp_store.temp_df
+                self.aux_store.clear_temp_df()
+                aux_df = self.aux_store.temp_df
 
         self.cap.set_frame(start)
+
+        auxiliary_methods = ['plot_tj_gb']  
+        
 
         #Do the annotation
         for f in tqdm(range(start, stop, step), 'Annotating'):
@@ -60,7 +68,11 @@ class TrackingAnnotator:
             try:
                 for method in self.parameters['annotate']['annotate_method']:
                     method_name, call_num = get_method_name(method)
-                    frame = getattr(am, method_name)(df.copy(), frame, f_index=f, parameters=self.parameters, call_num=call_num, section='annotate')
+                    if method_name in auxiliary_methods:
+                        # Auxiliary methods take the current frame/df and return the populated auxiliary DataFrame
+                        frame = getattr(am, method_name)(aux_df.copy(), frame, f_index=f, parameters=self.parameters, call_num=call_num, section='annotate')
+                    else:
+                        frame = getattr(am, method_name)(df.copy(), frame, f_index=f, parameters=self.parameters, call_num=call_num, section='annotate')
             except:
                 print('No data to annotate')
 

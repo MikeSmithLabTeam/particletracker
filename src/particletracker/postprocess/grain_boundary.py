@@ -6,11 +6,11 @@ import pandas as pd
 
 
 def mask_polygon(frame_size, pt_list, dilation_rad):
-    mask = np.ones(frame_size[:2], dtype=np.uint8)
+    mask = 255*np.ones(frame_size[:2], dtype=np.uint8)
 
     if pt_list is not None:
         poly = np.array([[p[0], p[1]] for p in pt_list], dtype=np.int32)
-        cv2.fillPoly(mask, [poly], 0)
+        cv2.fillPoly(mask, [poly],  0)
         
         # Shrink the white polygon region
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (dilation_rad, dilation_rad))
@@ -18,24 +18,17 @@ def mask_polygon(frame_size, pt_list, dilation_rad):
         
     return mask
 
-def largest_filled_object(binary_img: np.ndarray, kernel_size=11) -> np.ndarray:
-    """Return a binary mask containing only the largest thresholded object."""
-    kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
-    binary_img = cv2.dilate(binary_img, kernel, iterations=1)
-
-    count, labels, statistics, _ = cv2.connectedComponentsWithStats(
-        binary_img, connectivity=8
-    )
-
-    largest_label = 1 + int(np.argmax(statistics[1:, cv2.CC_STAT_AREA]))
-    object_mask = np.where(labels == largest_label, 255, 0).astype(np.uint8)
-
-    contours, _ = cv2.findContours(
-        object_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-    )
-    filled = np.zeros_like(object_mask)
-    cv2.drawContours(filled, contours, -1, 255, thickness=cv2.FILLED)
-    return filled
+# Create mask of white crystal on black bkg
+def crystal_mask(filtered_df, frame_size, dilate_rad):
+    mask = np.zeros(frame_size[:2], dtype=np.uint8)
+    
+    points = filtered_df[["x", "y"]].to_numpy(dtype=np.int32)
+    radii = filtered_df[["r"]].to_numpy(dtype=np.int32) + 3*dilate_rad
+    
+    for i,pt in enumerate(points):
+            cv2.circle(mask, tuple(pt), radius=int(radii[i][0]), color=255, thickness=-1)
+    return mask
+    
 
 def construct_mask(
     df: pd.DataFrame,
@@ -47,32 +40,23 @@ def construct_mask(
 
     color range bounds after applying a central circular mask.
     """
-    filtered_df = df[~df["is_boundary"]]
+    filtered_df_r = df[df['crystal_id'] == 0]  
+    filtered_df_g = df[df['crystal_id'] == 1] 
+    filtered_df_b = df[df['crystal_id'] == 2] 
     
     # Extract coordinates into a Nx2 numpy array of integers
-    points = filtered_df[["x", "y"]].to_numpy(dtype=np.int32)
-    radii = filtered_df[["r"]].to_numpy(dtype=np.int32) + dilate_rad
-
-    # Create a blank mask with the same dimensions as the original image
-    mask = np.ones(frame_size[:2], dtype=np.uint8)
-    boundary_mask = mask_polygon(frame_size, mask_pts, dilate_rad)
-
-    # Draw a filled white circle (255) for each particle coordinate
-    for i,pt in enumerate(points):
-        cv2.circle(mask, tuple(pt), radius=int(radii[i][0]), color=0, thickness=-1)
+    mask_r = crystal_mask(filtered_df_r, frame_size, dilate_rad)
+    mask_g = crystal_mask(filtered_df_g, frame_size, dilate_rad)
+    mask_b = crystal_mask(filtered_df_b, frame_size, dilate_rad)
     
-    mask = 255*cv2.subtract(mask, boundary_mask)
+    rg = cv2.multiply(mask_r, mask_g)
+    gb = cv2.multiply(mask_g, mask_b)
+    br = cv2.multiply(mask_b, mask_r)
     
     
-    return mask
+    return (rg, gb, br)
 
-def extract_centerlines_via_skeleton(
-    mask: np.ndarray,
-) -> tuple[list[tuple], list[tuple], list[tuple]]:
-    """Extracts centerlines via raw skeletonization without pruning."""
-    
-
-    # Direct raw skeletonization (no pruning loop)
+def extract_gb(mask):
     raw_skeleton = cv2.ximgproc.thinning(
         mask.astype(np.uint8), 
         thinningType=cv2.ximgproc.THINNING_ZHANGSUEN
@@ -82,78 +66,63 @@ def extract_centerlines_via_skeleton(
         raw_skeleton, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE
     )
 
-    centerlines = []
-    for cnt in contours:
-        if len(cnt) > 30:
-            pts = [(float(p[0][0]), float(p[0][1])) for p in cnt]
-            centerlines.append(pts)
+    # Find the single longest contour
+    longest_cnt = max(contours, key=len)
     
-    # Sort centerlines based on the average x-coordinate of their points (furthest left first)
-    centerlines.sort(key=lambda cl: sum(p[0] for p in cl) / len(cl))
+    # Map directly to a float coordinate list
+    centerline = [(float(p[0][0]), float(p[0][1])) for p in longest_cnt]
+    
+    return centerline
 
-    cl_r = centerlines[0] if len(centerlines) > 0 else []
-    cl_g = centerlines[1] if len(centerlines) > 1 else []
-    cl_b = centerlines[2] if len(centerlines) > 2 else []
+def find_grain_boundaries(
+    masks: tuple(np.ndarray, np.ndarray, np.ndarray)
+) -> tuple[list[tuple], list[tuple], list[tuple]]:
+    """Extracts centerlines via raw skeletonization without pruning."""
+    rg, gb, br = masks
 
-    return cl_r, cl_g, cl_b
+    gb_rg = extract_gb(rg)
+    gb_gb = extract_gb(gb)
+    gb_br = extract_gb(br)
 
-def find_grain_boundaries(cl_r, cl_g, cl_b) -> tuple[list[tuple], list[tuple], list[tuple]]:
-    # Convert to sets of rounded tuples ONLY for O(1) lookup speeds
-    set_r = {(round(p[0]), round(p[1])) for p in cl_r}
-    set_g = {(round(p[0]), round(p[1])) for p in cl_g}
-    set_b = {(round(p[0]), round(p[1])) for p in cl_b}
+    return (gb_rg, gb_gb, gb_br)
 
-    # Filter original ordered lists based on set membership
-    gb_rg = [p for p in cl_r if (round(p[0]), round(p[1])) in set_r]
-    gb_gb = [p for p in cl_g if (round(p[0]), round(p[1])) in set_g]
-    gb_br = [p for p in cl_b if (round(p[0]), round(p[1])) in set_b]
 
-    return gb_rg, gb_gb, gb_br
+def find_triple_junction(gbs):
+    """Finds the triple junction by locating the point that minimizes the 
+    combined squared distance to all three distinct grain boundary centre lines.
+    """
+    gb_rg, gb_gb, gb_br = gbs
 
-def find_triple_junction(cl_r, cl_g, cl_b):
-    """Fast triple junction localization via set intersections and vectorized numpy logic."""
-    set_rg = set((round(p[0]), round(p[1])) for p in cl_r)
-    set_gb = set((round(p[0]), round(p[1])) for p in cl_g)
-    set_br = set((round(p[0]), round(p[1])) for p in cl_b)
+    arr_rg = np.array(gb_rg) if gb_rg else np.empty((0, 2))
+    arr_gb = np.array(gb_gb) if gb_gb else np.empty((0, 2))
+    arr_br = np.array(gb_br) if gb_br else np.empty((0, 2))
 
-    common_pts = set_rg.intersection(set_gb).intersection(set_br)
+    if len(arr_rg) == 0 or len(arr_gb) == 0 or len(arr_br) == 0:
+        return (0.0, 0.0)
 
-    #I think there must always only be one common_pt which makes rest of this bit superfluous but keep for now.
+    # Use the mean centroid of all lines as a robust initial search anchor
+    all_pts = np.vstack([arr_rg, arr_gb, arr_br])
+    anchor = np.mean(all_pts, axis=0)
 
-    if common_pts:
-        pts_arr = np.array(list(common_pts))
-        return (float(np.mean(pts_arr[:, 0])), float(np.mean(pts_arr[:, 1])))
-
-    # Vectorized NumPy fallback for closest convergence point
-    arr_r = np.array(cl_r) if cl_r else np.empty((0, 2))
-    arr_g = np.array(cl_g) if cl_g else np.empty((0, 2))
-    arr_b = np.array(cl_b) if cl_b else np.empty((0, 2))
-
-    if len(arr_r) > 0 and len(arr_g) > 0 and len(arr_b) > 0:
-        all_pts = np.vstack([arr_r, arr_g, arr_b])
-        centroid = np.mean(all_pts, axis=0)
-
+    # Collect points from each boundary within a local radius of the anchor
     candidates = []
-    for cl in [arr_r, arr_g, arr_b]:
-        dists_sq = np.sum((cl - centroid) ** 2, axis=1)
-        mask = dists_sq < 100**2
+    for arr in [arr_rg, arr_gb, arr_br]:
+        dists_sq = np.sum((arr - anchor) ** 2, axis=1)
+        mask = dists_sq < 150**2
         if np.any(mask):
-            candidates.append(cl[mask])
+            candidates.append(arr[mask])
+        else:
+            candidates.append(arr)  # Fallback to full array if local mask is empty
 
-        if candidates:
-            pool = np.vstack(candidates)
-            d_rg = np.min(
-                np.sum((arr_r[:, None, :] - pool[None, :, :]) ** 2, axis=2), axis=0
-            )
-            d_gb = np.min(
-                np.sum((arr_g[:, None, :] - pool[None, :, :]) ** 2, axis=2), axis=0
-            )
-            d_br = np.min(
-                np.sum((arr_b[:, None, :] - pool[None, :, :]) ** 2, axis=2), axis=0
-            )
+    pool = np.vstack(candidates)
 
-            scores = d_rg + d_gb + d_br
-            best_idx = np.argmin(scores)
-            return (float(pool[best_idx, 0]), float(pool[best_idx, 1]))
+    # For every point in the local pool, compute its distance squared to each of the three legs
+    d_rg = np.min(np.sum((arr_rg[:, None, :] - pool[None, :, :]) ** 2, axis=2), axis=0)
+    d_gb = np.min(np.sum((arr_gb[:, None, :] - pool[None, :, :]) ** 2, axis=2), axis=0)
+    d_br = np.min(np.sum((arr_br[:, None, :] - pool[None, :, :]) ** 2, axis=2), axis=0)
 
-    return (0.0, 0.0)
+    # The triple junction is the candidate point that minimises the sum of squared distances to all 3 paths
+    scores = d_rg + d_gb + d_br
+    best_idx = np.argmin(scores)
+
+    return (float(pool[best_idx, 0]), float(pool[best_idx, 1]))

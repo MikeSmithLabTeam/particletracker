@@ -12,7 +12,7 @@ class PostProcessor:
     def __init__(self, parameters=None, data=None):
         self.data=data
         self.link_store = data.link_store
-        self.auxiliary_store = data.auxiliary_store
+        self.auxiliary_store = data.aux_store
         self.parameters = parameters      
 
     def process(self, f_index=None, lock_part=-1):
@@ -79,7 +79,7 @@ class PostProcessor:
                         df = getattr(pm, method_name)(df, f_index=f_index, parameters=self.parameters, call_num=call_num, section='postprocess')    
             
                 if f_index is not None:
-                    store.write_data(df.loc[f_index])
+                    store.write_data(df.loc[f_index], f_index=f_index)
                     if aux_df is not None:
                         aux_store.write_data(aux_df, f_index=f_index)
                 else:

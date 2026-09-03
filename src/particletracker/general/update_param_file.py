@@ -12,13 +12,14 @@ params['postprocess']['find_tj_gb_coords'] = {
         }
 
 params['annotate']['plot_tj_gb'] = {
-            'tj_colour':(200, 200, 200),
-            'tj_radius':5,
-            'tj_thickness':2,            
-            'gb1_colour':(0, 255, 255),
-            'gb2_colour':(255, 255, 0),
-            'gb3_colour':(255, 0, 255),
-            'gb_thickness':2,
+            'tj_colour':(255, 0, 0),
+            'tj_radius':[25,1,100,1],
+            'tj_thickness':-1,            
+            'gb0_colour':(0, 255, 255),
+            'gb1_colour':(255, 255, 0),
+            'gb2_colour':(255, 0, 255),
+            'gb_thickness':5,
+            'plot_mode': ['both', ('both', 'tj_only', 'gb_only')]
         }
 
 write_paramdict_file(params, filename)

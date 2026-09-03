@@ -843,122 +843,103 @@ def trajectories(df_range, frame, f_index=None, parameters=None, *args, **kwargs
 
 
 
-@error_with_hint(additional_message="HINT: To run tj_gb you must have run find_tj_gb_coords in the postprocessing section")
-@param_parse
-@df_single
-def plot_tj_gb(df_single,frame, f_index=None, parameters=None, *args, **kwargs):
-    tj_x, tj_y = get_entity_coords_for_plotting(df_single, 'TJ')
-    gb1_x, gb1_y = get_entity_coords_for_plotting(df_single, 'GB1')
-    gb2_x, gb2_y = get_entity_coords_for_plotting(df_single, 'GB2')
-    gb3_x, gb3_y = get_entity_coords_for_plotting(df_single, 'GB3')
-    
-    # Helper function to draw polylines from coordinate arrays
-    def draw_gb_lines(x_arr, y_arr, color, thickness):
-        if len(x_arr) > 0 and len(y_arr) > 0:
-            # Reshape coordinates into an (N, 1, 2) integer array required by cv2.polylines
-            pts = np.stack((x_arr, y_arr), axis=-1).astype(np.int32)
-            pts = pts.reshape((-1, 1, 2))
-            cv2.polylines(frame, [pts], isClosed=False, color=color, thickness=thickness)
-
-    # 3. Draw grain boundaries (BGR color format: Yellow, Cyan, Magenta)
-    draw_gb_lines(gb1_x, gb1_y, color=parameters['gb1_colour'], thickness=parameters['gb_thickness'])     
-    draw_gb_lines(gb2_x, gb2_y, color=parameters['gb2_colour'], thickness=parameters['gb_thickness'])    
-    draw_gb_lines(gb3_x, gb3_y, color=parameters['gb3_colour'], thickness=parameters['gb_thickness'])     
-
-    # 4. Draw the triple junction circle (Red in BGR: (0, 0, 255))
-    if tj_x is not None and tj_y is not None:
-        cv2.circle(
-            frame, 
-            center=(int(tj_x), int(tj_y)), 
-            radius=parameters['tj_radius'], 
-            color=parameters['tj_colour'], 
-            thickness=parameters['tj_thickness']
-        )
-
-    return frame
-
 def get_entity_coords_for_plotting(frame_df: pd.DataFrame, entity_type: str):
     """
     Extracts coordinates for a specific entity instance (by frame, type, and ID)
     formatted for plotting.
     
     Returns:
-        - For line/path entities (e.g., grain_boundary): A tuple of (x_array, y_array)
-        - For point entities (e.g., triple_junction): A tuple of scalar floats (x, y)
+        - For line/path entities (e.g., GB1): A tuple of (x_array, y_array)
+        - For point entities (e.g., TJ): A tuple of scalar floats (x, y)
     """
-    row = frame_df[(frame_df['entity_type'] == entity_type)]
+    row = frame_df[frame_df['entity_type'] == entity_type]
+    
+    if row.empty:
+        # Graceful fallback if the entity hasn't been logged for this frame
+        if entity_type in ('TJ', 'triple_junction'):
+            return None, None
+        return np.array([]), np.array([])
     
     coords = row['coords'].iloc[0]
     arr = np.array(coords)
 
-    if entity_type == 'triple_junction':
-        # Return a single (x, y) point for plt.scatter or plt.plot
+    # Handle point entities (double-wrapped as [[x, y]])
+    if entity_type in ('TJ', 'triple_junction') or (arr.ndim == 2 and arr.shape[0] == 1):
+        if arr.ndim == 2:
+            return float(arr[0, 0]), float(arr[0, 1])
         return float(arr[0]), float(arr[1])
     else:
         # Return (x_array, y_array) for a path/line
         return arr[:, 0], arr[:, 1]
+
+    
+@error_handling
+@param_parse
+@df_single
+def plot_tj_gb(df_single, frame, f_index=None, parameters=None, *args, **kwargs):
+    """
+    Superimposes extracted grain boundaries (GBs) and triple junctions (TJs) 
+    onto a single video frame or image based on data stored in a frame DataFrame.
+
+    Parameters:
+        df_single (pd.DataFrame): DataFrame filtered to include rows for a single frame only, 
+                                  containing 'entity_type' and 'coords' columns.
+        frame (np.ndarray): The target image or video frame (in BGR format) to draw upon.
+        f_index (int, optional): The specific frame index being processed. Defaults to None.
+        parameters (dict, optional): Configuration dictionary for rendering styles. Supports:
+            - 'plot_mode' (str): Specifies what to render. Options are `'both'` (default), 
+              `'tj_only'`, or `'gb_only'`. (If passed as a tuple/list schema specifier, 
+              the first element or default string will be used).
+            - 'gb_thickness' (int): Thickness of the grain boundary polylines (default: 2).
+            - 'tj_radius' (int): Radius of the circle representing the triple junction (default: 5).
+            - 'tj_colour' (tuple): BGR color tuple for the triple junction (default: (200, 200, 200)).
+            - '{entity_type}_colour' (tuple): Dynamic BGR color mapping for individual GB types 
+              (e.g. 'gb1_colour', 'gb2_colour', 'gb3_colour').
+            - 'tj_thickness' (int): Line thickness for the TJ circle outline (default: 2).
+        *args: Additional positional arguments for extensibility.
+        **kwargs: Additional keyword arguments for extensibility.
+
+    Returns:
+        np.ndarray: The modified image frame containing the rendered geometric overlays.
+    """
+    
+    gb_thickness = parameters.get('gb_thickness', 2)
+    tj_radius = parameters.get('tj_radius', 5)
+    tj_colour = parameters.get('tj_colour', (200, 200, 200))
+    tj_thickness = parameters.get('tj_thickness', 2)
+    
+    plot_mode = parameters.get('plot_mode', 'both')
+    
+    for _, row in df_single.iterrows():
+        
+        entity_type = row['entity_type']
+        is_tj = entity_type in ('TJ', 'triple_junction')
+        
+        if plot_mode == 'tj_only' and not is_tj:
+            continue
+        if plot_mode == 'gb_only' and is_tj:
+            continue
+            
+        x_data, y_data = get_entity_coords_for_plotting(df_single, entity_type)
+        
+        if is_tj:
+            if x_data is not None and y_data is not None:
+                cv2.circle(
+                    frame, 
+                    center=(int(x_data), int(y_data)), 
+                    radius=int(tj_radius), 
+                    color=tj_colour, 
+                    thickness=int(tj_thickness)
+                )
+        else:
+            if len(x_data) > 0 and len(y_data) > 0:
+                pts = np.stack((x_data, y_data), axis=-1).astype(np.int32)
+                pts = pts.reshape((-1, 1, 2))
+                
+                colour = parameters.get(f'{entity_type.lower()}_colour', (0, 255, 255))
+                cv2.polylines(frame, [pts], isClosed=False, color=colour, thickness=int(gb_thickness))
+    
+    return frame
     
 
 
-
-
-
-
-
-"""Extract and combine the largest filled objects from an RGB image."""
-
-
-
-
-
-def main() -> None:
-  image_path = "C:/Users/ppzmis/OneDrive - The University of Nottingham/Documents/Papers/Joe/triple_junction/up_1_frame0_1.png"
-  image = cv2.imread(image_path, cv2.IMREAD_COLOR)
-
-  h, w = image.shape[:2]
-  center = (w // 2, h // 2)
-  radius = w // 3
-
-  mask = np.ones((h, w), dtype=np.uint8)
-  #mask = cv2.circle(circular_mask, center, radius, 255, thickness=-1)
-
-  red_ref = np.array([0, 0, 128])
-  green_ref = np.array([124, 255, 124])
-  blue_ref = np.array([128, 0, 0])
-
-  tolerance = 10
-
-  
-  final = make_mask(image, red_bounds, green_bounds, blue_bounds, mask)
-
-  cl_rg, cl_gb, cl_br = extract_centerlines_via_skeleton(final)
-  triple_junction = find_triple_junction(cl_rg, cl_gb, cl_br)
-
-  plt.figure()
-  plt.imshow(image)
-
-  for cl, name, col in [
-      (cl_rg, "Centerline 1", "purple"),
-      (cl_gb, "Centerline 2", "orange"),
-      (cl_br, "Centerline 3", "cyan"),
-  ]:
-    if cl:
-      cx = [p[0] for p in cl]
-      cy = [p[1] for p in cl]
-      plt.plot(cx, cy, color=col, linewidth=2, label=name)
-
-  if triple_junction != (0.0, 0.0):
-    plt.scatter(
-        [triple_junction[0]],
-        [triple_junction[1]],
-        color="gold",
-        s=150,
-        marker="X",
-        zorder=10,
-        label="Triple Junction",
-    )
-
-  plt.legend(loc="upper right")
-  plt.title("Centerlines and Triple Junction Superimposed on Original Image")
-  plt.axis("off")
-  plt.show()
