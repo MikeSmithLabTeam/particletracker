@@ -39,6 +39,7 @@ class PostProcessor:
         
         #Choose whether to load full df or temp
         if f_index is None:
+            self.link_store._df = None
             df = self.link_store.df
         elif lock_part == 1 and self.parameters['postprocess']['postprocess_method']:
             full_df = self.link_store.df
@@ -74,7 +75,7 @@ class PostProcessor:
                     
                     if method_name in auxiliary_methods:
                         # Auxiliary methods take the current frame/df and return the populated auxiliary DataFrame
-                        aux_df = getattr(pm, method_name)(df, aux_df, f_index=f_index, parameters=self.parameters, call_num=call_num, section='postprocess')
+                        aux_df = getattr(pm, method_name)(aux_df, df, f_index=f_index, parameters=self.parameters, call_num=call_num, section='postprocess')
                     else:
                         df = getattr(pm, method_name)(df, f_index=f_index, parameters=self.parameters, call_num=call_num, section='postprocess')    
             
