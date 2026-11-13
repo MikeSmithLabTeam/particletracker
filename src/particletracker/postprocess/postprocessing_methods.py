@@ -12,6 +12,8 @@ from scipy.ndimage import gaussian_filter1d
 import pyarrow as pa
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor
 
 from labvision import audio, video
 from moviepy.audio.io.AudioFileClip import AudioFileClip
@@ -1210,10 +1212,10 @@ def calibrate_acceleration():
 
 
 
-def _find_min_id(phi_array,peak_positions):
+def _find_min_id(phi_array,peak_positions,shift=0):
     """Calculates the id of the crystal to which all particles in the array belong. It implements wrapping so that a phi of 2.8 will find a peak at say -2.8"""
-    low_peaks = len(peak_positions[peak_positions<-np.pi])
-    num_peaks = len(peak_positions[peak_positions<np.pi]) - low_peaks
+    low_peaks = len(peak_positions[peak_positions<(-np.pi + shift)])
+    num_peaks = len(peak_positions[peak_positions<(np.pi + shift)]) - low_peaks
     min_id = np.argmin(np.abs(phi_array[:,None] - peak_positions), axis=1) - low_peaks 
     
     min_id[min_id < 0] = min_id[min_id < 0] + num_peaks
@@ -1227,6 +1229,7 @@ def crystal_ID_plot(df, parameters):
     '''
     peak_height = parameters['peak_height']
     smoothing = parameters['smoothing']
+    shift = parameters['shift']
 
     phi = df['hexatic_order_phase']
 
@@ -1256,8 +1259,8 @@ def crystal_ID_plot(df, parameters):
     plt.legend()
 
     
-    plt.axvline(-np.pi, color='r', linestyle = '--')
-    plt.axvline(np.pi, color='r', linestyle = '--')
+    plt.axvline((-np.pi+shift), color='r', linestyle = '--')
+    plt.axvline((np.pi+shift), color='r', linestyle = '--')
     plt.show()
 
 @time_it
@@ -1298,6 +1301,7 @@ def _crystal_id(df, *args, parameters=None, **kwargs):
     peak_height = parameters['peak_height']
     smoothing = parameters['smoothing']
     debug = parameters['debug']
+    shift = parameters['shift']
 
     phi = df['hexatic_order_phase'].to_numpy(dtype=np.float32, na_value=np.nan)
 
@@ -1315,7 +1319,7 @@ def _crystal_id(df, *args, parameters=None, **kwargs):
     peaks=padded_peaks
 
     phi_array = np.array(phi)
-    df['crystal_id'] = _find_min_id(phi_array, padded_bins[peaks])
+    df['crystal_id'] = _find_min_id(phi_array, padded_bins[peaks], shift=shift)
 
     #plotting(df)
     if debug:
@@ -1442,7 +1446,112 @@ def _boundary_and_tj_id(df, *args, parameters=None, **kwargs):
 
 @time_it
 @error_handling
-def find_tj_gb_coords(aux_df, df, *args, parameters=None, **kwargs):
+def _find_tj_gb_coords(aux_df, df, *args, parameters=None, **kwargs):
+    """
+    Find the coordinates of triple junctions and grain boundaries in the dataframe.
+    This uses the tracked coordinates of the particles to generate a dummy coloured
+    image. This is then processed to find the coordinates of the triple junctions and grain boundaries.
+    The Data is stored in the auxiliary dataframe because it is not a property of the particles themselves but rather a property of the system.
+    This method requires you to have run the boundary_and_tj_id method first.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The dataframe containing particle data.
+    parameters : dict, optional
+        Additional parameters for processing (default is None).
+
+    Returns
+    -------
+    Auxiliary DataFrame: pd.DataFrame
+        A DataFrame containing the coordinates of triple junctions and grain boundaries.
+    """
+    frame_size = parameters['crop']['_frame_size']
+    dilate_rad = get_param_val(parameters['postprocess']['find_tj_gb_coords']['dilate_rad'])
+
+    f_index = kwargs['f_index']
+
+    if f_index is None:
+        #process all frames
+        indices = df.index.unique().tolist()
+    else:
+        #Just process frame of interest
+        indices=[f_index]
+
+    records = []
+    entity_counters = defaultdict(int)
+
+    # 1. Seed existing data if aux_df is passed in
+    if aux_df is not None and not aux_df.empty:
+        work_df = (aux_df.reset_index() if aux_df.index.name == "frame" else aux_df)
+        for _, row in work_df.iterrows():
+            f = row["frame"]
+            et = str(row["entity_type"])
+            eid = int(row["entity_id"])
+            records.append(
+                {
+                    "frame": f,
+                    "entity_type": et,
+                    "entity_id": eid,
+                    "coords": row["coords"],
+                }
+            )
+            entity_counters[(f, et)] = max(entity_counters[(f, et)], eid + 1)
+
+    # 2. Main processing loop
+    for f in tqdm(indices, desc="Finding TJ and GB Coords"):
+        masks = construct_mask(df, frame_size, dilate_rad)
+        gbs = find_grain_boundaries(masks)
+        tj = find_triple_junction(gbs)
+
+        entities = [
+            ("TJ", tj),
+            ("GB0", gbs[0] if len(gbs) > 0 else None),
+            ("GB1", gbs[1] if len(gbs) > 1 else None),
+            ("GB2", gbs[2] if len(gbs) > 2 else None),
+        ]
+
+        for entity_type, coords in entities:
+            clean_coords = _normalize_GB_coords(coords)
+
+            key = (f, entity_type)
+            eid = entity_counters[key]
+            entity_counters[key] += 1
+
+            records.append(
+                {
+                    "frame": f,
+                    "entity_type": entity_type,
+                    "entity_id": eid,
+                    "coords": clean_coords,
+                }
+            )
+        
+    # 3. Assemble final DataFrame in a single pass
+    if not records:
+        return pd.DataFrame(columns=["entity_type", "entity_id", "coords"]).rename_axis("frame")
+
+    out_df = pd.DataFrame(records)
+    out_df["entity_type"] = out_df["entity_type"].astype("string")
+    out_df["entity_id"] = out_df["entity_id"].astype("int64")
+    return out_df.set_index("frame") 
+
+def _normalize_GB_coords(coords):
+    """Fast coordinate standardizer avoiding DataFrame instantiation."""
+    if coords is None:
+        return []
+    if (
+        isinstance(coords, (list, tuple, np.ndarray))
+        and len(coords) == 2
+        and not isinstance(coords[0], (list, tuple, np.ndarray))
+    ):
+        return [[float(coords[0]), float(coords[1])]]
+    return [[float(pt[0]), float(pt[1])] for pt in coords if len(pt) >= 2]
+
+
+@time_it
+@error_handling
+def _find_tj_gb_coords(aux_df, df, *args, parameters=None, **kwargs):
     """
     Find the coordinates of triple junctions and grain boundaries in the dataframe.
     This uses the tracked coordinates of the particles to generate a dummy coloured
@@ -1475,17 +1584,295 @@ def find_tj_gb_coords(aux_df, df, *args, parameters=None, **kwargs):
         indices=[f_index]
 
     for f_index in tqdm(indices, desc="Finding TJ and GB Coords"):
+        t0 = time.perf_counter()
         masks = construct_mask(df,frame_size, dilate_rad)
+        t1 = time.perf_counter()
         gbs = find_grain_boundaries(masks)
+        t2 = time.perf_counter()
         tj = find_triple_junction(gbs)
+        t3 = time.perf_counter()
         
         aux_df = add_to_aux_frame_df(aux_df,f_index,'TJ',tj)
         aux_df = add_to_aux_frame_df(aux_df,f_index,'GB0',gbs[0])
         aux_df = add_to_aux_frame_df(aux_df,f_index,'GB1',gbs[1])
         aux_df = add_to_aux_frame_df(aux_df,f_index,'GB2',gbs[2])
+        t4 = time.perf_counter()
+
+
+        print(f"\n--- Frame {f_index} Line Timings ---")
+        print(f"construct_mask:       {t1 - t0:.4f}s")
+        print(f"find_grain_boundaries:{t2 - t1:.4f}s")
+        print(f"find_triple_junction: {t3 - t2:.4f}s")
+        print(f"add_to_aux_frame_df:  {t4 - t3:.4f}s\n")
     
     return aux_df
 
+
+def _process_single_frame(args):
+    """Worker function to process a single frame index."""
+    idx, df_frame, frame_size, dilate_rad = args
+
+    masks = construct_mask(df_frame, frame_size, dilate_rad)
+    gbs = find_grain_boundaries(masks)
+    tj = find_triple_junction(gbs)
+
+    results = [(idx, "TJ", tj)]
+    for gb_idx, gb_data in enumerate(gbs):
+        results.append((idx, f"GB{gb_idx}", gb_data))
+
+    return results
+
+@time_it
+@error_handling
+def find_tj_gb_coords(aux_df, df, *args, parameters=None, **kwargs):
+    """Find the coordinates of triple junctions and grain boundaries in the dataframe."""
+    frame_size = parameters["crop"]["_frame_size"]
+    dilate_rad = get_param_val(parameters["postprocess"]["find_tj_gb_coords"]["dilate_rad"])
+
+    f_index = kwargs.get("f_index")
+
+    if f_index is None:
+        # process all frames
+        indices = list(set(df.index.values.tolist()))
+    else:
+        # Just process frame of interest
+        indices = [f_index]
+
+    total_frames = len(indices)
+
+    if total_frames <= 1000:
+        for i, idx in enumerate(tqdm(indices, desc="Finding TJ and GB Coords (Sequential)")):
+            frame_df = df.loc[idx] if idx in df.index else df
+            masks = construct_mask(frame_df, frame_size, dilate_rad)
+            gbs = find_grain_boundaries(masks)
+            tj = find_triple_junction(gbs)
+            
+            aux_df = add_to_aux_frame_df(aux_df, idx, "TJ", tj)
+            aux_df = add_to_aux_frame_df(aux_df, idx, "GB0", gbs[0])
+            aux_df = add_to_aux_frame_df(aux_df, idx, "GB1", gbs[1])
+            aux_df = add_to_aux_frame_df(aux_df, idx, "GB2", gbs[2])
+
+        return aux_df
+
+    tasks = [(idx, df.loc[[idx]], frame_size, dilate_rad) for idx in indices]
+
+    NUM_WORKERS = max(1, (os.cpu_count() or 2) - 1)
+    all_results = []
+    with ProcessPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        for result in tqdm(
+            executor.map(_process_single_frame, tasks),
+            total=len(tasks),
+            desc=f"Finding TJ and GB Coords (Parallel) workers={NUM_WORKERS}",
+        ):
+            all_results.extend(result)
+
+    # Merge results sequentially into aux_df
+    for idx, key, data in all_results:
+        aux_df = add_to_aux_frame_df(aux_df, idx, key, data)
+
+    return aux_df
+    
+###
+
+
+def _clean_coords(coords):
+    """Helper to standardize coordinates into list-of-lists format."""
+    clean_c = []
+    if coords is not None:
+        is_single_point = (
+            isinstance(coords, (list, tuple, np.ndarray)) 
+            and len(coords) == 2 
+            and not isinstance(coords[0], (list, tuple, np.ndarray))
+        )
+        if is_single_point:
+            clean_c = [[float(coords[0]), float(coords[1])]]
+        else:
+            for pt in coords:
+                if len(pt) >= 2:
+                    clean_c.append([float(pt[0]), float(pt[1])])
+    return clean_c
+
+# Global variable container for worker processes
+_GLOBAL_DF = None
+
+def _init_worker(df):
+    """Initializes each worker process with a read-only copy of the main dataframe."""
+    global _GLOBAL_DF
+    _GLOBAL_DF = df
+
+def _process_single_frame_(args):
+    """Worker function processing a single frame index using the shared global dataframe."""
+    idx, frame_size, dilate_rad = args
+    global _GLOBAL_DF
+    
+    # Slice locally inside the worker process
+    df_frame = _GLOBAL_DF.loc[[idx]] if idx in _GLOBAL_DF.index else _GLOBAL_DF
+
+    masks = construct_mask(df_frame, frame_size, dilate_rad)
+    gbs = find_grain_boundaries(masks)
+    tj = find_triple_junction(gbs)
+
+    results = [(idx, "TJ", 0, _clean_coords(tj))]
+    for gb_idx, gb_data in enumerate(gbs):
+        results.append((idx, f"GB{gb_idx}", 0, _clean_coords(gb_data)))
+
+    return results
+
+def _process_single_frame_(args):
+    """Worker function to process a single frame index."""
+    idx, df_frame, frame_size, dilate_rad = args
+
+    masks = construct_mask(df_frame, frame_size, dilate_rad)
+    gbs = find_grain_boundaries(masks)
+    tj = find_triple_junction(gbs)
+
+    # Clean coordinates inside the worker and store with entity_id = 0
+    results = [(idx, "TJ", 0, _clean_coords(tj))]
+    for gb_idx, gb_data in enumerate(gbs):
+        results.append((idx, f"GB{gb_idx}", 0, _clean_coords(gb_data)))
+
+    return results
+
+@time_it
+@error_handling
+def find_tj_gb_coords_(aux_df, df, *args, parameters=None, **kwargs):
+    """Find the coordinates of triple junctions and grain boundaries in the dataframe."""
+    frame_size = parameters["crop"]["_frame_size"]
+    dilate_rad = get_param_val(parameters["postprocess"]["find_tj_gb_coords"]["dilate_rad"])
+
+    f_index = kwargs.get("f_index")
+    if f_index is None:
+        indices = list(set(df.index.values.tolist()))
+    else:
+        indices = [f_index]
+
+    total_frames = len(indices)
+    all_records = []
+
+    # 1. Sequential execution (<= 100 frames)
+    if total_frames <= 100:
+        global _GLOBAL_DF
+        _GLOBAL_DF = df
+        for idx in tqdm(indices, desc="Finding TJ and GB Coords (Sequential)"):
+            res = _process_single_frame((idx, frame_size, dilate_rad))
+            for idx_val, entity_type, entity_id, clean_coords in res:
+                all_records.append({
+                    'frame': idx_val, 
+                    'entity_type': entity_type, 
+                    'entity_id': entity_id, 
+                    'coords': clean_coords
+                })
+
+    # # 1. Sequential execution (<= 1000 frames)
+    # if total_frames <= 100:
+    #     for idx in tqdm(indices, desc="Finding TJ and GB Coords (Sequential)"):
+    #         frame_df = df.loc[[idx]] if idx in df.index else df
+            
+    #         # Reuse the worker logic directly for sequential runs
+    #         res = _process_single_frame((idx, frame_df, frame_size, dilate_rad))
+    #         for idx_val, entity_type, entity_id, clean_coords in res:
+    #             all_records.append({
+    #                 'frame': idx_val, 
+    #                 'entity_type': entity_type, 
+    #                 'entity_id': entity_id, 
+    #                 'coords': clean_coords
+    #             })
+
+    # 2. Parallel execution (> 100 frames)
+    else:
+        print("Preparing lightweight frame tasks for parallel execution...")
+        
+        tasks = [(idx, frame_size, dilate_rad) for idx in indices]
+        NUM_WORKERS = max(1, (os.cpu_count() or 2) - 1)
+        
+        with ProcessPoolExecutor(
+            max_workers=NUM_WORKERS, 
+            initializer=_init_worker, 
+            initargs=(df,)
+        ) as executor:
+            for result_batch in tqdm(
+                executor.map(_process_single_frame, tasks, chunksize=200),
+                total=len(tasks),
+                desc=f"Finding TJ and GB Coords (Parallel) workers={NUM_WORKERS}",
+            ):
+                for idx_val, entity_type, entity_id, clean_coords in result_batch:
+                    all_records.append({
+                        'frame': idx_val, 
+                        'entity_type': entity_type, 
+                        'entity_id': entity_id, 
+                        'coords': clean_coords
+                    })
+
+    # # 2. Parallel execution (> 1000 frames)
+    # else:
+    #     # OPTIMIZATION: Pre-slice or group df slices once outside the loop 
+    #     # so we don't repeatedly evaluate df.loc[[idx]] 16,000 times inside a list comprehension.
+    #     # If df is indexed by frame, grouping or mapping saves massive pickling overhead.
+    #     print("Preparing frame tasks for parallel execution...")
+        
+    #     # If index exists in df, pre-extract slices to avoid heavy pickle serialization of the full df
+    #     #has_index = idx in df.index if indices else False
+        
+    #     tasks = []
+    #     for idx in indices:
+    #         # Get frame slice once
+    #         frame_df = df.loc[[idx]] if idx in df.index else df
+    #         tasks.append((idx, frame_df, frame_size, dilate_rad))
+
+    #     NUM_WORKERS = max(1, (os.cpu_count() or 2) - 1)
+        
+    #     with ProcessPoolExecutor(max_workers=NUM_WORKERS) as executor:
+    #         for result_batch in tqdm(
+    #             executor.map(_process_single_frame, tasks, chunksize=100),
+    #             total=len(tasks),
+    #             desc=f"Finding TJ and GB Coords (Parallel) workers={NUM_WORKERS}",
+    #         ):
+    #             for idx_val, entity_type, entity_id, clean_coords in result_batch:
+    #                 all_records.append({
+    #                     'frame': idx_val, 
+    #                     'entity_type': entity_type, 
+    #                     'entity_id': entity_id, 
+    #                     'coords': clean_coords
+    #                 })
+
+
+    # else:
+    #     tasks = [(idx, df.loc[[idx]] if idx in df.index else df, frame_size, dilate_rad) for idx in indices]
+    #     NUM_WORKERS = max(1, (os.cpu_count() or 2) - 1)
+        
+    #     with ProcessPoolExecutor(max_workers=NUM_WORKERS) as executor:
+    #         for result_batch in tqdm(
+    #             executor.map(_process_single_frame, tasks),
+    #             total=len(tasks),
+    #             desc=f"Finding TJ and GB Coords (Parallel) workers={NUM_WORKERS}",
+    #         ):
+    #             for idx_val, entity_type, entity_id, clean_coords in result_batch:
+    #                 all_records.append({
+    #                     'frame': idx_val, 
+    #                     'entity_type': entity_type, 
+    #                     'entity_id': entity_id, 
+    #                     'coords': clean_coords
+    #                 })
+
+    # 3. Construct the DataFrame once at the very end
+    new_df = pd.DataFrame(all_records)
+    if not new_df.empty:
+        new_df = new_df.set_index('frame')
+        new_df['entity_type'] = new_df['entity_type'].astype('string')
+        new_df['entity_id'] = new_df['entity_id'].astype('int64')
+
+    # 4. Merge cleanly with original aux_df if present
+    return new_df
+    # if aux_df is None or aux_df.empty:
+    #     return new_df
+    
+    # work_aux = aux_df.copy()
+    # if 'frame' in work_aux.columns and work_aux.index.name != 'frame':
+    #     work_aux = work_aux.set_index('frame')
+        
+    # return pd.concat([work_aux, new_df], axis=0)
+
+###
 
 @time_it
 @error_handling

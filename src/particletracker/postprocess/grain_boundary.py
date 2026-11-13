@@ -3,7 +3,18 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import time
+from skimage.morphology import skeletonize
 
+def time_it(func):
+    def wrapper(*args, **kwargs):
+        print(f"running {func.__name__}")
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"[{func.__name__}] took {end - start:.4f} seconds")
+        return result
+    return wrapper
 
 def mask_polygon(frame_size, pt_list, dilation_rad):
     mask = 255*np.ones(frame_size[:2], dtype=np.uint8)
@@ -55,36 +66,62 @@ def construct_mask(
     
     return (rg, gb, br)
 
-def extract_gb(mask):
-    raw_skeleton = cv2.ximgproc.thinning(
-        mask.astype(np.uint8), 
-        thinningType=cv2.ximgproc.THINNING_ZHANGSUEN
-    )
+
+def extract_gb(mask: np.ndarray) -> list[tuple[float, float]]:
+    # 1. Skip completely if mask is empty
+    y_indices, x_indices = np.where(mask > 0)
+    if len(x_indices) < 3:
+        return []
+
+    # 2. Crop mask tightly around active pixels (drastically reduces matrix size for thinning)
+    min_x, max_x = x_indices.min(), x_indices.max()
+    min_y, max_y = y_indices.min(), y_indices.max()
+
+    # Add 1px padding boundary safely within image bounds
+    pad_min_x, pad_max_x = max(0, min_x - 1), min(mask.shape[1], max_x + 2)
+    pad_min_y, pad_max_y = max(0, min_y - 1), min(mask.shape[0], max_y + 2)
+
+    cropped = mask[pad_min_y:pad_max_y, pad_min_x:pad_max_x] > 0
+    if cropped.dtype != np.uint8:
+        cropped = cropped.astype(np.uint8)
+
+    #start = time.perf_counter()
+            
+    # 3. Fast thinning algorithm on the small cropped matrix
+    #raw_skeleton = cv2.ximgproc.thinning(
+    #   cropped, thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)         #THINNING_GUOHALL
+
+    raw_skeleton = skeletonize(cropped)
+    raw_skeleton = (raw_skeleton.astype(np.uint8)) * 255
     
+    # end = time.perf_counter()
+    #print(f"took {end - start:.4f} seconds")
+    
+    # 4. Find contours on skeleton
     contours, _ = cv2.findContours(
         raw_skeleton, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE
     )
+    if not contours:
+        return []
 
-    # Find the single longest contour
     longest_cnt = max(contours, key=len)
-    
-    # Map directly to a float coordinate list
-    centerline = [(float(p[0][0]), float(p[0][1])) for p in longest_cnt]
-    
-    return centerline
+
+    # 5. Shift coordinates back to full image space using vectorized C casting
+    pts = longest_cnt.reshape(-1, 2).astype(float)
+    pts[:, 0] += pad_min_x
+    pts[:, 1] += pad_min_y
+
+    return pts.tolist()
 
 def find_grain_boundaries(
-    masks: tuple(np.ndarray, np.ndarray, np.ndarray)
+    masks: tuple[np.ndarray, np.ndarray, np.ndarray],
 ) -> tuple[list[tuple], list[tuple], list[tuple]]:
-    """Extracts centerlines via raw skeletonization without pruning."""
-    rg, gb, br = masks
-
-    gb_rg = extract_gb(rg)
-    gb_gb = extract_gb(gb)
-    gb_br = extract_gb(br)
-
-    return (gb_rg, gb_gb, gb_br)
-
+    """Extracts centerlines via fast cropped skeletonization."""
+    return (
+        extract_gb(masks[0]),
+        extract_gb(masks[1]),
+        extract_gb(masks[2]),
+    )
 
 def find_triple_junction(gbs):
     """Finds the triple junction by locating the point that minimizes the 

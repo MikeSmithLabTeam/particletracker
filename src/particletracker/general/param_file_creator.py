@@ -165,6 +165,7 @@ def create_param_file(filename):
         'crystal_id':{'peak_height': [30,1,60, 1],
                       'smoothing': [2.0,0.2,10.0,0.1],
                       'debug': [False, ('True', 'False')],
+                      'shift': [0.0,-1.0, 1.0, 0.1],
 
         },
         'boundary_and_tj_id':{

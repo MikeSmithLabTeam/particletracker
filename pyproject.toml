@@ -35,6 +35,7 @@ dependencies = [
     "jupyterlab",
     "tables",
     "pyarrow>=24.0.0",
+    "scikit-image",
 ]
 
 [project.scripts]
